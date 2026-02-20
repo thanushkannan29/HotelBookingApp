@@ -5,9 +5,9 @@ using System.Reflection.Emit;
 
 namespace HotelBookingAppWebApi.Contexts
 {
-    public class HotelBookingAppWebApi : DbContext
+    public class HotelBookingContext : DbContext
     {
-        public HotelBookingAppWebApi(DbContextOptions<HotelBookingAppWebApi> options)
+        public HotelBookingContext(DbContextOptions<HotelBookingContext> options)
             : base(options)
         {
         }
@@ -65,7 +65,9 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<RoomType>()
                 .HasMany(rt => rt.Rooms)
                 .WithOne(r => r.RoomType)
-                .HasForeignKey(r => r.RoomTypeId);
+                .HasForeignKey(r => r.RoomTypeId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
 
             modelBuilder.Entity<RoomType>()
                 .HasMany(rt => rt.Rates)
@@ -92,7 +94,9 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<ReservationRoom>()
                 .HasOne(rr => rr.Room)
                 .WithMany(r => r.ReservationRooms)
-                .HasForeignKey(rr => rr.RoomId);
+                .HasForeignKey(rr => rr.RoomId)
+                .OnDelete(DeleteBehavior.Restrict);
+
 
             // ---------------- UNIQUE CONSTRAINTS ----------------
 
@@ -120,6 +124,29 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Status)
                 .HasConversion<int>();
+
+
+            // for decimal corection point
+            // Reservation
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.TotalAmount)
+                .HasPrecision(18, 2);
+
+            // ReservationRoom
+            modelBuilder.Entity<ReservationRoom>()
+                .Property(rr => rr.PricePerNight)
+                .HasPrecision(18, 2);
+
+            // RoomTypeRate
+            modelBuilder.Entity<RoomTypeRate>()
+                .Property(r => r.Rate)
+                .HasPrecision(18, 2);
+
+            // Transaction
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.Amount)
+                .HasPrecision(18, 2);
+
         }
     }
 }

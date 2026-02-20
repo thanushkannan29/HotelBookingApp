@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "GI98bVgQcs8=",
+  "dgSpecHash": "oPTPdP6cwN8=",
   "success": true,
-  "projectFilePath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
+  "projectFilePath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\Thanush.K\\.nuget\\packages\\azure.core\\1.47.1\\azure.core.1.47.1.nupkg.sha512",
     "C:\\Users\\Thanush.K\\.nuget\\packages\\azure.identity\\1.14.2\\azure.identity.1.14.2.nupkg.sha512",

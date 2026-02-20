@@ -3814,11 +3814,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
+      "projectUniqueName": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
       "projectName": "HotelBookingTesting",
-      "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
+      "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotelBookingTesting.csproj",
       "packagesPath": "C:\\Users\\Thanush.K\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingTesting\\obj\\",
+      "outputPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -3839,8 +3839,8 @@
         "net10.0": {
           "targetAlias": "net10.0",
           "projectReferences": {
-            "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {
-              "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj"
+            "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {
+              "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj"
             }
           }
         }

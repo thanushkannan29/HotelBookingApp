@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {}
+    "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {
+    "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj",
+        "projectUniqueName": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj",
         "projectName": "HotelBookingAppWebApi",
-        "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj",
+        "projectPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj",
         "packagesPath": "C:\\Users\\Thanush.K\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\obj\\",
+        "outputPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
