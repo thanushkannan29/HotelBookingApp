@@ -1,27 +1,37 @@
-﻿using Microsoft.AspNetCore.Mvc.ViewEngines;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
     public class Hotel
     {
-        public int HotelId { get; set; }
+        [Key]
+        public Guid HotelId { get; set; }
 
+        [Required, MaxLength(200)]
         public string Name { get; set; } = string.Empty;
+
+        [Required, MaxLength(500)]
         public string Address { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
         public string City { get; set; } = string.Empty;
+
+        [MaxLength(1000)]
         public string Description { get; set; } = string.Empty;
 
         public string ImageUrl { get; set; } = string.Empty;
-        public string ContactNumber { get; set; } = string.Empty;
-        //This Collection means Hotel have many relationship with this four Tables
-        public ICollection<RoomType> RoomTypes { get; set; } = new List<RoomType>();
-        public ICollection<Room> Rooms { get; set; } = new List<Room>();
-        public ICollection<Review> Reviews { get; set; } = new List<Review>();
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
 
-        public override string ToString()
-        {
-            return $"Hotel [{HotelId}] | {Name} | {City} | Contact: {ContactNumber}";
-        }
+        [Required, MaxLength(15)]
+        public string ContactNumber { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        public ICollection<RoomType>? RoomTypes { get; set; }
+        public ICollection<Room>? Rooms { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Reservation>? Reservations { get; set; }
     }
 }

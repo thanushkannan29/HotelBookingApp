@@ -1,67 +1,106 @@
 ﻿using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace HotelBookingAppWebApi.Repository
 {
-    public class Respository<K, T> : IRepository<K, T> where T : class
+    public class Repository<K, T> : IRepository<K, T> where T : class
     {
-        private readonly HotelBookingContext _context;
+        protected readonly HotelBookingContext _context;
+        protected readonly DbSet<T> _dbSet;
 
-        public Respository(HotelBookingContext context)
+        public Repository(HotelBookingContext context)
         {
             _context = context;
+            _dbSet = _context.Set<T>();
         }
 
-        public async Task<T?> AddAsync(T entity)
+        // =========================
+        // GET ALL
+        // =========================
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
-            _context.Add(entity);
-            await _context.SaveChangesAsync();
-            return entity;
+            return await _dbSet.ToListAsync();
         }
 
-        public async Task<T> DeleteAsync(K id)
-        {
-            var entity = await GetByIdAsync(id);
-            if (entity == null)
-            {
-                throw new KeyNotFoundException($"Entity with id {id} not found.");
-            }
-            _context.Remove(entity);
-            await _context.SaveChangesAsync();
-            return entity;
-        }
-
-        public async Task<IEnumerable<T>?> GetAllAsync()
-        {
-            var entities = _context.Set<T>();
-            if (entities == null)
-            {
-                throw new InvalidOperationException("No entities found.");
-            }
-            return await entities.ToListAsync();
-        }
-
+        // =========================
+        // GET BY ID
+        // =========================
         public async Task<T?> GetByIdAsync(K id)
         {
-            var entity = await _context.Set<T>().FindAsync(id);
-            if (entity == null)
-            {
-                throw new KeyNotFoundException($"Entity with id {id} not found.");
-            }
+            return await _dbSet.FindAsync(id);
+        }
+
+        // =========================
+        // FIND (WHERE)
+        // =========================
+        public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.Where(predicate).ToListAsync();
+        }
+
+        // =========================
+        // EXISTS
+        // =========================
+        public async Task<bool> ExistsAsync(K id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+            return entity != null;
+        }
+
+        // =========================
+        // ADD
+        // =========================
+        public async Task<T> AddAsync(T entity)
+        {
+            await _dbSet.AddAsync(entity);
+            await _context.SaveChangesAsync();
             return entity;
         }
 
-        public async Task<T?> UpdateAsync(K key, T entity)
+        // =========================
+        // UPDATE
+        // =========================
+        public async Task<T?> UpdateAsync(K id, T entity)
         {
-            var entry = await GetByIdAsync(key);
-            if (entry == null)
-            {
-                throw new KeyNotFoundException($"Entity with id {key} not found.");
-            }
-            _context.Entry(entry).CurrentValues.SetValues(entity);
+            var existing = await _dbSet.FindAsync(id);
+
+            if (existing == null)
+                return null;
+
+            _context.Entry(existing).CurrentValues.SetValues(entity);
+
             await _context.SaveChangesAsync();
-            return entry;
+            return existing;
         }
+
+        // =========================
+        // DELETE
+        // =========================
+        public async Task<bool> DeleteAsync(K id)
+        {
+            var entity = await _dbSet.FindAsync(id);
+
+            if (entity == null)
+                return false;
+
+            _dbSet.Remove(entity);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+
+        //this help for var reservations = await repo.GetAllWithIncludeAsync(r => r.User, r => r.ReservationRooms);
+
+        public async Task<IEnumerable<T>> GetAllWithIncludeAsync(params Expression<Func<T, object>>[] includes)
+        {
+            IQueryable<T> query = _dbSet;
+
+            foreach (var include in includes)
+                query = query.Include(include);
+
+            return await query.ToListAsync();
+        }
+
     }
 }

@@ -1,30 +1,45 @@
-﻿namespace HotelBookingAppWebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
 {
     public class User
     {
-        public int UserId { get; set; }
+        [Key]
+        public Guid UserId { get; set; }
 
-        public string UserName { get; set; } = string.Empty;
+        [Required, MaxLength(150)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
         public string Email { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
 
-        public string PasswordHash { get; set; } = string.Empty;
-        public string PasswordSalt { get; set; } = string.Empty;
+        [Required]
+        public byte[] Password { get; set; } = Array.Empty<byte>();
 
+        [Required]
+        public byte[] PasswordSaltValue { get; set; } = Array.Empty<byte>();
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
         public UserRole Role { get; set; }
 
-        public ICollection<Reservation> Reservations { get; set; } = new List<Reservation>();
-        public ICollection<Review> Reviews { get; set; } = new List<Review>();
+        [Required]
+        public DateTime CreatedAt { get; set; }
 
-        public override string ToString()
-        {
-            return $"User [{UserId}] | {UserName} | {Email} | Role: {Role}";
-        }
+        public UserProfileDetails? UserDetails { get; set; }
+        public Guid? HotelId { get; set; }
+        public Hotel? Hotel { get; set; }
 
+
+        public ICollection<Reservation>? Reservations { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Log>? Logs { get; set; }
     }
+
     public enum UserRole
     {
-        Guest,
-        Admin
+        Guest = 1,
+        Admin = 2
     }
 }

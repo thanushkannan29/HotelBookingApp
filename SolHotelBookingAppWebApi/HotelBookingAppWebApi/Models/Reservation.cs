@@ -1,46 +1,51 @@
-﻿using System.Transactions;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
     public class Reservation
     {
-        public int ReservationId { get; set; }
+        [Key]
+        public Guid ReservationId { get; set; }
 
-        public string ReservationCode { get; set; } = Guid.NewGuid().ToString();
+        [Required]
+        public string ReservationCode { get; set; } = string.Empty;
 
-        public int UserId { get; set; }
-        public User? User { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
 
-        public int HotelId { get; set; }
-        public Hotel? Hotel { get; set; }
+        [Required]
+        public Guid HotelId { get; set; }
 
+        [Required]
         public DateTime CheckInDate { get; set; }
+
+        [Required]
         public DateTime CheckOutDate { get; set; }
 
+        [Required]
         public decimal TotalAmount { get; set; }
 
+        [Required]
         public ReservationStatus Status { get; set; }
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? CancelledDate { get; set; }
+        public string? CancellationReason { get; set; }
 
-        public ICollection<ReservationRoom> ReservationRooms { get; set; } = new List<ReservationRoom>();
-        public ICollection<Transaction> Transactions { get; set; } = new List<Transaction>();
+        [Required]
+        public DateTime CreatedDate { get; set; }
 
-        public override string ToString()
-        {
-            return $"Reservation [{ReservationId}] | Code: {ReservationCode} | UserId: {UserId} | HotelId: {HotelId} | " +
-                   $"CheckIn: {CheckInDate:yyyy-MM-dd} | CheckOut: {CheckOutDate:yyyy-MM-dd} | Status: {Status} | Total: {TotalAmount:C}";
-        }
+        public User? User { get; set; }
+        public Hotel? Hotel { get; set; }
 
-
-
+        public ICollection<ReservationRoom>? ReservationRooms { get; set; }
+        public ICollection<Transaction>? Transactions { get; set; }
     }
 
     public enum ReservationStatus
     {
-        Pending,
-        Confirmed,
-        Cancelled,
-        Completed
+        Pending = 1,
+        Confirmed = 2,
+        Cancelled = 3,
+        Completed = 4
     }
 }

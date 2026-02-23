@@ -1,24 +1,28 @@
-﻿namespace HotelBookingAppWebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
 {
     public class Review
     {
-        public int ReviewId { get; set; }
+        [Key]
+        public Guid ReviewId { get; set; }
 
-        public int UserId { get; set; }
-        public User? User { get; set; }
+        [Required]
+        public Guid UserId { get; set; }
 
-        public int HotelId { get; set; }
-        public Hotel? Hotel { get; set; }
+        [Required]
+        public Guid HotelId { get; set; }
 
-        public int Rating { get; set; }   // 1–5
+        [Range(1, 5)]
+        public decimal Rating { get; set; }
+
+        [Required]
         public string Comment { get; set; } = string.Empty;
 
-        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+        [Required]
+        public DateTime CreatedDate { get; set; }
 
-        public override string ToString()
-        {
-            return $"Review [{ReviewId}] | HotelId: {HotelId} | UserId: {UserId} | Rating: {Rating}/5 | Date: {CreatedDate:yyyy-MM-dd}";
-        }
-
+        public User? User { get; set; }
+        public Hotel? Hotel { get; set; }
     }
 }

@@ -1,22 +1,24 @@
-﻿namespace HotelBookingAppWebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
 {
     public class RoomTypeRate
     {
-        public int RoomTypeRateId { get; set; }
+        [Key]
+        public Guid RoomTypeRateId { get; set; }
 
-        public int RoomTypeId { get; set; }
-        public RoomType? RoomType { get; set; }
+        [Required]
+        public Guid RoomTypeId { get; set; }
 
+        [Required]
         public DateOnly StartDate { get; set; }
+
+        [Required]
         public DateOnly EndDate { get; set; }
 
+        [Required]
         public decimal Rate { get; set; }
 
-        public override string ToString()
-        {
-            return $"RoomTypeRate [{RoomTypeRateId}] | RoomTypeId: {RoomTypeId} | " +
-                   $"From: {StartDate:yyyy-MM-dd} To: {EndDate:yyyy-MM-dd} | Rate: {Rate:C}";
-        }
-
+        public RoomType? RoomType { get; set; }
     }
 }

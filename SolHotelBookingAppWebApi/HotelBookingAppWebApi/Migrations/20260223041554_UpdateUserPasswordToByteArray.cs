@@ -3,10 +3,12 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
+#pragma warning disable CA1814 // Prefer jagged arrays over multidimensional
+
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class newinit : Migration
+    public partial class UpdateUserPasswordToByteArray : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -22,7 +24,8 @@ namespace HotelBookingAppWebApi.Migrations
                     City = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ContactNumber = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    ContactNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -38,8 +41,9 @@ namespace HotelBookingAppWebApi.Migrations
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Email = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordHash = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    PasswordSalt = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    PasswordHash = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    PasswordSalt = table.Column<byte[]>(type: "varbinary(max)", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
                     Role = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -57,7 +61,8 @@ namespace HotelBookingAppWebApi.Migrations
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MaxOccupancy = table.Column<int>(type: "int", nullable: false),
                     Amenities = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    HotelId = table.Column<int>(type: "int", nullable: false)
+                    HotelId = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -140,7 +145,8 @@ namespace HotelBookingAppWebApi.Migrations
                     RoomNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Floor = table.Column<int>(type: "int", nullable: false),
                     HotelId = table.Column<int>(type: "int", nullable: false),
-                    RoomTypeId = table.Column<int>(type: "int", nullable: false)
+                    RoomTypeId = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -251,6 +257,66 @@ namespace HotelBookingAppWebApi.Migrations
                         principalTable: "Rooms",
                         principalColumn: "RoomId",
                         onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.InsertData(
+                table: "Hotels",
+                columns: new[] { "HotelId", "Address", "City", "ContactNumber", "Description", "ImageUrl", "IsActive", "Name" },
+                values: new object[,]
+                {
+                    { 1, "MG Road", "Chennai", "9000000001", "Luxury hotel", "img1.jpg", true, "Grand Palace" },
+                    { 2, "Beach Road", "Goa", "9000000002", "Beach side stay", "img2.jpg", true, "Sea View Resort" },
+                    { 3, "Hill Top", "Ooty", "9000000003", "Hill station hotel", "img3.jpg", true, "Mountain Retreat" },
+                    { 4, "Downtown", "Bangalore", "9000000004", "Business hotel", "img4.jpg", true, "City Inn" },
+                    { 5, "Palace Road", "Jaipur", "9000000005", "Heritage stay", "img5.jpg", true, "Royal Heritage" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Users",
+                columns: new[] { "UserId", "Email", "IsActive", "PasswordHash", "PasswordSalt", "Phone", "Role", "UserName" },
+                values: new object[,]
+                {
+                    { 1, "admin@hotel.com", true, new byte[] { 1, 2, 3, 4, 5 }, new byte[] { 5, 4, 3, 2, 1 }, "9999999999", 1, "Admin" },
+                    { 2, "john@mail.com", true, new byte[] { 10, 20, 30 }, new byte[] { 30, 20, 10 }, "8888888888", 0, "John" },
+                    { 3, "alice@mail.com", true, new byte[] { 11, 22, 33 }, new byte[] { 33, 22, 11 }, "7777777777", 0, "Alice" },
+                    { 4, "bob@mail.com", true, new byte[] { 44, 55, 66 }, new byte[] { 66, 55, 44 }, "6666666666", 0, "Bob" },
+                    { 5, "charlie@mail.com", true, new byte[] { 77, 88, 99 }, new byte[] { 99, 88, 77 }, "5555555555", 0, "Charlie" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "RoomTypes",
+                columns: new[] { "RoomTypeId", "Amenities", "Description", "HotelId", "IsActive", "MaxOccupancy", "Name" },
+                values: new object[,]
+                {
+                    { 1, "AC,TV,WiFi", "Deluxe Room", 1, true, 2, "Deluxe" },
+                    { 2, "AC,TV,WiFi,MiniBar", "Luxury Suite", 1, true, 4, "Suite" },
+                    { 3, "Fan,TV", "Standard Room", 2, true, 2, "Standard" },
+                    { 4, "AC,TV,WiFi", "Family Room", 3, true, 5, "Family" },
+                    { 5, "AC,TV,WiFi,Desk", "Executive Room", 4, true, 3, "Executive" }
+                });
+
+            migrationBuilder.InsertData(
+                table: "RoomTypeRates",
+                columns: new[] { "RoomTypeRateId", "EndDate", "Rate", "RoomTypeId", "StartDate" },
+                values: new object[,]
+                {
+                    { 1, new DateOnly(2026, 12, 31), 2500m, 1, new DateOnly(2026, 1, 1) },
+                    { 2, new DateOnly(2026, 12, 31), 4500m, 2, new DateOnly(2026, 1, 1) },
+                    { 3, new DateOnly(2026, 12, 31), 1800m, 3, new DateOnly(2026, 1, 1) },
+                    { 4, new DateOnly(2026, 12, 31), 3200m, 4, new DateOnly(2026, 1, 1) },
+                    { 5, new DateOnly(2026, 12, 31), 4000m, 5, new DateOnly(2026, 1, 1) }
+                });
+
+            migrationBuilder.InsertData(
+                table: "Rooms",
+                columns: new[] { "RoomId", "Floor", "HotelId", "IsActive", "RoomNumber", "RoomTypeId" },
+                values: new object[,]
+                {
+                    { 1, 1, 1, true, "101", 1 },
+                    { 2, 1, 1, true, "102", 2 },
+                    { 3, 2, 2, true, "201", 3 },
+                    { 4, 3, 3, true, "301", 4 },
+                    { 5, 4, 4, true, "401", 5 }
                 });
 
             migrationBuilder.CreateIndex(

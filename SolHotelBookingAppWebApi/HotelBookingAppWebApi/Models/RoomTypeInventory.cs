@@ -1,22 +1,28 @@
-﻿namespace HotelBookingAppWebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HotelBookingAppWebApi.Models
 {
     public class RoomTypeInventory
     {
-        public int RoomTypeInventoryId { get; set; }
+        [Key]
+        public Guid RoomTypeInventoryId { get; set; }
 
-        public int RoomTypeId { get; set; }
-        public RoomType? RoomType { get; set; }
+        [Required]
+        public Guid RoomTypeId { get; set; }
 
+        [Required]
         public DateOnly Date { get; set; }
 
+        [Required]
         public int TotalInventory { get; set; }
+
+        [Required]
         public int ReservedInventory { get; set; }
 
-        public override string ToString()
-        {
-            return $"Inventory [{RoomTypeInventoryId}] | RoomTypeId: {RoomTypeId} | Date: {Date:yyyy-MM-dd} | " +
-                   $"Total: {TotalInventory} | Reserved: {ReservedInventory}";
-        }
+        [NotMapped]
+        public int AvailableInventory => TotalInventory - ReservedInventory;
 
+        public RoomType? RoomType { get; set; }
     }
 }

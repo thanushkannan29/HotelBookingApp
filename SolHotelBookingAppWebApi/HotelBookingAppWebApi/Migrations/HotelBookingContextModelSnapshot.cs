@@ -50,6 +50,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -57,6 +60,63 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasKey("HotelId");
 
                     b.ToTable("Hotels");
+
+                    b.HasData(
+                        new
+                        {
+                            HotelId = 1,
+                            Address = "MG Road",
+                            City = "Chennai",
+                            ContactNumber = "9000000001",
+                            Description = "Luxury hotel",
+                            ImageUrl = "img1.jpg",
+                            IsActive = true,
+                            Name = "Grand Palace"
+                        },
+                        new
+                        {
+                            HotelId = 2,
+                            Address = "Beach Road",
+                            City = "Goa",
+                            ContactNumber = "9000000002",
+                            Description = "Beach side stay",
+                            ImageUrl = "img2.jpg",
+                            IsActive = true,
+                            Name = "Sea View Resort"
+                        },
+                        new
+                        {
+                            HotelId = 3,
+                            Address = "Hill Top",
+                            City = "Ooty",
+                            ContactNumber = "9000000003",
+                            Description = "Hill station hotel",
+                            ImageUrl = "img3.jpg",
+                            IsActive = true,
+                            Name = "Mountain Retreat"
+                        },
+                        new
+                        {
+                            HotelId = 4,
+                            Address = "Downtown",
+                            City = "Bangalore",
+                            ContactNumber = "9000000004",
+                            Description = "Business hotel",
+                            ImageUrl = "img4.jpg",
+                            IsActive = true,
+                            Name = "City Inn"
+                        },
+                        new
+                        {
+                            HotelId = 5,
+                            Address = "Palace Road",
+                            City = "Jaipur",
+                            ContactNumber = "9000000005",
+                            Description = "Heritage stay",
+                            ImageUrl = "img5.jpg",
+                            IsActive = true,
+                            Name = "Royal Heritage"
+                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
@@ -179,6 +239,9 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<int>("HotelId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<string>("RoomNumber")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -193,6 +256,53 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("RoomTypeId");
 
                     b.ToTable("Rooms");
+
+                    b.HasData(
+                        new
+                        {
+                            RoomId = 1,
+                            Floor = 1,
+                            HotelId = 1,
+                            IsActive = true,
+                            RoomNumber = "101",
+                            RoomTypeId = 1
+                        },
+                        new
+                        {
+                            RoomId = 2,
+                            Floor = 1,
+                            HotelId = 1,
+                            IsActive = true,
+                            RoomNumber = "102",
+                            RoomTypeId = 2
+                        },
+                        new
+                        {
+                            RoomId = 3,
+                            Floor = 2,
+                            HotelId = 2,
+                            IsActive = true,
+                            RoomNumber = "201",
+                            RoomTypeId = 3
+                        },
+                        new
+                        {
+                            RoomId = 4,
+                            Floor = 3,
+                            HotelId = 3,
+                            IsActive = true,
+                            RoomNumber = "301",
+                            RoomTypeId = 4
+                        },
+                        new
+                        {
+                            RoomId = 5,
+                            Floor = 4,
+                            HotelId = 4,
+                            IsActive = true,
+                            RoomNumber = "401",
+                            RoomTypeId = 5
+                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.RoomType", b =>
@@ -214,6 +324,9 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<int>("HotelId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
                     b.Property<int>("MaxOccupancy")
                         .HasColumnType("int");
 
@@ -226,6 +339,58 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("HotelId");
 
                     b.ToTable("RoomTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            RoomTypeId = 1,
+                            Amenities = "AC,TV,WiFi",
+                            Description = "Deluxe Room",
+                            HotelId = 1,
+                            IsActive = true,
+                            MaxOccupancy = 2,
+                            Name = "Deluxe"
+                        },
+                        new
+                        {
+                            RoomTypeId = 2,
+                            Amenities = "AC,TV,WiFi,MiniBar",
+                            Description = "Luxury Suite",
+                            HotelId = 1,
+                            IsActive = true,
+                            MaxOccupancy = 4,
+                            Name = "Suite"
+                        },
+                        new
+                        {
+                            RoomTypeId = 3,
+                            Amenities = "Fan,TV",
+                            Description = "Standard Room",
+                            HotelId = 2,
+                            IsActive = true,
+                            MaxOccupancy = 2,
+                            Name = "Standard"
+                        },
+                        new
+                        {
+                            RoomTypeId = 4,
+                            Amenities = "AC,TV,WiFi",
+                            Description = "Family Room",
+                            HotelId = 3,
+                            IsActive = true,
+                            MaxOccupancy = 5,
+                            Name = "Family"
+                        },
+                        new
+                        {
+                            RoomTypeId = 5,
+                            Amenities = "AC,TV,WiFi,Desk",
+                            Description = "Executive Room",
+                            HotelId = 4,
+                            IsActive = true,
+                            MaxOccupancy = 3,
+                            Name = "Executive"
+                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.RoomTypeInventory", b =>
@@ -281,6 +446,48 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("RoomTypeId");
 
                     b.ToTable("RoomTypeRates");
+
+                    b.HasData(
+                        new
+                        {
+                            RoomTypeRateId = 1,
+                            EndDate = new DateOnly(2026, 12, 31),
+                            Rate = 2500m,
+                            RoomTypeId = 1,
+                            StartDate = new DateOnly(2026, 1, 1)
+                        },
+                        new
+                        {
+                            RoomTypeRateId = 2,
+                            EndDate = new DateOnly(2026, 12, 31),
+                            Rate = 4500m,
+                            RoomTypeId = 2,
+                            StartDate = new DateOnly(2026, 1, 1)
+                        },
+                        new
+                        {
+                            RoomTypeRateId = 3,
+                            EndDate = new DateOnly(2026, 12, 31),
+                            Rate = 1800m,
+                            RoomTypeId = 3,
+                            StartDate = new DateOnly(2026, 1, 1)
+                        },
+                        new
+                        {
+                            RoomTypeRateId = 4,
+                            EndDate = new DateOnly(2026, 12, 31),
+                            Rate = 3200m,
+                            RoomTypeId = 4,
+                            StartDate = new DateOnly(2026, 1, 1)
+                        },
+                        new
+                        {
+                            RoomTypeRateId = 5,
+                            EndDate = new DateOnly(2026, 12, 31),
+                            Rate = 4000m,
+                            RoomTypeId = 5,
+                            StartDate = new DateOnly(2026, 1, 1)
+                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Transaction", b =>
@@ -326,13 +533,16 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.Property<string>("PasswordHash")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
 
-                    b.Property<string>("PasswordSalt")
+                    b.Property<byte[]>("PasswordHash")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("varbinary(max)");
+
+                    b.Property<byte[]>("PasswordSalt")
+                        .IsRequired()
+                        .HasColumnType("varbinary(max)");
 
                     b.Property<string>("Phone")
                         .IsRequired()
@@ -351,6 +561,63 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsUnique();
 
                     b.ToTable("Users");
+
+                    b.HasData(
+                        new
+                        {
+                            UserId = 1,
+                            Email = "admin@hotel.com",
+                            IsActive = true,
+                            PasswordHash = new byte[] { 1, 2, 3, 4, 5 },
+                            PasswordSalt = new byte[] { 5, 4, 3, 2, 1 },
+                            Phone = "9999999999",
+                            Role = 1,
+                            UserName = "Admin"
+                        },
+                        new
+                        {
+                            UserId = 2,
+                            Email = "john@mail.com",
+                            IsActive = true,
+                            PasswordHash = new byte[] { 10, 20, 30 },
+                            PasswordSalt = new byte[] { 30, 20, 10 },
+                            Phone = "8888888888",
+                            Role = 0,
+                            UserName = "John"
+                        },
+                        new
+                        {
+                            UserId = 3,
+                            Email = "alice@mail.com",
+                            IsActive = true,
+                            PasswordHash = new byte[] { 11, 22, 33 },
+                            PasswordSalt = new byte[] { 33, 22, 11 },
+                            Phone = "7777777777",
+                            Role = 0,
+                            UserName = "Alice"
+                        },
+                        new
+                        {
+                            UserId = 4,
+                            Email = "bob@mail.com",
+                            IsActive = true,
+                            PasswordHash = new byte[] { 44, 55, 66 },
+                            PasswordSalt = new byte[] { 66, 55, 44 },
+                            Phone = "6666666666",
+                            Role = 0,
+                            UserName = "Bob"
+                        },
+                        new
+                        {
+                            UserId = 5,
+                            Email = "charlie@mail.com",
+                            IsActive = true,
+                            PasswordHash = new byte[] { 77, 88, 99 },
+                            PasswordSalt = new byte[] { 99, 88, 77 },
+                            Phone = "5555555555",
+                            Role = 0,
+                            UserName = "Charlie"
+                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>

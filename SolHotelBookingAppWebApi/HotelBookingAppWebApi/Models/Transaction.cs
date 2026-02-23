@@ -1,41 +1,44 @@
-﻿namespace HotelBookingAppWebApi.Models
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
 {
     public class Transaction
     {
-        public int TransactionId { get; set; }
+        [Key]
+        public Guid TransactionId { get; set; }
 
-        public int ReservationId { get; set; }
-        public Reservation? Reservation { get; set; }
+        [Required]
+        public Guid ReservationId { get; set; }
 
+        [Required]
         public decimal Amount { get; set; }
 
+        [Required]
         public PaymentMethod PaymentMethod { get; set; }
+
+        [Required]
         public PaymentStatus Status { get; set; }
 
-        public DateTime TransactionDate { get; set; } = DateTime.UtcNow;
+        [Required]
+        public DateTime TransactionDate { get; set; }
 
-        public override string ToString()
-        {
-            return $"Transaction [{TransactionId}] | ReservationId: {ReservationId} | " +
-                   $"Amount: {Amount:C} | Method: {PaymentMethod} | Status: {Status} | Date: {TransactionDate:yyyy-MM-dd HH:mm}";
-        }
-
+        public Reservation? Reservation { get; set; }
     }
 
     public enum PaymentMethod
     {
-        CreditCard,
-        DebitCard,
-        UPI,
-        NetBanking,
-        Wallet
+        CreditCard = 1,
+        DebitCard = 2,
+        UPI = 3,
+        NetBanking = 4,
+        Wallet = 5
     }
 
     public enum PaymentStatus
     {
-        Pending,
-        Success,
-        Failed,
-        Refunded
+        Pending = 1,
+        Success = 2,
+        Failed = 3,
+        Refunded = 4
     }
 }
