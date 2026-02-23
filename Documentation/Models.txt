@@ -1,0 +1,435 @@
+Hotel.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Hotel
+    {
+        [Key]
+        public Guid HotelId { get; set; }
+
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, MaxLength(500)]
+        public string Address { get; set; } = string.Empty;
+
+        [Required, MaxLength(100)]
+        public string City { get; set; } = string.Empty;
+
+        [MaxLength(1000)]
+        public string Description { get; set; } = string.Empty;
+
+        public string ImageUrl { get; set; } = string.Empty;
+
+        [Required, MaxLength(15)]
+        public string ContactNumber { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        public ICollection<RoomType>? RoomTypes { get; set; }
+        public ICollection<Room>? Rooms { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Reservation>? Reservations { get; set; }
+    }
+}
+
+Log.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Log
+    {
+        [Key]
+        public Guid LogId { get; set; }
+
+        [Required]
+        public string Message { get; set; } = string.Empty;
+
+        [Required]
+        public string ErrorNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string Role { get; set; } = string.Empty;
+
+        [Required]
+        public string UserName { get; set; } = string.Empty;
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        public User? User { get; set; }
+    }
+}
+
+Reservation.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Reservation
+    {
+        [Key]
+        public Guid ReservationId { get; set; }
+
+        [Required]
+        public string ReservationCode { get; set; } = string.Empty;
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
+        public Guid HotelId { get; set; }
+
+        [Required]
+        public DateTime CheckInDate { get; set; }
+
+        [Required]
+        public DateTime CheckOutDate { get; set; }
+
+        [Required]
+        public decimal TotalAmount { get; set; }
+
+        [Required]
+        public ReservationStatus Status { get; set; }
+
+        public DateTime? CancelledDate { get; set; }
+        public string? CancellationReason { get; set; }
+
+        [Required]
+        public DateTime CreatedDate { get; set; }
+
+        public User? User { get; set; }
+        public Hotel? Hotel { get; set; }
+
+        public ICollection<ReservationRoom>? ReservationRooms { get; set; }
+        public ICollection<Transaction>? Transactions { get; set; }
+    }
+
+    public enum ReservationStatus
+    {
+        Pending = 1,
+        Confirmed = 2,
+        Cancelled = 3,
+        Completed = 4
+    }
+}
+ReservationRoom.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class ReservationRoom
+    {
+        [Key]
+        public Guid ReservationRoomId { get; set; }
+
+        [Required]
+        public Guid ReservationId { get; set; }
+
+        [Required]
+        public Guid RoomId { get; set; }
+
+        [Required]
+        public decimal PricePerNight { get; set; }
+
+        public Reservation? Reservation { get; set; }
+        public Room? Room { get; set; }
+    }
+}
+Review.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Review
+    {
+        [Key]
+        public Guid ReviewId { get; set; }
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required]
+        public Guid HotelId { get; set; }
+
+        [Range(1, 5)]
+        public decimal Rating { get; set; }
+
+        [Required]
+        public string Comment { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime CreatedDate { get; set; }
+
+        public User? User { get; set; }
+        public Hotel? Hotel { get; set; }
+    }
+}
+
+
+Room.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Room
+    {
+        [Key]
+        public Guid RoomId { get; set; }
+
+        [Required]
+        public string RoomNumber { get; set; } = string.Empty;
+
+        [Required]
+        public int Floor { get; set; }
+
+        [Required]
+        public Guid HotelId { get; set; }
+
+        [Required]
+        public Guid RoomTypeId { get; set; }
+
+        public bool IsActive { get; set; } = true;
+
+        public Hotel? Hotel { get; set; }
+        public RoomType? RoomType { get; set; }
+
+        public ICollection<ReservationRoom>? ReservationRooms { get; set; }
+    }
+}
+
+
+RoomType.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class RoomType
+    {
+        [Key]
+        public Guid RoomTypeId { get; set; }
+
+        [Required]
+        public Guid HotelId { get; set; }
+
+        [Required]
+        public string Name { get; set; } = string.Empty;
+
+        public string Description { get; set; } = string.Empty;
+
+        [Required]
+        public int MaxOccupancy { get; set; }
+
+        public string Amenities { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
+
+        public Hotel? Hotel { get; set; }
+
+        public ICollection<Room>? Rooms { get; set; }
+        public ICollection<RoomTypeRate>? Rates { get; set; }
+        public ICollection<RoomTypeInventory>? Inventories { get; set; }
+    }
+}
+
+RoomTypeInventory.cs
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class RoomTypeInventory
+    {
+        [Key]
+        public Guid RoomTypeInventoryId { get; set; }
+
+        [Required]
+        public Guid RoomTypeId { get; set; }
+
+        [Required]
+        public DateOnly Date { get; set; }
+
+        [Required]
+        public int TotalInventory { get; set; }
+
+        [Required]
+        public int ReservedInventory { get; set; }
+
+        [NotMapped]
+        public int AvailableInventory => TotalInventory - ReservedInventory;
+
+        public RoomType? RoomType { get; set; }
+    }
+}
+
+RoomTypeRate.cs
+using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class RoomTypeRate
+    {
+        [Key]
+        public Guid RoomTypeRateId { get; set; }
+
+        [Required]
+        public Guid RoomTypeId { get; set; }
+
+        [Required]
+        public DateOnly StartDate { get; set; }
+
+        [Required]
+        public DateOnly EndDate { get; set; }
+
+        [Required]
+      
+        public decimal Rate { get; set; }
+
+
+        public RoomType? RoomType { get; set; }
+    }
+}
+
+Transaction.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class Transaction
+    {
+        [Key]
+        public Guid TransactionId { get; set; }
+
+        [Required]
+        public Guid ReservationId { get; set; }
+
+        [Required]
+        public decimal Amount { get; set; }
+
+        [Required]
+        public PaymentMethod PaymentMethod { get; set; }
+
+        [Required]
+        public PaymentStatus Status { get; set; }
+
+        [Required]
+        public DateTime TransactionDate { get; set; }
+
+        public Reservation? Reservation { get; set; }
+    }
+
+    public enum PaymentMethod
+    {
+        CreditCard = 1,
+        DebitCard = 2,
+        UPI = 3,
+        NetBanking = 4,
+        Wallet = 5
+    }
+
+    public enum PaymentStatus
+    {
+        Pending = 1,
+        Success = 2,
+        Failed = 3,
+        Refunded = 4
+    }
+}
+
+User.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class User
+    {
+        [Key]
+        public Guid UserId { get; set; }
+
+        [Required, MaxLength(150)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required]
+        public byte[] Password { get; set; } = Array.Empty<byte>();
+
+        [Required]
+        public byte[] PasswordSaltValue { get; set; } = Array.Empty<byte>();
+
+        public bool IsActive { get; set; } = true;
+
+        [Required]
+        public UserRole Role { get; set; }
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        public UserProfileDetails? UserDetails { get; set; }
+        public Guid? HotelId { get; set; }
+        public Hotel? Hotel { get; set; }
+
+
+        public ICollection<Reservation>? Reservations { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Log>? Logs { get; set; }
+    }
+
+    public enum UserRole
+    {
+        Guest = 1,
+        Admin = 2
+    }
+}
+
+UserProfileDetails.cs
+using System.ComponentModel.DataAnnotations;
+
+namespace HotelBookingAppWebApi.Models
+{
+    public class UserProfileDetails
+    {
+        [Key]
+        public Guid UserDetailsId { get; set; }
+
+        [Required]
+        public Guid UserId { get; set; }
+
+        [Required, MaxLength(150)]
+        public string Name { get; set; } = string.Empty;
+
+        [Required, EmailAddress]
+        public string Email { get; set; } = string.Empty;
+
+        [Required, MaxLength(15)]
+        public string PhoneNumber { get; set; } = string.Empty;
+
+        [Required]
+        public string Address { get; set; } = string.Empty;
+
+        [Required]
+        public string State { get; set; } = string.Empty;
+
+        [Required]
+        public string City { get; set; } = string.Empty;
+
+        [Required]
+        public string Pincode { get; set; } = string.Empty;
+
+        [Required]
+        public DateTime CreatedAt { get; set; }
+
+        public User? User { get; set; }
+    }
+}
+

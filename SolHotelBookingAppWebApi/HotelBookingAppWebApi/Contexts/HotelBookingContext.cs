@@ -10,7 +10,7 @@ namespace HotelBookingAppWebApi.Contexts
         {
         }
 
-        // ---------------- DB SETS ----------------
+        // DB SETS 
 
         public DbSet<User> Users { get; set; } = null!;
         public DbSet<UserProfileDetails> UserProfileDetails { get; set; } = null!;
@@ -29,10 +29,8 @@ namespace HotelBookingAppWebApi.Contexts
         {
             base.OnModelCreating(modelBuilder);
 
-            // =====================================================
-            // USER RELATIONSHIPS
-            // =====================================================
-
+             // USER RELATIONSHIPS
+            
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Reservations)
                 .WithOne(r => r.User)
@@ -65,9 +63,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasConversion<int>();
 
 
-            // =====================================================
             // HOTEL RELATIONSHIPS
-            // =====================================================
 
             modelBuilder.Entity<Hotel>()
                 .HasMany(h => h.RoomTypes)
@@ -93,9 +89,8 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasIndex(h => h.City); // Fast search by city
 
 
-            // =====================================================
             // ROOM TYPE
-            // =====================================================
+        
 
             modelBuilder.Entity<RoomType>()
                 .HasMany(rt => rt.Rooms)
@@ -120,19 +115,19 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasIndex(i => new { i.RoomTypeId, i.Date })
                 .IsUnique(); // Prevent duplicate inventory per day
 
+            modelBuilder.Entity<RoomTypeRate>()
+                .Property(r => r.Rate)
+                .HasPrecision(18, 2);
 
-            // =====================================================
+
             // ROOM
-            // =====================================================
 
             modelBuilder.Entity<Room>()
                 .HasIndex(r => new { r.HotelId, r.RoomNumber })
                 .IsUnique(); // Prevent duplicate room numbers per hotel
 
-
-            // =====================================================
             // RESERVATION
-            // =====================================================
+            
 
             modelBuilder.Entity<Reservation>()
                 .HasMany(r => r.ReservationRooms)
@@ -156,10 +151,8 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(r => r.TotalAmount)
                 .HasPrecision(18, 2);
 
-
-            // =====================================================
             // RESERVATION ROOM
-            // =====================================================
+           
 
             modelBuilder.Entity<ReservationRoom>()
                 .HasOne(rr => rr.Room)
@@ -171,10 +164,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(rr => rr.PricePerNight)
                 .HasPrecision(18, 2);
 
-
-            // =====================================================
             // TRANSACTION
-            // =====================================================
 
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.PaymentMethod)
@@ -188,19 +178,13 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(t => t.Amount)
                 .HasPrecision(18, 2);
 
-
-            // =====================================================
             // REVIEW
-            // =====================================================
 
             modelBuilder.Entity<Review>()
                 .Property(r => r.Rating)
                 .HasPrecision(3, 2); // 4.50 max format
 
-
-            // =====================================================
             // DEFAULT VALUES
-            // =====================================================
 
             modelBuilder.Entity<User>()
                 .Property(u => u.CreatedAt)

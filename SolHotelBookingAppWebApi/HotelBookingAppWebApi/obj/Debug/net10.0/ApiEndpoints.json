@@ -1,0 +1,50 @@
+[
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "Method": "Login",
+    "RelativePath": "api/Authentication/login",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Auth.LoginDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "Method": "RegisterGuest",
+    "RelativePath": "api/Authentication/register-guest",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Auth.RegisterUserDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "Method": "RegisterHotelAdmin",
+    "RelativePath": "api/Authentication/register-hotel-admin",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Auth.RegisterHotelAdminDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  }
+]

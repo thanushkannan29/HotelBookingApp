@@ -16,42 +16,32 @@ namespace HotelBookingAppWebApi.Repository
             _dbSet = _context.Set<T>();
         }
 
-        // =========================
         // GET ALL
-        // =========================
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             return await _dbSet.ToListAsync();
         }
 
-        // =========================
         // GET BY ID
-        // =========================
         public async Task<T?> GetByIdAsync(K id)
         {
             return await _dbSet.FindAsync(id);
         }
 
-        // =========================
         // FIND (WHERE)
-        // =========================
         public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate)
         {
             return await _dbSet.Where(predicate).ToListAsync();
         }
 
-        // =========================
         // EXISTS
-        // =========================
         public async Task<bool> ExistsAsync(K id)
         {
             var entity = await _dbSet.FindAsync(id);
             return entity != null;
         }
 
-        // =========================
         // ADD
-        // =========================
         public async Task<T> AddAsync(T entity)
         {
             await _dbSet.AddAsync(entity);
@@ -59,9 +49,7 @@ namespace HotelBookingAppWebApi.Repository
             return entity;
         }
 
-        // =========================
         // UPDATE
-        // =========================
         public async Task<T?> UpdateAsync(K id, T entity)
         {
             var existing = await _dbSet.FindAsync(id);
@@ -75,9 +63,7 @@ namespace HotelBookingAppWebApi.Repository
             return existing;
         }
 
-        // =========================
         // DELETE
-        // =========================
         public async Task<bool> DeleteAsync(K id)
         {
             var entity = await _dbSet.FindAsync(id);

@@ -24,27 +24,34 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Hotel", b =>
                 {
-                    b.Property<int>("HotelId")
+                    b.Property<Guid>("HotelId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HotelId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Address")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<string>("City")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("ContactNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<string>("ImageUrl")
                         .IsRequired()
@@ -55,77 +62,62 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("HotelId");
 
-                    b.ToTable("Hotels");
+                    b.HasIndex("City");
 
-                    b.HasData(
-                        new
-                        {
-                            HotelId = 1,
-                            Address = "MG Road",
-                            City = "Chennai",
-                            ContactNumber = "9000000001",
-                            Description = "Luxury hotel",
-                            ImageUrl = "img1.jpg",
-                            IsActive = true,
-                            Name = "Grand Palace"
-                        },
-                        new
-                        {
-                            HotelId = 2,
-                            Address = "Beach Road",
-                            City = "Goa",
-                            ContactNumber = "9000000002",
-                            Description = "Beach side stay",
-                            ImageUrl = "img2.jpg",
-                            IsActive = true,
-                            Name = "Sea View Resort"
-                        },
-                        new
-                        {
-                            HotelId = 3,
-                            Address = "Hill Top",
-                            City = "Ooty",
-                            ContactNumber = "9000000003",
-                            Description = "Hill station hotel",
-                            ImageUrl = "img3.jpg",
-                            IsActive = true,
-                            Name = "Mountain Retreat"
-                        },
-                        new
-                        {
-                            HotelId = 4,
-                            Address = "Downtown",
-                            City = "Bangalore",
-                            ContactNumber = "9000000004",
-                            Description = "Business hotel",
-                            ImageUrl = "img4.jpg",
-                            IsActive = true,
-                            Name = "City Inn"
-                        },
-                        new
-                        {
-                            HotelId = 5,
-                            Address = "Palace Road",
-                            City = "Jaipur",
-                            ContactNumber = "9000000005",
-                            Description = "Heritage stay",
-                            ImageUrl = "img5.jpg",
-                            IsActive = true,
-                            Name = "Royal Heritage"
-                        });
+                    b.ToTable("Hotels");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.Log", b =>
+                {
+                    b.Property<Guid>("LogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("LogId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Logs");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
                 {
-                    b.Property<int>("ReservationId")
+                    b.Property<Guid>("ReservationId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservationId"));
+                    b.Property<string>("CancellationReason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CancelledDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CheckInDate")
                         .HasColumnType("datetime2");
@@ -134,10 +126,12 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<int>("HotelId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ReservationCode")
                         .IsRequired()
@@ -150,8 +144,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ReservationId");
 
@@ -167,21 +161,19 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.ReservationRoom", b =>
                 {
-                    b.Property<int>("ReservationRoomId")
+                    b.Property<Guid>("ReservationRoomId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReservationRoomId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("PricePerNight")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("ReservationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ReservationId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ReservationRoomId");
 
@@ -194,11 +186,9 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Review", b =>
                 {
-                    b.Property<int>("ReviewId")
+                    b.Property<Guid>("ReviewId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ReviewId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Comment")
                         .IsRequired()
@@ -207,14 +197,15 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("HotelId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
+                    b.Property<decimal>("Rating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ReviewId");
 
@@ -227,91 +218,41 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Room", b =>
                 {
-                    b.Property<int>("RoomId")
+                    b.Property<Guid>("RoomId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Floor")
                         .HasColumnType("int");
 
-                    b.Property<int>("HotelId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<string>("RoomNumber")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("RoomId");
 
-                    b.HasIndex("HotelId");
-
                     b.HasIndex("RoomTypeId");
 
-                    b.ToTable("Rooms");
+                    b.HasIndex("HotelId", "RoomNumber")
+                        .IsUnique();
 
-                    b.HasData(
-                        new
-                        {
-                            RoomId = 1,
-                            Floor = 1,
-                            HotelId = 1,
-                            IsActive = true,
-                            RoomNumber = "101",
-                            RoomTypeId = 1
-                        },
-                        new
-                        {
-                            RoomId = 2,
-                            Floor = 1,
-                            HotelId = 1,
-                            IsActive = true,
-                            RoomNumber = "102",
-                            RoomTypeId = 2
-                        },
-                        new
-                        {
-                            RoomId = 3,
-                            Floor = 2,
-                            HotelId = 2,
-                            IsActive = true,
-                            RoomNumber = "201",
-                            RoomTypeId = 3
-                        },
-                        new
-                        {
-                            RoomId = 4,
-                            Floor = 3,
-                            HotelId = 3,
-                            IsActive = true,
-                            RoomNumber = "301",
-                            RoomTypeId = 4
-                        },
-                        new
-                        {
-                            RoomId = 5,
-                            Floor = 4,
-                            HotelId = 4,
-                            IsActive = true,
-                            RoomNumber = "401",
-                            RoomTypeId = 5
-                        });
+                    b.ToTable("Rooms");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.RoomType", b =>
                 {
-                    b.Property<int>("RoomTypeId")
+                    b.Property<Guid>("RoomTypeId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomTypeId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Amenities")
                         .IsRequired()
@@ -321,8 +262,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("HotelId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -339,67 +280,13 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("HotelId");
 
                     b.ToTable("RoomTypes");
-
-                    b.HasData(
-                        new
-                        {
-                            RoomTypeId = 1,
-                            Amenities = "AC,TV,WiFi",
-                            Description = "Deluxe Room",
-                            HotelId = 1,
-                            IsActive = true,
-                            MaxOccupancy = 2,
-                            Name = "Deluxe"
-                        },
-                        new
-                        {
-                            RoomTypeId = 2,
-                            Amenities = "AC,TV,WiFi,MiniBar",
-                            Description = "Luxury Suite",
-                            HotelId = 1,
-                            IsActive = true,
-                            MaxOccupancy = 4,
-                            Name = "Suite"
-                        },
-                        new
-                        {
-                            RoomTypeId = 3,
-                            Amenities = "Fan,TV",
-                            Description = "Standard Room",
-                            HotelId = 2,
-                            IsActive = true,
-                            MaxOccupancy = 2,
-                            Name = "Standard"
-                        },
-                        new
-                        {
-                            RoomTypeId = 4,
-                            Amenities = "AC,TV,WiFi",
-                            Description = "Family Room",
-                            HotelId = 3,
-                            IsActive = true,
-                            MaxOccupancy = 5,
-                            Name = "Family"
-                        },
-                        new
-                        {
-                            RoomTypeId = 5,
-                            Amenities = "AC,TV,WiFi,Desk",
-                            Description = "Executive Room",
-                            HotelId = 4,
-                            IsActive = true,
-                            MaxOccupancy = 3,
-                            Name = "Executive"
-                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.RoomTypeInventory", b =>
                 {
-                    b.Property<int>("RoomTypeInventoryId")
+                    b.Property<Guid>("RoomTypeInventoryId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomTypeInventoryId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -407,26 +294,25 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<int>("ReservedInventory")
                         .HasColumnType("int");
 
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("TotalInventory")
                         .HasColumnType("int");
 
                     b.HasKey("RoomTypeInventoryId");
 
-                    b.HasIndex("RoomTypeId");
+                    b.HasIndex("RoomTypeId", "Date")
+                        .IsUnique();
 
                     b.ToTable("RoomTypeInventories");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.RoomTypeRate", b =>
                 {
-                    b.Property<int>("RoomTypeRateId")
+                    b.Property<Guid>("RoomTypeRateId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RoomTypeRateId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
@@ -435,68 +321,24 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("RoomTypeId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
                     b.HasKey("RoomTypeRateId");
 
-                    b.HasIndex("RoomTypeId");
+                    b.HasIndex("RoomTypeId", "StartDate", "EndDate");
 
                     b.ToTable("RoomTypeRates");
-
-                    b.HasData(
-                        new
-                        {
-                            RoomTypeRateId = 1,
-                            EndDate = new DateOnly(2026, 12, 31),
-                            Rate = 2500m,
-                            RoomTypeId = 1,
-                            StartDate = new DateOnly(2026, 1, 1)
-                        },
-                        new
-                        {
-                            RoomTypeRateId = 2,
-                            EndDate = new DateOnly(2026, 12, 31),
-                            Rate = 4500m,
-                            RoomTypeId = 2,
-                            StartDate = new DateOnly(2026, 1, 1)
-                        },
-                        new
-                        {
-                            RoomTypeRateId = 3,
-                            EndDate = new DateOnly(2026, 12, 31),
-                            Rate = 1800m,
-                            RoomTypeId = 3,
-                            StartDate = new DateOnly(2026, 1, 1)
-                        },
-                        new
-                        {
-                            RoomTypeRateId = 4,
-                            EndDate = new DateOnly(2026, 12, 31),
-                            Rate = 3200m,
-                            RoomTypeId = 4,
-                            StartDate = new DateOnly(2026, 1, 1)
-                        },
-                        new
-                        {
-                            RoomTypeRateId = 5,
-                            EndDate = new DateOnly(2026, 12, 31),
-                            Rate = 4000m,
-                            RoomTypeId = 5,
-                            StartDate = new DateOnly(2026, 1, 1)
-                        });
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Transaction", b =>
                 {
-                    b.Property<int>("TransactionId")
+                    b.Property<Guid>("TransactionId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TransactionId"));
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<decimal>("Amount")
                         .HasPrecision(18, 2)
@@ -505,14 +347,16 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<int>("PaymentMethod")
                         .HasColumnType("int");
 
-                    b.Property<int>("ReservationId")
-                        .HasColumnType("int");
+                    b.Property<Guid>("ReservationId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("TransactionDate")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("TransactionId");
 
@@ -523,101 +367,110 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.User", b =>
                 {
-                    b.Property<int>("UserId")
+                    b.Property<Guid>("UserId")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("uniqueidentifier");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserId"));
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
+                    b.Property<Guid?>("HotelId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<byte[]>("PasswordHash")
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<byte[]>("Password")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
 
-                    b.Property<byte[]>("PasswordSalt")
+                    b.Property<byte[]>("PasswordSaltValue")
                         .IsRequired()
                         .HasColumnType("varbinary(max)");
-
-                    b.Property<string>("Phone")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Role")
                         .HasColumnType("int");
-
-                    b.Property<string>("UserName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
 
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("Users");
+                    b.HasIndex("HotelId");
 
-                    b.HasData(
-                        new
-                        {
-                            UserId = 1,
-                            Email = "admin@hotel.com",
-                            IsActive = true,
-                            PasswordHash = new byte[] { 1, 2, 3, 4, 5 },
-                            PasswordSalt = new byte[] { 5, 4, 3, 2, 1 },
-                            Phone = "9999999999",
-                            Role = 1,
-                            UserName = "Admin"
-                        },
-                        new
-                        {
-                            UserId = 2,
-                            Email = "john@mail.com",
-                            IsActive = true,
-                            PasswordHash = new byte[] { 10, 20, 30 },
-                            PasswordSalt = new byte[] { 30, 20, 10 },
-                            Phone = "8888888888",
-                            Role = 0,
-                            UserName = "John"
-                        },
-                        new
-                        {
-                            UserId = 3,
-                            Email = "alice@mail.com",
-                            IsActive = true,
-                            PasswordHash = new byte[] { 11, 22, 33 },
-                            PasswordSalt = new byte[] { 33, 22, 11 },
-                            Phone = "7777777777",
-                            Role = 0,
-                            UserName = "Alice"
-                        },
-                        new
-                        {
-                            UserId = 4,
-                            Email = "bob@mail.com",
-                            IsActive = true,
-                            PasswordHash = new byte[] { 44, 55, 66 },
-                            PasswordSalt = new byte[] { 66, 55, 44 },
-                            Phone = "6666666666",
-                            Role = 0,
-                            UserName = "Bob"
-                        },
-                        new
-                        {
-                            UserId = 5,
-                            Email = "charlie@mail.com",
-                            IsActive = true,
-                            PasswordHash = new byte[] { 77, 88, 99 },
-                            PasswordSalt = new byte[] { 99, 88, 77 },
-                            Phone = "5555555555",
-                            Role = 0,
-                            UserName = "Charlie"
-                        });
+                    b.ToTable("Users");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.UserProfileDetails", b =>
+                {
+                    b.Property<Guid>("UserDetailsId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(15)
+                        .HasColumnType("nvarchar(15)");
+
+                    b.Property<string>("Pincode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("State")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("UserDetailsId");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("UserProfileDetails");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.Log", b =>
+                {
+                    b.HasOne("HotelBookingAppWebApi.Models.User", "User")
+                        .WithMany("Logs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
@@ -740,6 +593,26 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Navigation("Reservation");
                 });
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.User", b =>
+                {
+                    b.HasOne("HotelBookingAppWebApi.Models.Hotel", "Hotel")
+                        .WithMany()
+                        .HasForeignKey("HotelId");
+
+                    b.Navigation("Hotel");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.UserProfileDetails", b =>
+                {
+                    b.HasOne("HotelBookingAppWebApi.Models.User", "User")
+                        .WithOne("UserDetails")
+                        .HasForeignKey("HotelBookingAppWebApi.Models.UserProfileDetails", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Hotel", b =>
                 {
                     b.Navigation("Reservations");
@@ -774,9 +647,13 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.User", b =>
                 {
+                    b.Navigation("Logs");
+
                     b.Navigation("Reservations");
 
                     b.Navigation("Reviews");
+
+                    b.Navigation("UserDetails");
                 });
 #pragma warning restore 612, 618
         }

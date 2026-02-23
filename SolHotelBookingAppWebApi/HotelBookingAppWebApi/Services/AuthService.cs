@@ -24,7 +24,7 @@ namespace HotelBookingAppWebApi.Services
             _tokenService = tokenService;
         }
 
-        // ================= REGISTER GUEST =================
+        // REGISTER GUEST
 
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
@@ -51,7 +51,7 @@ namespace HotelBookingAppWebApi.Services
             return GenerateToken(user);
         }
 
-        // ================= REGISTER HOTEL ADMIN =================
+        // REGISTER HOTEL ADMIN 
 
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
@@ -60,7 +60,7 @@ namespace HotelBookingAppWebApi.Services
             if (existing.Any())
                 throw new Exception("Email already registered");
 
-            // 1️⃣ Create Hotel FIRST
+            // 1️) Create Hotel FIRST
             var hotel = new Hotel
             {
                 HotelId = Guid.NewGuid(),
@@ -74,7 +74,7 @@ namespace HotelBookingAppWebApi.Services
 
             await _hotelRepository.AddAsync(hotel);
 
-            // 2️⃣ Create Admin linked to hotel
+            // 2️) Create Admin linked to hotel
             byte[]? salt;
             var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
@@ -92,12 +92,12 @@ namespace HotelBookingAppWebApi.Services
 
             await _userRepository.AddAsync(admin);
 
-            // 3️⃣ Generate Token
+            // 3️) Generate Token
             return GenerateToken(admin);
         }
 
 
-        // ================= LOGIN =================
+        // LOGIN
 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
@@ -115,7 +115,7 @@ namespace HotelBookingAppWebApi.Services
             return GenerateToken(user);
         }
 
-        // ================= TOKEN CREATION =================
+        // TOKEN CREATION 
 
         private AuthResponseDto GenerateToken(User user)
         {
