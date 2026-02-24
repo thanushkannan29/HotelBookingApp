@@ -1,5 +1,37 @@
 [
   {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminHotelController",
+    "Method": "Toggle",
+    "RelativePath": "api/admin/hotel/toggle-status",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "isActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminHotelController",
+    "Method": "Update",
+    "RelativePath": "api/admin/hotel/update",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Hotel.Admin.UpdateHotelDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
     "Method": "Login",
     "RelativePath": "api/Authentication/login",
@@ -42,6 +74,38 @@
       {
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.Auth.RegisterHotelAdminDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
+    "Method": "GetDetails",
+    "RelativePath": "api/public/hotels/{hotelId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "hotelId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
+    "Method": "Search",
+    "RelativePath": "api/public/hotels/search",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "request",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Hotel.Public.SearchHotelRequestDto",
         "IsRequired": true
       }
     ],
