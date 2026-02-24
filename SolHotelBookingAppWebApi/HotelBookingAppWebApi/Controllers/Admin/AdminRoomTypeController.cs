@@ -39,9 +39,18 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         [HttpPut("{roomTypeId}/toggle-status")]
-        public async Task<IActionResult> ToggleRoomType(Guid roomTypeId, bool isActive)
+
+        public async Task<IActionResult> ToggleStatus(Guid roomTypeId, bool isActive)
         {
-            await _service.ToggleRoomTypeStatusAsync(roomTypeId, isActive);
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized();
+
+            var userId = Guid.Parse(userIdClaim);
+
+            await _service.ToggleRoomTypeStatusAsync(userId,roomTypeId,isActive);
+
             return Ok("RoomType status updated");
         }
 

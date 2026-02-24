@@ -9,12 +9,12 @@ namespace HotelBookingAppWebApi.Services
     public class RoomTypeService : IRoomTypeService
     {
         private readonly HotelBookingContext _context;
-        private readonly IHttpContextAccessor _httpContextAccessor;
+       
 
-        public RoomTypeService(HotelBookingContext context, IHttpContextAccessor httpContextAccessor)
+        public RoomTypeService(HotelBookingContext context)
         {
             _context = context;
-            _httpContextAccessor = httpContextAccessor;
+            
         }
 
         // ADD ROOM TYPE 
@@ -74,30 +74,30 @@ namespace HotelBookingAppWebApi.Services
 
         // DEACTIVATE
 
-        public async Task ToggleRoomTypeStatusAsync(Guid roomTypeId, bool isActive)
+        public async Task ToggleRoomTypeStatusAsync( Guid userId,Guid roomTypeId,bool isActive)
         {
-            // Get HotelId from JWT
-            var hotelIdClaim = _httpContextAccessor.HttpContext!
-                .User.FindFirst("HotelId")?.Value;
+            // 1️) Validate User
+            var user = await _context.Users
+                .FirstOrDefaultAsync(u => u.UserId == userId);
 
-            if (string.IsNullOrEmpty(hotelIdClaim))
-                throw new UnauthorizedAccessException("Invalid token");
+            if (user == null || user.HotelId == null)
+                throw new UnauthorizedAccessException("Invalid user");
 
-            var hotelId = Guid.Parse(hotelIdClaim);
-
-            // Get room type belonging to this hotel only
+            // 2️) Find RoomType belonging to user's hotel
             var roomType = await _context.RoomTypes
-                .FirstOrDefaultAsync(r => r.RoomTypeId == roomTypeId
-                                       && r.HotelId == hotelId);
+                .FirstOrDefaultAsync(r =>
+                    r.RoomTypeId == roomTypeId &&
+                    r.HotelId == user.HotelId);
 
             if (roomType == null)
                 throw new KeyNotFoundException("RoomType not found");
 
-            // Update status
+            // 3️) Update Status
             roomType.IsActive = isActive;
 
             await _context.SaveChangesAsync();
         }
+
 
 
         // ADD RATE

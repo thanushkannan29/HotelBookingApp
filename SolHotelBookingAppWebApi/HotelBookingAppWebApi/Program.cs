@@ -114,7 +114,6 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
-builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<IRoomService, RoomService>();
 
 

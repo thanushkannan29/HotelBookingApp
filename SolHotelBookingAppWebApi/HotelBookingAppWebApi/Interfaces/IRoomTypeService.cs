@@ -9,7 +9,9 @@ namespace HotelBookingAppWebApi.Interfaces
         Task UpdateRoomTypeAsync(Guid userId, UpdateRoomTypeDto dto);
 
         
-        Task ToggleRoomTypeStatusAsync(Guid roomTypeId, bool isActive);
+
+        Task ToggleRoomTypeStatusAsync(Guid userId, Guid roomTypeId, bool isActive);
+
 
         Task AddRateAsync(Guid userId, CreateRoomTypeRateDto dto);
 

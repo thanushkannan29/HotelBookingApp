@@ -139,7 +139,7 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
-    "Method": "ToggleRoomType",
+    "Method": "ToggleStatus",
     "RelativePath": "api/admin/roomtype/{roomTypeId}/toggle-status",
     "HttpMethod": "PUT",
     "IsController": true,
