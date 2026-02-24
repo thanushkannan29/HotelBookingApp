@@ -32,6 +32,181 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
+    "Method": "Add",
+    "RelativePath": "api/admin/rooms",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Room.CreateRoomDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
+    "Method": "Update",
+    "RelativePath": "api/admin/rooms",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Room.UpdateRoomDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
+    "Method": "List",
+    "RelativePath": "api/admin/rooms",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "pageNumber",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
+    "Method": "Toggle",
+    "RelativePath": "api/admin/rooms/{roomId}/status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "roomId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "isActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "Add",
+    "RelativePath": "api/admin/roomtype",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.RoomType.CreateRoomTypeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "Update",
+    "RelativePath": "api/admin/roomtype",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.RoomType.UpdateRoomTypeDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "ToggleRoomType",
+    "RelativePath": "api/admin/roomtype/{roomTypeId}/toggle-status",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "roomTypeId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "isActive",
+        "Type": "System.Boolean",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "AddRate",
+    "RelativePath": "api/admin/roomtype/rate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.RoomType.CreateRoomTypeRateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "UpdateRate",
+    "RelativePath": "api/admin/roomtype/rate",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.RoomType.UpdateRoomTypeRateDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "GetRate",
+    "RelativePath": "api/admin/roomtype/rate-by-date",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.RoomType.GetRateByDateRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
     "Method": "Login",
     "RelativePath": "api/Authentication/login",

@@ -1,4 +1,5 @@
 ﻿using HotelBookingAppWebApi.Models;
+using HotelBookingAppWebApi.Models.QueryModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Contexts
@@ -24,6 +25,10 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<RoomTypeInventory> RoomTypeInventories { get; set; } = null!;
         public DbSet<Transaction> Transactions { get; set; } = null!;
         public DbSet<Log> Logs { get; set; } = null!;
+
+
+        //Room listqueryModel
+        public DbSet<RoomListQueryModel> RoomListQueryModel { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -118,6 +123,9 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<RoomTypeRate>()
                 .Property(r => r.Rate)
                 .HasPrecision(18, 2);
+
+            //room no key
+            modelBuilder.Entity<RoomListQueryModel>().HasNoKey();
 
 
             // ROOM

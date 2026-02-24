@@ -10,3 +10,7 @@ select * from ReservationRooms
 select * from Transactions
 select * from Reviews
 select * from Logs
+
+
+SELECT HotelId FROM Users WHERE UserId = '26840a90-ea89-4151-8b62-f91e064955d8'
+
