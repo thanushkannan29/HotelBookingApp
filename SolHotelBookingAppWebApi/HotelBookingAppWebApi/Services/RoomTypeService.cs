@@ -168,7 +168,7 @@ namespace HotelBookingAppWebApi.Services
             await _context.SaveChangesAsync();
         }
 
-        // ================= GET RATE BY DATE =================
+        // GET RATE BY DATE
 
         public async Task<decimal> GetRateByDateAsync(Guid userId, GetRateByDateRequestDto dto)
         {

@@ -4,28 +4,21 @@ using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using HotelBookingAppWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
-
-
-// Controllers
-
+#region controllers
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
+#endregion
 
-
-
-
-// Swagger + JWT Support
-
-
+#region Swagger + JWT Support
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
@@ -60,24 +53,18 @@ builder.Services.AddSwaggerGen(c =>
     });
 });
 
+#endregion
 
-
-
-
-// Database Context
-
-
+#region Database Context
 builder.Services.AddDbContext<HotelBookingContext>(options =>
 {
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Developer"));
 });
+#endregion
 
 
-
-// CORS
-
-
+#region CORS
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
@@ -87,42 +74,26 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
 });
+#endregion
 
 
-
-
-// Repositories
-
-
+#region Repositories
 builder.Services.AddScoped<IRepository<Guid, User>, Repository<Guid, User>>();
 builder.Services.AddScoped<IRepository<Guid, Hotel>, Repository<Guid, Hotel>>();
-builder.Services.AddScoped<IRepository<Guid, Room>, Repository<Guid, Room>>();
-builder.Services.AddScoped<IRepository<Guid, Reservation>, Repository<Guid, Reservation>>();
-builder.Services.AddScoped<IRepository<Guid, ReservationRoom>, Repository<Guid, ReservationRoom>>();
-builder.Services.AddScoped<IRepository<Guid, Transaction>, Repository<Guid, Transaction>>();
-builder.Services.AddScoped<IRepository<Guid, Review>, Repository<Guid, Review>>();
-builder.Services.AddScoped<IRepository<Guid, RoomType>, Repository<Guid, RoomType>>();
-builder.Services.AddScoped<IRepository<Guid, RoomTypeRate>, Repository<Guid, RoomTypeRate>>();
+//This Repo i used in my authecation time password and token creation
+#endregion
 
-
-
-// Services
-
-
+#region Services
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+#endregion
 
 
-
-
-
-// JWT Authentication
-
-
+#region JWT Authentication
 string key = builder.Configuration["Keys:Jwt"]
     ?? throw new InvalidOperationException("JWT Key not found.");
 
@@ -139,18 +110,11 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         });
 
 builder.Services.AddAuthorization();
-
-
+#endregion
 // Build App
-
-
 var app = builder.Build();
 
-
-
-
 // Middleware Pipeline
-
 
 if (app.Environment.IsDevelopment())
 {
