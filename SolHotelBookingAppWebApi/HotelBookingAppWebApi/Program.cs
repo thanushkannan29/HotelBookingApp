@@ -1,3 +1,4 @@
+using AspNetCoreRateLimit;
 using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
@@ -18,7 +19,13 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 #endregion
-
+//builder.Services.AddAutoMapper(typeof(CustomerProfile)); // This is for mapper
+#region RateLimiter
+builder.Services.AddMemoryCache();
+builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+builder.Services.AddInMemoryRateLimiting();
+builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+#endregion
 #region Swagger + JWT Support
 builder.Services.AddSwaggerGen(c =>
 {
@@ -139,7 +146,7 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
+app.UseIpRateLimiting();
 app.MapControllers();
 
 app.Run();
