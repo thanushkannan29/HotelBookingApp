@@ -32,6 +32,96 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminInventoryController",
+    "Method": "AddInventory",
+    "RelativePath": "api/admin/inventory",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Inventory.CreateInventoryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminInventoryController",
+    "Method": "UpdateInventory",
+    "RelativePath": "api/admin/inventory",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Inventory.UpdateInventoryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminInventoryController",
+    "Method": "GetInventory",
+    "RelativePath": "api/admin/inventory",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "roomTypeId",
+        "Type": "System.Guid",
+        "IsRequired": false
+      },
+      {
+        "Name": "start",
+        "Type": "System.DateOnly",
+        "IsRequired": false
+      },
+      {
+        "Name": "end",
+        "Type": "System.DateOnly",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminInventoryController",
+    "Method": "Adjust",
+    "RelativePath": "api/admin/inventory/adjust",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Inventory.AdjustReservedInventoryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
+    "Method": "Complete",
+    "RelativePath": "api/admin/reservations/{code}/complete",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
     "Method": "Add",
     "RelativePath": "api/admin/rooms",
@@ -207,7 +297,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.AuthenticationController",
     "Method": "Login",
     "RelativePath": "api/Authentication/login",
     "HttpMethod": "POST",
@@ -223,7 +313,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.AuthenticationController",
     "Method": "RegisterGuest",
     "RelativePath": "api/Authentication/register-guest",
     "HttpMethod": "POST",
@@ -239,7 +329,7 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.AuthenticationController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.AuthenticationController",
     "Method": "RegisterHotelAdmin",
     "RelativePath": "api/Authentication/register-hotel-admin",
     "HttpMethod": "POST",
@@ -250,6 +340,127 @@
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.Auth.RegisterHotelAdminDto",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestReservationController",
+    "Method": "Create",
+    "RelativePath": "api/guest/reservations",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Reservation.CreateReservationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestReservationController",
+    "Method": "GetMyReservations",
+    "RelativePath": "api/guest/reservations",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestReservationController",
+    "Method": "GetByCode",
+    "RelativePath": "api/guest/reservations/{code}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestReservationController",
+    "Method": "Cancel",
+    "RelativePath": "api/guest/reservations/{code}/cancel",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "code",
+        "Type": "System.String",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Reservation.CancelReservationDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.LogsController",
+    "Method": "CreateLog",
+    "RelativePath": "api/Logs",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Log.CreateLogDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.LogsController",
+    "Method": "GetAll",
+    "RelativePath": "api/Logs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.LogsController",
+    "Method": "GetMyLogs",
+    "RelativePath": "api/Logs/my-logs",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []
@@ -282,6 +493,221 @@
         "Name": "request",
         "Type": "HotelBookingAppWebApi.Models.DTOs.Hotel.Public.SearchHotelRequestDto",
         "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
+    "Method": "GetTopHotels",
+    "RelativePath": "api/public/hotels/top",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.ReviewsController",
+    "Method": "AddReview",
+    "RelativePath": "api/Reviews",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Review.CreateReviewDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.ReviewsController",
+    "Method": "UpdateReview",
+    "RelativePath": "api/Reviews/{id}",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Review.UpdateReviewDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.ReviewsController",
+    "Method": "DeleteReview",
+    "RelativePath": "api/Reviews/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.ReviewsController",
+    "Method": "GetByHotel",
+    "RelativePath": "api/Reviews/hotel/{hotelId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "hotelId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.TransactionsController",
+    "Method": "CreatePayment",
+    "RelativePath": "api/Transactions",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Transactions.CreatePaymentDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.TransactionsController",
+    "Method": "GetAll",
+    "RelativePath": "api/Transactions",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.TransactionsController",
+    "Method": "Refund",
+    "RelativePath": "api/Transactions/{id}/refund",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Transactions.RefundRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.TransactionsController",
+    "Method": "UpdateStatus",
+    "RelativePath": "api/Transactions/{id}/status",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Transactions.UpdatePaymentStatusDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.UserProfileController",
+    "Method": "GetProfile",
+    "RelativePath": "api/UserProfile",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.UserProfileController",
+    "Method": "UpdateProfile",
+    "RelativePath": "api/UserProfile",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.UserDetails.UpdateUserProfileDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.UserProfileController",
+    "Method": "GetBookingHistory",
+    "RelativePath": "api/UserProfile/booking-history",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
       }
     ],
     "ReturnTypes": []

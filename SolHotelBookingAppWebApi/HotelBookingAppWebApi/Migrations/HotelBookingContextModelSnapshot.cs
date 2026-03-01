@@ -107,6 +107,59 @@ namespace HotelBookingAppWebApi.Migrations
                     b.ToTable("Logs");
                 });
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.RoomListQueryModel", b =>
+                {
+                    b.Property<int>("Floor")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("RoomNumber")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RoomTypeName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.ToTable("RoomListQueryModel");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.TopHotelView", b =>
+                {
+                    b.Property<decimal>("AverageRating")
+                        .HasPrecision(3, 2)
+                        .HasColumnType("decimal(3,2)");
+
+                    b.Property<string>("City")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("HotelId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("StartingPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.ToTable("TopHotelViews");
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
                 {
                     b.Property<Guid>("ReservationId")
@@ -119,11 +172,11 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<DateTime?>("CancelledDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CheckInDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("CheckInDate")
+                        .HasColumnType("date");
 
-                    b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateOnly>("CheckOutDate")
+                        .HasColumnType("date");
 
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
@@ -165,6 +218,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int>("NumberOfRooms")
+                        .HasColumnType("int");
+
                     b.Property<decimal>("PricePerNight")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -172,7 +228,10 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<Guid>("ReservationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("RoomId")
+                    b.Property<Guid?>("RoomId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("RoomTypeId")
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("ReservationRoomId");
@@ -180,6 +239,8 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("ReservationId");
 
                     b.HasIndex("RoomId");
+
+                    b.HasIndex("RoomTypeId");
 
                     b.ToTable("ReservationRooms");
                 });
@@ -301,6 +362,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("RoomTypeInventoryId");
+
+                    b.HasIndex("Date");
 
                     b.HasIndex("RoomTypeId", "Date")
                         .IsUnique();
@@ -500,15 +563,19 @@ namespace HotelBookingAppWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HotelBookingAppWebApi.Models.Room", "Room")
+                    b.HasOne("HotelBookingAppWebApi.Models.Room", null)
                         .WithMany("ReservationRooms")
-                        .HasForeignKey("RoomId")
+                        .HasForeignKey("RoomId");
+
+                    b.HasOne("HotelBookingAppWebApi.Models.RoomType", "RoomType")
+                        .WithMany()
+                        .HasForeignKey("RoomTypeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Reservation");
 
-                    b.Navigation("Room");
+                    b.Navigation("RoomType");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Review", b =>

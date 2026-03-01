@@ -1,4 +1,5 @@
 ﻿using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Room;
@@ -15,31 +16,50 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ADD ROOM 
-
         public async Task AddRoomAsync(Guid userId, CreateRoomDto dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _context.Users
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
 
                 if (user?.HotelId == null)
-                    throw new Exception("Unauthorized");
+                    throw new UnAuthorizedException("Unauthorized");
 
                 var roomType = await _context.RoomTypes
                     .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
                                             && rt.HotelId == user.HotelId);
 
                 if (roomType == null)
-                    throw new Exception("Invalid RoomType");
+                    throw new NotFoundException("Invalid RoomType");
 
-                var existing = await _context.Rooms
+                var existingRoomNumber = await _context.Rooms
                     .AnyAsync(r => r.HotelId == user.HotelId
                                 && r.RoomNumber == dto.RoomNumber);
 
-                if (existing)
-                    throw new Exception("Room number already exists");
+                if (existingRoomNumber)
+                    throw new ConflictException("Room number already exists");
+
+                // INVENTORY CHECK STARTS HERE
+
+                var physicalRoomCount = await _context.Rooms
+                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId
+                                  && r.HotelId == user.HotelId);
+
+                var maxInventory = await _context.RoomTypeInventories
+                    .Where(i => i.RoomTypeId == dto.RoomTypeId)
+                    .MaxAsync(i => (int?)i.TotalInventory);
+
+                if (maxInventory == null)
+                    throw new NotFoundException("Inventory not defined for this RoomType");
+
+                if (physicalRoomCount >= maxInventory)
+                    throw new ConflictException(
+                        $"Cannot create more rooms. Max allowed: {maxInventory}");
+
+                // INVENTORY CHECK ENDS HERE
 
                 var room = new Room
                 {
@@ -62,6 +82,7 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
+
         // UPDATE ROOM
 
         public async Task UpdateRoomAsync(Guid userId, UpdateRoomDto dto)
@@ -77,14 +98,14 @@ namespace HotelBookingAppWebApi.Services
                                            && r.HotelId == user!.HotelId);
 
                 if (room == null)
-                    throw new Exception("Room not found");
+                    throw new NotFoundException("Room not found");
 
                 var roomType = await _context.RoomTypes
                     .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
                                             && rt.HotelId == user.HotelId);
 
                 if (roomType == null)
-                    throw new Exception("Invalid RoomType");
+                    throw new UnableToCreateEntityException("Invalid RoomType");
 
                 room.RoomNumber = dto.RoomNumber;
                 room.Floor = dto.Floor;
@@ -111,7 +132,7 @@ namespace HotelBookingAppWebApi.Services
                                        && r.HotelId == user!.HotelId);
 
             if (room == null)
-                throw new Exception("Room not found");
+                throw new NotFoundException("Room not found");
 
             room.IsActive = isActive;
 
@@ -126,7 +147,7 @@ namespace HotelBookingAppWebApi.Services
             var user = await _context.Users.FindAsync(userId);
 
             if (user?.HotelId == null)
-                throw new Exception("Unauthorized");
+                throw new UnAuthorizedException("Unauthorized");
 
             var offset = (pageNumber - 1) * pageSize;
 

@@ -1,0 +1,18 @@
+/*FULL RESET SCRIPT*/
+-- CHILD TABLES FIRST
+
+DELETE FROM ReservationRooms;
+DELETE FROM Transactions;
+DELETE FROM Reservations;
+DELETE FROM Reviews;
+DELETE FROM Logs;
+DELETE FROM RoomTypeInventories;
+DELETE FROM RoomTypeRates;
+DELETE FROM Rooms;
+DELETE FROM RoomTypes;
+DELETE FROM UserProfileDetails;
+
+-- THEN PARENT TABLES
+
+DELETE FROM Users;
+DELETE FROM Hotels;

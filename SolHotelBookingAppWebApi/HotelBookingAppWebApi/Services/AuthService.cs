@@ -1,4 +1,4 @@
-﻿
+﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
@@ -9,28 +9,30 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, User> _userRepository;
         private readonly IRepository<Guid, Hotel> _hotelRepository;
+        private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
 
         public AuthService(
             IRepository<Guid, User> userRepository,
             IRepository<Guid, Hotel> hotelRepository,
+            IRepository<Guid, UserProfileDetails> userProfileRepository,
             IPasswordService passwordService,
             ITokenService tokenService)
         {
             _userRepository = userRepository;
             _hotelRepository = hotelRepository;
+            _userProfileRepository = userProfileRepository;
             _passwordService = passwordService;
             _tokenService = tokenService;
         }
 
         // REGISTER GUEST
-
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
             var existingUsers = await _userRepository.FindAsync(u => u.Email == dto.Email);
             if (existingUsers.Any())
-                throw new Exception("Email already registered");
+                throw new ConflictException("Email already registered");
 
             byte[]? salt;
             var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
@@ -48,19 +50,34 @@ namespace HotelBookingAppWebApi.Services
 
             await _userRepository.AddAsync(user);
 
+            // CREATE USER PROFILE DETAILS
+            var profile = new UserProfileDetails
+            {
+                UserDetailsId = Guid.NewGuid(),
+                UserId = user.UserId,
+                Name = dto.Name,
+                Email = dto.Email,
+                PhoneNumber = "Not Updated",
+                Address = "Not Updated",
+                City = "Not Updated",
+                State = "Not Updated",
+                Pincode = "000000",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userProfileRepository.AddAsync(profile);
+
             return GenerateToken(user);
         }
 
-        // REGISTER HOTEL ADMIN 
-
+        // REGISTER HOTEL ADMIN
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
-            // Check if email already exists
             var existing = await _userRepository.FindAsync(u => u.Email == dto.Email);
             if (existing.Any())
-                throw new Exception("Email already registered");
+                throw new ConflictException("Email already registered");
 
-            // 1️) Create Hotel FIRST
+            // Create Hotel
             var hotel = new Hotel
             {
                 HotelId = Guid.NewGuid(),
@@ -74,7 +91,7 @@ namespace HotelBookingAppWebApi.Services
 
             await _hotelRepository.AddAsync(hotel);
 
-            // 2️) Create Admin linked to hotel
+            // Create Admin
             byte[]? salt;
             var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
@@ -86,36 +103,48 @@ namespace HotelBookingAppWebApi.Services
                 Password = hashedPassword,
                 PasswordSaltValue = salt!,
                 Role = UserRole.Admin,
-                HotelId = hotel.HotelId,   // Now we assign generated hotel id
+                HotelId = hotel.HotelId,
                 CreatedAt = DateTime.UtcNow
             };
 
             await _userRepository.AddAsync(admin);
 
-            // 3️) Generate Token
+            // Create Profile
+            var profile = new UserProfileDetails
+            {
+                UserDetailsId = Guid.NewGuid(),
+                UserId = admin.UserId,
+                Name = dto.Name,
+                Email = dto.Email,
+                PhoneNumber = "Not Updated",
+                Address = dto.Address,
+                City = dto.City,
+                State = "Not Updated",
+                Pincode = "000000",
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _userProfileRepository.AddAsync(profile);
+
             return GenerateToken(admin);
         }
 
-
         // LOGIN
-
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var users = await _userRepository.FindAsync(u => u.Email == dto.Email);
             var user = users.FirstOrDefault();
 
             if (user == null)
-                throw new Exception("Invalid credentials");
+                throw new UnAuthorizedException("Invalid credentials");
 
             var hashed = _passwordService.HashPassword(dto.Password, user.PasswordSaltValue, out _);
 
             if (!hashed.SequenceEqual(user.Password))
-                throw new Exception("Invalid credentials");
+                throw new UnAuthorizedException("Invalid credentials");
 
             return GenerateToken(user);
         }
-
-        // TOKEN CREATION 
 
         private AuthResponseDto GenerateToken(User user)
         {

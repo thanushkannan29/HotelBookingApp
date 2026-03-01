@@ -10,6 +10,7 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId);
 
         Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto);
+        Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync();
 
         Task ToggleHotelStatusAsync(Guid userId, bool isActive);
     }

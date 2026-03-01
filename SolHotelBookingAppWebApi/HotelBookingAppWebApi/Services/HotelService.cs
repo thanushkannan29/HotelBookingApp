@@ -4,6 +4,7 @@ using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Public;
 using Microsoft.EntityFrameworkCore;
 using HotelBookingAppWebApi.Models;
+using HotelBookingAppWebApi.Exceptions;
 namespace HotelBookingAppWebApi.Services
 {
     public class HotelService : IHotelService
@@ -14,6 +15,27 @@ namespace HotelBookingAppWebApi.Services
         {
             _context = context;
         }
+
+        // TOP 10 HOTELS FOR HOME PAGE
+
+        public async Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync()
+        {
+            var result = await _context.TopHotelViews
+                .FromSqlRaw("EXEC proc_GetTopHotels")
+                .ToListAsync();
+
+            return result.Select(h => new HotelListItemDto
+            {
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+                ImageUrl = h.ImageUrl,
+                AverageRating = h.AverageRating,
+                ReviewCount = h.ReviewCount,
+                StartingPrice = h.StartingPrice
+            });
+        }
+
 
         // PUBLIC SEARCH
 
@@ -31,7 +53,7 @@ namespace HotelBookingAppWebApi.Services
                 .ToListAsync();
 
             if (!hotels.Any())
-                throw new Exception("No hotels found");
+                throw new NotFoundException("No hotels found");
 
             return new SearchHotelResponseDto
             {
@@ -57,7 +79,7 @@ namespace HotelBookingAppWebApi.Services
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId);
 
             if (hotel == null)
-                throw new Exception("Hotel not found");
+                throw new NotFoundException("Hotel not found");
 
             return new HotelDetailsDto
             {
@@ -86,7 +108,7 @@ namespace HotelBookingAppWebApi.Services
             {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
                 if (user == null || user.HotelId == null)
-                    throw new Exception("Unauthorized");
+                    throw new UnAuthorizedException("Unauthorized");
 
                 var hotel = await _context.Hotels.FindAsync(user.HotelId);
 
@@ -113,7 +135,7 @@ namespace HotelBookingAppWebApi.Services
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null || user.HotelId == null)
-                throw new Exception("Unauthorized");
+                throw new UnAuthorizedException("Unauthorized");
 
             var hotel = await _context.Hotels.FindAsync(user.HotelId);
             hotel!.IsActive = isActive;

@@ -57,6 +57,155 @@
         }
       }
     },
+    "/api/admin/inventory": {
+      "post": {
+        "tags": [
+          "AdminInventory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateInventoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AdminInventory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateInventoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "AdminInventory"
+        ],
+        "parameters": [
+          {
+            "name": "roomTypeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "start",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "end",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/inventory/adjust": {
+      "patch": {
+        "tags": [
+          "AdminInventory"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/reservations/{code}/complete": {
+      "put": {
+        "tags": [
+          "AdminReservation"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/admin/rooms": {
       "post": {
         "tags": [
@@ -451,6 +600,215 @@
         }
       }
     },
+    "/api/guest/reservations": {
+      "post": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/reservations/{code}": {
+      "get": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/reservations/{code}/cancel": {
+      "put": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReservationDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReservationDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelReservationDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Logs": {
+      "post": {
+        "tags": [
+          "Logs"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLogDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLogDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateLogDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Logs/my-logs": {
+      "get": {
+        "tags": [
+          "Logs"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/hotels/top": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/public/hotels/search": {
       "post": {
         "tags": [
@@ -504,10 +862,527 @@
           }
         }
       }
+    },
+    "/api/Reviews": {
+      "post": {
+        "tags": [
+          "Reviews"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Reviews/{id}": {
+      "put": {
+        "tags": [
+          "Reviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Reviews"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Reviews/hotel/{hotelId}": {
+      "get": {
+        "tags": [
+          "Reviews"
+        ],
+        "parameters": [
+          {
+            "name": "hotelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Transactions": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePaymentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "Transactions"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Transactions/{id}/status": {
+      "put": {
+        "tags": [
+          "Transactions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Transactions/{id}/refund": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefundRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/UserProfile": {
+      "get": {
+        "tags": [
+          "UserProfile"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "UserProfile"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/UserProfile/booking-history": {
+      "get": {
+        "tags": [
+          "UserProfile"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "AdjustReservedInventoryDto": {
+        "required": [
+          "date",
+          "quantity",
+          "roomTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "roomTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CancelReservationDto": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateInventoryDto": {
+        "required": [
+          "endDate",
+          "roomTypeId",
+          "startDate",
+          "totalInventory"
+        ],
+        "type": "object",
+        "properties": {
+          "roomTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "startDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "endDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "totalInventory": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateLogDto": {
+        "required": [
+          "errorNumber",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "message": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "errorNumber": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreatePaymentDto": {
+        "required": [
+          "paymentMethod",
+          "reservationId"
+        ],
+        "type": "object",
+        "properties": {
+          "reservationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateReservationDto": {
+        "required": [
+          "checkInDate",
+          "checkOutDate",
+          "hotelId",
+          "numberOfRooms",
+          "paymentMethod",
+          "roomTypeId"
+        ],
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "roomTypeId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "checkInDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "checkOutDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "numberOfRooms": {
+            "maximum": 10,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "paymentMethod": {
+            "$ref": "#/components/schemas/PaymentMethod"
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateReviewDto": {
+        "required": [
+          "comment",
+          "hotelId",
+          "rating"
+        ],
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rating": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "number",
+            "format": "double"
+          },
+          "comment": {
+            "maxLength": 1000,
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateRoomDto": {
         "required": [
           "floor",
@@ -612,6 +1487,40 @@
             "format": "email"
           },
           "password": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaymentMethod": {
+        "enum": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "PaymentStatus": {
+        "enum": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "type": "integer",
+        "format": "int32"
+      },
+      "RefundRequestDto": {
+        "required": [
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "reason": {
             "minLength": 1,
             "type": "string"
           }
@@ -741,6 +1650,53 @@
         },
         "additionalProperties": false
       },
+      "UpdateInventoryDto": {
+        "required": [
+          "roomTypeInventoryId",
+          "totalInventory"
+        ],
+        "type": "object",
+        "properties": {
+          "roomTypeInventoryId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalInventory": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdatePaymentStatusDto": {
+        "required": [
+          "status"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "$ref": "#/components/schemas/PaymentStatus"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateReviewDto": {
+        "type": "object",
+        "properties": {
+          "rating": {
+            "maximum": 5,
+            "minimum": 1,
+            "type": "number",
+            "format": "double"
+          },
+          "comment": {
+            "maxLength": 1000,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "UpdateRoomDto": {
         "required": [
           "roomId"
@@ -816,6 +1772,38 @@
           "rate": {
             "type": "number",
             "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateUserProfileDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "maxLength": 150,
+            "type": "string",
+            "nullable": true
+          },
+          "phoneNumber": {
+            "maxLength": 15,
+            "type": "string",
+            "nullable": true
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
+          "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "pincode": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

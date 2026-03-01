@@ -1,4 +1,5 @@
 using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
@@ -80,6 +81,7 @@ builder.Services.AddCors(options =>
 #region Repositories
 builder.Services.AddScoped<IRepository<Guid, User>, Repository<Guid, User>>();
 builder.Services.AddScoped<IRepository<Guid, Hotel>, Repository<Guid, Hotel>>();
+builder.Services.AddScoped<IRepository<Guid, UserProfileDetails>, Repository<Guid, UserProfileDetails>>();
 //This Repo i used in my authecation time password and token creation
 #endregion
 
@@ -90,6 +92,16 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IReviewService, ReviewService>();
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<ILogService, LogService>();
+
+
+
+
 #endregion
 
 
@@ -123,6 +135,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();

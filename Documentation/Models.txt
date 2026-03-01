@@ -89,10 +89,10 @@ namespace HotelBookingAppWebApi.Models
         public Guid HotelId { get; set; }
 
         [Required]
-        public DateTime CheckInDate { get; set; }
-
+        public DateOnly CheckInDate { get; set; }
         [Required]
-        public DateTime CheckOutDate { get; set; }
+        public DateOnly CheckOutDate { get; set; }
+
 
         [Required]
         public decimal TotalAmount { get; set; }
@@ -121,6 +121,7 @@ namespace HotelBookingAppWebApi.Models
         Completed = 4
     }
 }
+
 ReservationRoom.cs
 using System.ComponentModel.DataAnnotations;
 
@@ -128,22 +129,22 @@ namespace HotelBookingAppWebApi.Models
 {
     public class ReservationRoom
     {
-        [Key]
         public Guid ReservationRoomId { get; set; }
 
-        [Required]
         public Guid ReservationId { get; set; }
 
-        [Required]
-        public Guid RoomId { get; set; }
+        public Guid RoomTypeId { get; set; }
+        public int NumberOfRooms { get; set; }
 
-        [Required]
         public decimal PricePerNight { get; set; }
 
         public Reservation? Reservation { get; set; }
-        public Room? Room { get; set; }
+        public RoomType? RoomType { get; set; }
     }
+
+
 }
+
 Review.cs
 using System.ComponentModel.DataAnnotations;
 
@@ -430,6 +431,41 @@ namespace HotelBookingAppWebApi.Models
         public DateTime CreatedAt { get; set; }
 
         public User? User { get; set; }
+    }
+}
+
+
+using Microsoft.EntityFrameworkCore;
+
+namespace HotelBookingAppWebApi.Models.QueryModels
+{
+    [Keyless]
+    public class RoomListQueryModel
+    {
+        public Guid RoomId { get; set; }
+        public string RoomNumber { get; set; } = string.Empty;
+        public int Floor { get; set; }
+        public bool IsActive { get; set; }
+        public string RoomTypeName { get; set; } = string.Empty;
+    }
+}
+
+
+using Microsoft.EntityFrameworkCore;
+
+namespace HotelBookingAppWebApi.Models.QueryModels
+{
+    [Keyless]
+    public class TopHotelView
+    {
+        public Guid HotelId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+
+        public decimal AverageRating { get; set; }
+        public int ReviewCount { get; set; }
+        public decimal? StartingPrice { get; set; }
     }
 }
 

@@ -1,4 +1,5 @@
 ﻿using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.RoomType;
@@ -27,7 +28,7 @@ namespace HotelBookingAppWebApi.Services
             {
                 var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
                 if (user?.HotelId == null)
-                    throw new Exception("Unauthorized");
+                    throw new UnAuthorizedException("Unauthorized");
 
                 var roomType = new RoomType
                 {
@@ -62,7 +63,7 @@ namespace HotelBookingAppWebApi.Services
                                        && r.HotelId == user!.HotelId);
 
             if (roomType == null)
-                throw new Exception("RoomType not found");
+                throw new NotFoundException("RoomType not found");
 
             roomType.Name = dto.Name;
             roomType.Description = dto.Description;
@@ -115,10 +116,10 @@ namespace HotelBookingAppWebApi.Services
                                            && r.HotelId == user!.HotelId);
 
                 if (roomType == null)
-                    throw new Exception("RoomType not found");
+                    throw new NotFoundException("RoomType not found");
 
                 if (dto.StartDate > dto.EndDate)
-                    throw new Exception("Invalid date range");
+                    throw new UnableToCreateEntityException("Invalid date range");
 
                 var overlapping = await _context.RoomTypeRates
                     .AnyAsync(r =>
@@ -127,7 +128,7 @@ namespace HotelBookingAppWebApi.Services
                         dto.EndDate >= r.StartDate);
 
                 if (overlapping)
-                    throw new Exception("Rate already exists for selected date range");
+                    throw new UnableToCreateEntityException("Rate already exists for selected date range");
 
                 var rate = new RoomTypeRate
                 {
@@ -180,7 +181,7 @@ namespace HotelBookingAppWebApi.Services
                     dto.Date <= r.EndDate);
 
             if (rate == null)
-                throw new Exception("Rate not found for selected date");
+                throw new UnableToCreateEntityException("Rate not found for selected date");
 
             return rate.Rate;
         }

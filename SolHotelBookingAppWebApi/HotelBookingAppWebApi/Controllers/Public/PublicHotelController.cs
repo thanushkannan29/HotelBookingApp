@@ -14,6 +14,12 @@ namespace HotelBookingAppWebApi.Controllers.Public
         {
             _service = service;
         }
+        [HttpGet("top")]
+        public async Task<IActionResult> GetTopHotels()
+        {
+            return Ok(await _service.GetTopHotelsAsync());
+        }
+
 
         [HttpPost("search")]
         public async Task<IActionResult> Search(SearchHotelRequestDto request)
