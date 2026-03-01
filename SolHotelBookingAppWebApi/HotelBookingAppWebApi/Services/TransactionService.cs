@@ -16,9 +16,9 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
-        // ============================================
+         
         // CREATE PAYMENT
-        // ============================================
+         
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
             var reservation = await _context.Reservations
@@ -54,9 +54,9 @@ namespace HotelBookingAppWebApi.Services
 
         
 
-        // ============================================
+         
         // REFUND
-        // ============================================
+         
         public async Task<TransactionResponseDto> RefundAsync(
             Guid transactionId,
             RefundRequestDto dto)
@@ -117,9 +117,9 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        // ============================================
+         
         // PAGINATION
-        // ============================================
+         
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
             int page,
             int pageSize)

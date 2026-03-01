@@ -18,9 +18,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        // ============================================
+        
         // ADD REVIEW (Guest)
-        // ============================================
+        
         [HttpPost]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> AddReview(CreateReviewDto dto)
@@ -32,9 +32,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
+        
         // UPDATE REVIEW (Guest)
-        // ============================================
+        
         [HttpPut("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> UpdateReview(Guid id, UpdateReviewDto dto)
@@ -46,9 +46,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
+        
         // DELETE REVIEW (Guest)
-        // ============================================
+        
         [HttpDelete("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> DeleteReview(Guid id)
@@ -60,9 +60,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(new { message = "Review deleted successfully." });
         }
 
-        // ============================================
+        
         // GET REVIEWS BY HOTEL (Public)
-        // ============================================
+        
         [HttpGet("hotel/{hotelId}")]
         [AllowAnonymous]
         public async Task<IActionResult> GetByHotel(

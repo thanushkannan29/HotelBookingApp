@@ -15,9 +15,9 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
-        // ============================================
+         
         // GET PROFILE
-        // ============================================
+         
         public async Task<UserProfileResponseDto> GetProfileAsync(Guid userId)
         {
             var user = await _context.Users
@@ -33,9 +33,9 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(user);
         }
 
-        // ============================================
+         
         // UPDATE PROFILE (Transactional)
-        // ============================================
+         
         public async Task<UserProfileResponseDto> UpdateProfileAsync(
             Guid userId,
             UpdateUserProfileDto dto)
@@ -78,9 +78,9 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(user);
         }
 
-        // ============================================
+         
         // BOOKING HISTORY (PAGINATED)
-        // ============================================
+         
         public async Task<PagedBookingHistoryDto> GetBookingHistoryAsync(
             Guid userId,
             int page,

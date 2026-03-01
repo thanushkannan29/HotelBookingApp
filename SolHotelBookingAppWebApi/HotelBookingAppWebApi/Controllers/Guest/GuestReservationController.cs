@@ -24,7 +24,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
 
-        // ✅ Create Reservation
+        //  Create Reservation
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateReservationDto dto)
         {
@@ -35,7 +35,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
                 result);
         }
 
-        // ✅ Get Reservation By Code
+        // Get Reservation By Code
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code)
         {
@@ -43,7 +43,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             return Ok(result);
         }
 
-        // ✅ Get My Reservations
+        // Get My Reservations
         [HttpGet]
         public async Task<IActionResult> GetMyReservations()
         {
@@ -51,7 +51,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             return Ok(result);
         }
 
-        // ✅ Cancel Reservation
+        // Cancel Reservation
         [HttpPut("{code}/cancel")]
         public async Task<IActionResult> Cancel(string code, [FromBody] CancelReservationDto dto)
         {

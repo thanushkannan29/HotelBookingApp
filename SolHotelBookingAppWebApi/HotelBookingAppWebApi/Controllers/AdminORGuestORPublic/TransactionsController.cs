@@ -17,9 +17,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        // ============================================
+        
         // CREATE PAYMENT (Guest)
-        // ============================================
+        
         [HttpPost]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> CreatePayment(CreatePaymentDto dto)
@@ -30,9 +30,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 
         
 
-        // ============================================
+        
         // REFUND (Admin)
-        // ============================================
+        
         [HttpPost("{id}/refund")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Refund(Guid id, RefundRequestDto dto)
@@ -41,9 +41,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
+        
         // PAGINATED LIST (Admin)
-        // ============================================
+        
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)

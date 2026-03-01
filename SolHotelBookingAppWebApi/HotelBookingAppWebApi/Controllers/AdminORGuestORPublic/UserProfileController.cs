@@ -25,9 +25,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
                 User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
 
-        // ============================================
+        
         // GET PROFILE (Guest/Admin)
-        // ============================================
+        
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
@@ -35,9 +35,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
+        
         // UPDATE PROFILE
-        // ============================================
+        
         [HttpPut]
         public async Task<IActionResult> UpdateProfile(UpdateUserProfileDto dto)
         {
@@ -45,9 +45,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
+        
         // BOOKING HISTORY (Guest)
-        // ============================================
+        
         [HttpGet("booking-history")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GetBookingHistory(

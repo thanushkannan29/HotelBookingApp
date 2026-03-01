@@ -27,9 +27,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 
         
 
-        // ============================================
+         
         // GET OWN LOGS
-        // ============================================
+         
         [HttpGet("my-logs")]
         public async Task<IActionResult> GetMyLogs(int page = 1, int pageSize = 10)
         {
@@ -39,9 +39,9 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
-        // GET ALL LOGS (ADMIN)
-        // ============================================
+         
+        // GET ALL LOGS (ADMIN for now need to add super admin role in user modles)
+         
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)

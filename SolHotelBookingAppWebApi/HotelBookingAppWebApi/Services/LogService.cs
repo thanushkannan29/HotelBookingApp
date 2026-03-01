@@ -17,9 +17,9 @@ namespace HotelBookingAppWebApi.Services
 
        
 
-        // ============================================
+         
         // GET ALL LOGS (ADMIN)
-        // ============================================
+         
         public async Task<PagedLogResponseDto> GetAllLogsAsync(
             int page,
             int pageSize)
@@ -42,9 +42,9 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        // ============================================
+         
         // GET USER LOGS
-        // ============================================
+         
         public async Task<PagedLogResponseDto> GetUserLogsAsync(
             Guid userId,
             int page,

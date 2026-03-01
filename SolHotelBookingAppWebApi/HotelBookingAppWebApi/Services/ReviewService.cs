@@ -16,9 +16,9 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
-        // ============================================
+         
         // ADD REVIEW
-        // ============================================
+         
         public async Task<ReviewResponseDto> AddReviewAsync(
             Guid userId,
             CreateReviewDto dto)
@@ -51,9 +51,9 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(review);
         }
 
-        // ============================================
+         
         // UPDATE REVIEW
-        // ============================================
+         
         public async Task<ReviewResponseDto> UpdateReviewAsync(
             Guid userId,
             Guid reviewId,
@@ -77,9 +77,9 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(review);
         }
 
-        // ============================================
+         
         // DELETE REVIEW
-        // ============================================
+         
         public async Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId)
         {
             var review = await _context.Reviews
@@ -97,9 +97,9 @@ namespace HotelBookingAppWebApi.Services
             return true;
         }
 
-        // ============================================
+         
         // GET REVIEWS BY HOTEL (PAGINATED)
-        // ============================================
+         
         public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(
             Guid hotelId,
             int page,
