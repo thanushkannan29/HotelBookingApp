@@ -104,7 +104,7 @@ namespace HotelBookingAppWebApi.Services
                     CheckInDate = dto.CheckInDate,
                     CheckOutDate = dto.CheckOutDate,
                     TotalAmount = totalAmount,
-                    Status = ReservationStatus.Confirmed,
+                    Status = ReservationStatus.Pending,//after transaction payment only confirm
                     CreatedDate = DateTime.UtcNow
                 };
 
@@ -124,17 +124,6 @@ namespace HotelBookingAppWebApi.Services
                 foreach (var inventory in inventories)
                     inventory.ReservedInventory += dto.NumberOfRooms;
 
-                // 9️ Add Transaction
-                await _context.Transactions.AddAsync(new Transaction
-                {
-                    TransactionId = Guid.NewGuid(),
-                    ReservationId = reservation.ReservationId,
-                    Amount = totalAmount,
-                    PaymentMethod = dto.PaymentMethod,
-                    Status = PaymentStatus.Success,
-                    TransactionDate = DateTime.UtcNow
-                });
-
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
@@ -144,7 +133,7 @@ namespace HotelBookingAppWebApi.Services
                     ReservationCode = reservation.ReservationCode,
                     TotalAmount = totalAmount,
                     Status = reservation.Status.ToString(),
-                    PaymentStatus = PaymentStatus.Success.ToString()
+                    
                 };
             }
             catch
@@ -192,6 +181,12 @@ namespace HotelBookingAppWebApi.Services
                 {
                     ReservationCode = r.ReservationCode,
                     HotelId = r.HotelId,
+                    RoomTypeId = r.ReservationRooms
+                        .Select(rr => rr.RoomTypeId)
+                        .FirstOrDefault(),
+                    NumberOfRooms = r.ReservationRooms
+                        .Select(rr => rr.NumberOfRooms)
+                        .FirstOrDefault(),
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalAmount = r.TotalAmount,
@@ -199,6 +194,7 @@ namespace HotelBookingAppWebApi.Services
                 })
                 .ToListAsync();
         }
+
 
         #endregion
 

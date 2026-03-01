@@ -21,7 +21,6 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         [Range(1, 10, ErrorMessage = "Number of rooms must be at least 1")]
         public int NumberOfRooms { get; set; }
 
-        [Required]
-        public PaymentMethod PaymentMethod { get; set; }
+        
     }
 }

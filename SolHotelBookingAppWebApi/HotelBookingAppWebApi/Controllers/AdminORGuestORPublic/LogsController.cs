@@ -25,15 +25,7 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
                 User.FindFirstValue(ClaimTypes.NameIdentifier)!);
         }
 
-        // ============================================
-        // CREATE LOG (Guest/Admin)
-        // ============================================
-        [HttpPost]
-        public async Task<IActionResult> CreateLog(CreateLogDto dto)
-        {
-            var result = await _service.CreateLogAsync(GetUserId(), dto);
-            return Ok(result);
-        }
+        
 
         // ============================================
         // GET OWN LOGS

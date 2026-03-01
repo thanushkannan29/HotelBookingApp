@@ -4,6 +4,7 @@ using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Transactions;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class TransactionService : ITransactionService
@@ -21,6 +22,7 @@ namespace HotelBookingAppWebApi.Services
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
             var reservation = await _context.Reservations
+                .Include(r => r.Transactions)
                 .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId);
 
             if (reservation == null)
@@ -28,6 +30,9 @@ namespace HotelBookingAppWebApi.Services
 
             if (reservation.Status == ReservationStatus.Cancelled)
                 throw new PaymentException("Cannot pay for cancelled reservation.");
+
+            if (reservation.Transactions.Any(t => t.Status == PaymentStatus.Success))
+                throw new PaymentException("Reservation already paid.");
 
             var transaction = new Transaction
             {
@@ -47,59 +52,73 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(transaction);
         }
 
-        // ============================================
-        // UPDATE STATUS (ADMIN)
-        // ============================================
-        public async Task<TransactionResponseDto> UpdatePaymentStatusAsync(
-            Guid transactionId,
-            UpdatePaymentStatusDto dto)
-        {
-            var transaction = await _context.Transactions
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
-
-            if (transaction == null)
-                throw new NotFoundException("Transaction not found.");
-
-            transaction.Status = dto.Status;
-
-            await _context.SaveChangesAsync();
-
-            return MapToDto(transaction);
-        }
+        
 
         // ============================================
-        // REFUND LOGIC
+        // REFUND
         // ============================================
         public async Task<TransactionResponseDto> RefundAsync(
             Guid transactionId,
             RefundRequestDto dto)
         {
-            var transaction = await _context.Transactions
-                .Include(t => t.Reservation)
-                .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+            using var dbTransaction = await _context.Database.BeginTransactionAsync();
 
-            if (transaction == null)
-                throw new NotFoundException("Transaction not found.");
-
-            if (transaction.Status != PaymentStatus.Success)
-                throw new PaymentException("Only successful payments can be refunded.");
-
-            transaction.Status = PaymentStatus.Refunded;
-
-            if (transaction.Reservation != null)
+            try
             {
-                transaction.Reservation.Status = ReservationStatus.Cancelled;
-                transaction.Reservation.CancelledDate = DateTime.UtcNow;
-                transaction.Reservation.CancellationReason = dto.Reason;
+                var transaction = await _context.Transactions
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r.ReservationRooms)
+                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
+
+                if (transaction == null)
+                    throw new NotFoundException("Transaction not found.");
+
+                if (transaction.Status != PaymentStatus.Success)
+                    throw new PaymentException("Only successful payments can be refunded.");
+
+                transaction.Status = PaymentStatus.Refunded;
+
+                var reservation = transaction.Reservation;
+
+                if (reservation != null)
+                {
+                    reservation.Status = ReservationStatus.Cancelled;
+                    reservation.CancelledDate = DateTime.UtcNow;
+                    reservation.CancellationReason = dto.Reason;
+
+                    var room = reservation.ReservationRooms.First();
+
+                    var totalDays = reservation.CheckOutDate.DayNumber -
+                                    reservation.CheckInDate.DayNumber;
+
+                    var dates = Enumerable.Range(0, totalDays)
+                        .Select(offset => reservation.CheckInDate.AddDays(offset))
+                        .ToList();
+
+                    var inventories = await _context.RoomTypeInventories
+                        .Where(i =>
+                            i.RoomTypeId == room.RoomTypeId &&
+                            dates.Contains(i.Date))
+                        .ToListAsync();
+
+                    foreach (var inventory in inventories)
+                        inventory.ReservedInventory -= room.NumberOfRooms;
+                }
+
+                await _context.SaveChangesAsync();
+                await dbTransaction.CommitAsync();
+
+                return MapToDto(transaction);
             }
-
-            await _context.SaveChangesAsync();
-
-            return MapToDto(transaction);
+            catch
+            {
+                await dbTransaction.RollbackAsync();
+                throw;
+            }
         }
 
         // ============================================
-        // PAGINATED LIST
+        // PAGINATION
         // ============================================
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
             int page,
@@ -113,7 +132,15 @@ namespace HotelBookingAppWebApi.Services
                 .OrderByDescending(t => t.TransactionDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(t => MapToDto(t))
+                .Select(t => new TransactionResponseDto
+                {
+                    TransactionId = t.TransactionId,
+                    ReservationId = t.ReservationId,
+                    Amount = t.Amount,
+                    PaymentMethod = t.PaymentMethod,
+                    Status = t.Status,
+                    TransactionDate = t.TransactionDate
+                })
                 .ToListAsync();
 
             return new PagedTransactionResponseDto
@@ -121,8 +148,8 @@ namespace HotelBookingAppWebApi.Services
                 TotalCount = total,
                 Transactions = transactions
             };
-        }
 
+        }
         private static TransactionResponseDto MapToDto(Transaction t)
         {
             return new TransactionResponseDto
@@ -135,5 +162,6 @@ namespace HotelBookingAppWebApi.Services
                 TransactionDate = t.TransactionDate
             };
         }
+
     }
 }

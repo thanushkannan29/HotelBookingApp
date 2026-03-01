@@ -8,7 +8,10 @@
         public string City { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
 
+        public decimal AverageRating { get; set; }
+
         public IEnumerable<string> Amenities { get; set; } = new List<string>();
+
         public IEnumerable<ReviewDto> Reviews { get; set; } = new List<ReviewDto>();
     }
 }

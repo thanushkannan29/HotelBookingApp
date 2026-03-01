@@ -74,12 +74,23 @@ namespace HotelBookingAppWebApi.Services
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
         {
             var hotel = await _context.Hotels
+                .Include(h => h.RoomTypes)
                 .Include(h => h.Reviews)
-                .ThenInclude(r => r.User)
+                    .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId);
 
             if (hotel == null)
                 throw new NotFoundException("Hotel not found");
+
+            var reviews = hotel.Reviews ?? new List<Review>();
+
+            //  Extract amenities from RoomTypes (string split)
+            var amenities = hotel.RoomTypes?
+                .Where(rt => !string.IsNullOrEmpty(rt.Amenities))
+                .SelectMany(rt => rt.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                .Select(a => a.Trim())
+                .Distinct()
+                .ToList() ?? new List<string>();
 
             return new HotelDetailsDto
             {
@@ -88,15 +99,27 @@ namespace HotelBookingAppWebApi.Services
                 Address = hotel.Address,
                 City = hotel.City,
                 Description = hotel.Description,
-                Reviews = hotel.Reviews?.Select(r => new ReviewDto
-                {
-                    UserName = r.User!.Name,
-                    Rating = r.Rating,
-                    Comment = r.Comment,
-                    CreatedDate = r.CreatedDate
-                }) ?? new List<ReviewDto>()
+
+                AverageRating = reviews.Any()
+                    ? Math.Round(reviews.Average(r => r.Rating), 2)
+                    : 0,
+
+                Amenities = amenities,
+
+                Reviews = reviews
+                    .OrderByDescending(r => r.CreatedDate)
+                    .Select(r => new ReviewDto
+                    {
+                        UserName = r.User != null ? r.User.Name : "Anonymous",
+                        Rating = r.Rating,
+                        Comment = r.Comment,
+                        CreatedDate = r.CreatedDate
+                    })
+                    .ToList()
             };
         }
+
+
 
         // ADMIN UPDATE
 

@@ -704,36 +704,7 @@
         }
       }
     },
-    "/api/Logs": {
-      "post": {
-        "tags": [
-          "Logs"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLogDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLogDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateLogDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
+    "/api/Logs/my-logs": {
       "get": {
         "tags": [
           "Logs"
@@ -765,7 +736,7 @@
         }
       }
     },
-    "/api/Logs/my-logs": {
+    "/api/Logs": {
       "get": {
         "tags": [
           "Logs"
@@ -1059,48 +1030,6 @@
         }
       }
     },
-    "/api/Transactions/{id}/status": {
-      "put": {
-        "tags": [
-          "Transactions"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdatePaymentStatusDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/Transactions/{id}/refund": {
       "post": {
         "tags": [
@@ -1283,24 +1212,6 @@
         },
         "additionalProperties": false
       },
-      "CreateLogDto": {
-        "required": [
-          "errorNumber",
-          "message"
-        ],
-        "type": "object",
-        "properties": {
-          "message": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "errorNumber": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "additionalProperties": false
-      },
       "CreatePaymentDto": {
         "required": [
           "paymentMethod",
@@ -1324,7 +1235,6 @@
           "checkOutDate",
           "hotelId",
           "numberOfRooms",
-          "paymentMethod",
           "roomTypeId"
         ],
         "type": "object",
@@ -1350,9 +1260,6 @@
             "minimum": 1,
             "type": "integer",
             "format": "int32"
-          },
-          "paymentMethod": {
-            "$ref": "#/components/schemas/PaymentMethod"
           }
         },
         "additionalProperties": false
@@ -1500,16 +1407,6 @@
           3,
           4,
           5
-        ],
-        "type": "integer",
-        "format": "int32"
-      },
-      "PaymentStatus": {
-        "enum": [
-          1,
-          2,
-          3,
-          4
         ],
         "type": "integer",
         "format": "int32"
@@ -1664,18 +1561,6 @@
           "totalInventory": {
             "type": "integer",
             "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdatePaymentStatusDto": {
-        "required": [
-          "status"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "$ref": "#/components/schemas/PaymentStatus"
           }
         },
         "additionalProperties": false

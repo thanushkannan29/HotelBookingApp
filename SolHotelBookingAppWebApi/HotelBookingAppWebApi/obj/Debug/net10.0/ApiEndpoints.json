@@ -409,22 +409,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.LogsController",
-    "Method": "CreateLog",
-    "RelativePath": "api/Logs",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.Log.CreateLogDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.LogsController",
     "Method": "GetAll",
     "RelativePath": "api/Logs",
     "HttpMethod": "GET",
@@ -639,27 +623,6 @@
       {
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.Transactions.RefundRequestDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.AdminORGuestORPublic.TransactionsController",
-    "Method": "UpdateStatus",
-    "RelativePath": "api/Transactions/{id}/status",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.Transactions.UpdatePaymentStatusDto",
         "IsRequired": true
       }
     ],

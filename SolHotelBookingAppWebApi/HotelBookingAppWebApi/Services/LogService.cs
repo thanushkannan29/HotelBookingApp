@@ -15,35 +15,7 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
-        // ============================================
-        // CREATE LOG
-        // ============================================
-        public async Task<LogResponseDto> CreateLogAsync(
-            Guid userId,
-            CreateLogDto dto)
-        {
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserId == userId);
-
-            if (user == null)
-                throw new NotFoundException("User not found.");
-
-            var log = new Log
-            {
-                LogId = Guid.NewGuid(),
-                Message = dto.Message,
-                ErrorNumber = dto.ErrorNumber,
-                Role = user.Role.ToString(),
-                UserName = user.Email,
-                UserId = userId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _context.Logs.AddAsync(log);
-            await _context.SaveChangesAsync();
-
-            return MapToDto(log);
-        }
+       
 
         // ============================================
         // GET ALL LOGS (ADMIN)

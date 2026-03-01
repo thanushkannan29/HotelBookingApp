@@ -28,16 +28,7 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             return Ok(result);
         }
 
-        // ============================================
-        // UPDATE STATUS (Admin)
-        // ============================================
-        [HttpPut("{id}/status")]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateStatus(Guid id, UpdatePaymentStatusDto dto)
-        {
-            var result = await _service.UpdatePaymentStatusAsync(id, dto);
-            return Ok(result);
-        }
+        
 
         // ============================================
         // REFUND (Admin)
