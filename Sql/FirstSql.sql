@@ -2,11 +2,12 @@ select * from Users
 select * from Hotels
 select * from UserProfileDetails
 select * from Rooms
+select * from ReservationRooms
 select * from RoomTypeRates
 select * from RoomTypes
 select * from RoomTypeInventories 
 select * from Reservations
-select * from ReservationRooms
+
 select * from Transactions
 select * from Reviews
 select * from Logs

@@ -3,8 +3,32 @@
   "WorkspaceRootPath": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{B20D2C35-0B0B-57AA-FA36-DCDABB4723E3}|HotelBookingTesting\\HotelBookingTesting.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingtesting\\unittest1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{B20D2C35-0B0B-57AA-FA36-DCDABB4723E3}|HotelBookingTesting\\HotelBookingTesting.csproj|solutionrelative:hotelbookingtesting\\unittest1.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\exceptions\\middleware\\globalexceptionmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\exceptions\\middleware\\globalexceptionmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\reservationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\reservationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{B20D2C35-0B0B-57AA-FA36-DCDABB4723E3}|HotelBookingTesting\\HotelBookingTesting.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingtesting\\hotesservicetest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{B20D2C35-0B0B-57AA-FA36-DCDABB4723E3}|HotelBookingTesting\\HotelBookingTesting.csproj|solutionrelative:hotelbookingtesting\\hotesservicetest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\hotelservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\hotelservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -17,10 +41,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\transactionservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\tokenservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -39,10 +59,6 @@
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\reviewservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\reservationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\reservationservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\passwordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\passwordservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -53,14 +69,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\inventoryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\inventoryservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\hotelservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\hotelservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\services\\authservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\repository\\respository.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -303,10 +311,6 @@
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\exceptions\\conflictexception.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\exceptions\\middleware\\globalexceptionmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\exceptions\\middleware\\globalexceptionmiddleware.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\controllers\\public\\publichotelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\controllers\\public\\publichotelcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
@@ -373,10 +377,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\models\\dtos\\transactions\\createpaymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\models\\dtos\\transactions\\createpaymentdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|solutionrelative:hotelbookingappwebapi\\models\\transaction.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{057EA1EE-A6D0-7428-E083-8D4CE9916274}|HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj|c:\\users\\thanush.k\\onedrive - new american funding\\desktop\\my_naf_final_project\\hotelbookingapp\\solhotelbookingappwebapi\\hotelbookingappwebapi\\models\\reservation.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
@@ -478,25 +478,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 7,
+          "SelectedChildIndex": 6,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 13,
+              "DocumentIndex": 5,
               "Title": "HotelService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\HotelService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\HotelService.cs",
               "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\HotelService.cs",
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\HotelService.cs",
-              "ViewState": "AgIAACQAAAAAAAAAAAAgwGMAAAAiAAAAAAAAAA==",
+              "ViewState": "AgIAAJYAAAAAAAAAAAAmwKkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T04:56:33.011Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 11,
               "Title": "RoomTypeService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\RoomTypeService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\RoomTypeService.cs",
@@ -505,12 +504,11 @@
               "ViewState": "AgIAAK0AAAAAAAAAAAA9wKIAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-24T06:52:53.211Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
-              "DocumentIndex": 15,
+              "DocumentIndex": 17,
               "Title": "Respository.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Repository\\Respository.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Repository\\Respository.cs",
@@ -519,22 +517,20 @@
               "ViewState": "AgIAAEkAAAAAAAAAAADwvxEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-20T06:39:31.557Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
-              "DocumentIndex": 14,
+              "DocumentIndex": 6,
               "Title": "AuthService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\AuthService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\AuthService.cs",
               "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\AuthService.cs",
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\AuthService.cs",
-              "ViewState": "AgIAAIgAAAAAAAAAAAAkwAsAAAAIAAAAAAAAAA==",
+              "ViewState": "AgIAAIgAAAAAAAAAAAAkwJMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-23T09:42:48.29Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Bookmark",
@@ -542,20 +538,68 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Program.cs",
-              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Program.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Program.cs",
-              "RelativeToolTip": "HotelBookingAppWebApi\\Program.cs",
-              "ViewState": "AgIAAH8AAAAAAAAAAADwv4gAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 2,
+              "Title": "GlobalExceptionMiddleware.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
+              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
+              "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAABSAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:43:56.007Z",
+              "WhenOpened": "2026-02-27T17:17:52.841Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Transaction.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Transaction.cs",
+              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\Transaction.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Transaction.cs",
+              "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Transaction.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAvAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T06:19:31.444Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
+              "Title": "TransactionService.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\TransactionService.cs",
+              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\TransactionService.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\TransactionService.cs",
+              "RelativeToolTip": "HotelBookingAppWebApi\\Services\\TransactionService.cs",
+              "ViewState": "AgIAADkAAAAAAAAAAAAcwEkAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-27T16:12:26.941Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "ReservationService.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReservationService.cs",
+              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReservationService.cs",
+              "RelativeToolTip": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
+              "ViewState": "AgIAAM8AAAAAAAAAAAAiwNoAAAAUAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-25T16:33:46.368Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "HotesServiceTest.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotesServiceTest.cs",
+              "RelativeDocumentMoniker": "HotelBookingTesting\\HotesServiceTest.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\HotesServiceTest.cs",
+              "RelativeToolTip": "HotelBookingTesting\\HotesServiceTest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-02-20T06:27:11.367Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
               "Title": "appsettings.json",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\appsettings.json",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\appsettings.json",
@@ -563,25 +607,23 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-02-20T06:36:23.743Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:36:23.743Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "UnitTest1.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\UnitTest1.cs",
-              "RelativeDocumentMoniker": "HotelBookingTesting\\UnitTest1.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingTesting\\UnitTest1.cs",
-              "RelativeToolTip": "HotelBookingTesting\\UnitTest1.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
+              "DocumentIndex": 7,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Program.cs",
+              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Program.cs",
+              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Program.cs",
+              "RelativeToolTip": "HotelBookingAppWebApi\\Program.cs",
+              "ViewState": "AgIAAH8AAAAAAAAAAADwv4gAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:27:11.367Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:43:56.007Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 9,
               "Title": "UserService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\UserService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\UserService.cs",
@@ -589,25 +631,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\UserService.cs",
               "ViewState": "AgIAAHMAAAAAAAAAAAAkwH8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:55:32.519Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:55:32.519Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "TransactionService.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\TransactionService.cs",
-              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\TransactionService.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\TransactionService.cs",
-              "RelativeToolTip": "HotelBookingAppWebApi\\Services\\TransactionService.cs",
-              "ViewState": "AgIAAI4AAAAAAAAAAAAkwHkAAAAJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:12:26.941Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 10,
               "Title": "TokenService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\TokenService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\TokenService.cs",
@@ -615,12 +643,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\TokenService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAC0AAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:47:25.255Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:47:25.255Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 12,
               "Title": "RoomService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\RoomService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\RoomService.cs",
@@ -628,12 +655,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\RoomService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAKUAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:21:41.66Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:21:41.66Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 8,
+              "DocumentIndex": 13,
               "Title": "ReviewService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReviewService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\ReviewService.cs",
@@ -641,25 +667,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\ReviewService.cs",
               "ViewState": "AgIAAHsAAAAAAAAAAAAowGUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:29:16.987Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:29:16.987Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "ReservationService.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReservationService.cs",
-              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReservationService.cs",
-              "RelativeToolTip": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
-              "ViewState": "AgIAABABAAAAAAAAAAAswAsAAAA2AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:33:46.368Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 14,
               "Title": "PasswordService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\PasswordService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\PasswordService.cs",
@@ -667,12 +679,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\PasswordService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T05:02:52.219Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T05:02:52.219Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 11,
+              "DocumentIndex": 15,
               "Title": "LogService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\LogService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\LogService.cs",
@@ -680,12 +691,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\LogService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:14:34.756Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:14:34.756Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 12,
+              "DocumentIndex": 16,
               "Title": "InventoryService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\InventoryService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\InventoryService.cs",
@@ -693,12 +703,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\InventoryService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAHQAAAAUAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:16:35.172Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:16:35.172Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 16,
+              "DocumentIndex": 18,
               "Title": "RoomType.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\RoomType.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\RoomType.cs",
@@ -706,12 +715,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\RoomType.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:18:16.952Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:18:16.952Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 17,
+              "DocumentIndex": 19,
               "Title": "Log.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Log.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\Log.cs",
@@ -719,12 +727,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Log.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAAqwAYAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T08:45:56.178Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T08:45:56.178Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 18,
+              "DocumentIndex": 20,
               "Title": "TopHotelView.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\QueryModels\\TopHotelView.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\QueryModels\\TopHotelView.cs",
@@ -732,12 +739,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\QueryModels\\TopHotelView.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:58:14.231Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:58:14.231Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 19,
+              "DocumentIndex": 21,
               "Title": "RoomListQueryModel.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\QueryModels\\RoomListQueryModel.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\QueryModels\\RoomListQueryModel.cs",
@@ -745,12 +751,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\QueryModels\\RoomListQueryModel.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T10:55:14.194Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T10:55:14.194Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 20,
+              "DocumentIndex": 22,
               "Title": "Hotel.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Hotel.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\Hotel.cs",
@@ -758,12 +763,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Hotel.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAAAiwCAAAAA1AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:15:26.239Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:15:26.239Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 21,
+              "DocumentIndex": 23,
               "Title": "UpdateRoomTypeRateDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeRateDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeRateDto.cs",
@@ -771,12 +775,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeRateDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwAkAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:51:01.537Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:51:01.537Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 22,
+              "DocumentIndex": 24,
               "Title": "UpdateRoomTypeDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeDto.cs",
@@ -784,12 +787,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\UpdateRoomTypeDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAtAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:47:21.875Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:47:21.875Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 23,
+              "DocumentIndex": 25,
               "Title": "GetRateByDateRequestDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\GetRateByDateRequestDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\GetRateByDateRequestDto.cs",
@@ -797,12 +799,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\GetRateByDateRequestDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:51:16.235Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:51:16.235Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 24,
+              "DocumentIndex": 26,
               "Title": "CreateRoomTypeRateDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeRateDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeRateDto.cs",
@@ -810,12 +811,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeRateDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:50:49.98Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:50:49.98Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 25,
+              "DocumentIndex": 27,
               "Title": "CreateRoomTypeDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeDto.cs",
@@ -823,12 +823,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\RoomType\\CreateRoomTypeDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:47:08.611Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:47:08.611Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 26,
+              "DocumentIndex": 28,
               "Title": "UpdateRoomDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Room\\UpdateRoomDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\UpdateRoomDto.cs",
@@ -836,12 +835,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\UpdateRoomDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:20:46.872Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:20:46.872Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 27,
+              "DocumentIndex": 29,
               "Title": "RoomListResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Room\\RoomListResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\RoomListResponseDto.cs",
@@ -849,12 +847,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\RoomListResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:21:01.439Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:21:01.439Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 28,
+              "DocumentIndex": 30,
               "Title": "CreateRoomDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Room\\CreateRoomDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\CreateRoomDto.cs",
@@ -862,12 +859,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Room\\CreateRoomDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:20:33.663Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:20:33.663Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 29,
+              "DocumentIndex": 31,
               "Title": "UpdateReviewDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Review\\UpdateReviewDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\UpdateReviewDto.cs",
@@ -875,12 +871,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\UpdateReviewDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:32:22.857Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:32:22.857Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 30,
+              "DocumentIndex": 32,
               "Title": "ReviewResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Review\\ReviewResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\ReviewResponseDto.cs",
@@ -888,12 +883,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\ReviewResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:32:34.899Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:32:34.899Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 31,
+              "DocumentIndex": 33,
               "Title": "PagedReviewResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Review\\PagedReviewResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\PagedReviewResponseDto.cs",
@@ -901,12 +895,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\PagedReviewResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:32:47.742Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:32:47.742Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 32,
+              "DocumentIndex": 34,
               "Title": "CreateReviewDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Review\\CreateReviewDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\CreateReviewDto.cs",
@@ -914,12 +907,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Review\\CreateReviewDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:31:42.146Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:31:42.146Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 33,
+              "DocumentIndex": 35,
               "Title": "ReservationResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationResponseDto.cs",
@@ -927,12 +919,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:33:11.185Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:33:11.185Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 34,
+              "DocumentIndex": 36,
               "Title": "ReservationDetailsDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationDetailsDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationDetailsDto.cs",
@@ -940,12 +931,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\ReservationDetailsDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T17:10:29.15Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T17:10:29.15Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 35,
+              "DocumentIndex": 37,
               "Title": "CreateReservationDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CreateReservationDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CreateReservationDto.cs",
@@ -953,12 +943,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CreateReservationDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABUAAAAuAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:32:58.591Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:32:58.591Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 36,
+              "DocumentIndex": 38,
               "Title": "CancelReservationDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CancelReservationDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CancelReservationDto.cs",
@@ -966,12 +955,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Reservation\\CancelReservationDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T17:33:04.787Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T17:33:04.787Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 37,
+              "DocumentIndex": 39,
               "Title": "PagedLogResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Log\\PagedLogResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Log\\PagedLogResponseDto.cs",
@@ -979,12 +967,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Log\\PagedLogResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:19:14.611Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:19:14.611Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 38,
+              "DocumentIndex": 40,
               "Title": "LogResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Log\\LogResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Log\\LogResponseDto.cs",
@@ -992,12 +979,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Log\\LogResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:18:55.52Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:18:55.52Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 39,
+              "DocumentIndex": 41,
               "Title": "UpdateInventoryDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\UpdateInventoryDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\UpdateInventoryDto.cs",
@@ -1005,12 +991,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\UpdateInventoryDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:15:27.409Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:15:27.409Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 40,
+              "DocumentIndex": 42,
               "Title": "InventoryResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\InventoryResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\InventoryResponseDto.cs",
@@ -1018,12 +1003,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\InventoryResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:15:54.146Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:15:54.146Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 41,
+              "DocumentIndex": 43,
               "Title": "CreateInventoryDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\CreateInventoryDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\CreateInventoryDto.cs",
@@ -1031,12 +1015,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\CreateInventoryDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:15:09.473Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:15:09.473Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 42,
+              "DocumentIndex": 44,
               "Title": "AdjustReservedInventoryDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\AdjustReservedInventoryDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\AdjustReservedInventoryDto.cs",
@@ -1044,12 +1027,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Inventory\\AdjustReservedInventoryDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:15:40.341Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:15:40.341Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 43,
+              "DocumentIndex": 45,
               "Title": "SearchHotelResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelResponseDto.cs",
@@ -1057,12 +1039,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:55:01.046Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:55:01.046Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 44,
+              "DocumentIndex": 46,
               "Title": "SearchHotelRequestDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelRequestDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelRequestDto.cs",
@@ -1070,12 +1051,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\SearchHotelRequestDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:54:47.717Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:54:47.717Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 45,
+              "DocumentIndex": 47,
               "Title": "ReviewDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\ReviewDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\ReviewDto.cs",
@@ -1083,12 +1063,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\ReviewDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:55:49.464Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:55:49.464Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 46,
+              "DocumentIndex": 48,
               "Title": "HotelListItemDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelListItemDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelListItemDto.cs",
@@ -1096,12 +1075,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelListItemDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwA4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:55:18.217Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:55:18.217Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 47,
+              "DocumentIndex": 49,
               "Title": "HotelDetailsDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelDetailsDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelDetailsDto.cs",
@@ -1109,12 +1087,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Public\\HotelDetailsDto.cs",
               "ViewState": "AgIAAAMAAAAAAAAAAAAAwBEAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:55:30.619Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:55:30.619Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 48,
+              "DocumentIndex": 50,
               "Title": "UpdateHotelDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Admin\\UpdateHotelDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Admin\\UpdateHotelDto.cs",
@@ -1122,12 +1099,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Hotel\\Admin\\UpdateHotelDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:56:03.279Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:56:03.279Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 49,
+              "DocumentIndex": 51,
               "Title": "TokenPayloadDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Auth\\TokenPayloadDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\TokenPayloadDto.cs",
@@ -1135,12 +1111,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\TokenPayloadDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:38:09.305Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:38:09.305Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 50,
+              "DocumentIndex": 52,
               "Title": "RegisterUserDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterUserDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterUserDto.cs",
@@ -1148,12 +1123,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterUserDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:34:35.086Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:34:35.086Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 51,
+              "DocumentIndex": 53,
               "Title": "RegisterHotelAdminDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterHotelAdminDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterHotelAdminDto.cs",
@@ -1161,12 +1135,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\RegisterHotelAdminDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB4AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:35:39.82Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:35:39.82Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 52,
+              "DocumentIndex": 54,
               "Title": "LoginDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Auth\\LoginDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\LoginDto.cs",
@@ -1174,12 +1147,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\LoginDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:36:36.086Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:36:36.086Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 53,
+              "DocumentIndex": 55,
               "Title": "AuthResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Auth\\AuthResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\AuthResponseDto.cs",
@@ -1187,12 +1159,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Auth\\AuthResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:37:04.441Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:37:04.441Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 54,
+              "DocumentIndex": 56,
               "Title": "IUserService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IUserService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IUserService.cs",
@@ -1200,12 +1171,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IUserService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:53:47.854Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:53:47.854Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 55,
+              "DocumentIndex": 57,
               "Title": "ITransactionService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\ITransactionService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\ITransactionService.cs",
@@ -1213,12 +1183,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\ITransactionService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:12:11.906Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:12:11.906Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 56,
+              "DocumentIndex": 58,
               "Title": "ITokenService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\ITokenService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\ITokenService.cs",
@@ -1226,12 +1195,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\ITokenService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:31:13.363Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:31:13.363Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 57,
+              "DocumentIndex": 59,
               "Title": "IRoomTypeService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IRoomTypeService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IRoomTypeService.cs",
@@ -1239,12 +1207,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IRoomTypeService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwAoAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:51:38.577Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:51:38.577Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 58,
+              "DocumentIndex": 60,
               "Title": "IRoomService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IRoomService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IRoomService.cs",
@@ -1252,12 +1219,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IRoomService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:21:24.772Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:21:24.772Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 59,
+              "DocumentIndex": 61,
               "Title": "IReviewService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IReviewService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IReviewService.cs",
@@ -1265,12 +1231,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IReviewService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:28:58.666Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:28:58.666Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 60,
+              "DocumentIndex": 62,
               "Title": "IRepository.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IRepository.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IRepository.cs",
@@ -1278,12 +1243,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IRepository.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:37:54.884Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:37:54.884Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 61,
+              "DocumentIndex": 63,
               "Title": "IReservationService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IReservationService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IReservationService.cs",
@@ -1291,12 +1255,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IReservationService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:33:31.022Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:33:31.022Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 62,
+              "DocumentIndex": 64,
               "Title": "ILogService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\ILogService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\ILogService.cs",
@@ -1304,12 +1267,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\ILogService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAuwAYAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:14:16.65Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:14:16.65Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 63,
+              "DocumentIndex": 65,
               "Title": "IPasswordService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IPasswordService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IPasswordService.cs",
@@ -1317,12 +1279,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IPasswordService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:02:04.5Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:02:04.5Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 64,
+              "DocumentIndex": 66,
               "Title": "IInventoryService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IInventoryService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IInventoryService.cs",
@@ -1330,12 +1291,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IInventoryService.cs",
               "ViewState": "AgIAAAUAAAAAAAAAAAAcwA4AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:16:18.033Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:16:18.033Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 65,
+              "DocumentIndex": 67,
               "Title": "IHotelService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IHotelService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IHotelService.cs",
@@ -1343,12 +1303,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IHotelService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAABMAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:56:18.773Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:56:18.773Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 66,
+              "DocumentIndex": 68,
               "Title": "IAuthService.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Interfaces\\IAuthService.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Interfaces\\IAuthService.cs",
@@ -1356,12 +1315,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Interfaces\\IAuthService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T09:39:58.265Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T09:39:58.265Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 67,
+              "DocumentIndex": 69,
               "Title": "ValidationException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\ValidationException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\ValidationException.cs",
@@ -1369,12 +1327,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\ValidationException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:53:50.186Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:53:50.186Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 68,
+              "DocumentIndex": 70,
               "Title": "UnAuthorizedException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\UnAuthorizedException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\UnAuthorizedException.cs",
@@ -1382,12 +1339,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\UnAuthorizedException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:42:20.749Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:42:20.749Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 69,
+              "DocumentIndex": 71,
               "Title": "ReservationFailedException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\ReservationFailedException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\ReservationFailedException.cs",
@@ -1395,12 +1351,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\ReservationFailedException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:35:39.779Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:35:39.779Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 70,
+              "DocumentIndex": 72,
               "Title": "RateNotFoundException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\RateNotFoundException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\RateNotFoundException.cs",
@@ -1408,12 +1363,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\RateNotFoundException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:35:23.79Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:35:23.79Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 71,
+              "DocumentIndex": 73,
               "Title": "NotFoundException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\NotFoundException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\NotFoundException.cs",
@@ -1421,12 +1375,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\NotFoundException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:16:51.706Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:16:51.706Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 72,
+              "DocumentIndex": 74,
               "Title": "InsufficientInventoryException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\InsufficientInventoryException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\InsufficientInventoryException.cs",
@@ -1434,12 +1387,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\InsufficientInventoryException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:17:17.399Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:17:17.399Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 73,
+              "DocumentIndex": 75,
               "Title": "EntityNotFoundException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\EntityNotFoundException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\EntityNotFoundException.cs",
@@ -1447,12 +1399,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\EntityNotFoundException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:41:37.015Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:41:37.015Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 74,
+              "DocumentIndex": 76,
               "Title": "ConflictException.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\ConflictException.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\ConflictException.cs",
@@ -1460,25 +1411,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\ConflictException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:53:38.27Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:53:38.27Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 75,
-              "Title": "GlobalExceptionMiddleware.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
-              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
-              "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\Middleware\\GlobalExceptionMiddleware.cs",
-              "ViewState": "AgIAABwAAAAAAAAAAAAQwAgAAAAvAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:17:52.841Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 76,
+              "DocumentIndex": 77,
               "Title": "PublicHotelController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Public\\PublicHotelController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Public\\PublicHotelController.cs",
@@ -1486,12 +1423,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Public\\PublicHotelController.cs",
               "ViewState": "AgIAAA0AAAAAAAAAAAAQwBEAAAA3AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:57:01.5Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:57:01.5Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 77,
+              "DocumentIndex": 78,
               "Title": "GuestReservationController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Guest\\GuestReservationController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Guest\\GuestReservationController.cs",
@@ -1499,12 +1435,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Guest\\GuestReservationController.cs",
               "ViewState": "AgIAACgAAAAAAAAAAAAkwDsAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T16:34:50.812Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T16:34:50.812Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 78,
+              "DocumentIndex": 79,
               "Title": "UserProfileController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\UserProfileController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\UserProfileController.cs",
@@ -1512,12 +1447,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\UserProfileController.cs",
               "ViewState": "AgIAACYAAAAAAAAAAAAgwC8AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:56:13.258Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:56:13.258Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 79,
+              "DocumentIndex": 80,
               "Title": "TransactionsController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\TransactionsController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\TransactionsController.cs",
@@ -1525,12 +1459,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\TransactionsController.cs",
               "ViewState": "AgIAACEAAAAAAAAAAAAYwC0AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:14:42.485Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:14:42.485Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 80,
+              "DocumentIndex": 81,
               "Title": "ReviewsController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\ReviewsController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\ReviewsController.cs",
@@ -1538,12 +1471,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\ReviewsController.cs",
               "ViewState": "AgIAADIAAAAAAAAAAAAgwEAAAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:31:09.194Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:31:09.194Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 81,
+              "DocumentIndex": 82,
               "Title": "LogsController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\LogsController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\LogsController.cs",
@@ -1551,12 +1483,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\LogsController.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAAQwCoAAABSAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:17:10.359Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:17:10.359Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 82,
+              "DocumentIndex": 83,
               "Title": "AuthenticationController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\AuthenticationController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\AuthenticationController.cs",
@@ -1564,12 +1495,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\AdminORGuestORPublic\\AuthenticationController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAfAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T10:50:37.811Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T10:50:37.811Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 83,
+              "DocumentIndex": 84,
               "Title": "AdminRoomTypeController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomTypeController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomTypeController.cs",
@@ -1577,12 +1507,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomTypeController.cs",
               "ViewState": "AgIAAE4AAAAAAAAAAIBJwBEAAABAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T06:53:21.188Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T06:53:21.188Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 84,
+              "DocumentIndex": 85,
               "Title": "AdminRoomController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomController.cs",
@@ -1590,12 +1519,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminRoomController.cs",
               "ViewState": "AgIAACAAAAAAAAAAAAA3wAkAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T09:21:57.048Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T09:21:57.048Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 85,
+              "DocumentIndex": 86,
               "Title": "AdminReservationController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Admin\\AdminReservationController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminReservationController.cs",
@@ -1603,12 +1531,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminReservationController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAzAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T17:33:58.498Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T17:33:58.498Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 86,
+              "DocumentIndex": 87,
               "Title": "AdminInventoryController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Admin\\AdminInventoryController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminInventoryController.cs",
@@ -1616,12 +1543,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminInventoryController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADMAAAA3AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T15:16:55.973Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T15:16:55.973Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 87,
+              "DocumentIndex": 88,
               "Title": "AdminHotelController.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Controllers\\Admin\\AdminHotelController.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminHotelController.cs",
@@ -1629,12 +1555,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\Admin\\AdminHotelController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-24T04:57:14.414Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-24T04:57:14.414Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 88,
+              "DocumentIndex": 89,
               "Title": "HotelBookingContext.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Contexts\\HotelBookingContext.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Contexts\\HotelBookingContext.cs",
@@ -1642,12 +1567,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Contexts\\HotelBookingContext.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAIAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:20:52.472Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:20:52.472Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 89,
+              "DocumentIndex": 90,
               "Title": "TransactionResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\TransactionResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\TransactionResponseDto.cs",
@@ -1655,12 +1579,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\TransactionResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:15:52.424Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:15:52.424Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 90,
+              "DocumentIndex": 91,
               "Title": "RefundRequestDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\RefundRequestDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\RefundRequestDto.cs",
@@ -1668,12 +1591,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\RefundRequestDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:16:03.635Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:16:03.635Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 91,
+              "DocumentIndex": 92,
               "Title": "PagedTransactionResponseDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\PagedTransactionResponseDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\PagedTransactionResponseDto.cs",
@@ -1681,12 +1603,11 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\PagedTransactionResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:16:20.448Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:16:20.448Z"
             },
             {
               "$type": "Document",
-              "DocumentIndex": 92,
+              "DocumentIndex": 93,
               "Title": "CreatePaymentDto.cs",
               "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\CreatePaymentDto.cs",
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\CreatePaymentDto.cs",
@@ -1694,21 +1615,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\Transactions\\CreatePaymentDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:15:22.708Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 93,
-              "Title": "Transaction.cs",
-              "DocumentMoniker": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Transaction.cs",
-              "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Models\\Transaction.cs",
-              "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Models\\Transaction.cs",
-              "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Transaction.cs",
-              "ViewState": "AgIAABcAAAAAAAAAAAAswCkAAAAQAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:19:31.444Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:15:22.708Z"
             },
             {
               "$type": "Document",
@@ -1720,8 +1627,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Reservation.cs",
               "ViewState": "AgIAACYAAAAAAAAAAAAUwDEAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:16:16.193Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:16:16.193Z"
             },
             {
               "$type": "Document",
@@ -1733,8 +1639,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\ReservationRoom.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAIBJwBAAAAAXAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:16:52.827Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:16:52.827Z"
             },
             {
               "$type": "Document",
@@ -1746,8 +1651,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\UnableToCreateEntityException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T04:42:48.948Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T04:42:48.948Z"
             },
             {
               "$type": "Document",
@@ -1759,8 +1663,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\UserProfileException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:58:48.625Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:58:48.625Z"
             },
             {
               "$type": "Document",
@@ -1772,8 +1675,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\ReviewException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:33:00.358Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:33:00.358Z"
             },
             {
               "$type": "Document",
@@ -1785,8 +1687,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\PaymentException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:16:39.598Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:16:39.598Z"
             },
             {
               "$type": "Document",
@@ -1798,8 +1699,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Exceptions\\LogException.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T17:13:38.246Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T17:13:38.246Z"
             },
             {
               "$type": "Document",
@@ -1811,8 +1711,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\UserDetails\\PagedBookingHistoryDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:58:26.084Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:58:26.084Z"
             },
             {
               "$type": "Document",
@@ -1824,8 +1723,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\UserDetails\\BookingHistoryDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAwAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:58:11.24Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:58:11.24Z"
             },
             {
               "$type": "Document",
@@ -1837,8 +1735,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\UserDetails\\UpdateUserProfileDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:57:55.182Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:57:55.182Z"
             },
             {
               "$type": "Document",
@@ -1850,8 +1747,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\DTOs\\UserDetails\\UserProfileResponseDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-27T16:57:25.675Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-27T16:57:25.675Z"
             },
             {
               "$type": "Document",
@@ -1863,8 +1759,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\UserProfileDetails.cs",
               "ViewState": "AgIAAA4AAAAAAAAAAAAqwB8AAAA7AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-23T08:49:23.304Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T08:49:23.304Z"
             },
             {
               "$type": "Document",
@@ -1876,8 +1771,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\RoomTypeRate.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:19:05.933Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:19:05.933Z"
             },
             {
               "$type": "Document",
@@ -1889,8 +1783,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\RoomTypeInventory.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:18:40.895Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:18:40.895Z"
             },
             {
               "$type": "Document",
@@ -1902,8 +1795,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Migrations\\20260225174452_UpdatedContext1.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T17:44:52.352Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T17:44:52.352Z"
             },
             {
               "$type": "Document",
@@ -1915,8 +1807,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Migrations\\20260225173634_updatereservation.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAABFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-25T17:36:34.472Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-25T17:36:34.472Z"
             },
             {
               "$type": "Document",
@@ -1939,8 +1830,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\User.cs",
               "ViewState": "AgIAABYAAAAAAAAAAAAiwC0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:19:59.55Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:19:59.55Z"
             },
             {
               "$type": "Document",
@@ -1952,8 +1842,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Room.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAB0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:17:47.308Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:17:47.308Z"
             },
             {
               "$type": "Document",
@@ -1965,8 +1854,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\Review.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABwAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-02-20T06:17:20.811Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-20T06:17:20.811Z"
             },
             {
               "$type": "Document",
@@ -1978,8 +1866,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\HotelBookingAppWebApi.csproj",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
-              "WhenOpened": "2026-02-23T11:10:54.9Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-02-23T11:10:54.9Z"
             },
             {
               "$type": "Document",
