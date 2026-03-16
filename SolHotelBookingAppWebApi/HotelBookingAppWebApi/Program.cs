@@ -2,6 +2,7 @@ using AspNetCoreRateLimit;
 using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.Repository;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using HotelBookingAppWebApi.Services;
@@ -19,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 #endregion
-//builder.Services.AddAutoMapper(typeof(CustomerProfile)); // This is for mapper
+
 #region RateLimiter
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
@@ -86,9 +87,19 @@ builder.Services.AddCors(options =>
 
 
 #region Repositories
+builder.Services.AddScoped<IHotelRepository, HotelRepository>();
 builder.Services.AddScoped<IRepository<Guid, User>, Repository<Guid, User>>();
+builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+
+
+//above is added new below need to check and remove if not used
 builder.Services.AddScoped<IRepository<Guid, Hotel>, Repository<Guid, Hotel>>();
 builder.Services.AddScoped<IRepository<Guid, UserProfileDetails>, Repository<Guid, UserProfileDetails>>();
+builder.Services.AddScoped<DashboardRepository>();
+builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
+
+
+
 //This Repo i used in my authecation time password and token creation
 #endregion
 
@@ -96,6 +107,7 @@ builder.Services.AddScoped<IRepository<Guid, UserProfileDetails>, Repository<Gui
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
@@ -105,6 +117,7 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILogService, LogService>();
+builder.Services.AddHostedService<ReservationCleanupService>();
 
 
 

@@ -1,0 +1,104 @@
+⚠️ 16. Deployment
+
+Goal:
+
+Deploy to server.
+
+Not yet done.
+
+But frontend not started yet, so normal.
+
+⚠️ 15. Testing
+
+Goal:
+
+Testing and debugging.
+
+Not visible from uploaded files.
+
+Recommended:
+
+Postman collection
+
+Unit tests
+
+⚠️ 14. API Integration
+
+Goal:
+
+External hotel systems.
+
+❌ Not implemented.
+
+But this is enterprise feature.
+
+✔ OK for project.
+
+⚠️ 11. Additional Services
+
+Goal:
+
+Airport transfer
+Spa
+Meals
+
+❌ Not implemented
+
+But your goal file says:
+
+Optional
+
+
+✔ OK to skip
+
+⚠️ 6. Booking Confirmation (Email/SMS)
+
+Goal:
+
+Send email or SMS confirmation
+
+Your system:
+
+✔ ReservationCode exists
+✔ Reservation stored
+✔ Guest can view reservation
+
+But:
+
+❌ No Email / SMS service
+
+Example missing:
+
+EmailService
+SendReservationConfirmation()
+
+
+⚠️ Optional but good to add later.
+
+⚠️ 5. Payment System
+
+Goal:
+
+Secure payment processing
+
+You implemented:
+
+POST /api/Transactions
+POST /api/Transactions/{id}/refund
+GET /api/Transactions
+
+
+Model:
+
+PaymentMethod
+PaymentStatus
+Transaction
+
+
+⚠️ BUT
+
+This is simulation payment, not real gateway.
+
+That is OK for project level.
+
+✔ Acceptable

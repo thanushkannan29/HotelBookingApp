@@ -28,35 +28,74 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateReservationDto dto)
         {
-            var result = await _service.CreateReservationAsync(GetUserId(), dto);
+            try
+            {
+                var result = await _service.CreateReservationAsync(GetUserId(), dto);
 
-            return CreatedAtAction(nameof(GetByCode),
-                new { code = result.ReservationCode },
-                result);
+                return CreatedAtAction(nameof(GetByCode),
+                    new { code = result.ReservationCode },
+                    result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
+
 
         // Get Reservation By Code
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code)
         {
-            var result = await _service.GetReservationByCodeAsync(GetUserId(), code);
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetReservationByCodeAsync(GetUserId(), code);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
+
 
         // Get My Reservations
         [HttpGet]
         public async Task<IActionResult> GetMyReservations()
         {
-            var result = await _service.GetMyReservationsAsync(GetUserId());
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetMyReservationsAsync(GetUserId());
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    message = ex.Message
+                });
+            }
         }
+
 
         // Cancel Reservation
         [HttpPut("{code}/cancel")]
         public async Task<IActionResult> Cancel(string code, [FromBody] CancelReservationDto dto)
         {
-            await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
-            return Ok(new { message = "Reservation cancelled successfully" });
+            try
+            {
+                await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
+
+                return Ok(new { message = "Reservation cancelled successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
+
     }
 }

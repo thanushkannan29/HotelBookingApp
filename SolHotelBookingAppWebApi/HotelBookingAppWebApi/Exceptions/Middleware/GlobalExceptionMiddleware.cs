@@ -34,7 +34,7 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
                         {
                             LogId = Guid.NewGuid(),
                             Message = ex.Message,
-                            ErrorNumber = ex.HResult.ToString(),
+                            ErrorCode = ex.HResult.ToString(),
                             Role = user.Role.ToString(),
                             UserName = user.Email,
                             UserId = userId,

@@ -30,6 +30,8 @@ namespace HotelBookingAppWebApi.Models
 
         public DateTime? CancelledDate { get; set; }
         public string? CancellationReason { get; set; }
+        public DateTime? ExpiryTime { get; set; }
+
 
         [Required]
         public DateTime CreatedDate { get; set; }

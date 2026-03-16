@@ -4,6 +4,7 @@ namespace HotelBookingAppWebApi.Models
 {
     public class ReservationRoom
     {
+        [Key]
         public Guid ReservationRoomId { get; set; }
 
         public Guid ReservationId { get; set; }

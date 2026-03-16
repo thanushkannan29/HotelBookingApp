@@ -11,7 +11,7 @@ namespace HotelBookingAppWebApi.Models
         public string Message { get; set; } = string.Empty;
 
         [Required]
-        public string ErrorNumber { get; set; } = string.Empty;
+        public string ErrorCode { get; set; } = string.Empty;
 
         [Required]
         public string Role { get; set; } = string.Empty;

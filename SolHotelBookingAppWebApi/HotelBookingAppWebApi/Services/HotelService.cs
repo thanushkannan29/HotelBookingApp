@@ -1,28 +1,29 @@
 ﻿using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.Repository;
+using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Public;
 using Microsoft.EntityFrameworkCore;
-using HotelBookingAppWebApi.Models;
-using HotelBookingAppWebApi.Exceptions;
 namespace HotelBookingAppWebApi.Services
 {
     public class HotelService : IHotelService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IHotelRepository _hotelRepository;
+        private readonly IRepository<Guid, User> _userRepository;
 
-        public HotelService(HotelBookingContext context)
+        public HotelService(
+            IHotelRepository hotelRepository,
+            IRepository<Guid, User> userRepository)
         {
-            _context = context;
+            _hotelRepository = hotelRepository;
+            _userRepository = userRepository;
         }
-
-        // TOP 10 HOTELS FOR HOME PAGE
 
         public async Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync()
         {
-            var result = await _context.TopHotelViews
-                .FromSqlRaw("EXEC proc_GetTopHotels")
-                .ToListAsync();
+            var result = await _hotelRepository.GetTopHotelsAsync();
 
             return result.Select(h => new HotelListItemDto
             {
@@ -36,21 +37,16 @@ namespace HotelBookingAppWebApi.Services
             });
         }
 
-
-        // PUBLIC SEARCH
-
         public async Task<SearchHotelResponseDto> SearchHotelsAsync(SearchHotelRequestDto request)
         {
             var offset = (request.PageNumber - 1) * request.PageSize;
 
-            var hotels = await _context.Hotels
-                .FromSqlRaw("EXEC proc_SearchHotels {0},{1},{2},{3},{4}",
+            var hotels = await _hotelRepository.SearchHotelsAsync(
                 request.City,
                 offset,
                 request.PageSize,
                 request.CheckIn,
-                request.CheckOut)
-                .ToListAsync();
+                request.CheckOut);
 
             if (!hotels.Any())
                 throw new NotFoundException("No hotels found");
@@ -65,26 +61,19 @@ namespace HotelBookingAppWebApi.Services
                     ImageUrl = h.ImageUrl
                 }),
                 PageNumber = request.PageNumber,
-                RecordsCount = hotels.Count
+                RecordsCount = hotels.Count()
             };
         }
 
-        //  HOTEL DETAILS
-
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
         {
-            var hotel = await _context.Hotels
-                .Include(h => h.RoomTypes)
-                .Include(h => h.Reviews)
-                    .ThenInclude(r => r.User)
-                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
+            var hotel = await _hotelRepository.GetHotelDetailsAsync(hotelId);
 
             if (hotel == null)
                 throw new NotFoundException("Hotel not found");
 
             var reviews = hotel.Reviews ?? new List<Review>();
 
-            //  Extract amenities from RoomTypes (string split)
             var amenities = hotel.RoomTypes?
                 .Where(rt => !string.IsNullOrEmpty(rt.Amenities))
                 .SelectMany(rt => rt.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries))
@@ -99,71 +88,89 @@ namespace HotelBookingAppWebApi.Services
                 Address = hotel.Address,
                 City = hotel.City,
                 Description = hotel.Description,
-
                 AverageRating = reviews.Any()
                     ? Math.Round(reviews.Average(r => r.Rating), 2)
                     : 0,
-
                 Amenities = amenities,
-
-                Reviews = reviews
-                    .OrderByDescending(r => r.CreatedDate)
-                    .Select(r => new ReviewDto
-                    {
-                        UserName = r.User != null ? r.User.Name : "Anonymous",
-                        Rating = r.Rating,
-                        Comment = r.Comment,
-                        CreatedDate = r.CreatedDate
-                    })
-                    .ToList()
+                Reviews = reviews.Select(r => new ReviewDto
+                {
+                    UserName = r.User?.Name ?? "Anonymous",
+                    Rating = r.Rating,
+                    Comment = r.Comment,
+                    CreatedDate = r.CreatedDate
+                })
             };
         }
 
+        public async Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId)
+        {
+            var types = await _hotelRepository.GetRoomTypesAsync(hotelId);
 
+            return types.Select(t => new RoomTypePublicDto
+            {
+                RoomTypeId = t.RoomTypeId,
+                Name = t.Name,
+                Description = t.Description,
+                MaxOccupancy = t.MaxOccupancy,
+                Amenities = t.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            });
+        }
 
-        // ADMIN UPDATE
+        public async Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
+            Guid hotelId,
+            DateOnly checkIn,
+            DateOnly checkOut)
+        {
+            var inventories = await _hotelRepository.GetAvailabilityAsync(hotelId, checkIn, checkOut);
+
+            return inventories
+                .GroupBy(i => i.RoomType!)
+                .Select(g => new RoomAvailabilityDto
+                {
+                    RoomTypeId = g.Key.RoomTypeId,
+                    RoomTypeName = g.Key.Name,
+                    PricePerNight = g.Key.Rates?.FirstOrDefault()?.Rate ?? 0,
+                    AvailableRooms = g.Min(x => x.AvailableInventory)
+                });
+        }
 
         public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            var user = (await _userRepository.FindAsync(u => u.UserId == userId)).FirstOrDefault();
 
-            try
-            {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-                if (user == null || user.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized");
-
-                var hotel = await _context.Hotels.FindAsync(user.HotelId);
-
-                hotel!.Name = dto.Name;
-                hotel.Address = dto.Address;
-                hotel.City = dto.City;
-                hotel.Description = dto.Description;
-                hotel.ContactNumber = dto.ContactNumber;
-                hotel.ImageUrl = dto.ImageUrl;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        // ACTIVATE / DEACTIVATE 
-
-        public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
             if (user == null || user.HotelId == null)
                 throw new UnAuthorizedException("Unauthorized");
 
-            var hotel = await _context.Hotels.FindAsync(user.HotelId);
-            hotel!.IsActive = isActive;
+            var hotel = await _hotelRepository.GetByIdAsync(user.HotelId.Value);
 
-            await _context.SaveChangesAsync();
+            if (hotel == null)
+                throw new NotFoundException("Hotel not found");
+
+            hotel.Name = dto.Name;
+            hotel.Address = dto.Address;
+            hotel.City = dto.City;
+            hotel.Description = dto.Description;
+            hotel.ContactNumber = dto.ContactNumber;
+            hotel.ImageUrl = dto.ImageUrl;
+
+            await _hotelRepository.UpdateAsync(hotel.HotelId, hotel);
+        }
+
+        public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
+        {
+            var user = (await _userRepository.FindAsync(u => u.UserId == userId)).FirstOrDefault();
+
+            if (user == null || user.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized");
+
+            var hotel = await _hotelRepository.GetByIdAsync(user.HotelId.Value);
+
+            if (hotel == null)
+                throw new NotFoundException("Hotel not found");
+
+            hotel.IsActive = isActive;
+
+            await _hotelRepository.UpdateAsync(hotel.HotelId, hotel);
         }
     }
 }

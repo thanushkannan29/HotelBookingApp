@@ -324,5 +324,3 @@ C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingTesting\obj\Debug\net10.0\HotelBookingTesting.genruntimeconfig.cache
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingTesting\obj\Debug\net10.0\ref\HotelBookingTesting.dll
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingTesting\bin\Debug\net10.0\AspNetCoreRateLimit.dll
-C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingTesting\bin\Debug\net10.0\AutoMapper.dll
-C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingTesting\bin\Debug\net10.0\AutoMapper.Extensions.Microsoft.DependencyInjection.dll

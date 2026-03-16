@@ -75,7 +75,7 @@ namespace HotelBookingAppWebApi.Services
             {
                 LogId = l.LogId,
                 Message = l.Message,
-                ErrorNumber = l.ErrorNumber,
+                ErrorNumber = l.ErrorCode,
                 Role = l.Role,
                 UserName = l.UserName,
                 CreatedAt = l.CreatedAt

@@ -18,62 +18,102 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        
-        // ADD REVIEW (Guest)
-        
+        // ADD REVIEW
+
         [HttpPost]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> AddReview(CreateReviewDto dto)
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var result = await _service.AddReviewAsync(userId, dto);
-            return Ok(result);
+                var result = await _service.AddReviewAsync(userId, dto);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        
-        // UPDATE REVIEW (Guest)
-        
+        // UPDATE REVIEW
+
         [HttpPut("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> UpdateReview(Guid id, UpdateReviewDto dto)
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var result = await _service.UpdateReviewAsync(userId, id, dto);
-            return Ok(result);
+                var result = await _service.UpdateReviewAsync(userId, id, dto);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        
-        // DELETE REVIEW (Guest)
-        
+        // DELETE REVIEW
+
         [HttpDelete("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> DeleteReview(Guid id)
         {
-            var userId = Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            await _service.DeleteReviewAsync(userId, id);
-            return Ok(new { message = "Review deleted successfully." });
+                await _service.DeleteReviewAsync(userId, id);
+
+                return Ok(new { message = "Review deleted successfully." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
-        
-        // GET REVIEWS BY HOTEL (Public)
-        
+        // GET REVIEWS BY HOTEL (PUBLIC)
+
         [HttpGet("hotel/{hotelId}")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetByHotel(
-            Guid hotelId,
-            int page = 1,
-            int pageSize = 10)
+        public async Task<IActionResult> GetByHotel(Guid hotelId, int page = 1, int pageSize = 10)
         {
-            var result = await _service
-                .GetReviewsByHotelAsync(hotelId, page, pageSize);
+            try
+            {
+                var result = await _service.GetReviewsByHotelAsync(hotelId, page, pageSize);
 
-            return Ok(result);
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
+
+        // GET MY REVIEWS (Guest)
+
+        [HttpGet("my-reviews")]
+        [Authorize(Roles = "Guest")]
+        public async Task<IActionResult> GetMyReviews()
+        {
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+                var result = await _service.GetMyReviewsAsync(userId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
     }
 }

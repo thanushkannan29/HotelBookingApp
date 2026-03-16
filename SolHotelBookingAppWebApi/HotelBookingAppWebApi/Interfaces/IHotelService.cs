@@ -5,12 +5,20 @@ namespace HotelBookingAppWebApi.Interfaces
 {
     public interface IHotelService
     {
+        Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync();
+
         Task<SearchHotelResponseDto> SearchHotelsAsync(SearchHotelRequestDto request);
 
         Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId);
 
+        Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId);
+
+        Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
+            Guid hotelId,
+            DateOnly checkIn,
+            DateOnly checkOut);
+
         Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto);
-        Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync();
 
         Task ToggleHotelStatusAsync(Guid userId, bool isActive);
     }

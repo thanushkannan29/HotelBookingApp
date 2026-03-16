@@ -7,10 +7,22 @@ select * from RoomTypeRates
 select * from RoomTypes
 select * from RoomTypeInventories 
 select * from Reservations
-
+select * from TopHotelViews
 select * from Transactions
 select * from Reviews
 select * from Logs
+--my superadmin mail id
+
+select * from Users where Email='Thanush@test.com'
+--after add migration run this below command
+UPDATE Users
+SET Role = 3
+WHERE Email = 'Thanush@test.com';
+
+SELECT UserId, Name, Email, Role
+FROM Users
+WHERE Email = 'Thanush@test.com';
+
 
 -- to select roomtypeinventoryId for that roomtypei
 select * from RoomTypeInventories where RoomTypeId='4E4BCE29-70A0-403B-90E4-6D105F730FC2'

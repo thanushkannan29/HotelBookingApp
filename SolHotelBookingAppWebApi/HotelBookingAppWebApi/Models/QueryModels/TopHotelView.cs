@@ -11,6 +11,7 @@ namespace HotelBookingAppWebApi.Models.QueryModels
         public string ImageUrl { get; set; } = string.Empty;
 
         public decimal AverageRating { get; set; }
+
         public int ReviewCount { get; set; }
         public decimal? StartingPrice { get; set; }
     }

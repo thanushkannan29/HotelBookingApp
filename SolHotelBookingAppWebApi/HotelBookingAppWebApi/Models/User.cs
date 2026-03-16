@@ -40,6 +40,8 @@ namespace HotelBookingAppWebApi.Models
     public enum UserRole
     {
         Guest = 1,
-        Admin = 2
+        Admin = 2,
+        SuperAdmin = 3
     }
+
 }

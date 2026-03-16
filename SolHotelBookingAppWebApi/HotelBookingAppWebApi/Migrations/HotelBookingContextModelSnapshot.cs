@@ -81,7 +81,7 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ErrorNumber")
+                    b.Property<string>("ErrorCode")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -183,6 +183,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
+                    b.Property<DateTime?>("ExpiryTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uniqueidentifier");
 
@@ -208,6 +211,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsUnique();
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("Status", "ExpiryTime");
 
                     b.ToTable("Reservations");
                 });
@@ -664,7 +669,8 @@ namespace HotelBookingAppWebApi.Migrations
                 {
                     b.HasOne("HotelBookingAppWebApi.Models.Hotel", "Hotel")
                         .WithMany()
-                        .HasForeignKey("HotelId");
+                        .HasForeignKey("HotelId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Hotel");
                 });
