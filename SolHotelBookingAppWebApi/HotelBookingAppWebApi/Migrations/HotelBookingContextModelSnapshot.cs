@@ -79,7 +79,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("ErrorCode")
                         .IsRequired()
@@ -126,7 +128,7 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("RoomListQueryModel");
+                    b.ToTable("RoomListQueries");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.TopHotelView", b =>
@@ -568,7 +570,7 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasOne("HotelBookingAppWebApi.Models.Room", "Room")
                         .WithMany("ReservationRooms")
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("HotelBookingAppWebApi.Models.RoomType", "RoomType")

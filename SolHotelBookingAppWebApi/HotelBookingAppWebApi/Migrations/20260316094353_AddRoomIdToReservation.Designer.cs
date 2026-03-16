@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingAppWebApi.Migrations
 {
     [DbContext(typeof(HotelBookingContext))]
-    [Migration("20260316072432_AddRoomIdToReservationRoom")]
-    partial class AddRoomIdToReservationRoom
+    [Migration("20260316094353_AddRoomIdToReservation")]
+    partial class AddRoomIdToReservation
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -82,7 +82,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("ErrorCode")
                         .IsRequired()
@@ -129,7 +131,7 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.ToTable("RoomListQueryModel");
+                    b.ToTable("RoomListQueries");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.TopHotelView", b =>
@@ -571,7 +573,7 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasOne("HotelBookingAppWebApi.Models.Room", "Room")
                         .WithMany("ReservationRooms")
                         .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("HotelBookingAppWebApi.Models.RoomType", "RoomType")

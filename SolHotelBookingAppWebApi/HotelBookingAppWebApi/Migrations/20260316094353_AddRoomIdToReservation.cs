@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRoomIdToReservationRoom : Migration
+    public partial class AddRoomIdToReservation : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -31,7 +31,7 @@ namespace HotelBookingAppWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "RoomListQueryModel",
+                name: "RoomListQueries",
                 columns: table => new
                 {
                     RoomId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -188,7 +188,7 @@ namespace HotelBookingAppWebApi.Migrations
                     Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
                 {
@@ -319,7 +319,7 @@ namespace HotelBookingAppWebApi.Migrations
                         column: x => x.RoomId,
                         principalTable: "Rooms",
                         principalColumn: "RoomId",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -468,7 +468,7 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "RoomListQueryModel");
+                name: "RoomListQueries");
 
             migrationBuilder.DropTable(
                 name: "RoomTypeInventories");

@@ -3,15 +3,18 @@ select * from Hotels
 select * from UserProfileDetails
 select * from Rooms
 select * from ReservationRooms
+order by RoomId
 select * from RoomTypeRates
 select * from RoomTypes
 select * from RoomTypeInventories 
+order by ReservedInventory desc
 select * from Reservations
 select * from TopHotelViews
 select * from Transactions
 select * from Reviews
 select * from Logs
 --my superadmin mail id
+
 
 select * from Users where Email='Thanush@test.com'
 --after add migration run this below command

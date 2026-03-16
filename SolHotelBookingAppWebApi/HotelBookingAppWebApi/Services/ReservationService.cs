@@ -40,6 +40,10 @@ namespace HotelBookingAppWebApi.Services
 
             var physicalRooms = await _repo.GetPhysicalRoomsAsync(dto.RoomTypeId, dto.HotelId);
 
+            if (dto.NumberOfRooms <= 0)
+                throw new ValidationException("Number of rooms must be greater than 0");
+
+
             if (dto.NumberOfRooms > physicalRooms)
                 throw new InsufficientInventoryException($"Only {physicalRooms} rooms available");
 

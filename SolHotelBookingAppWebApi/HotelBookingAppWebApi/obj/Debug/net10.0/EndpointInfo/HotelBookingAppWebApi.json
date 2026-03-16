@@ -1366,7 +1366,7 @@
             "format": "date"
           },
           "numberOfRooms": {
-            "maximum": 10,
+            "maximum": 2147483647,
             "minimum": 1,
             "type": "integer",
             "format": "int32"

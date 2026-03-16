@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public DateOnly CheckOutDate { get; set; }
 
         [Required]
-        [Range(1, 10, ErrorMessage = "Number of rooms must be at least 1")]
+        [Range(1, int.MaxValue, ErrorMessage = "Number of rooms must be at least 1")]
         public int NumberOfRooms { get; set; }
 
         

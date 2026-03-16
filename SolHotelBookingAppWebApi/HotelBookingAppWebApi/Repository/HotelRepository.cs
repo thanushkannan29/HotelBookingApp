@@ -56,11 +56,13 @@ namespace HotelBookingAppWebApi.Repository
         {
             return await _context.RoomTypeInventories
                 .Include(i => i.RoomType)
+                    .ThenInclude(rt => rt!.Rates)
                 .Where(i =>
                     i.RoomType!.HotelId == hotelId &&
                     i.Date >= checkIn &&
                     i.Date <= checkOut)
                 .ToListAsync();
         }
+
     }
 }

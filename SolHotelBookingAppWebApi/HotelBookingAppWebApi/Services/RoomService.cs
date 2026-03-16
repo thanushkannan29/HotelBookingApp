@@ -151,7 +151,7 @@ namespace HotelBookingAppWebApi.Services
 
             var offset = (pageNumber - 1) * pageSize;
 
-            var result = await _context.RoomListQueryModel
+            var result = await _context.RoomListQueries
                 .FromSqlRaw("EXEC proc_GetRoomsByHotel {0},{1},{2}",
                     user.HotelId, offset, pageSize)
                 .ToListAsync();

@@ -125,13 +125,20 @@ namespace HotelBookingAppWebApi.Services
 
             return inventories
                 .GroupBy(i => i.RoomType!)
-                .Select(g => new RoomAvailabilityDto
+                .Select(g =>
                 {
-                    RoomTypeId = g.Key.RoomTypeId,
-                    RoomTypeName = g.Key.Name,
-                    PricePerNight = g.Key.Rates?.FirstOrDefault()?.Rate ?? 0,
-                    AvailableRooms = g.Min(x => x.AvailableInventory)
-                });
+                    var rate = g.Key.Rates?
+                        .FirstOrDefault(r => checkIn >= r.StartDate && checkIn <= r.EndDate);
+
+                    return new RoomAvailabilityDto
+                    {
+                        RoomTypeId = g.Key.RoomTypeId,
+                        RoomTypeName = g.Key.Name,
+                        PricePerNight = rate?.Rate ?? 0,
+                        AvailableRooms = g.Min(x => x.AvailableInventory)
+                    };
+    });
+
         }
 
         public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
