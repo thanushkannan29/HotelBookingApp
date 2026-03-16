@@ -96,5 +96,16 @@ namespace HotelBookingAppWebApi.Repository
         {
             await _context.SaveChangesAsync();
         }
+        public async Task<List<Room>> GetAvailableRoomsAsync(Guid roomTypeId, Guid hotelId)
+        {
+            return await _context.Rooms
+                .Where(r =>
+                    r.RoomTypeId == roomTypeId &&
+                    r.HotelId == hotelId &&
+                    r.IsActive)
+                .ToListAsync();
+        }
+
+
     }
 }

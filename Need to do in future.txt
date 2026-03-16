@@ -72,7 +72,7 @@ Example missing:
 EmailService
 SendReservationConfirmation()
 
-
+builder.Services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>)); can replace for all repo code
 ⚠️ Optional but good to add later.
 
 ⚠️ 5. Payment System

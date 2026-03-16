@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingAppWebApi.Migrations
 {
     [DbContext(typeof(HotelBookingContext))]
-    [Migration("20260315094741_UpdateDbContextRelations")]
-    partial class UpdateDbContextRelations
+    [Migration("20260316072432_AddRoomIdToReservationRoom")]
+    partial class AddRoomIdToReservationRoom
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -226,9 +226,6 @@ namespace HotelBookingAppWebApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<int>("NumberOfRooms")
-                        .HasColumnType("int");
-
                     b.Property<decimal>("PricePerNight")
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
@@ -236,7 +233,7 @@ namespace HotelBookingAppWebApi.Migrations
                     b.Property<Guid>("ReservationId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid?>("RoomId")
+                    b.Property<Guid>("RoomId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("RoomTypeId")
@@ -571,9 +568,11 @@ namespace HotelBookingAppWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("HotelBookingAppWebApi.Models.Room", null)
+                    b.HasOne("HotelBookingAppWebApi.Models.Room", "Room")
                         .WithMany("ReservationRooms")
-                        .HasForeignKey("RoomId");
+                        .HasForeignKey("RoomId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("HotelBookingAppWebApi.Models.RoomType", "RoomType")
                         .WithMany()
@@ -582,6 +581,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Reservation");
+
+                    b.Navigation("Room");
 
                     b.Navigation("RoomType");
                 });

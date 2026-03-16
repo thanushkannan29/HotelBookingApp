@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class UpdateDbContextRelations : Migration
+    public partial class AddRoomIdToReservationRoom : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -296,9 +296,8 @@ namespace HotelBookingAppWebApi.Migrations
                     ReservationRoomId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     ReservationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     RoomTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    NumberOfRooms = table.Column<int>(type: "int", nullable: false),
-                    PricePerNight = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    RoomId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    RoomId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PricePerNight = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -319,7 +318,8 @@ namespace HotelBookingAppWebApi.Migrations
                         name: "FK_ReservationRooms_Rooms_RoomId",
                         column: x => x.RoomId,
                         principalTable: "Rooms",
-                        principalColumn: "RoomId");
+                        principalColumn: "RoomId",
+                        onDelete: ReferentialAction.Cascade);
                 });
 
             migrationBuilder.CreateTable(

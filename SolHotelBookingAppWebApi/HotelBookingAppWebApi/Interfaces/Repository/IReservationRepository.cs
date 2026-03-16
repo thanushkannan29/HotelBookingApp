@@ -12,6 +12,8 @@ namespace HotelBookingAppWebApi.Interfaces.Repository
 
         Task<List<RoomTypeRate>> GetRatesAsync(Guid roomTypeId, DateOnly checkIn, DateOnly checkOut);
 
+        Task<List<Room>> GetAvailableRoomsAsync(Guid roomTypeId, Guid hotelId);
+
         Task AddReservationAsync(Reservation reservation);
 
         Task AddReservationRoomAsync(ReservationRoom room);

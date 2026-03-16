@@ -16,9 +16,8 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
-         
         // CREATE PAYMENT
-         
+
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
             var reservation = await _context.Reservations
@@ -52,9 +51,6 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(transaction);
         }
 
-
-
-
         // REFUND
 
         public async Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto)
@@ -87,6 +83,8 @@ namespace HotelBookingAppWebApi.Services
 
                 var room = reservation.ReservationRooms.First();
 
+                int numberOfRooms = reservation.ReservationRooms.Count;
+
                 var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
 
                 var dates = Enumerable.Range(0, totalDays)
@@ -98,7 +96,9 @@ namespace HotelBookingAppWebApi.Services
                     .ToListAsync();
 
                 foreach (var inventory in inventories)
-                    inventory.ReservedInventory -= room.NumberOfRooms;
+                {
+                    inventory.ReservedInventory -= numberOfRooms;
+                }
 
                 await _context.SaveChangesAsync();
                 await dbTransaction.CommitAsync();
@@ -112,13 +112,9 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-
-
         // PAGINATION
 
-        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
-            int page,
-            int pageSize)
+        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(int page, int pageSize)
         {
             var query = _context.Transactions.AsQueryable();
 
@@ -144,8 +140,8 @@ namespace HotelBookingAppWebApi.Services
                 TotalCount = total,
                 Transactions = transactions
             };
-
         }
+
         private static TransactionResponseDto MapToDto(Transaction t)
         {
             return new TransactionResponseDto
@@ -158,6 +154,5 @@ namespace HotelBookingAppWebApi.Services
                 TransactionDate = t.TransactionDate
             };
         }
-
     }
 }

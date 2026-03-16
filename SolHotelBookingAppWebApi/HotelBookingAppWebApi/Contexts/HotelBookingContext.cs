@@ -215,8 +215,15 @@ namespace HotelBookingAppWebApi.Contexts
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<ReservationRoom>()
+                .HasOne(rr => rr.Room)
+                .WithMany()
+                .HasForeignKey(rr => rr.RoomId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ReservationRoom>()
                 .Property(rr => rr.PricePerNight)
                 .HasPrecision(18, 2);
+
 
             /*
             ==================================================

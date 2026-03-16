@@ -1,6 +1,7 @@
 ﻿using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class ReservationCleanupService : BackgroundService
@@ -29,10 +30,12 @@ namespace HotelBookingAppWebApi.Services
 
                 foreach (var reservation in expired)
                 {
-                    var room = reservation.ReservationRooms!.FirstOrDefault();
-
-                    if (room == null)
+                    if (!reservation.ReservationRooms.Any())
                         continue;
+
+                    var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
+
+                    int numberOfRooms = reservation.ReservationRooms.Count;
 
                     var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
 
@@ -41,13 +44,13 @@ namespace HotelBookingAppWebApi.Services
                         .ToList();
 
                     var inventories = await context.RoomTypeInventories
-                        .Where(i => i.RoomTypeId == room.RoomTypeId && dates.Contains(i.Date))
+                        .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
                         .ToListAsync(stoppingToken);
 
                     foreach (var inv in inventories)
                     {
                         inv.ReservedInventory =
-                            Math.Max(0, inv.ReservedInventory - room.NumberOfRooms);
+                            Math.Max(0, inv.ReservedInventory - numberOfRooms);
                     }
 
                     reservation.Status = ReservationStatus.Cancelled;
@@ -61,6 +64,4 @@ namespace HotelBookingAppWebApi.Services
             }
         }
     }
-
-
 }
