@@ -1,26 +1,36 @@
-﻿using HotelBookingAppWebApi.Contexts;
-using HotelBookingAppWebApi.Exceptions;
+﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.UserDetails;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class UserService : IUserService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public UserService(HotelBookingContext context)
+        public UserService(
+            IRepository<Guid, User> userRepo,
+            IRepository<Guid, Reservation> reservationRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _userRepo = userRepo;
+            _reservationRepo = reservationRepo;
+            _unitOfWork = unitOfWork;
         }
 
-         
+        
         // GET PROFILE
-         
+        
         public async Task<UserProfileResponseDto> GetProfileAsync(Guid userId)
         {
-            var user = await _context.Users
+            var user = await _userRepo
+                .GetQueryable()
                 .Include(u => u.UserDetails)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
@@ -33,60 +43,70 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(user);
         }
 
-         
-        // UPDATE PROFILE (Transactional)
-         
+        
+        // UPDATE PROFILE (TRANSACTION)
+        
         public async Task<UserProfileResponseDto> UpdateProfileAsync(
             Guid userId,
             UpdateUserProfileDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
-            var user = await _context.Users
-                .Include(u => u.UserDetails)
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            try
+            {
+                var user = await _userRepo
+                    .GetQueryable()
+                    .Include(u => u.UserDetails)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
 
-            if (user == null)
-                throw new NotFoundException("User not found.");
+                if (user == null)
+                    throw new NotFoundException("User not found.");
 
-            if (user.UserDetails == null)
-                throw new UserProfileException("Profile details not found.");
+                if (user.UserDetails == null)
+                    throw new UserProfileException("Profile details not found.");
 
-            var details = user.UserDetails;
+                var details = user.UserDetails;
 
-            if (!string.IsNullOrWhiteSpace(dto.Name))
-                details.Name = dto.Name;
+                // Update only if provided
+                if (!string.IsNullOrWhiteSpace(dto.Name))
+                    details.Name = dto.Name;
 
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-                details.PhoneNumber = dto.PhoneNumber;
+                if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                    details.PhoneNumber = dto.PhoneNumber;
 
-            if (!string.IsNullOrWhiteSpace(dto.Address))
-                details.Address = dto.Address;
+                if (!string.IsNullOrWhiteSpace(dto.Address))
+                    details.Address = dto.Address;
 
-            if (!string.IsNullOrWhiteSpace(dto.State))
-                details.State = dto.State;
+                if (!string.IsNullOrWhiteSpace(dto.State))
+                    details.State = dto.State;
 
-            if (!string.IsNullOrWhiteSpace(dto.City))
-                details.City = dto.City;
+                if (!string.IsNullOrWhiteSpace(dto.City))
+                    details.City = dto.City;
 
-            if (!string.IsNullOrWhiteSpace(dto.Pincode))
-                details.Pincode = dto.Pincode;
+                if (!string.IsNullOrWhiteSpace(dto.Pincode))
+                    details.Pincode = dto.Pincode;
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
 
-            return MapToDto(user);
+                return MapToDto(user);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-         
-        // BOOKING HISTORY (PAGINATED)
-         
+        
+        // BOOKING HISTORY (PAGINATION)
+        
         public async Task<PagedBookingHistoryDto> GetBookingHistoryAsync(
             Guid userId,
             int page,
             int pageSize)
         {
-            var query = _context.Reservations
+            var query = _reservationRepo
+                .GetQueryable()
                 .Include(r => r.Hotel)
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate);
@@ -116,6 +136,9 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
+        
+        // MAPPER
+        
         private static UserProfileResponseDto MapToDto(User user)
         {
             var d = user.UserDetails!;

@@ -1,14 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class UnableToCreateEntityException : Exception
+    public class UnableToCreateEntityException : AppException
     {
-        public UnableToCreateEntityException() : base("Unable to create object")
-        {
-
-        }
-        public UnableToCreateEntityException(string entityName) : base($"Unable to create {entityName}.")
-        {
-        }
-
+        public UnableToCreateEntityException(string message = "Unable to create entity")
+            : base(message, 400) { }
     }
 }

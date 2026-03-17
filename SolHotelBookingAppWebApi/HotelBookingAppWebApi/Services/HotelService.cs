@@ -1,11 +1,10 @@
-﻿using HotelBookingAppWebApi.Contexts;
-using HotelBookingAppWebApi.Exceptions;
+﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Public;
-using HotelBookingAppWebApi.Models.QueryModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
@@ -14,75 +13,95 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IRepository<Guid, User> _userRepo;
-        private readonly HotelBookingContext _context; // for Stored Procedures
         private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IUnitOfWork _unitOfWork;
+
         public HotelService(
-                IRepository<Guid, Hotel> hotelRepo,
-                IRepository<Guid, User> userRepo,
-                IRepository<Guid, RoomType> roomTypeRepo,
-                HotelBookingContext context)
+            IRepository<Guid, Hotel> hotelRepo,
+            IRepository<Guid, User> userRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IUnitOfWork unitOfWork)
         {
             _hotelRepo = hotelRepo;
             _userRepo = userRepo;
             _roomTypeRepo = roomTypeRepo;
-            _context = context;
+            _unitOfWork = unitOfWork;
         }
 
-
-        // ✅ TOP HOTELS (Stored Procedure)
+        
+        // TOP HOTELS
+        
         public async Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync()
         {
-            var result = await _context.Set<TopHotelView>()
-                .FromSqlRaw("EXEC proc_GetTopHotels")
-                .ToListAsync();
+            return await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive)
+                .Select(h => new HotelListItemDto
+                {
+                    HotelId = h.HotelId,
+                    Name = h.Name,
+                    City = h.City,
+                    ImageUrl = h.ImageUrl,
 
-            return result.Select(h => new HotelListItemDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ImageUrl = h.ImageUrl,
-                AverageRating = h.AverageRating,
-                ReviewCount = h.ReviewCount,
-                StartingPrice = h.StartingPrice
-            });
+                    AverageRating = h.Reviews.Any()
+                        ? Math.Round(h.Reviews.Average(r => (decimal)r.Rating), 2)
+                        : 0m,
+
+
+                    ReviewCount = h.Reviews.Count(),
+
+                    StartingPrice = h.RoomTypes
+                        .SelectMany(rt => rt.Rates)
+                        .Min(r => (decimal?)r.Rate) ?? 0
+                })
+                .OrderByDescending(h => h.AverageRating)
+                .ThenByDescending(h => h.ReviewCount)
+                .Take(10)
+                .ToListAsync();
         }
 
-        // ✅ SEARCH HOTELS (Stored Procedure)
+        
+        // SEARCH HOTELS
+        
         public async Task<SearchHotelResponseDto> SearchHotelsAsync(SearchHotelRequestDto request)
         {
-            var offset = (request.PageNumber - 1) * request.PageSize;
+            var query = _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive && h.City == request.City);
 
-            var hotels = await _context.Hotels
-                .FromSqlRaw("EXEC proc_SearchHotels {0},{1},{2},{3},{4}",
-                    request.City,
-                    offset,
-                    request.PageSize,
-                    request.CheckIn,
-                    request.CheckOut)
-                .ToListAsync();
+            var totalRecords = await query.CountAsync();
 
-            if (!hotels.Any())
+            if (totalRecords == 0)
                 throw new NotFoundException("No hotels found");
 
-            return new SearchHotelResponseDto
-            {
-                Hotels = hotels.Select(h => new HotelListItemDto
+            var hotels = await query
+                .OrderBy(h => h.Name)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(h => new HotelListItemDto
                 {
                     HotelId = h.HotelId,
                     Name = h.Name,
                     City = h.City,
                     ImageUrl = h.ImageUrl
-                }),
+                })
+                .ToListAsync();
+
+            return new SearchHotelResponseDto
+            {
+                Hotels = hotels,
                 PageNumber = request.PageNumber,
-                RecordsCount = hotels.Count
+                RecordsCount = totalRecords
             };
         }
 
-        // ✅ HOTEL DETAILS (IQueryable + Include)
+        
+        // HOTEL DETAILS
+        
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
         {
             var hotel = await _hotelRepo.GetQueryable()
+                .AsNoTracking()
                 .Include(h => h.RoomTypes)
                 .Include(h => h.Reviews)
                     .ThenInclude(r => r.User)
@@ -107,10 +126,14 @@ namespace HotelBookingAppWebApi.Services
                 Address = hotel.Address,
                 City = hotel.City,
                 Description = hotel.Description,
+
                 AverageRating = reviews.Any()
-                    ? Math.Round(reviews.Average(r => r.Rating), 2)
-                    : 0,
+                    ? Math.Round(reviews.Average(r => (decimal)r.Rating), 2)
+                    : 0m,
+
+
                 Amenities = amenities,
+
                 Reviews = reviews.Select(r => new ReviewDto
                 {
                     UserName = r.User?.Name ?? "Anonymous",
@@ -121,10 +144,13 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        //  ROOM TYPES
+        
+        // ROOM TYPES
+        
         public async Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId)
         {
             var types = await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
                 .Where(r => r.HotelId == hotelId && r.IsActive)
                 .ToListAsync();
 
@@ -134,24 +160,26 @@ namespace HotelBookingAppWebApi.Services
                 Name = t.Name,
                 Description = t.Description,
                 MaxOccupancy = t.MaxOccupancy,
-                Amenities = t.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                Amenities = t.Amenities?
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries) ?? new string[] { }
             });
         }
 
-
-        // ✅ AVAILABILITY
+        
+        // AVAILABILITY
+        
         public async Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
             Guid hotelId,
             DateOnly checkIn,
             DateOnly checkOut)
         {
-            var inventories = await _context.RoomTypeInventories
-                .Include(i => i.RoomType)
-                    .ThenInclude(rt => rt!.Rates)
-                .Where(i =>
-                    i.RoomType!.HotelId == hotelId &&
-                    i.Date >= checkIn &&
-                    i.Date <= checkOut)
+            var inventories = await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(rt => rt.HotelId == hotelId)
+                .SelectMany(rt => rt.Inventories)
+                .Where(i => i.Date >= checkIn && i.Date <= checkOut)
+                .Include(i => i.RoomType!)
+                    .ThenInclude(rt => rt.Rates)
                 .ToListAsync();
 
             return inventories
@@ -159,7 +187,9 @@ namespace HotelBookingAppWebApi.Services
                 .Select(g =>
                 {
                     var rate = g.Key.Rates?
-                        .FirstOrDefault(r => checkIn >= r.StartDate && checkIn <= r.EndDate);
+                        .FirstOrDefault(r =>
+                            checkIn >= r.StartDate &&
+                            checkIn <= r.EndDate);
 
                     return new RoomAvailabilityDto
                     {
@@ -171,47 +201,69 @@ namespace HotelBookingAppWebApi.Services
                 });
         }
 
-        // ✅ UPDATE HOTEL
+        
+        // UPDATE HOTEL (WITH TRANSACTION)
+        
         public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
         {
-            var user = await _userRepo.GetQueryable()
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (user == null || user.HotelId == null)
-                throw new UnAuthorizedException("Unauthorized");
+            try
+            {
+                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
 
-            var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
+                if (user == null || user.HotelId == null)
+                    throw new UnAuthorizedException("Unauthorized");
 
-            if (hotel == null)
-                throw new NotFoundException("Hotel not found");
+                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
 
-            hotel.Name = dto.Name;
-            hotel.Address = dto.Address;
-            hotel.City = dto.City;
-            hotel.Description = dto.Description;
-            hotel.ContactNumber = dto.ContactNumber;
-            hotel.ImageUrl = dto.ImageUrl;
+                if (hotel == null)
+                    throw new NotFoundException("Hotel not found");
 
-            await _hotelRepo.UpdateAsync(hotel.HotelId, hotel);
+                hotel.Name = dto.Name;
+                hotel.Address = dto.Address;
+                hotel.City = dto.City;
+                hotel.Description = dto.Description;
+                hotel.ContactNumber = dto.ContactNumber;
+                hotel.ImageUrl = dto.ImageUrl;
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // ✅ TOGGLE STATUS
+        
+        // TOGGLE HOTEL STATUS (WITH TRANSACTION)
+        
         public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
         {
-            var user = await _userRepo.GetQueryable()
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (user == null || user.HotelId == null)
-                throw new UnAuthorizedException("Unauthorized");
+            try
+            {
+                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
 
-            var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
+                if (user == null || user.HotelId == null)
+                    throw new UnAuthorizedException("Unauthorized");
 
-            if (hotel == null)
-                throw new NotFoundException("Hotel not found");
+                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
 
-            hotel.IsActive = isActive;
+                if (hotel == null)
+                    throw new NotFoundException("Hotel not found");
 
-            await _hotelRepo.UpdateAsync(hotel.HotelId, hotel);
+                hotel.IsActive = isActive;
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
     }
 }

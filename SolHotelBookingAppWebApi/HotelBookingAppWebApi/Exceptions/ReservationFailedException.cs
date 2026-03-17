@@ -1,9 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class ReservationFailedException:Exception
+    public class ReservationFailedException : AppException
     {
-        public ReservationFailedException(string message) : base($"{message} is Reservation Failer try Again")
-        {
-        }
+        public ReservationFailedException(string message)
+            : base($"{message} - Reservation failed", 400) { }
     }
 }

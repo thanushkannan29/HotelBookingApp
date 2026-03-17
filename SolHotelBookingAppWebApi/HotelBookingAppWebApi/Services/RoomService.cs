@@ -1,66 +1,81 @@
-﻿using HotelBookingAppWebApi.Contexts;
-using HotelBookingAppWebApi.Exceptions;
+﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Room;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
-{   
+{
     public class RoomService : IRoomService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, Room> _roomRepo;
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RoomService(HotelBookingContext context)
+        public RoomService(
+            IRepository<Guid, Room> roomRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid, User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _roomRepo = roomRepo;
+            _roomTypeRepo = roomTypeRepo;
+            _inventoryRepo = inventoryRepo;
+            _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        // ADD ROOM 
+        #region ADD
+
         public async Task AddRoomAsync(Guid userId, CreateRoomDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                if (user?.HotelId == null)
+                if (user.HotelId == null)
                     throw new UnAuthorizedException("Unauthorized");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
-                                            && rt.HotelId == user.HotelId);
+                // Validate RoomType
+                var roomTypeExists = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(rt => rt.RoomTypeId == dto.RoomTypeId &&
+                                    rt.HotelId == user.HotelId);
 
-                if (roomType == null)
+                if (!roomTypeExists)
                     throw new NotFoundException("Invalid RoomType");
 
-                var existingRoomNumber = await _context.Rooms
-                    .AnyAsync(r => r.HotelId == user.HotelId
-                                && r.RoomNumber == dto.RoomNumber);
+                // Unique Room Number
+                var exists = await _roomRepo.GetQueryable()
+                    .AnyAsync(r => r.HotelId == user.HotelId &&
+                                   r.RoomNumber == dto.RoomNumber);
 
-                if (existingRoomNumber)
+                if (exists)
                     throw new ConflictException("Room number already exists");
 
-                // INVENTORY CHECK STARTS HERE
+                // Inventory Check
+                var currentCount = await _roomRepo.GetQueryable()
+                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId &&
+                                     r.HotelId == user.HotelId);
 
-                var physicalRoomCount = await _context.Rooms
-                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                  && r.HotelId == user.HotelId);
-
-                var maxInventory = await _context.RoomTypeInventories
+                var maxInventory = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == dto.RoomTypeId)
                     .MaxAsync(i => (int?)i.TotalInventory);
 
                 if (maxInventory == null)
-                    throw new NotFoundException("Inventory not defined for this RoomType");
+                    throw new NotFoundException("Inventory not defined");
 
-                if (physicalRoomCount >= maxInventory)
-                    throw new ConflictException(
-                        $"Cannot create more rooms. Max allowed: {maxInventory}");
+                if (currentCount >= maxInventory)
+                    throw new ConflictException($"Max rooms allowed: {maxInventory}");
 
-                // INVENTORY CHECK ENDS HERE
-
+                // Create Room
                 var room = new Room
                 {
                     RoomId = Guid.NewGuid(),
@@ -71,100 +86,114 @@ namespace HotelBookingAppWebApi.Services
                     IsActive = true
                 };
 
-                await _context.Rooms.AddAsync(room);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _roomRepo.AddAsync(room);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
+        #endregion
 
-        // UPDATE ROOM
+        #region UPDATE
 
         public async Task UpdateRoomAsync(Guid userId, UpdateRoomDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FindAsync(userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                var room = await _context.Rooms
-                    .FirstOrDefaultAsync(r => r.RoomId == dto.RoomId
-                                           && r.HotelId == user!.HotelId);
+                var room = await _roomRepo.GetQueryable()
+                    .FirstOrDefaultAsync(r =>
+                        r.RoomId == dto.RoomId &&
+                        r.HotelId == user.HotelId);
 
                 if (room == null)
                     throw new NotFoundException("Room not found");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
-                                            && rt.HotelId == user.HotelId);
+                var validRoomType = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(rt =>
+                        rt.RoomTypeId == dto.RoomTypeId &&
+                        rt.HotelId == user.HotelId);
 
-                if (roomType == null)
-                    throw new UnableToCreateEntityException("Invalid RoomType");
+                if (!validRoomType)
+                    throw new NotFoundException("Invalid RoomType");
 
                 room.RoomNumber = dto.RoomNumber;
                 room.Floor = dto.Floor;
                 room.RoomTypeId = dto.RoomTypeId;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // TOGGLE ROOM STATUS
+        #endregion
+
+        #region TOGGLE STATUS
 
         public async Task ToggleRoomStatusAsync(Guid userId, Guid roomId, bool isActive)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            var room = await _context.Rooms
-                .FirstOrDefaultAsync(r => r.RoomId == roomId
-                                       && r.HotelId == user!.HotelId);
+            var room = await _roomRepo.GetQueryable()
+                .FirstOrDefaultAsync(r =>
+                    r.RoomId == roomId &&
+                    r.HotelId == user.HotelId);
 
             if (room == null)
                 throw new NotFoundException("Room not found");
 
             room.IsActive = isActive;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // LIST ROOMS 
+        #endregion
+
+        #region GET ROOMS 
 
         public async Task<IEnumerable<RoomListResponseDto>> GetRoomsByHotelAsync(
-    Guid userId, int pageNumber, int pageSize)
+            Guid userId, int pageNumber, int pageSize)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            if (user?.HotelId == null)
+            if (user.HotelId == null)
                 throw new UnAuthorizedException("Unauthorized");
 
-            var offset = (pageNumber - 1) * pageSize;
+            var query = _roomRepo.GetQueryable()
+                .Include(r => r.RoomType)
+                .Where(r => r.HotelId == user.HotelId)
+                .OrderBy(r => r.RoomNumber);
 
-            var result = await _context.RoomListQueries
-                .FromSqlRaw("EXEC proc_GetRoomsByHotel {0},{1},{2}",
-                    user.HotelId, offset, pageSize)
+            var rooms = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return result.Select(r => new RoomListResponseDto
+            return rooms.Select(r => new RoomListResponseDto
             {
                 RoomId = r.RoomId,
                 RoomNumber = r.RoomNumber,
                 Floor = r.Floor,
-                RoomTypeName = r.RoomTypeName,
+                RoomTypeName = r.RoomType!.Name,
                 IsActive = r.IsActive
             });
         }
 
+        #endregion
     }
 }

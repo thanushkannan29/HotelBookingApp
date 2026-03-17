@@ -1,6 +1,7 @@
 ﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
 using Microsoft.EntityFrameworkCore;
@@ -14,137 +15,157 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(
             IRepository<Guid, User> userRepository,
             IRepository<Guid, Hotel> hotelRepository,
             IRepository<Guid, UserProfileDetails> userProfileRepository,
             IPasswordService passwordService,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _hotelRepository = hotelRepository;
             _userProfileRepository = userProfileRepository;
             _passwordService = passwordService;
             _tokenService = tokenService;
+            _unitOfWork = unitOfWork;
         }
 
-        // REGISTER GUEST
+        //  REGISTER GUEST (WITH TRANSACTION)
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
-            var exists = await _userRepository.GetQueryable().AnyAsync(u => u.Email == dto.Email);
+            var exists = await _userRepository.GetQueryable()
+                .AnyAsync(u => u.Email == dto.Email);
 
             if (exists)
                 throw new ConflictException("Email already registered");
 
+            await _unitOfWork.BeginTransactionAsync();
 
-
-            byte[]? salt;
-            var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
-
-            var user = new User
+            try
             {
-                UserId = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                Password = hashedPassword,
-                PasswordSaltValue = salt!,
-                Role = UserRole.Guest,
-                CreatedAt = DateTime.UtcNow
-            };
+                byte[]? salt;
+                var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
-            await _userRepository.AddAsync(user);
+                var user = new User
+                {
+                    UserId = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Password = hashedPassword,
+                    PasswordSaltValue = salt!,
+                    Role = UserRole.Guest,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            // CREATE USER PROFILE DETAILS
-            var profile = new UserProfileDetails
+                await _userRepository.AddAsync(user);
+
+                var profile = new UserProfileDetails
+                {
+                    UserDetailsId = Guid.NewGuid(),
+                    UserId = user.UserId,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    PhoneNumber = "Not Updated",
+                    Address = "Not Updated",
+                    City = "Not Updated",
+                    State = "Not Updated",
+                    Pincode = "000000",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userProfileRepository.AddAsync(profile);
+
+                await _unitOfWork.CommitAsync();
+
+                return GenerateToken(user);
+            }
+            catch
             {
-                UserDetailsId = Guid.NewGuid(),
-                UserId = user.UserId,
-                Name = dto.Name,
-                Email = dto.Email,
-                PhoneNumber = "Not Updated",
-                Address = "Not Updated",
-                City = "Not Updated",
-                State = "Not Updated",
-                Pincode = "000000",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userProfileRepository.AddAsync(profile);
-
-            return GenerateToken(user);
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // REGISTER HOTEL ADMIN
+        //  REGISTER HOTEL ADMIN (WITH TRANSACTION)
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
-            var exists = await _userRepository.GetQueryable().AnyAsync(u => u.Email == dto.Email);
+            var exists = await _userRepository.GetQueryable()
+                .AnyAsync(u => u.Email == dto.Email);
 
             if (exists)
                 throw new ConflictException("Email already registered");
 
+            await _unitOfWork.BeginTransactionAsync();
 
-
-            // Create Hotel
-            var hotel = new Hotel
+            try
             {
-                HotelId = Guid.NewGuid(),
-                Name = dto.HotelName,
-                Address = dto.Address,
-                City = dto.City,
-                Description = dto.Description,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+                var hotel = new Hotel
+                {
+                    HotelId = Guid.NewGuid(),
+                    Name = dto.HotelName,
+                    Address = dto.Address,
+                    City = dto.City,
+                    Description = dto.Description,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            await _hotelRepository.AddAsync(hotel);
+                await _hotelRepository.AddAsync(hotel);
 
-            // Create Admin
-            byte[]? salt;
-            var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
+                byte[]? salt;
+                var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
-            var admin = new User
+                var admin = new User
+                {
+                    UserId = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Password = hashedPassword,
+                    PasswordSaltValue = salt!,
+                    Role = UserRole.Admin,
+                    HotelId = hotel.HotelId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userRepository.AddAsync(admin);
+
+                var profile = new UserProfileDetails
+                {
+                    UserDetailsId = Guid.NewGuid(),
+                    UserId = admin.UserId,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    PhoneNumber = "Not Updated",
+                    Address = dto.Address,
+                    City = dto.City,
+                    State = "Not Updated",
+                    Pincode = "000000",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userProfileRepository.AddAsync(profile);
+
+                await _unitOfWork.CommitAsync();
+
+                return GenerateToken(admin);
+            }
+            catch
             {
-                UserId = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                Password = hashedPassword,
-                PasswordSaltValue = salt!,
-                Role = UserRole.Admin,
-                HotelId = hotel.HotelId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userRepository.AddAsync(admin);
-
-            // Create Profile
-            var profile = new UserProfileDetails
-            {
-                UserDetailsId = Guid.NewGuid(),
-                UserId = admin.UserId,
-                Name = dto.Name,
-                Email = dto.Email,
-                PhoneNumber = "Not Updated",
-                Address = dto.Address,
-                City = dto.City,
-                State = "Not Updated",
-                Pincode = "000000",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userProfileRepository.AddAsync(profile);
-
-            return GenerateToken(admin);
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // LOGIN
+        // LOGIN 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
             var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 throw new UnAuthorizedException("Invalid credentials");
-
 
             var hashed = _passwordService.HashPassword(dto.Password, user.PasswordSaltValue, out _);
 
@@ -154,6 +175,7 @@ namespace HotelBookingAppWebApi.Services
             return GenerateToken(user);
         }
 
+        //  TOKEN GENERATION
         private AuthResponseDto GenerateToken(User user)
         {
             var payload = new TokenPayloadDto
@@ -169,8 +191,6 @@ namespace HotelBookingAppWebApi.Services
             return new AuthResponseDto
             {
                 Token = token
-                //Expiration = DateTime.UtcNow.AddDays(1)
-                //need to do this as token object in response in future
             };
         }
     }

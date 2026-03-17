@@ -19,83 +19,37 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             _service = service;
         }
 
-        private Guid GetUserId()
-        {
-            return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        //  Create Reservation
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateReservationDto dto)
         {
-            try
-            {
-                var result = await _service.CreateReservationAsync(GetUserId(), dto);
+            var result = await _service.CreateReservationAsync(GetUserId(), dto);
 
-                return CreatedAtAction(nameof(GetByCode),
-                    new { code = result.ReservationCode },
-                    result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            return CreatedAtAction(nameof(GetByCode),
+                new { code = result.ReservationCode },
+                result);
         }
 
-
-        // Get Reservation By Code
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code)
         {
-            try
-            {
-                var result = await _service.GetReservationByCodeAsync(GetUserId(), code);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
+            return Ok(await _service.GetReservationByCodeAsync(GetUserId(), code));
         }
 
-
-        // Get My Reservations
         [HttpGet]
         public async Task<IActionResult> GetMyReservations()
         {
-            try
-            {
-                var result = await _service.GetMyReservationsAsync(GetUserId());
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
-            }
+            return Ok(await _service.GetMyReservationsAsync(GetUserId()));
         }
 
-
-        // Cancel Reservation
-        [HttpPut("{code}/cancel")]
+        [HttpPatch("{code}/cancel")]
         public async Task<IActionResult> Cancel(string code, [FromBody] CancelReservationDto dto)
         {
-            try
-            {
-                await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
-
-                return Ok(new { message = "Reservation cancelled successfully" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
+            return Ok(new { message = "Reservation cancelled successfully" });
         }
-
     }
+
 }

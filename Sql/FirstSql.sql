@@ -6,16 +6,15 @@ select * from ReservationRooms
 order by RoomId
 select * from RoomTypeRates
 select * from RoomTypes
-select * from RoomTypeInventories 
+select * from RoomTypeInventories -- check toommorw moring cancel or remove this thanush [HttpPatch("adjust")]//this is for reception work offine reserve the room for customer with cash
 order by ReservedInventory desc
 select * from Reservations
-select * from TopHotelViews
 select * from Transactions
 select * from Reviews
 select * from Logs
 --my superadmin mail id
-
-
+--thanuhs need to check more service only inventory check for now and remove inventory -ajust tommorow from api
+--need to ask mam tommorow about golbal exception have working in response showing but app crash is need to add try catch ask pk and chatgbt
 select * from Users where Email='Thanush@test.com'
 --after add migration run this below command
 UPDATE Users

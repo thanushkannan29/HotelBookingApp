@@ -8,7 +8,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
-    [Route("api/admin/roomtype")]
+    [Route("api/admin/roomtypes")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminRoomTypeController : ControllerBase
@@ -16,7 +16,6 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         private readonly IRoomTypeService _service;
 
         public AdminRoomTypeController(IRoomTypeService service)
-
         {
             _service = service;
         }
@@ -25,57 +24,46 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
-        public async Task<IActionResult> Add(CreateRoomTypeDto dto)
+        public async Task<IActionResult> Add([FromBody] CreateRoomTypeDto dto)
         {
             await _service.AddRoomTypeAsync(GetUserId(), dto);
             return Ok("RoomType added successfully");
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(UpdateRoomTypeDto dto)
+        public async Task<IActionResult> Update([FromBody] UpdateRoomTypeDto dto)
         {
             await _service.UpdateRoomTypeAsync(GetUserId(), dto);
             return Ok("RoomType updated");
         }
 
-        [HttpPut("{roomTypeId}/toggle-status")]
-
-        public async Task<IActionResult> ToggleStatus(Guid roomTypeId, bool isActive)
+        [HttpPatch("{roomTypeId}/status")]
+        public async Task<IActionResult> ToggleStatus(Guid roomTypeId, [FromQuery] bool isActive)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-
-            if (string.IsNullOrEmpty(userIdClaim))
-                return Unauthorized();
-
-            var userId = Guid.Parse(userIdClaim);
-
-            await _service.ToggleRoomTypeStatusAsync(userId,roomTypeId,isActive);
-
+            await _service.ToggleRoomTypeStatusAsync(GetUserId(), roomTypeId, isActive);
             return Ok("RoomType status updated");
         }
 
-
         [HttpPost("rate")]
-        public async Task<IActionResult> AddRate(CreateRoomTypeRateDto dto)
+        public async Task<IActionResult> AddRate([FromBody] CreateRoomTypeRateDto dto)
         {
             await _service.AddRateAsync(GetUserId(), dto);
             return Ok("Rate added");
         }
 
         [HttpPut("rate")]
-        public async Task<IActionResult> UpdateRate(UpdateRoomTypeRateDto dto)
+        public async Task<IActionResult> UpdateRate([FromBody] UpdateRoomTypeRateDto dto)
         {
             await _service.UpdateRateAsync(GetUserId(), dto);
             return Ok("Rate updated");
         }
-       
-
 
         [HttpPost("rate-by-date")]
-        public async Task<IActionResult> GetRate(GetRateByDateRequestDto dto)
+        public async Task<IActionResult> GetRate([FromBody] GetRateByDateRequestDto dto)
         {
             var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
             return Ok(rate);
         }
     }
+
 }

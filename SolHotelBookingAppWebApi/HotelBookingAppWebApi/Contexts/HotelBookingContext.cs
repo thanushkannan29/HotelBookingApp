@@ -1,5 +1,4 @@
 ﻿using HotelBookingAppWebApi.Models;
-using HotelBookingAppWebApi.Models.QueryModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Contexts
@@ -12,31 +11,26 @@ namespace HotelBookingAppWebApi.Contexts
         }
 
         // TABLES
-        public DbSet<User> Users { get; set; } = null!;
-        public DbSet<UserProfileDetails> UserProfileDetails { get; set; } = null!;
-        public DbSet<Hotel> Hotels { get; set; } = null!;
-        public DbSet<RoomType> RoomTypes { get; set; } = null!;
-        public DbSet<Room> Rooms { get; set; } = null!;
-        public DbSet<Reservation> Reservations { get; set; } = null!;
-        public DbSet<ReservationRoom> ReservationRooms { get; set; } = null!;
-        public DbSet<Review> Reviews { get; set; } = null!;
-        public DbSet<RoomTypeRate> RoomTypeRates { get; set; } = null!;
-        public DbSet<RoomTypeInventory> RoomTypeInventories { get; set; } = null!;
-        public DbSet<Transaction> Transactions { get; set; } = null!;
-        public DbSet<Log> Logs { get; set; } = null!;
-
-        // QUERY MODELS
-        public DbSet<RoomListQueryModel> RoomListQueries { get; set; }
-        public DbSet<TopHotelView> TopHotelViews { get; set; }
+        public DbSet<User> Users { get; set; }
+        public DbSet<UserProfileDetails> UserProfileDetails { get; set; }
+        public DbSet<Hotel> Hotels { get; set; }
+        public DbSet<RoomType> RoomTypes { get; set; }
+        public DbSet<Room> Rooms { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<ReservationRoom> ReservationRooms { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+        public DbSet<RoomTypeRate> RoomTypeRates { get; set; }
+        public DbSet<RoomTypeInventory> RoomTypeInventories { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Log> Logs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
             
-            //USER
+            // USER
             
-
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -52,7 +46,8 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<User>()
                 .HasOne(u => u.UserDetails)
                 .WithOne(d => d.User)
-                .HasForeignKey<UserProfileDetails>(d => d.UserId);
+                .HasForeignKey<UserProfileDetails>(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<User>()
                 .HasMany(u => u.Reservations)
@@ -79,9 +74,8 @@ namespace HotelBookingAppWebApi.Contexts
                 .OnDelete(DeleteBehavior.Restrict);
 
             
-            //HOTEL
+            // HOTEL
             
-
             modelBuilder.Entity<Hotel>()
                 .HasIndex(h => h.City);
 
@@ -89,30 +83,9 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(h => h.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.RoomTypes)
-                .WithOne(rt => rt.Hotel)
-                .HasForeignKey(rt => rt.HotelId);
-
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Rooms)
-                .WithOne(r => r.Hotel)
-                .HasForeignKey(r => r.HotelId);
-
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Reviews)
-                .WithOne(r => r.Hotel)
-                .HasForeignKey(r => r.HotelId);
-
-            modelBuilder.Entity<Hotel>()
-                .HasMany(h => h.Reservations)
-                .WithOne(r => r.Hotel)
-                .HasForeignKey(r => r.HotelId);
-
-
-            //ROOM TYPE
             
-
+            // ROOM TYPE
+            
             modelBuilder.Entity<RoomType>()
                 .HasIndex(rt => rt.HotelId);
 
@@ -132,6 +105,9 @@ namespace HotelBookingAppWebApi.Contexts
                 .WithOne(i => i.RoomType)
                 .HasForeignKey(i => i.RoomTypeId);
 
+            
+            // ROOM TYPE RATE
+            
             modelBuilder.Entity<RoomTypeRate>()
                 .Property(r => r.Rate)
                 .HasPrecision(18, 2);
@@ -139,21 +115,16 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<RoomTypeRate>()
                 .HasIndex(r => new { r.RoomTypeId, r.StartDate, r.EndDate });
 
-
-            //INVENTORY
             
-
+            // INVENTORY
+            
             modelBuilder.Entity<RoomTypeInventory>()
                 .HasIndex(i => new { i.RoomTypeId, i.Date })
                 .IsUnique();
 
-            modelBuilder.Entity<RoomTypeInventory>()
-                .HasIndex(i => i.Date);
-
-
-            //ROOM
             
-
+            // ROOM
+            
             modelBuilder.Entity<Room>()
                 .HasIndex(r => new { r.HotelId, r.RoomNumber })
                 .IsUnique();
@@ -164,19 +135,12 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(rr => rr.RoomId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-
-            //RESERVATION
-
-
+            
+            // RESERVATION
+            
             modelBuilder.Entity<Reservation>()
                 .HasIndex(r => r.ReservationCode)
                 .IsUnique();
-
-            modelBuilder.Entity<Reservation>()
-                .HasIndex(r => r.UserId);
-
-            modelBuilder.Entity<Reservation>()
-                .HasIndex(r => new { r.Status, r.ExpiryTime });
 
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.Status)
@@ -202,9 +166,12 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(t => t.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-
-            //RESERVATION ROOM
             
+            // RESERVATION ROOM
+            
+            modelBuilder.Entity<ReservationRoom>()
+                .Property(rr => rr.PricePerNight)
+                .HasPrecision(18, 2);
 
             modelBuilder.Entity<ReservationRoom>()
                 .HasOne(rr => rr.RoomType)
@@ -212,14 +179,9 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(rr => rr.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<ReservationRoom>()
-                .Property(rr => rr.PricePerNight)
-                .HasPrecision(18, 2);
-
-
-            //TRANSACTION
             
-
+            // TRANSACTION
+            
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.PaymentMethod)
                 .HasConversion<int>();
@@ -236,42 +198,22 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(t => t.TransactionDate)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-
-            //REVIEW
             
-
-            modelBuilder.Entity<Review>()
-                .HasIndex(r => r.HotelId);
-
+            // REVIEW
+            
             modelBuilder.Entity<Review>()
                 .Property(r => r.Rating)
                 .HasPrecision(3, 2);
 
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.HotelId);
 
-            //LOG
             
-
+            // LOG
+            
             modelBuilder.Entity<Log>()
                 .Property(l => l.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
-
-
-            //KEYLESS QUERY MODELS
-            
-
-            modelBuilder.Entity<RoomListQueryModel>()
-                .HasNoKey();
-
-            modelBuilder.Entity<TopHotelView>()
-                .HasNoKey();
-
-            modelBuilder.Entity<TopHotelView>()
-                .Property(t => t.AverageRating)
-                .HasPrecision(3, 2);
-
-            modelBuilder.Entity<TopHotelView>()
-                .Property(t => t.StartingPrice)
-                .HasPrecision(18, 2);
         }
     }
 }

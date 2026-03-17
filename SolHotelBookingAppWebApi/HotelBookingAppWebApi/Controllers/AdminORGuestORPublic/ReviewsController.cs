@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/reviews")]
     [ApiController]
     public class ReviewsController : ControllerBase
     {
@@ -18,102 +18,54 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        // ADD REVIEW
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> AddReview(CreateReviewDto dto)
+        public async Task<IActionResult> AddReview([FromBody] CreateReviewDto dto)
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.AddReviewAsync(userId, dto);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.AddReviewAsync(GetUserId(), dto);
+            return Ok(result);
         }
-
-        // UPDATE REVIEW
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> UpdateReview(Guid id, UpdateReviewDto dto)
+        public async Task<IActionResult> UpdateReview(Guid id, [FromBody] UpdateReviewDto dto)
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.UpdateReviewAsync(userId, id, dto);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.UpdateReviewAsync(GetUserId(), id, dto);
+            return Ok(result);
         }
-
-        // DELETE REVIEW
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> DeleteReview(Guid id)
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                await _service.DeleteReviewAsync(userId, id);
-
-                return Ok(new { message = "Review deleted successfully." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            await _service.DeleteReviewAsync(GetUserId(), id);
+            return Ok(new { message = "Review deleted successfully." });
         }
 
-        // GET REVIEWS BY HOTEL (PUBLIC)
-
-        [HttpGet("hotel/{hotelId}")]
+        //  Complex filter → POST (Correct)
+        [HttpPost("hotel")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetByHotel(Guid hotelId, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetByHotel([FromBody] GetHotelReviewsRequestDto dto)
         {
-            try
-            {
-                var result = await _service.GetReviewsByHotelAsync(hotelId, page, pageSize);
+            var result = await _service.GetReviewsByHotelAsync(
+                dto.HotelId,
+                dto.Page,
+                dto.PageSize);
 
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(result);
         }
 
-        // GET MY REVIEWS (Guest)
 
         [HttpGet("my-reviews")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GetMyReviews()
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.GetMyReviewsAsync(userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.GetMyReviewsAsync(GetUserId());
+            return Ok(result);
         }
     }
+
 }

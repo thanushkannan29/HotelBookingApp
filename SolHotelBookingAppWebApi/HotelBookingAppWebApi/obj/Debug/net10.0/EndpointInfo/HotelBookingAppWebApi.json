@@ -2,10 +2,10 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Hotel Booking API",
-    "version": "v2"
+    "version": "v1"
   },
   "paths": {
-    "/api/admin/hotel/update": {
+    "/api/admin/hotels": {
       "put": {
         "tags": [
           "AdminHotel"
@@ -36,8 +36,8 @@
         }
       }
     },
-    "/api/admin/hotel/toggle-status": {
-      "put": {
+    "/api/admin/hotels/status": {
+      "patch": {
         "tags": [
           "AdminHotel"
         ],
@@ -185,7 +185,7 @@
       }
     },
     "/api/admin/reservations/{code}/complete": {
-      "put": {
+      "patch": {
         "tags": [
           "AdminReservation"
         ],
@@ -326,7 +326,7 @@
         }
       }
     },
-    "/api/admin/roomtype": {
+    "/api/admin/roomtypes": {
       "post": {
         "tags": [
           "AdminRoomType"
@@ -386,8 +386,8 @@
         }
       }
     },
-    "/api/admin/roomtype/{roomTypeId}/toggle-status": {
-      "put": {
+    "/api/admin/roomtypes/{roomTypeId}/status": {
+      "patch": {
         "tags": [
           "AdminRoomType"
         ],
@@ -416,7 +416,7 @@
         }
       }
     },
-    "/api/admin/roomtype/rate": {
+    "/api/admin/roomtypes/rate": {
       "post": {
         "tags": [
           "AdminRoomType"
@@ -476,7 +476,7 @@
         }
       }
     },
-    "/api/admin/roomtype/rate-by-date": {
+    "/api/admin/roomtypes/rate-by-date": {
       "post": {
         "tags": [
           "AdminRoomType"
@@ -507,7 +507,7 @@
         }
       }
     },
-    "/api/Authentication/register-guest": {
+    "/api/auth/register-guest": {
       "post": {
         "tags": [
           "Authentication"
@@ -538,7 +538,7 @@
         }
       }
     },
-    "/api/Authentication/register-hotel-admin": {
+    "/api/auth/register-hotel-admin": {
       "post": {
         "tags": [
           "Authentication"
@@ -569,7 +569,7 @@
         }
       }
     },
-    "/api/Authentication/login": {
+    "/api/auth/login": {
       "post": {
         "tags": [
           "Authentication"
@@ -700,7 +700,7 @@
       }
     },
     "/api/guest/reservations/{code}/cancel": {
-      "put": {
+      "patch": {
         "tags": [
           "GuestReservation"
         ],
@@ -740,7 +740,7 @@
         }
       }
     },
-    "/api/Logs/my-logs": {
+    "/api/logs/my-logs": {
       "get": {
         "tags": [
           "Logs"
@@ -772,7 +772,7 @@
         }
       }
     },
-    "/api/Logs": {
+    "/api/logs": {
       "get": {
         "tags": [
           "Logs"
@@ -932,7 +932,7 @@
         }
       }
     },
-    "/api/Reviews": {
+    "/api/reviews": {
       "post": {
         "tags": [
           "Reviews"
@@ -963,7 +963,7 @@
         }
       }
     },
-    "/api/Reviews/{id}": {
+    "/api/reviews/{id}": {
       "put": {
         "tags": [
           "Reviews"
@@ -1026,40 +1026,30 @@
         }
       }
     },
-    "/api/Reviews/hotel/{hotelId}": {
-      "get": {
+    "/api/reviews/hotel": {
+      "post": {
         "tags": [
           "Reviews"
         ],
-        "parameters": [
-          {
-            "name": "hotelId",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          },
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetHotelReviewsRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetHotelReviewsRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetHotelReviewsRequestDto"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Success"
@@ -1067,7 +1057,7 @@
         }
       }
     },
-    "/api/Reviews/my-reviews": {
+    "/api/reviews/my-reviews": {
       "get": {
         "tags": [
           "Reviews"
@@ -1079,7 +1069,7 @@
         }
       }
     },
-    "/api/Transactions": {
+    "/api/transactions": {
       "post": {
         "tags": [
           "Transactions"
@@ -1140,7 +1130,7 @@
         }
       }
     },
-    "/api/Transactions/{id}/refund": {
+    "/api/transactions/{id}/refund": {
       "post": {
         "tags": [
           "Transactions"
@@ -1182,7 +1172,7 @@
         }
       }
     },
-    "/api/UserProfile": {
+    "/api/user-profile": {
       "get": {
         "tags": [
           "UserProfile"
@@ -1223,31 +1213,30 @@
         }
       }
     },
-    "/api/UserProfile/booking-history": {
-      "get": {
+    "/api/user-profile/booking-history": {
+      "post": {
         "tags": [
           "UserProfile"
         ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/PaginationDto"
+              }
             }
           }
-        ],
+        },
         "responses": {
           "200": {
             "description": "Success"
@@ -1477,6 +1466,24 @@
         },
         "additionalProperties": false
       },
+      "GetHotelReviewsRequestDto": {
+        "type": "object",
+        "properties": {
+          "hotelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "page": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "type": "integer",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "GetRateByDateRequestDto": {
         "type": "object",
         "properties": {
@@ -1506,6 +1513,24 @@
           "password": {
             "minLength": 1,
             "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PaginationDto": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "maximum": 2147483647,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
+          },
+          "pageSize": {
+            "maximum": 100,
+            "minimum": 1,
+            "type": "integer",
+            "format": "int32"
           }
         },
         "additionalProperties": false

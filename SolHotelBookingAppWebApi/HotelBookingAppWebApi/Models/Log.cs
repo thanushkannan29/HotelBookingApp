@@ -7,24 +7,25 @@ namespace HotelBookingAppWebApi.Models
         [Key]
         public Guid LogId { get; set; }
 
-        [Required]
         public string Message { get; set; } = string.Empty;
+        public string ExceptionType { get; set; } = string.Empty;
+        public string StackTrace { get; set; } = string.Empty;
 
-        [Required]
-        public string ErrorCode { get; set; } = string.Empty;
+        public int StatusCode { get; set; }
 
-        [Required]
-        public string Role { get; set; } = string.Empty;
+        public string UserName { get; set; } = "Anonymous";
+        public string Role { get; set; } = "Anonymous";
+        public Guid? UserId { get; set; }
 
-        [Required]
-        public string UserName { get; set; } = string.Empty;
+        public string Controller { get; set; } = string.Empty;
+        public string Action { get; set; } = string.Empty;
 
-        [Required]
-        public Guid UserId { get; set; }
+        public string HttpMethod { get; set; } = string.Empty;
+        public string RequestPath { get; set; } = string.Empty;
 
-        [Required]
         public DateTime CreatedAt { get; set; }
-
         public User? User { get; set; }
     }
+
+
 }

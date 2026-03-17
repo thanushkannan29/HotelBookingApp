@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/user-profile")]
     [ApiController]
     [Authorize]
     public class UserProfileController : ControllerBase
@@ -19,45 +19,34 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        private Guid GetUserId()
-        {
-            return Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        
-        // GET PROFILE (Guest/Admin)
-        
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
-            var result = await _service.GetProfileAsync(GetUserId());
-            return Ok(result);
+            return Ok(await _service.GetProfileAsync(GetUserId()));
         }
 
-        
-        // UPDATE PROFILE
-        
         [HttpPut]
-        public async Task<IActionResult> UpdateProfile(UpdateUserProfileDto dto)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDto dto)
         {
-            var result = await _service.UpdateProfileAsync(GetUserId(), dto);
-            return Ok(result);
+            return Ok(await _service.UpdateProfileAsync(GetUserId(), dto));
         }
 
-        
-        // BOOKING HISTORY (Guest)
-        
-        [HttpGet("booking-history")]
+        //  Can convert to POST (mam suggestion valid here)
+        [HttpPost("booking-history")]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> GetBookingHistory(
-            int page = 1,
-            int pageSize = 10)
+        public async Task<IActionResult> GetBookingHistory([FromBody] PaginationDto dto)
         {
-            var result = await _service
-                .GetBookingHistoryAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetBookingHistoryAsync(
+                GetUserId(),
+                dto.Page,
+                dto.PageSize);
 
             return Ok(result);
         }
+
     }
+
 }

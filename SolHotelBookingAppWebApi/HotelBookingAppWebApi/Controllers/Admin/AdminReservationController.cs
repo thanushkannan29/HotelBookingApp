@@ -16,23 +16,12 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
-        // Complete Reservation
-        [HttpPut("{code}/complete")]
+        [HttpPatch("{code}/complete")]
         public async Task<IActionResult> Complete(string code)
         {
-            try
-            {
-                await _service.CompleteReservationAsync(code);
-
-                return Ok(new { message = "Reservation marked as completed" });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            await _service.CompleteReservationAsync(code);
+            return Ok(new { message = "Reservation marked as completed" });
         }
-
-
-        // (Optional) Future: View all reservations
     }
+
 }

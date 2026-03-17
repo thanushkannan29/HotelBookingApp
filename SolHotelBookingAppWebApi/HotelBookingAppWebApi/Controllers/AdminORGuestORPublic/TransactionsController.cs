@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/transactions")]
     [ApiController]
     [Authorize]
     public class TransactionsController : ControllerBase
@@ -17,39 +17,31 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        
-        // CREATE PAYMENT (Guest)
-        
         [HttpPost]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> CreatePayment(CreatePaymentDto dto)
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
             var result = await _service.CreatePaymentAsync(dto);
             return Ok(result);
         }
 
-        
-
-        
-        // REFUND (Admin)
-        
         [HttpPost("{id}/refund")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Refund(Guid id, RefundRequestDto dto)
+        public async Task<IActionResult> Refund(Guid id, [FromBody] RefundRequestDto dto)
         {
             var result = await _service.RefundAsync(id, dto);
             return Ok(result);
         }
 
-        
-        // PAGINATED LIST (Admin)
-        
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
             var result = await _service.GetAllTransactionsAsync(page, pageSize);
             return Ok(result);
         }
     }
+
 }

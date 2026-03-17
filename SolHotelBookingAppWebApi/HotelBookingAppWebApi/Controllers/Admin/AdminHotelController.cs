@@ -7,7 +7,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
-    [Route("api/admin/hotel")]
+    [Route("api/admin/hotels")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminHotelController : ControllerBase
@@ -19,20 +19,22 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
-        [HttpPut("update")]
-        public async Task<IActionResult> Update(UpdateHotelDto dto)
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] UpdateHotelDto dto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _service.UpdateHotelAsync(userId, dto);
+            await _service.UpdateHotelAsync(GetUserId(), dto);
             return Ok("Hotel updated successfully");
         }
 
-        [HttpPut("toggle-status")]
-        public async Task<IActionResult> Toggle(bool isActive)
+        [HttpPatch("status")]
+        public async Task<IActionResult> Toggle([FromQuery] bool isActive)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _service.ToggleHotelStatusAsync(userId, isActive);
+            await _service.ToggleHotelStatusAsync(GetUserId(), isActive);
             return Ok("Hotel status updated");
         }
     }
+
 }

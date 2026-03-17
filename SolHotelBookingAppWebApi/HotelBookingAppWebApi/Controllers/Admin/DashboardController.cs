@@ -18,56 +18,32 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDashboard()
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.GetAdminDashboardAsync(userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.GetAdminDashboardAsync(GetUserId());
+            return Ok(result);
         }
 
         [HttpGet("guest")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GuestDashboard()
         {
-            try
-            {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.GetGuestDashboardAsync(userId);
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.GetGuestDashboardAsync(GetUserId());
+            return Ok(result);
         }
 
         [HttpGet("superadmin")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> SuperAdminDashboard()
         {
-            try
-            {
-                var result = await _service.GetSuperAdminDashboardAsync();
-
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _service.GetSuperAdminDashboardAsync();
+            return Ok(result);
         }
     }
+
 }

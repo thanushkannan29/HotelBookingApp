@@ -1,6 +1,7 @@
-﻿using HotelBookingAppWebApi.Contexts;
-using HotelBookingAppWebApi.Exceptions;
+﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.RoomType;
 using Microsoft.EntityFrameworkCore;
@@ -9,25 +10,35 @@ namespace HotelBookingAppWebApi.Services
 {
     public class RoomTypeService : IRoomTypeService
     {
-        private readonly HotelBookingContext _context;
-       
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, RoomTypeRate> _rateRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RoomTypeService(HotelBookingContext context)
+        public RoomTypeService(
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, RoomTypeRate> rateRepo,
+            IRepository<Guid, User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
-            
+            _roomTypeRepo = roomTypeRepo;
+            _rateRepo = rateRepo;
+            _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        // ADD ROOM TYPE 
+        #region ADD ROOM TYPE
 
         public async Task AddRoomTypeAsync(Guid userId, CreateRoomTypeDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-                if (user?.HotelId == null)
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
+
+                if (user.HotelId == null)
                     throw new UnAuthorizedException("Unauthorized");
 
                 var roomType = new RoomType
@@ -41,26 +52,30 @@ namespace HotelBookingAppWebApi.Services
                     IsActive = true
                 };
 
-                await _context.RoomTypes.AddAsync(roomType);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _roomTypeRepo.AddAsync(roomType);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // UPDATE ROOM TYPE 
+        #endregion
+
+        #region UPDATE ROOM TYPE
 
         public async Task UpdateRoomTypeAsync(Guid userId, UpdateRoomTypeDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            var roomType = await _context.RoomTypes
-                .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                       && r.HotelId == user!.HotelId);
+            var roomType = await _roomTypeRepo.GetQueryable()
+                .FirstOrDefaultAsync(r =>
+                    r.RoomTypeId == dto.RoomTypeId &&
+                    r.HotelId == user.HotelId);
 
             if (roomType == null)
                 throw new NotFoundException("RoomType not found");
@@ -70,65 +85,64 @@ namespace HotelBookingAppWebApi.Services
             roomType.MaxOccupancy = dto.MaxOccupancy;
             roomType.Amenities = dto.Amenities;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // DEACTIVATE
+        #endregion
 
-        public async Task ToggleRoomTypeStatusAsync( Guid userId,Guid roomTypeId,bool isActive)
+        #region TOGGLE STATUS
+
+        public async Task ToggleRoomTypeStatusAsync(Guid userId, Guid roomTypeId, bool isActive)
         {
-            // 1️) Validate User
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            if (user == null || user.HotelId == null)
-                throw new UnauthorizedAccessException("Invalid user");
-
-            // 2️) Find RoomType belonging to user's hotel
-            var roomType = await _context.RoomTypes
+            var roomType = await _roomTypeRepo.GetQueryable()
                 .FirstOrDefaultAsync(r =>
                     r.RoomTypeId == roomTypeId &&
                     r.HotelId == user.HotelId);
 
             if (roomType == null)
-                throw new KeyNotFoundException("RoomType not found");
+                throw new NotFoundException("RoomType not found");
 
-            // 3️) Update Status
             roomType.IsActive = isActive;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
+        #endregion
 
-
-        // ADD RATE
+        #region ADD RATE
 
         public async Task AddRateAsync(Guid userId, CreateRoomTypeRateDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                           && r.HotelId == user!.HotelId);
+                var roomTypeExists = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == user.HotelId);
 
-                if (roomType == null)
+                if (!roomTypeExists)
                     throw new NotFoundException("RoomType not found");
 
                 if (dto.StartDate > dto.EndDate)
-                    throw new UnableToCreateEntityException("Invalid date range");
+                    throw new ValidationException("Invalid date range");
 
-                var overlapping = await _context.RoomTypeRates
+                // Overlap check
+                var overlapping = await _rateRepo.GetQueryable()
                     .AnyAsync(r =>
                         r.RoomTypeId == dto.RoomTypeId &&
                         dto.StartDate <= r.EndDate &&
                         dto.EndDate >= r.StartDate);
 
                 if (overlapping)
-                    throw new UnableToCreateEntityException("Rate already exists for selected date range");
+                    throw new ValidationException("Rate already exists for date range");
 
                 var rate = new RoomTypeRate
                 {
@@ -139,51 +153,58 @@ namespace HotelBookingAppWebApi.Services
                     Rate = dto.Rate
                 };
 
-                await _context.RoomTypeRates.AddAsync(rate);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _rateRepo.AddAsync(rate);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        //UPDATE RATE
+        #endregion
+
+        #region UPDATE RATE
 
         public async Task UpdateRateAsync(Guid userId, UpdateRoomTypeRateDto dto)
         {
-            var rate = await _context.RoomTypeRates
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
+
+            var rate = await _rateRepo.GetQueryable()
                 .Include(r => r.RoomType)
                 .FirstOrDefaultAsync(r => r.RoomTypeRateId == dto.RoomTypeRateId);
 
-            if (rate == null || rate.RoomType!.HotelId !=
-                (await _context.Users.FindAsync(userId))!.HotelId)
-                throw new Exception("Unauthorized");
+            if (rate == null || rate.RoomType!.HotelId != user.HotelId)
+                throw new UnAuthorizedException("Unauthorized");
 
             rate.StartDate = dto.StartDate;
             rate.EndDate = dto.EndDate;
             rate.Rate = dto.Rate;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // GET RATE BY DATE
+        #endregion
+
+        #region GET RATE
 
         public async Task<decimal> GetRateByDateAsync(Guid userId, GetRateByDateRequestDto dto)
         {
-            var rate = await _context.RoomTypeRates
-                .Include(r => r.RoomType)
+            var rate = await _rateRepo.GetQueryable()
                 .FirstOrDefaultAsync(r =>
                     r.RoomTypeId == dto.RoomTypeId &&
                     dto.Date >= r.StartDate &&
                     dto.Date <= r.EndDate);
 
             if (rate == null)
-                throw new UnableToCreateEntityException("Rate not found for selected date");
+                throw new NotFoundException("Rate not found");
 
             return rate.Rate;
         }
+
+        #endregion
     }
 }

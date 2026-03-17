@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingAppWebApi.Migrations
 {
     [DbContext(typeof(HotelBookingContext))]
-    [Migration("20260316094353_AddRoomIdToReservation")]
-    partial class AddRoomIdToReservation
+    [Migration("20260317180832_Hotelbookingv2")]
+    partial class Hotelbookingv2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -81,12 +81,24 @@ namespace HotelBookingAppWebApi.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Controller")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
 
-                    b.Property<string>("ErrorCode")
+                    b.Property<string>("ExceptionType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HttpMethod")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -94,11 +106,22 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RequestPath")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Role")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<Guid>("UserId")
+                    b.Property<string>("StackTrace")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("UserId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("UserName")
@@ -110,59 +133,6 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("Logs");
-                });
-
-            modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.RoomListQueryModel", b =>
-                {
-                    b.Property<int>("Floor")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("RoomId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("RoomNumber")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RoomTypeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.ToTable("RoomListQueries");
-                });
-
-            modelBuilder.Entity("HotelBookingAppWebApi.Models.QueryModels.TopHotelView", b =>
-                {
-                    b.Property<decimal>("AverageRating")
-                        .HasPrecision(3, 2)
-                        .HasColumnType("decimal(3,2)");
-
-                    b.Property<string>("City")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<Guid>("HotelId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("ImageUrl")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("ReviewCount")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("StartingPrice")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.ToTable("TopHotelViews");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
@@ -216,8 +186,6 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsUnique();
 
                     b.HasIndex("UserId");
-
-                    b.HasIndex("Status", "ExpiryTime");
 
                     b.ToTable("Reservations");
                 });
@@ -369,8 +337,6 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("RoomTypeInventoryId");
-
-                    b.HasIndex("Date");
 
                     b.HasIndex("RoomTypeId", "Date")
                         .IsUnique();
@@ -537,8 +503,7 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasOne("HotelBookingAppWebApi.Models.User", "User")
                         .WithMany("Logs")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("User");
                 });

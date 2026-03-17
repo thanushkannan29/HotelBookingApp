@@ -1,36 +1,4 @@
-using Microsoft.EntityFrameworkCore;
-
-namespace HotelBookingAppWebApi.Models.QueryModels
-{
-    [Keyless]
-    public class RoomListQueryModel
-    {
-        public Guid RoomId { get; set; }
-        public string RoomNumber { get; set; } = string.Empty;
-        public int Floor { get; set; }
-        public bool IsActive { get; set; }
-        public string RoomTypeName { get; set; } = string.Empty;
-    }
-}
-
-using Microsoft.EntityFrameworkCore;
-
-namespace HotelBookingAppWebApi.Models.QueryModels
-{
-    [Keyless]
-    public class TopHotelView
-    {
-        public Guid HotelId { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public string City { get; set; } = string.Empty;
-        public string ImageUrl { get; set; } = string.Empty;
-
-        public decimal AverageRating { get; set; }
-
-        public int ReviewCount { get; set; }
-        public decimal? StartingPrice { get; set; }
-    }
-}
+based on my models updated now log table alter so check all my models and rewrite the dbcontext
 
 
 using System.ComponentModel.DataAnnotations;
@@ -75,30 +43,37 @@ using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
-    public class Log
+    public class Hotel
     {
         [Key]
-        public Guid LogId { get; set; }
+        public Guid HotelId { get; set; }
 
-        [Required]
-        public string Message { get; set; } = string.Empty;
+        [Required, MaxLength(200)]
+        public string Name { get; set; } = string.Empty;
 
-        [Required]
-        public string ErrorCode { get; set; } = string.Empty;
+        [Required, MaxLength(500)]
+        public string Address { get; set; } = string.Empty;
 
-        [Required]
-        public string Role { get; set; } = string.Empty;
+        [Required, MaxLength(100)]
+        public string City { get; set; } = string.Empty;
 
-        [Required]
-        public string UserName { get; set; } = string.Empty;
+        [MaxLength(1000)]
+        public string Description { get; set; } = string.Empty;
 
-        [Required]
-        public Guid UserId { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+
+        [Required, MaxLength(15)]
+        public string ContactNumber { get; set; } = string.Empty;
+
+        public bool IsActive { get; set; } = true;
 
         [Required]
         public DateTime CreatedAt { get; set; }
 
-        public User? User { get; set; }
+        public ICollection<RoomType>? RoomTypes { get; set; }
+        public ICollection<Room>? Rooms { get; set; }
+        public ICollection<Review>? Reviews { get; set; }
+        public ICollection<Reservation>? Reservations { get; set; }
     }
 }
 
@@ -156,6 +131,7 @@ namespace HotelBookingAppWebApi.Models
     }
 }
 
+
 using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
@@ -186,7 +162,6 @@ namespace HotelBookingAppWebApi.Models
 
 
 }
-
 
 using System.ComponentModel.DataAnnotations;
 
@@ -247,6 +222,7 @@ namespace HotelBookingAppWebApi.Models
     }
 }
 
+
 using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
@@ -279,6 +255,7 @@ namespace HotelBookingAppWebApi.Models
     }
 }
 
+
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -308,7 +285,6 @@ namespace HotelBookingAppWebApi.Models
     }
 }
 
-
 using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
@@ -335,6 +311,7 @@ namespace HotelBookingAppWebApi.Models
         public RoomType? RoomType { get; set; }
     }
 }
+
 
 using System.ComponentModel.DataAnnotations;
 
@@ -429,7 +406,6 @@ namespace HotelBookingAppWebApi.Models
 
 }
 
-
 using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
@@ -471,9 +447,7 @@ namespace HotelBookingAppWebApi.Models
 }
 
 
-
 using HotelBookingAppWebApi.Models;
-using HotelBookingAppWebApi.Models.QueryModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Contexts
@@ -500,8 +474,7 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<Log> Logs { get; set; } = null!;
 
         // QUERY MODELS
-        public DbSet<RoomListQueryModel> RoomListQueries { get; set; }
-        public DbSet<TopHotelView> TopHotelViews { get; set; }
+        
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -730,22 +703,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasDefaultValueSql("GETUTCDATE()");
 
 
-            //KEYLESS QUERY MODELS
             
-
-            modelBuilder.Entity<RoomListQueryModel>()
-                .HasNoKey();
-
-            modelBuilder.Entity<TopHotelView>()
-                .HasNoKey();
-
-            modelBuilder.Entity<TopHotelView>()
-                .Property(t => t.AverageRating)
-                .HasPrecision(3, 2);
-
-            modelBuilder.Entity<TopHotelView>()
-                .Property(t => t.StartingPrice)
-                .HasPrecision(18, 2);
         }
     }
 }

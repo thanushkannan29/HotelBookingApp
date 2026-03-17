@@ -1,6 +1,7 @@
 ﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
 using Microsoft.EntityFrameworkCore;
@@ -15,6 +16,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
         private readonly IRepository<Guid, RoomTypeRate> _rateRepo;
         private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         public ReservationService(
             IRepository<Guid, Reservation> reservationRepo,
@@ -22,7 +24,8 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, RoomType> roomTypeRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
             IRepository<Guid, RoomTypeRate> rateRepo,
-            IRepository<Guid, ReservationRoom> reservationRoomRepo)
+            IRepository<Guid, ReservationRoom> reservationRoomRepo,
+            IUnitOfWork unitOfWork)
         {
             _reservationRepo = reservationRepo;
             _roomRepo = roomRepo;
@@ -30,141 +33,145 @@ namespace HotelBookingAppWebApi.Services
             _inventoryRepo = inventoryRepo;
             _rateRepo = rateRepo;
             _reservationRoomRepo = reservationRoomRepo;
+            _unitOfWork = unitOfWork;
         }
 
         #region CREATE
 
         public async Task<ReservationResponseDto> CreateReservationAsync(Guid userId, CreateReservationDto dto)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (dto.CheckInDate < today)
-                throw new ValidationException("Cannot book past dates");
-
-            if (dto.CheckInDate >= dto.CheckOutDate)
-                throw new ValidationException("Invalid date range");
-
-            var totalDays = dto.CheckOutDate.DayNumber - dto.CheckInDate.DayNumber;
-
-            var dates = Enumerable.Range(0, totalDays)
-                .Select(d => dto.CheckInDate.AddDays(d))
-                .ToList();
-
-            //  RoomType
-            var roomType = await _roomTypeRepo.GetQueryable()
-                .FirstOrDefaultAsync(r =>
-                    r.RoomTypeId == dto.RoomTypeId &&
-                    r.HotelId == dto.HotelId &&
-                    r.IsActive);
-
-            if (roomType == null)
-                throw new NotFoundException("Invalid hotel or room type");
-
-            //  Physical Rooms
-            var physicalRooms = await _roomRepo.GetQueryable()
-                .Where(r =>
-                    r.RoomTypeId == dto.RoomTypeId &&
-                    r.HotelId == dto.HotelId &&
-                    r.IsActive)
-                .CountAsync();
-
-            if (dto.NumberOfRooms <= 0)
-                throw new ValidationException("Number of rooms must be greater than 0");
-
-            if (dto.NumberOfRooms > physicalRooms)
-                throw new InsufficientInventoryException($"Only {physicalRooms} rooms available");
-
-            //  Inventory
-            var inventories = await _inventoryRepo.GetQueryable()
-                .Where(i =>
-                    i.RoomTypeId == dto.RoomTypeId &&
-                    dates.Contains(i.Date))
-                .ToListAsync();
-
-            if (inventories.Count != dates.Count)
-                throw new InsufficientInventoryException("Inventory missing");
-
-            // ✅ Rates
-            var rates = await _rateRepo.GetQueryable()
-                .Where(r =>
-                    r.RoomTypeId == dto.RoomTypeId &&
-                    r.StartDate <= dto.CheckOutDate &&
-                    r.EndDate >= dto.CheckInDate)
-                .ToListAsync();
-
-            decimal totalAmount = 0;
-
-            foreach (var date in dates)
+            try
             {
-                var inventory = inventories.First(i => i.Date == date);
+                var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                if (inventory.AvailableInventory < dto.NumberOfRooms)
-                    throw new InsufficientInventoryException($"Insufficient inventory for {date}");
+                if (dto.CheckInDate < today || dto.CheckInDate >= dto.CheckOutDate)
+                    throw new ValidationException("Invalid booking dates");
 
-                var rate = rates.FirstOrDefault(r =>
-                    date >= r.StartDate && date <= r.EndDate);
+                if (dto.NumberOfRooms <= 0)
+                    throw new ValidationException("Invalid room count");
 
-                if (rate == null)
-                    throw new RateNotFoundException($"Rate missing for {date}");
+                var totalDays = dto.CheckOutDate.DayNumber - dto.CheckInDate.DayNumber;
+                var dates = Enumerable.Range(0, totalDays)
+                    .Select(d => dto.CheckInDate.AddDays(d))
+                    .ToList();
 
-                totalAmount += rate.Rate * dto.NumberOfRooms;
-            }
+                //  Validate RoomType
+                var roomType = await _roomTypeRepo.GetQueryable()
+                    .FirstOrDefaultAsync(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == dto.HotelId &&
+                        r.IsActive);
 
-            //  Create Reservation
-            var reservation = new Reservation
-            {
-                ReservationId = Guid.NewGuid(),
-                ReservationCode = GenerateReservationCode(),
-                UserId = userId,
-                HotelId = dto.HotelId,
-                CheckInDate = dto.CheckInDate,
-                CheckOutDate = dto.CheckOutDate,
-                TotalAmount = totalAmount,
-                Status = ReservationStatus.Pending,
-                CreatedDate = DateTime.UtcNow,
-                ExpiryTime = DateTime.UtcNow.AddMinutes(10)
-            };
+                if (roomType == null)
+                    throw new NotFoundException("Invalid room type");
 
-            await _reservationRepo.AddAsync(reservation);
+                //  Validate physical rooms
+                var totalRooms = await _roomRepo.GetQueryable()
+                    .CountAsync(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == dto.HotelId &&
+                        r.IsActive);
 
-            //  Available Rooms
-            var availableRooms = await _roomRepo.GetQueryable()
-                .Where(r =>
-                    r.RoomTypeId == dto.RoomTypeId &&
-                    r.HotelId == dto.HotelId &&
-                    r.IsActive)
-                .ToListAsync();
+                if (dto.NumberOfRooms > totalRooms)
+                    throw new InsufficientInventoryException($"Only {totalRooms} rooms available");
 
-            var selectedRooms = availableRooms.Take(dto.NumberOfRooms).ToList();
+                //  Fetch inventory + rates (ONE DB HIT EACH)
+                var inventories = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == dto.RoomTypeId && dates.Contains(i.Date))
+                    .ToListAsync();
 
-            if (selectedRooms.Count < dto.NumberOfRooms)
-                throw new InsufficientInventoryException("Not enough rooms available");
+                var rates = await _rateRepo.GetQueryable()
+                    .Where(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.StartDate <= dto.CheckOutDate &&
+                        r.EndDate >= dto.CheckInDate)
+                    .ToListAsync();
 
-            decimal pricePerNight = totalAmount / totalDays / dto.NumberOfRooms;
+                if (inventories.Count != dates.Count)
+                    throw new InsufficientInventoryException("Inventory missing");
 
-            foreach (var room in selectedRooms)
-            {
-                await _reservationRoomRepo.AddAsync(new ReservationRoom
+                //  Convert to dictionary (O(1))
+                var inventoryMap = inventories.ToDictionary(i => i.Date);
+
+                decimal totalAmount = 0;
+
+                foreach (var date in dates)
                 {
-                    ReservationRoomId = Guid.NewGuid(),
+                    var inventory = inventoryMap[date];
+
+                    if (inventory.AvailableInventory < dto.NumberOfRooms)
+                        throw new InsufficientInventoryException($"Insufficient inventory on {date}");
+
+                    var rate = rates.FirstOrDefault(r => date >= r.StartDate && date <= r.EndDate)
+                        ?? throw new RateNotFoundException($"Rate missing for {date}");
+
+                    totalAmount += rate.Rate * dto.NumberOfRooms;
+                }
+
+                //  Create Reservation
+                var reservation = new Reservation
+                {
+                    ReservationId = Guid.NewGuid(),
+                    ReservationCode = GenerateCode(),
+                    UserId = userId,
+                    HotelId = dto.HotelId,
+                    CheckInDate = dto.CheckInDate,
+                    CheckOutDate = dto.CheckOutDate,
+                    TotalAmount = totalAmount,
+                    Status = ReservationStatus.Pending,
+                    CreatedDate = DateTime.UtcNow,
+                    ExpiryTime = DateTime.UtcNow.AddMinutes(10)
+                };
+
+                await _reservationRepo.AddAsync(reservation);
+
+                //  Assign rooms
+                var rooms = await _roomRepo.GetQueryable()
+                    .Where(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == dto.HotelId &&
+                        r.IsActive)
+                    .Take(dto.NumberOfRooms)
+                    .ToListAsync();
+
+                if (rooms.Count < dto.NumberOfRooms)
+                    throw new InsufficientInventoryException("Not enough rooms");
+
+                var pricePerNight = totalAmount / totalDays / dto.NumberOfRooms;
+
+                foreach (var room in rooms)
+                {
+                    await _reservationRoomRepo.AddAsync(new ReservationRoom
+                    {
+                        ReservationRoomId = Guid.NewGuid(),
+                        ReservationId = reservation.ReservationId,
+                        RoomTypeId = dto.RoomTypeId,
+                        RoomId = room.RoomId,
+                        PricePerNight = pricePerNight
+                    });
+                }
+
+                //  Update inventory
+                foreach (var inv in inventories)
+                    inv.ReservedInventory += dto.NumberOfRooms;
+
+                await _unitOfWork.CommitAsync();
+
+                return new ReservationResponseDto
+                {
                     ReservationId = reservation.ReservationId,
-                    RoomTypeId = dto.RoomTypeId,
-                    RoomId = room.RoomId,
-                    PricePerNight = pricePerNight
-                });
+                    ReservationCode = reservation.ReservationCode,
+                    TotalAmount = totalAmount,
+                    Status = reservation.Status.ToString()
+                };
             }
-
-            //  Update Inventory
-            foreach (var inventory in inventories)
-                inventory.ReservedInventory += dto.NumberOfRooms;
-
-            return new ReservationResponseDto
+            catch
             {
-                ReservationId = reservation.ReservationId,
-                ReservationCode = reservation.ReservationCode,
-                TotalAmount = totalAmount,
-                Status = reservation.Status.ToString()
-            };
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
         #endregion
@@ -173,48 +180,22 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<ReservationDetailsDto> GetReservationByCodeAsync(Guid userId, string code)
         {
-            var reservation = await _reservationRepo.GetQueryable()
+            var res = await _reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms)
-                .FirstOrDefaultAsync(r =>
-                    r.ReservationCode == code &&
-                    r.UserId == userId);
+                .FirstOrDefaultAsync(r => r.ReservationCode == code && r.UserId == userId)
+                ?? throw new NotFoundException("Reservation not found");
 
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found");
-
-            var rooms = reservation.ReservationRooms!;
-
-            return new ReservationDetailsDto
-            {
-                ReservationCode = reservation.ReservationCode,
-                HotelId = reservation.HotelId,
-                RoomTypeId = rooms.First().RoomTypeId,
-                CheckInDate = reservation.CheckInDate,
-                CheckOutDate = reservation.CheckOutDate,
-                NumberOfRooms = rooms.Count,
-                TotalAmount = reservation.TotalAmount,
-                Status = reservation.Status.ToString()
-            };
+            return MapToDto(res);
         }
 
         public async Task<IEnumerable<ReservationDetailsDto>> GetMyReservationsAsync(Guid userId)
         {
-            var reservations = await _reservationRepo.GetQueryable()
+            var list = await _reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms)
                 .Where(r => r.UserId == userId)
                 .ToListAsync();
 
-            return reservations.Select(r => new ReservationDetailsDto
-            {
-                ReservationCode = r.ReservationCode,
-                HotelId = r.HotelId,
-                RoomTypeId = r.ReservationRooms!.First().RoomTypeId,
-                NumberOfRooms = r.ReservationRooms.Count,
-                CheckInDate = r.CheckInDate,
-                CheckOutDate = r.CheckOutDate,
-                TotalAmount = r.TotalAmount,
-                Status = r.Status.ToString()
-            });
+            return list.Select(MapToDto);
         }
 
         #endregion
@@ -223,43 +204,47 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<bool> CancelReservationAsync(Guid userId, string code, string reason)
         {
-            var reservation = await _reservationRepo.GetQueryable()
-                .Include(r => r.ReservationRooms)
-                .FirstOrDefaultAsync(r =>
-                    r.ReservationCode == code &&
-                    r.UserId == userId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found");
+            try
+            {
+                var res = await _reservationRepo.GetQueryable()
+                    .Include(r => r.ReservationRooms)
+                    .FirstOrDefaultAsync(r => r.ReservationCode == code && r.UserId == userId)
+                    ?? throw new NotFoundException("Reservation not found");
 
-            if (reservation.Status == ReservationStatus.Cancelled)
-                throw new ReservationFailedException("Already cancelled");
+                if (res.Status is ReservationStatus.Cancelled)
+                    throw new ReservationFailedException("Already cancelled");
 
-            if (reservation.Status == ReservationStatus.Completed)
-                throw new ValidationException("Cannot cancel completed reservation");
+                if (res.Status is ReservationStatus.Completed)
+                    throw new ValidationException("Cannot cancel completed");
 
-            var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+                var dates = Enumerable.Range(0,
+                        res.CheckOutDate.DayNumber - res.CheckInDate.DayNumber)
+                    .Select(d => res.CheckInDate.AddDays(d))
+                    .ToList();
 
-            var dates = Enumerable.Range(0, totalDays)
-                .Select(d => reservation.CheckInDate.AddDays(d))
-                .ToList();
+                var roomTypeId = res.ReservationRooms!.First().RoomTypeId;
 
-            var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
+                var inventories = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
+                    .ToListAsync();
 
-            var inventories = await _inventoryRepo.GetQueryable()
-                .Where(i =>
-                    i.RoomTypeId == roomTypeId &&
-                    dates.Contains(i.Date))
-                .ToListAsync();
+                foreach (var inv in inventories)
+                    inv.ReservedInventory -= res.ReservationRooms.Count;
 
-            foreach (var inventory in inventories)
-                inventory.ReservedInventory -= reservation.ReservationRooms.Count;
+                res.Status = ReservationStatus.Cancelled;
+                res.CancelledDate = DateTime.UtcNow;
+                res.CancellationReason = reason;
 
-            reservation.Status = ReservationStatus.Cancelled;
-            reservation.CancelledDate = DateTime.UtcNow;
-            reservation.CancellationReason = reason;
-
-            return true;
+                await _unitOfWork.CommitAsync();
+                return true;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
         #endregion
@@ -268,25 +253,37 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<bool> CompleteReservationAsync(string code)
         {
-            var reservation = await _reservationRepo.GetQueryable()
-                .FirstOrDefaultAsync(r => r.ReservationCode == code);
+            var res = await _reservationRepo.FirstOrDefaultAsync(r => r.ReservationCode == code)
+                ?? throw new NotFoundException("Reservation not found");
 
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found");
+            if (res.Status != ReservationStatus.Confirmed)
+                throw new ValidationException("Only confirmed can complete");
 
-            if (reservation.Status != ReservationStatus.Confirmed)
-                throw new ValidationException("Only confirmed reservations can be completed");
+            res.Status = ReservationStatus.Completed;
 
-            reservation.Status = ReservationStatus.Completed;
-
+            await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
         #endregion
 
-        private string GenerateReservationCode()
+        #region HELPERS
+
+        private static ReservationDetailsDto MapToDto(Reservation r) => new()
         {
-            return "RES-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
-        }
+            ReservationCode = r.ReservationCode,
+            HotelId = r.HotelId,
+            RoomTypeId = r.ReservationRooms!.First().RoomTypeId,
+            NumberOfRooms = r.ReservationRooms.Count,
+            CheckInDate = r.CheckInDate,
+            CheckOutDate = r.CheckOutDate,
+            TotalAmount = r.TotalAmount,
+            Status = r.Status.ToString()
+        };
+
+        private static string GenerateCode()
+            => $"RES-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+        #endregion
     }
 }

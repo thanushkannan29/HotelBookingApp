@@ -1,7 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class PaymentException : Exception
+    public class PaymentException : AppException
     {
-        public PaymentException(string message) : base(message) { }
+        public PaymentException(string message)
+            : base(message, 400) { }
     }
 }

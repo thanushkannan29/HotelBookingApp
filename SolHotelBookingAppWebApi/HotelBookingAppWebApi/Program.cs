@@ -3,11 +3,11 @@ using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using HotelBookingAppWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -33,7 +33,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Hotel Booking API",
-        Version = "v2"
+        Version = "v1"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -106,6 +106,9 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILogService, LogService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
 
 
 
@@ -146,11 +149,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseRouting();
+
+
+app.UseMiddleware<GlobalExceptionMiddleware>(); 
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseIpRateLimiting();
+
 app.MapControllers();
+
 
 app.Run();

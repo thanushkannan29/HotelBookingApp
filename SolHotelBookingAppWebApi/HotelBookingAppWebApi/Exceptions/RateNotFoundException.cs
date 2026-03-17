@@ -1,9 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class RateNotFoundException:Exception
+    public class RateNotFoundException : AppException
     {
-        public RateNotFoundException(string message) : base($"{message} is Rate not Found")
-        {
-        }
+        public RateNotFoundException(string message)
+            : base($"{message} - Rate not found", 404) { }
     }
 }

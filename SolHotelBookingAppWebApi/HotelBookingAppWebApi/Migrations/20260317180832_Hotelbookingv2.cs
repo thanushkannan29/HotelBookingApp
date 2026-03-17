@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class AddRoomIdToReservation : Migration
+    public partial class Hotelbookingv2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -28,36 +28,6 @@ namespace HotelBookingAppWebApi.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Hotels", x => x.HotelId);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "RoomListQueries",
-                columns: table => new
-                {
-                    RoomId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    RoomNumber = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Floor = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    RoomTypeName = table.Column<string>(type: "nvarchar(max)", nullable: false)
-                },
-                constraints: table =>
-                {
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TopHotelViews",
-                columns: table => new
-                {
-                    HotelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    City = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    AverageRating = table.Column<decimal>(type: "decimal(3,2)", precision: 3, scale: 2, nullable: false),
-                    ReviewCount = table.Column<int>(type: "int", nullable: false),
-                    StartingPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true)
-                },
-                constraints: table =>
-                {
                 });
 
             migrationBuilder.CreateTable(
@@ -184,10 +154,16 @@ namespace HotelBookingAppWebApi.Migrations
                 {
                     LogId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ErrorCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    ExceptionType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StackTrace = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    StatusCode = table.Column<int>(type: "int", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    Controller = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Action = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    HttpMethod = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    RequestPath = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
@@ -381,11 +357,6 @@ namespace HotelBookingAppWebApi.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "IX_Reservations_Status_ExpiryTime",
-                table: "Reservations",
-                columns: new[] { "Status", "ExpiryTime" });
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Reservations_UserId",
                 table: "Reservations",
                 column: "UserId");
@@ -410,11 +381,6 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "IX_Rooms_RoomTypeId",
                 table: "Rooms",
                 column: "RoomTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_RoomTypeInventories_Date",
-                table: "RoomTypeInventories",
-                column: "Date");
 
             migrationBuilder.CreateIndex(
                 name: "IX_RoomTypeInventories_RoomTypeId_Date",
@@ -468,16 +434,10 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
-                name: "RoomListQueries");
-
-            migrationBuilder.DropTable(
                 name: "RoomTypeInventories");
 
             migrationBuilder.DropTable(
                 name: "RoomTypeRates");
-
-            migrationBuilder.DropTable(
-                name: "TopHotelViews");
 
             migrationBuilder.DropTable(
                 name: "Transactions");

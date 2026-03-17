@@ -18,69 +18,35 @@ namespace HotelBookingAppWebApi.Controllers.Public
         [HttpGet("top")]
         public async Task<IActionResult> GetTopHotels()
         {
-            try
-            {
-                return Ok(await _service.GetTopHotelsAsync());
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(await _service.GetTopHotelsAsync());
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> Search(SearchHotelRequestDto request)
+        public async Task<IActionResult> Search([FromBody] SearchHotelRequestDto request)
         {
-            try
-            {
-                return Ok(await _service.SearchHotelsAsync(request));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(await _service.SearchHotelsAsync(request));
         }
 
         [HttpGet("{hotelId}")]
         public async Task<IActionResult> GetDetails(Guid hotelId)
         {
-            try
-            {
-                return Ok(await _service.GetHotelDetailsAsync(hotelId));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(await _service.GetHotelDetailsAsync(hotelId));
         }
 
         [HttpGet("{hotelId}/roomtypes")]
         public async Task<IActionResult> GetRoomTypes(Guid hotelId)
         {
-            try
-            {
-                return Ok(await _service.GetRoomTypesAsync(hotelId));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(await _service.GetRoomTypesAsync(hotelId));
         }
 
         [HttpGet("{hotelId}/availability")]
         public async Task<IActionResult> GetAvailability(
             Guid hotelId,
-            DateOnly checkIn,
-            DateOnly checkOut)
+            [FromQuery] DateOnly checkIn,
+            [FromQuery] DateOnly checkOut)
         {
-            try
-            {
-                return Ok(await _service.GetAvailabilityAsync(hotelId, checkIn, checkOut));
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return Ok(await _service.GetAvailabilityAsync(hotelId, checkIn, checkOut));
         }
     }
+
 }

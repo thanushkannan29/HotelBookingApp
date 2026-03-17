@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
@@ -17,57 +17,29 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _authService = authService;
         }
 
-        // REGISTER GUEST
-
         [HttpPost("register-guest")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterGuest(RegisterUserDto dto)
+        public async Task<IActionResult> RegisterGuest([FromBody] RegisterUserDto dto)
         {
-            try
-            {
-                var result = await _authService.RegisterGuestAsync(dto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _authService.RegisterGuestAsync(dto);
+            return Ok(result);
         }
-
-        // REGISTER HOTEL ADMIN
 
         [HttpPost("register-hotel-admin")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterHotelAdmin(RegisterHotelAdminDto dto)
+        public async Task<IActionResult> RegisterHotelAdmin([FromBody] RegisterHotelAdminDto dto)
         {
-            try
-            {
-                var result = await _authService.RegisterHotelAdminAsync(dto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { message = ex.Message });
-            }
+            var result = await _authService.RegisterHotelAdminAsync(dto);
+            return Ok(result);
         }
-
-        // LOGIN (Guest or Admin)
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            try
-            {
-                var result = await _authService.LoginAsync(dto);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return Unauthorized(new { message = ex.Message });
-            }
+            var result = await _authService.LoginAsync(dto);
+            return Ok(result);
         }
-
-        
     }
+
 }

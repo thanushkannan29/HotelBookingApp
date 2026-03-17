@@ -1,7 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class UserProfileException : Exception
+    public class UserProfileException : AppException
     {
-        public UserProfileException(string message) : base(message) { }
+        public UserProfileException(string message)
+            : base(message, 404) { }
     }
 }

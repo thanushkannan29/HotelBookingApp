@@ -1,9 +1,8 @@
 ﻿namespace HotelBookingAppWebApi.Exceptions
 {
-    public class ValidationException:Exception
+    public class ValidationException : AppException
     {
-        public ValidationException(string message) : base($"{message} is Validation Error")
-        {
-        }
+        public ValidationException(string message)
+            : base(message, 400) { }
     }
 }

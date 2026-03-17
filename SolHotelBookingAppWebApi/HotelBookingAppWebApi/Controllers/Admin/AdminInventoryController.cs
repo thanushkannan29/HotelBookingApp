@@ -23,21 +23,21 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
-        public async Task<IActionResult> AddInventory(CreateInventoryDto dto)
+        public async Task<IActionResult> AddInventory([FromBody] CreateInventoryDto dto)
         {
             await _service.AddInventoryAsync(GetUserId(), dto);
             return Ok("Inventory added successfully");
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateInventory(UpdateInventoryDto dto)
+        public async Task<IActionResult> UpdateInventory([FromBody] UpdateInventoryDto dto)
         {
             await _service.UpdateInventoryAsync(GetUserId(), dto);
             return Ok("Inventory updated");
         }
 
-        [HttpPatch("adjust")]
-        public async Task<IActionResult> Adjust(AdjustReservedInventoryDto dto)
+        [HttpPatch("adjust")]//this is for reception work offine reserve the room for customer with cash
+        public async Task<IActionResult> Adjust([FromBody] AdjustReservedInventoryDto dto)
         {
             await _service.AdjustReservedInventoryAsync(GetUserId(), dto);
             return Ok("Reserved inventory updated");
@@ -45,12 +45,13 @@ namespace HotelBookingAppWebApi.Controllers.Admin
 
         [HttpGet]
         public async Task<IActionResult> GetInventory(
-            Guid roomTypeId,
-            DateOnly start,
-            DateOnly end)
+            [FromQuery] Guid roomTypeId,
+            [FromQuery] DateOnly start,
+            [FromQuery] DateOnly end)
         {
             var data = await _service.GetInventoryAsync(GetUserId(), roomTypeId, start, end);
             return Ok(data);
         }
     }
+
 }

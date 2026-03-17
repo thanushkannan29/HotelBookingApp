@@ -1,6 +1,7 @@
 ﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Review;
 using Microsoft.EntityFrameworkCore;
@@ -11,85 +12,130 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         public ReviewService(
             IRepository<Guid, Review> reviewRepo,
-            IRepository<Guid, Hotel> hotelRepo)
+            IRepository<Guid, Hotel> hotelRepo,
+            IUnitOfWork unitOfWork)
         {
             _reviewRepo = reviewRepo;
             _hotelRepo = hotelRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        //  ADD REVIEW
+        #region ADD
+
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
-            // Check hotel exists
-            var hotelExists = await _hotelRepo.GetQueryable()
-                .AnyAsync(h => h.HotelId == dto.HotelId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (!hotelExists)
-                throw new NotFoundException("Hotel not found.");
-
-            // Check already reviewed
-            var alreadyReviewed = await _reviewRepo.GetQueryable()
-                .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);
-
-            if (alreadyReviewed)
-                throw new ReviewException("You already reviewed this hotel.");
-
-            var review = new Review
+            try
             {
-                ReviewId = Guid.NewGuid(),
-                HotelId = dto.HotelId,
-                UserId = userId,
-                Rating = dto.Rating,
-                Comment = dto.Comment,
-                CreatedDate = DateTime.UtcNow
-            };
+                //  Validate hotel
+                var hotelExists = await _hotelRepo.GetQueryable()
+                    .AnyAsync(h => h.HotelId == dto.HotelId);
 
-            await _reviewRepo.AddAsync(review);
+                if (!hotelExists)
+                    throw new NotFoundException("Hotel not found");
 
-            return MapToDto(review);
+                //  Prevent duplicate review
+                var alreadyReviewed = await _reviewRepo.GetQueryable()
+                    .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);
+
+                if (alreadyReviewed)
+                    throw new ReviewException("Already reviewed");
+
+                var review = new Review
+                {
+                    ReviewId = Guid.NewGuid(),
+                    HotelId = dto.HotelId,
+                    UserId = userId,
+                    Rating = dto.Rating,
+                    Comment = dto.Comment,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _reviewRepo.AddAsync(review);
+
+                await _unitOfWork.CommitAsync();
+
+                return MapToDto(review);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        //  UPDATE REVIEW
+        #endregion
+
+        #region UPDATE
+
         public async Task<ReviewResponseDto> UpdateReviewAsync(Guid userId, Guid reviewId, UpdateReviewDto dto)
         {
-            var review = await _reviewRepo.GetAsync(reviewId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (review == null)
-                throw new NotFoundException("Review not found.");
+            try
+            {
+                var review = await _reviewRepo.GetAsync(reviewId)
+                    ?? throw new NotFoundException("Review not found");
 
-            if (review.UserId != userId)
-                throw new ReviewException("You can update only your own review.");
+                if (review.UserId != userId)
+                    throw new ReviewException("Not allowed");
 
-            review.Rating = dto.Rating;
+                review.Rating = dto.Rating;
 
-            if (!string.IsNullOrWhiteSpace(dto.Comment))
-                review.Comment = dto.Comment;
+                if (!string.IsNullOrWhiteSpace(dto.Comment))
+                    review.Comment = dto.Comment;
 
-            await _reviewRepo.UpdateAsync(reviewId, review);
+                await _reviewRepo.UpdateAsync(reviewId, review);
 
-            return MapToDto(review);
+                await _unitOfWork.CommitAsync();
+
+                return MapToDto(review);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        //  DELETE REVIEW
+        #endregion
+
+        #region DELETE
+
         public async Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId)
         {
-            var review = await _reviewRepo.GetAsync(reviewId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (review == null)
-                throw new NotFoundException("Review not found.");
+            try
+            {
+                var review = await _reviewRepo.GetAsync(reviewId)
+                    ?? throw new NotFoundException("Review not found");
 
-            if (review.UserId != userId)
-                throw new ReviewException("You can delete only your own review.");
+                if (review.UserId != userId)
+                    throw new ReviewException("Not allowed");
 
-            var deleted = await _reviewRepo.DeleteAsync(reviewId);
+                var deleted = await _reviewRepo.DeleteAsync(reviewId);
 
-            return deleted != null;
+                await _unitOfWork.CommitAsync();
+
+                return deleted != null;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        //  GET REVIEWS BY HOTEL (WITH PAGINATION)
+        #endregion
+
+        #region GET
+
         public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize)
         {
             var query = _reviewRepo.GetQueryable()
@@ -110,7 +156,6 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        //  GET MY REVIEWS (WITH HOTEL NAME)
         public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
         {
             var reviews = await _reviewRepo.GetQueryable()
@@ -130,18 +175,20 @@ namespace HotelBookingAppWebApi.Services
             });
         }
 
-        //  MAPPER
-        private static ReviewResponseDto MapToDto(Review r)
+        #endregion
+
+        #region HELPER
+
+        private static ReviewResponseDto MapToDto(Review r) => new()
         {
-            return new ReviewResponseDto
-            {
-                ReviewId = r.ReviewId,
-                HotelId = r.HotelId,
-                UserId = r.UserId,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedDate = r.CreatedDate
-            };
-        }
+            ReviewId = r.ReviewId,
+            HotelId = r.HotelId,
+            UserId = r.UserId,
+            Rating = r.Rating,
+            Comment = r.Comment,
+            CreatedDate = r.CreatedDate
+        };
+
+        #endregion
     }
 }
