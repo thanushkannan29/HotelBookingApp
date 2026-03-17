@@ -1,7 +1,9 @@
 ﻿using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
@@ -30,9 +32,12 @@ namespace HotelBookingAppWebApi.Services
         // REGISTER GUEST
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
-            var existingUsers = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            if (existingUsers.Any())
+            var exists = await _userRepository.GetQueryable().AnyAsync(u => u.Email == dto.Email);
+
+            if (exists)
                 throw new ConflictException("Email already registered");
+
+
 
             byte[]? salt;
             var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
@@ -73,9 +78,12 @@ namespace HotelBookingAppWebApi.Services
         // REGISTER HOTEL ADMIN
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
-            var existing = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            if (existing.Any())
+            var exists = await _userRepository.GetQueryable().AnyAsync(u => u.Email == dto.Email);
+
+            if (exists)
                 throw new ConflictException("Email already registered");
+
+
 
             // Create Hotel
             var hotel = new Hotel
@@ -132,11 +140,11 @@ namespace HotelBookingAppWebApi.Services
         // LOGIN
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var users = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            var user = users.FirstOrDefault();
+            var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 throw new UnAuthorizedException("Invalid credentials");
+
 
             var hashed = _passwordService.HashPassword(dto.Password, user.PasswordSaltValue, out _);
 
@@ -160,8 +168,9 @@ namespace HotelBookingAppWebApi.Services
 
             return new AuthResponseDto
             {
-                Token = token,
-                Expiration = DateTime.UtcNow.AddDays(1)
+                Token = token
+                //Expiration = DateTime.UtcNow.AddDays(1)
+                //need to do this as token object in response in future
             };
         }
     }

@@ -57,7 +57,7 @@ END
 
 
 /*  Get Top 10 hotel search */
-CREATE PROCEDURE proc_GetTopHotels
+Create PROCEDURE proc_GetTopHotels
 AS
 BEGIN
     SELECT TOP 10
@@ -66,22 +66,39 @@ BEGIN
         h.City,
         h.ImageUrl,
 
-        ISNULL(AVG(CAST(r.Rating AS DECIMAL(5,2))),0) AS AverageRating,
-        COUNT(r.ReviewId) AS ReviewCount,
+        --  Review Aggregation
+        ISNULL(r.AverageRating, 0) AS AverageRating,
+        ISNULL(r.ReviewCount, 0) AS ReviewCount,
 
-        MIN(rtRate.Rate) AS StartingPrice
+        --  Price Aggregation
+        ISNULL(p.StartingPrice, 0) AS StartingPrice
 
     FROM Hotels h
 
-    LEFT JOIN Reviews r ON r.HotelId = h.HotelId
-    LEFT JOIN RoomTypes rt ON rt.HotelId = h.HotelId
-    LEFT JOIN RoomTypeRates rtRate ON rtRate.RoomTypeId = rt.RoomTypeId
+    --  Reviews aggregated separately
+    LEFT JOIN (
+        SELECT 
+            HotelId,
+            AVG(CAST(Rating AS DECIMAL(5,2))) AS AverageRating,
+            COUNT(*) AS ReviewCount
+        FROM Reviews
+        GROUP BY HotelId
+    ) r ON r.HotelId = h.HotelId
+
+    --  Price aggregated separately
+    LEFT JOIN (
+        SELECT 
+            rt.HotelId,
+            MIN(rtRate.Rate) AS StartingPrice
+        FROM RoomTypes rt
+        INNER JOIN RoomTypeRates rtRate 
+            ON rtRate.RoomTypeId = rt.RoomTypeId
+        GROUP BY rt.HotelId
+    ) p ON p.HotelId = h.HotelId
 
     WHERE h.IsActive = 1
 
-    GROUP BY h.HotelId, h.Name, h.City, h.ImageUrl
-
     ORDER BY 
-        ISNULL(AVG(CAST(r.Rating AS DECIMAL(5,2))),0) DESC,
-        COUNT(r.ReviewId) DESC
+        ISNULL(r.AverageRating, 0) DESC,
+        ISNULL(r.ReviewCount, 0) DESC
 END

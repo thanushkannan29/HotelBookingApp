@@ -2,7 +2,7 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Hotel Booking API",
-    "version": "v1"
+    "version": "v2"
   },
   "paths": {
     "/api/admin/hotel/update": {
