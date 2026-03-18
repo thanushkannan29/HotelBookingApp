@@ -1,5 +1,4 @@
 ﻿using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -22,19 +21,52 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         private Guid GetUserId() =>
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        //  UPDATE HOTEL
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UpdateHotelDto dto)
         {
-            await _service.UpdateHotelAsync(GetUserId(), dto);
-            return Ok("Hotel updated successfully");
+            try
+            {
+                await _service.UpdateHotelAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Hotel updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
         [HttpPatch("status")]
         public async Task<IActionResult> Toggle([FromQuery] bool isActive)
         {
-            await _service.ToggleHotelStatusAsync(GetUserId(), isActive);
-            return Ok("Hotel status updated");
-        }
-    }
+            try
+            {
+                await _service.ToggleHotelStatusAsync(GetUserId(), isActive);
 
+                return Ok(new
+                {
+                    success = true,
+                    message = "Hotel status updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
+        }
+
+    }
 }

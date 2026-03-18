@@ -25,22 +25,58 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] CreateRoomDto dto)
         {
-            await _service.AddRoomAsync(GetUserId(), dto);
-            return Ok("Room added successfully");
+            try
+            {
+                await _service.AddRoomAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room added successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UpdateRoomDto dto)
         {
-            await _service.UpdateRoomAsync(GetUserId(), dto);
-            return Ok("Room updated");
+            try
+            {
+                await _service.UpdateRoomAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPatch("{roomId}/status")]
         public async Task<IActionResult> Toggle(Guid roomId, [FromQuery] bool isActive)
         {
-            await _service.ToggleRoomStatusAsync(GetUserId(), roomId, isActive);
-            return Ok("Room status updated");
+            try
+            {
+                await _service.ToggleRoomStatusAsync(GetUserId(), roomId, isActive);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room status updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -48,10 +84,23 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             [FromQuery] int pageNumber = 1,
             [FromQuery] int pageSize = 10)
         {
-            var rooms = await _service.GetRoomsByHotelAsync(GetUserId(), pageNumber, pageSize);
-            return Ok(rooms);
+            try
+            {
+                var rooms = await _service.GetRoomsByHotelAsync(GetUserId(), pageNumber, pageSize);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = rooms
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }
 

@@ -23,23 +23,34 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpGet("my-logs")]
-        public async Task<IActionResult> GetMyLogs(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetMyLogs(int page = 1, int pageSize = 10)
         {
-            var result = await _service.GetUserLogsAsync(GetUserId(), page, pageSize);
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetUserLogsAsync(GetUserId(), page, pageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
         [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
-            var result = await _service.GetAllLogsAsync(page, pageSize);
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetAllLogsAsync(page, pageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

@@ -26,44 +26,93 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> Add([FromBody] CreateRoomTypeDto dto)
         {
-            await _service.AddRoomTypeAsync(GetUserId(), dto);
-            return Ok("RoomType added successfully");
+            try
+            {
+                await _service.AddRoomTypeAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "RoomType added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
         public async Task<IActionResult> Update([FromBody] UpdateRoomTypeDto dto)
         {
-            await _service.UpdateRoomTypeAsync(GetUserId(), dto);
-            return Ok("RoomType updated");
+            try
+            {
+                await _service.UpdateRoomTypeAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "RoomType updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPatch("{roomTypeId}/status")]
         public async Task<IActionResult> ToggleStatus(Guid roomTypeId, [FromQuery] bool isActive)
         {
-            await _service.ToggleRoomTypeStatusAsync(GetUserId(), roomTypeId, isActive);
-            return Ok("RoomType status updated");
+            try
+            {
+                await _service.ToggleRoomTypeStatusAsync(GetUserId(), roomTypeId, isActive);
+
+                return Ok(new { success = true, message = "RoomType status updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("rate")]
         public async Task<IActionResult> AddRate([FromBody] CreateRoomTypeRateDto dto)
         {
-            await _service.AddRateAsync(GetUserId(), dto);
-            return Ok("Rate added");
+            try
+            {
+                await _service.AddRateAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "Rate added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut("rate")]
         public async Task<IActionResult> UpdateRate([FromBody] UpdateRoomTypeRateDto dto)
         {
-            await _service.UpdateRateAsync(GetUserId(), dto);
-            return Ok("Rate updated");
+            try
+            {
+                await _service.UpdateRateAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "Rate updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("rate-by-date")]
         public async Task<IActionResult> GetRate([FromBody] GetRateByDateRequestDto dto)
         {
-            var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
-            return Ok(rate);
+            try
+            {
+                var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, data = rate });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

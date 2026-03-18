@@ -120,37 +120,37 @@ namespace HotelBookingAppWebApi.Services
         
         // ADJUST RESERVED INVENTORY
         
-        public async Task AdjustReservedInventoryAsync(Guid userId, AdjustReservedInventoryDto dto)
-        {
-            await _unitOfWork.BeginTransactionAsync();
+        //public async Task AdjustReservedInventoryAsync(Guid userId, AdjustReservedInventoryDto dto)
+        //{
+        //    await _unitOfWork.BeginTransactionAsync();
 
-            try
-            {
-                var inventory = await _inventoryRepo.FirstOrDefaultAsync(i =>
-                    i.RoomTypeId == dto.RoomTypeId &&
-                    i.Date == dto.Date);
+        //    try
+        //    {
+        //        var inventory = await _inventoryRepo.FirstOrDefaultAsync(i =>
+        //            i.RoomTypeId == dto.RoomTypeId &&
+        //            i.Date == dto.Date);
 
-                if (inventory == null)
-                    throw new NotFoundException("Inventory not found");
+        //        if (inventory == null)
+        //            throw new NotFoundException("Inventory not found");
 
-                var newReserved = inventory.ReservedInventory + dto.Quantity;
+        //        var newReserved = inventory.ReservedInventory + dto.Quantity;
 
-                if (newReserved < 0)
-                    throw new InsufficientInventoryException("Reserved cannot be negative");
+        //        if (newReserved < 0)
+        //            throw new InsufficientInventoryException("Reserved cannot be negative");
 
-                if (newReserved > inventory.TotalInventory)
-                    throw new InsufficientInventoryException("Overbooking detected");
+        //        if (newReserved > inventory.TotalInventory)
+        //            throw new InsufficientInventoryException("Overbooking detected");
 
-                inventory.ReservedInventory = newReserved;
+        //        inventory.ReservedInventory = newReserved;
 
-                await _unitOfWork.CommitAsync();
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
-        }
+        //        await _unitOfWork.CommitAsync();
+        //    }
+        //    catch
+        //    {
+        //        await _unitOfWork.RollbackAsync();
+        //        throw;
+        //    }
+        //}
 
         
         // GET INVENTORY (READ ONLY)
@@ -173,7 +173,8 @@ namespace HotelBookingAppWebApi.Services
                     RoomTypeInventoryId = i.RoomTypeInventoryId,
                     Date = i.Date,
                     TotalInventory = i.TotalInventory,
-                    ReservedInventory = i.ReservedInventory
+                    ReservedInventory = i.ReservedInventory,
+                    
                 })
                 .ToListAsync();
 

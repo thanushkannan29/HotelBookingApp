@@ -7,6 +7,7 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto);
        
         Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto);
-        Task<PagedTransactionResponseDto> GetAllTransactionsAsync(int page, int pageSize);
+        Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize);
+
     }
 }

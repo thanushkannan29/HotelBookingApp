@@ -90,22 +90,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminInventoryController",
-    "Method": "Adjust",
-    "RelativePath": "api/admin/inventory/adjust",
-    "HttpMethod": "PATCH",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.Inventory.AdjustReservedInventoryDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
     "Method": "Complete",
     "RelativePath": "api/admin/reservations/{code}/complete",

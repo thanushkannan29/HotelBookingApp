@@ -25,47 +25,77 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> AddReview([FromBody] CreateReviewDto dto)
         {
-            var result = await _service.AddReviewAsync(GetUserId(), dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.AddReviewAsync(GetUserId(), dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> UpdateReview(Guid id, [FromBody] UpdateReviewDto dto)
         {
-            var result = await _service.UpdateReviewAsync(GetUserId(), id, dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.UpdateReviewAsync(GetUserId(), id, dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> DeleteReview(Guid id)
         {
-            await _service.DeleteReviewAsync(GetUserId(), id);
-            return Ok(new { message = "Review deleted successfully." });
+            try
+            {
+                await _service.DeleteReviewAsync(GetUserId(), id);
+                return Ok(new { success = true, message = "Review deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        //  Complex filter → POST (Correct)
         [HttpPost("hotel")]
         [AllowAnonymous]
         public async Task<IActionResult> GetByHotel([FromBody] GetHotelReviewsRequestDto dto)
         {
-            var result = await _service.GetReviewsByHotelAsync(
-                dto.HotelId,
-                dto.Page,
-                dto.PageSize);
-
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetReviewsByHotelAsync(dto.HotelId, dto.Page, dto.PageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
-
 
         [HttpGet("my-reviews")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GetMyReviews()
         {
-            var result = await _service.GetMyReviewsAsync(GetUserId());
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetMyReviewsAsync(GetUserId());
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

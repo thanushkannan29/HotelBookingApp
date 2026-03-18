@@ -25,25 +25,50 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDashboard()
         {
-            var result = await _service.GetAdminDashboardAsync(GetUserId());
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetAdminDashboardAsync(GetUserId());
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("guest")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GuestDashboard()
         {
-            var result = await _service.GetGuestDashboardAsync(GetUserId());
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetGuestDashboardAsync(GetUserId());
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("superadmin")]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> SuperAdminDashboard()
         {
-            var result = await _service.GetSuperAdminDashboardAsync();
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetSuperAdminDashboardAsync();
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

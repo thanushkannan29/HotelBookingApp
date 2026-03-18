@@ -2,6 +2,7 @@
 using HotelBookingAppWebApi.Models.DTOs.Transactions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
@@ -21,27 +22,53 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
-            var result = await _service.CreatePaymentAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.CreatePaymentAsync(dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("{id}/refund")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Refund(Guid id, [FromBody] RefundRequestDto dto)
         {
-            var result = await _service.RefundAsync(id, dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.RefundAsync(id, dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        [Authorize(Roles = "Admin,Guest")]
+        public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
-            var result = await _service.GetAllTransactionsAsync(page, pageSize);
-            return Ok(result);
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var role = User.FindFirstValue(ClaimTypes.Role)!;
+
+                var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
+
+
     }
+
 
 }

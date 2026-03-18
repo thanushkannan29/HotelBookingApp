@@ -19,9 +19,23 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPatch("{code}/complete")]
         public async Task<IActionResult> Complete(string code)
         {
-            await _service.CompleteReservationAsync(code);
-            return Ok(new { message = "Reservation marked as completed" });
+            try
+            {
+                await _service.CompleteReservationAsync(code);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Reservation marked as completed"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
 
 }
+
+

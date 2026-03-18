@@ -25,22 +25,39 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> AddInventory([FromBody] CreateInventoryDto dto)
         {
-            await _service.AddInventoryAsync(GetUserId(), dto);
-            return Ok("Inventory added successfully");
+            try
+            {
+                await _service.AddInventoryAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Inventory added successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateInventory([FromBody] UpdateInventoryDto dto)
         {
-            await _service.UpdateInventoryAsync(GetUserId(), dto);
-            return Ok("Inventory updated");
-        }
+            try
+            {
+                await _service.UpdateInventoryAsync(GetUserId(), dto);
 
-        [HttpPatch("adjust")]//this is for reception work offine reserve the room for customer with cash
-        public async Task<IActionResult> Adjust([FromBody] AdjustReservedInventoryDto dto)
-        {
-            await _service.AdjustReservedInventoryAsync(GetUserId(), dto);
-            return Ok("Reserved inventory updated");
+                return Ok(new
+                {
+                    success = true,
+                    message = "Inventory updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
@@ -49,9 +66,23 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             [FromQuery] DateOnly start,
             [FromQuery] DateOnly end)
         {
-            var data = await _service.GetInventoryAsync(GetUserId(), roomTypeId, start, end);
-            return Ok(data);
+            try
+            {
+                var data = await _service.GetInventoryAsync(GetUserId(), roomTypeId, start, end);
+
+                return Ok(new
+                {
+                    success = true,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
 
 }
+
+

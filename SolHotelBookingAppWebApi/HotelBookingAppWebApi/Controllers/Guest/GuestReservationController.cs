@@ -25,31 +25,61 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateReservationDto dto)
         {
-            var result = await _service.CreateReservationAsync(GetUserId(), dto);
+            try
+            {
+                var result = await _service.CreateReservationAsync(GetUserId(), dto);
 
-            return CreatedAtAction(nameof(GetByCode),
-                new { code = result.ReservationCode },
-                result);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code)
         {
-            return Ok(await _service.GetReservationByCodeAsync(GetUserId(), code));
+            try
+            {
+                var result = await _service.GetReservationByCodeAsync(GetUserId(), code);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> GetMyReservations()
         {
-            return Ok(await _service.GetMyReservationsAsync(GetUserId()));
+            try
+            {
+                var result = await _service.GetMyReservationsAsync(GetUserId());
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPatch("{code}/cancel")]
         public async Task<IActionResult> Cancel(string code, [FromBody] CancelReservationDto dto)
         {
-            await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
-            return Ok(new { message = "Reservation cancelled successfully" });
+            try
+            {
+                await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
+
+                return Ok(new { success = true, message = "Reservation cancelled successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

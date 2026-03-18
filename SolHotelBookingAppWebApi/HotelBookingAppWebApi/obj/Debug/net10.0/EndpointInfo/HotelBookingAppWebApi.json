@@ -153,37 +153,6 @@
         }
       }
     },
-    "/api/admin/inventory/adjust": {
-      "patch": {
-        "tags": [
-          "AdminInventory"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/AdjustReservedInventoryDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/admin/reservations/{code}/complete": {
       "patch": {
         "tags": [
@@ -1247,29 +1216,6 @@
   },
   "components": {
     "schemas": {
-      "AdjustReservedInventoryDto": {
-        "required": [
-          "date",
-          "quantity",
-          "roomTypeId"
-        ],
-        "type": "object",
-        "properties": {
-          "roomTypeId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "date": {
-            "type": "string",
-            "format": "date"
-          },
-          "quantity": {
-            "type": "integer",
-            "format": "int32"
-          }
-        },
-        "additionalProperties": false
-      },
       "CancelReservationDto": {
         "required": [
           "reason"

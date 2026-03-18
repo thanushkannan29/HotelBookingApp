@@ -21,25 +21,50 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         [AllowAnonymous]
         public async Task<IActionResult> RegisterGuest([FromBody] RegisterUserDto dto)
         {
-            var result = await _authService.RegisterGuestAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _authService.RegisterGuestAsync(dto);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("register-hotel-admin")]
         [AllowAnonymous]
         public async Task<IActionResult> RegisterHotelAdmin([FromBody] RegisterHotelAdminDto dto)
         {
-            var result = await _authService.RegisterHotelAdminAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _authService.RegisterHotelAdminAsync(dto);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost("login")]
         [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
-            var result = await _authService.LoginAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _authService.LoginAsync(dto);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 
 }

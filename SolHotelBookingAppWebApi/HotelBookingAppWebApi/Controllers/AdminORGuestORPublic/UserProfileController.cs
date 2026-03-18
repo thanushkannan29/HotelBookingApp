@@ -25,28 +25,46 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
-            return Ok(await _service.GetProfileAsync(GetUserId()));
+            try
+            {
+                var result = await _service.GetProfileAsync(GetUserId());
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDto dto)
         {
-            return Ok(await _service.UpdateProfileAsync(GetUserId(), dto));
+            try
+            {
+                var result = await _service.UpdateProfileAsync(GetUserId(), dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        //  Can convert to POST (mam suggestion valid here)
         [HttpPost("booking-history")]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> GetBookingHistory([FromBody] PaginationDto dto)
         {
-            var result = await _service.GetBookingHistoryAsync(
-                GetUserId(),
-                dto.Page,
-                dto.PageSize);
-
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetBookingHistoryAsync(GetUserId(), dto.Page, dto.PageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
-
     }
+
 
 }

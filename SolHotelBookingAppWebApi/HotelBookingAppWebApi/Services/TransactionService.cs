@@ -13,18 +13,22 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Transaction> _transactionRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, User> _userRepo;
         private readonly IUnitOfWork _unitOfWork;
+
 
         public TransactionService(
             IRepository<Guid, Transaction> transactionRepo,
             IRepository<Guid, Reservation> reservationRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid,User> userRepo,
             IUnitOfWork unitOfWork)
         {
             _transactionRepo = transactionRepo;
             _reservationRepo = reservationRepo;
             _inventoryRepo = inventoryRepo;
             _unitOfWork = unitOfWork;
+            _userRepo = userRepo;
         }
 
         #region CREATE PAYMENT
@@ -135,9 +139,29 @@ namespace HotelBookingAppWebApi.Services
 
         #region GET ALL (PAGINATION)
 
-        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(int page, int pageSize)
+        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize)
         {
             var query = _transactionRepo.GetQueryable();
+
+            //  ROLE-BASED FILTERING
+            if (role == "Guest")
+            {
+                query = query.Where(t => t.Reservation!.UserId == userId);
+            }
+            else if (role == "Admin")
+            {
+                // get admin hotel
+                var hotelId = await _userRepo.GetQueryable()
+                    .Where(u => u.UserId == userId)
+                    .Select(u => u.HotelId)
+                    .FirstOrDefaultAsync();
+
+                if (hotelId == null)
+                    throw new NotFoundException("Admin hotel not found");
+
+                query = query.Where(t => t.Reservation!.HotelId == hotelId);
+            }
+            // SuperAdmin → no filter (gets all)
 
             var total = await query.CountAsync();
 
@@ -153,6 +177,7 @@ namespace HotelBookingAppWebApi.Services
                 Transactions = data.Select(MapToDto)
             };
         }
+
 
         #endregion
 
