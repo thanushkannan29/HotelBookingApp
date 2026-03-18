@@ -2,12 +2,12 @@ using AspNetCoreRateLimit;
 using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Interfaces.Repository;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using HotelBookingAppWebApi.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -20,7 +20,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 #endregion
-//builder.Services.AddAutoMapper(typeof(CustomerProfile)); // This is for mapper
+
 #region RateLimiter
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
@@ -86,21 +86,10 @@ builder.Services.AddCors(options =>
 #endregion
 
 
-#region Repositories
-builder.Services.AddScoped<IHotelRepository, HotelRepository>();
-builder.Services.AddScoped<IRepository<Guid, User>, Repository<Guid, User>>();
-builder.Services.AddScoped<IReviewRepository, ReviewRepository>();
+#region Generic Repository
+builder.Services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
 
-//above is added new below need to check and remove if not used
-builder.Services.AddScoped<IRepository<Guid, Hotel>, Repository<Guid, Hotel>>();
-builder.Services.AddScoped<IRepository<Guid, UserProfileDetails>, Repository<Guid, UserProfileDetails>>();
-builder.Services.AddScoped<DashboardRepository>();
-builder.Services.AddScoped<IReservationRepository, ReservationRepository>();
-
-
-
-//This Repo i used in my authecation time password and token creation
 #endregion
 
 #region Services
@@ -117,13 +106,18 @@ builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILogService, LogService>();
-builder.Services.AddHostedService<ReservationCleanupService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+
+
 
 
 
 
 #endregion
-
+#region Hosted Service For reservation cancel Time Out
+builder.Services.AddHostedService<ReservationCleanupService>();
+#endregion
 
 #region JWT Authentication
 string key = builder.Configuration["Keys:Jwt"]
@@ -155,11 +149,17 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
-app.UseMiddleware<GlobalExceptionMiddleware>();
+app.UseRouting();
+
+
+app.UseMiddleware<GlobalExceptionMiddleware>(); 
 
 app.UseAuthentication();
 app.UseAuthorization();
+
 app.UseIpRateLimiting();
+
 app.MapControllers();
+
 
 app.Run();

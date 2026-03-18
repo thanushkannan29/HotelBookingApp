@@ -1,5 +1,4 @@
 using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -7,7 +6,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
-    [Route("api/admin/hotel")]
+    [Route("api/admin/hotels")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminHotelController : ControllerBase
@@ -19,21 +18,56 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
-        [HttpPut("update")]
-        public async Task<IActionResult> Update(UpdateHotelDto dto)
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        //  UPDATE HOTEL
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] UpdateHotelDto dto)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _service.UpdateHotelAsync(userId, dto);
-            return Ok("Hotel updated successfully");
+            try
+            {
+                await _service.UpdateHotelAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Hotel updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
 
-        [HttpPut("toggle-status")]
-        public async Task<IActionResult> Toggle(bool isActive)
+        [HttpPatch("status")]
+        public async Task<IActionResult> Toggle([FromQuery] bool isActive)
         {
-            var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            await _service.ToggleHotelStatusAsync(userId, isActive);
-            return Ok("Hotel status updated");
+            try
+            {
+                await _service.ToggleHotelStatusAsync(GetUserId(), isActive);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Hotel status updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new
+                {
+                    success = false,
+                    message = ex.Message
+                });
+            }
         }
+
     }
 }
 using HotelBookingAppWebApi.Interfaces;
@@ -61,37 +95,68 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
-        public async Task<IActionResult> AddInventory(CreateInventoryDto dto)
+        public async Task<IActionResult> AddInventory([FromBody] CreateInventoryDto dto)
         {
-            await _service.AddInventoryAsync(GetUserId(), dto);
-            return Ok("Inventory added successfully");
+            try
+            {
+                await _service.AddInventoryAsync(GetUserId(), dto);
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Inventory added successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
-        public async Task<IActionResult> UpdateInventory(UpdateInventoryDto dto)
+        public async Task<IActionResult> UpdateInventory([FromBody] UpdateInventoryDto dto)
         {
-            await _service.UpdateInventoryAsync(GetUserId(), dto);
-            return Ok("Inventory updated");
-        }
+            try
+            {
+                await _service.UpdateInventoryAsync(GetUserId(), dto);
 
-        [HttpPatch("adjust")]
-        public async Task<IActionResult> Adjust(AdjustReservedInventoryDto dto)
-        {
-            await _service.AdjustReservedInventoryAsync(GetUserId(), dto);
-            return Ok("Reserved inventory updated");
+                return Ok(new
+                {
+                    success = true,
+                    message = "Inventory updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpGet]
         public async Task<IActionResult> GetInventory(
-            Guid roomTypeId,
-            DateOnly start,
-            DateOnly end)
+            [FromQuery] Guid roomTypeId,
+            [FromQuery] DateOnly start,
+            [FromQuery] DateOnly end)
         {
-            var data = await _service.GetInventoryAsync(GetUserId(), roomTypeId, start, end);
-            return Ok(data);
+            try
+            {
+                var data = await _service.GetInventoryAsync(GetUserId(), roomTypeId, start, end);
+
+                return Ok(new
+                {
+                    success = true,
+                    data
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -110,26 +175,28 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
-        // Complete Reservation
-        [HttpPut("{code}/complete")]
+        [HttpPatch("{code}/complete")]
         public async Task<IActionResult> Complete(string code)
         {
             try
             {
                 await _service.CompleteReservationAsync(code);
 
-                return Ok(new { message = "Reservation marked as completed" });
+                return Ok(new
+                {
+                    success = true,
+                    message = "Reservation marked as completed"
+                });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-
-        // (Optional) Future: View all reservations
     }
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Room;
@@ -139,51 +206,102 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
-        [Route("api/admin/rooms")]
-        [ApiController]
-        [Authorize(Roles = "Admin")]
-        public class AdminRoomController : ControllerBase
+    [Route("api/admin/rooms")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class AdminRoomController : ControllerBase
+    {
+        private readonly IRoomService _service;
+
+        public AdminRoomController(IRoomService service)
         {
-            private readonly IRoomService _service;
+            _service = service;
+        }
 
-            public AdminRoomController(IRoomService service)
-            {
-                _service = service;
-            }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            private Guid GetUserId() =>
-                Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-            [HttpPost]
-            public async Task<IActionResult> Add(CreateRoomDto dto)
+        [HttpPost]
+        public async Task<IActionResult> Add([FromBody] CreateRoomDto dto)
+        {
+            try
             {
                 await _service.AddRoomAsync(GetUserId(), dto);
-                return Ok("Room added successfully");
-            }
 
-            [HttpPut]
-            public async Task<IActionResult> Update(UpdateRoomDto dto)
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room added successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] UpdateRoomDto dto)
+        {
+            try
             {
                 await _service.UpdateRoomAsync(GetUserId(), dto);
-                return Ok("Room updated");
-            }
 
-            [HttpPatch("{roomId}/status")]
-            public async Task<IActionResult> Toggle(Guid roomId, bool isActive)
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPatch("{roomId}/status")]
+        public async Task<IActionResult> Toggle(Guid roomId, [FromQuery] bool isActive)
+        {
+            try
             {
                 await _service.ToggleRoomStatusAsync(GetUserId(), roomId, isActive);
-                return Ok("Room status updated");
-            }
 
-            [HttpGet]
-            public async Task<IActionResult> List(int pageNumber = 1, int pageSize = 10)
+                return Ok(new
+                {
+                    success = true,
+                    message = "Room status updated successfully"
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> List(
+            [FromQuery] int pageNumber = 1,
+            [FromQuery] int pageSize = 10)
+        {
+            try
             {
                 var rooms = await _service.GetRoomsByHotelAsync(GetUserId(), pageNumber, pageSize);
-                return Ok(rooms);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = rooms
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }
 
+
+}
 
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
@@ -195,7 +313,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
-    [Route("api/admin/roomtype")]
+    [Route("api/admin/roomtypes")]
     [ApiController]
     [Authorize(Roles = "Admin")]
     public class AdminRoomTypeController : ControllerBase
@@ -203,7 +321,6 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         private readonly IRoomTypeService _service;
 
         public AdminRoomTypeController(IRoomTypeService service)
-
         {
             _service = service;
         }
@@ -212,60 +329,100 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
-        public async Task<IActionResult> Add(CreateRoomTypeDto dto)
+        public async Task<IActionResult> Add([FromBody] CreateRoomTypeDto dto)
         {
-            await _service.AddRoomTypeAsync(GetUserId(), dto);
-            return Ok("RoomType added successfully");
+            try
+            {
+                await _service.AddRoomTypeAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "RoomType added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut]
-        public async Task<IActionResult> Update(UpdateRoomTypeDto dto)
+        public async Task<IActionResult> Update([FromBody] UpdateRoomTypeDto dto)
         {
-            await _service.UpdateRoomTypeAsync(GetUserId(), dto);
-            return Ok("RoomType updated");
+            try
+            {
+                await _service.UpdateRoomTypeAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "RoomType updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        [HttpPut("{roomTypeId}/toggle-status")]
-
-        public async Task<IActionResult> ToggleStatus(Guid roomTypeId, bool isActive)
+        [HttpPatch("{roomTypeId}/status")]
+        public async Task<IActionResult> ToggleStatus(Guid roomTypeId, [FromQuery] bool isActive)
         {
-            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            try
+            {
+                await _service.ToggleRoomTypeStatusAsync(GetUserId(), roomTypeId, isActive);
 
-            if (string.IsNullOrEmpty(userIdClaim))
-                return Unauthorized();
-
-            var userId = Guid.Parse(userIdClaim);
-
-            await _service.ToggleRoomTypeStatusAsync(userId,roomTypeId,isActive);
-
-            return Ok("RoomType status updated");
+                return Ok(new { success = true, message = "RoomType status updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
-
 
         [HttpPost("rate")]
-        public async Task<IActionResult> AddRate(CreateRoomTypeRateDto dto)
+        public async Task<IActionResult> AddRate([FromBody] CreateRoomTypeRateDto dto)
         {
-            await _service.AddRateAsync(GetUserId(), dto);
-            return Ok("Rate added");
+            try
+            {
+                await _service.AddRateAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, message = "Rate added successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPut("rate")]
-        public async Task<IActionResult> UpdateRate(UpdateRoomTypeRateDto dto)
+        public async Task<IActionResult> UpdateRate([FromBody] UpdateRoomTypeRateDto dto)
         {
-            await _service.UpdateRateAsync(GetUserId(), dto);
-            return Ok("Rate updated");
-        }
-       
+            try
+            {
+                await _service.UpdateRateAsync(GetUserId(), dto);
 
+                return Ok(new { success = true, message = "Rate updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
 
         [HttpPost("rate-by-date")]
-        public async Task<IActionResult> GetRate(GetRateByDateRequestDto dto)
+        public async Task<IActionResult> GetRate([FromBody] GetRateByDateRequestDto dto)
         {
-            var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
-            return Ok(rate);
+            try
+            {
+                var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
+
+                return Ok(new { success = true, data = rate });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
+
 }
+
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -286,21 +443,22 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             _service = service;
         }
 
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
         [HttpGet("admin")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDashboard()
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var result = await _service.GetAdminDashboardAsync(GetUserId());
 
-                var result = await _service.GetAdminDashboardAsync(userId);
-
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -310,15 +468,13 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var result = await _service.GetGuestDashboardAsync(GetUserId());
 
-                var result = await _service.GetGuestDashboardAsync(userId);
-
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -330,15 +486,18 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             {
                 var result = await _service.GetSuperAdminDashboardAsync();
 
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }
+
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
@@ -347,7 +506,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/auth")]
     [ApiController]
     public class AuthenticationController : ControllerBase
     {
@@ -358,60 +517,58 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _authService = authService;
         }
 
-        // REGISTER GUEST
-
         [HttpPost("register-guest")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterGuest(RegisterUserDto dto)
+        public async Task<IActionResult> RegisterGuest([FromBody] RegisterUserDto dto)
         {
             try
             {
                 var result = await _authService.RegisterGuestAsync(dto);
-                return Ok(result);
+
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-        // REGISTER HOTEL ADMIN
-
         [HttpPost("register-hotel-admin")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterHotelAdmin(RegisterHotelAdminDto dto)
+        public async Task<IActionResult> RegisterHotelAdmin([FromBody] RegisterHotelAdminDto dto)
         {
             try
             {
                 var result = await _authService.RegisterHotelAdminAsync(dto);
-                return Ok(result);
+
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-        // LOGIN (Guest or Admin)
-
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginDto dto)
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
             try
             {
                 var result = await _authService.LoginAsync(dto);
-                return Ok(result);
+
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return Unauthorized(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-        
     }
+
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Log;
@@ -421,7 +578,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/logs")]
     [ApiController]
     [Authorize]
     public class LogsController : ControllerBase
@@ -433,40 +590,43 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        private Guid GetUserId()
-        {
-            return Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        
-
-         
-        // GET OWN LOGS
-         
         [HttpGet("my-logs")]
         public async Task<IActionResult> GetMyLogs(int page = 1, int pageSize = 10)
         {
-            var result = await _service
-                .GetUserLogsAsync(GetUserId(), page, pageSize);
-
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetUserLogsAsync(GetUserId(), page, pageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-         
-        // GET ALL LOGS (ADMIN for now need to add super admin role in user modles)
-         
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
-            var result = await _service
-                .GetAllLogsAsync(page, pageSize);
-
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetAllLogsAsync(page, pageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
+
 }
+
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Review;
@@ -476,7 +636,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/reviews")]
     [ApiController]
     public class ReviewsController : ControllerBase
     {
@@ -487,47 +647,38 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        // ADD REVIEW
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> AddReview(CreateReviewDto dto)
+        public async Task<IActionResult> AddReview([FromBody] CreateReviewDto dto)
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.AddReviewAsync(userId, dto);
-
-                return Ok(result);
+                var result = await _service.AddReviewAsync(GetUserId(), dto);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-        // UPDATE REVIEW
 
         [HttpPut("{id}")]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> UpdateReview(Guid id, UpdateReviewDto dto)
+        public async Task<IActionResult> UpdateReview(Guid id, [FromBody] UpdateReviewDto dto)
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.UpdateReviewAsync(userId, id, dto);
-
-                return Ok(result);
+                var result = await _service.UpdateReviewAsync(GetUserId(), id, dto);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-        // DELETE REVIEW
 
         [HttpDelete("{id}")]
         [Authorize(Roles = "Guest")]
@@ -535,37 +686,29 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                await _service.DeleteReviewAsync(userId, id);
-
-                return Ok(new { message = "Review deleted successfully." });
+                await _service.DeleteReviewAsync(GetUserId(), id);
+                return Ok(new { success = true, message = "Review deleted successfully" });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-        // GET REVIEWS BY HOTEL (PUBLIC)
-
-        [HttpGet("hotel/{hotelId}")]
+        [HttpPost("hotel")]
         [AllowAnonymous]
-        public async Task<IActionResult> GetByHotel(Guid hotelId, int page = 1, int pageSize = 10)
+        public async Task<IActionResult> GetByHotel([FromBody] GetHotelReviewsRequestDto dto)
         {
             try
             {
-                var result = await _service.GetReviewsByHotelAsync(hotelId, page, pageSize);
-
-                return Ok(result);
+                var result = await _service.GetReviewsByHotelAsync(dto.HotelId, dto.Page, dto.PageSize);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
-        // GET MY REVIEWS (Guest)
 
         [HttpGet("my-reviews")]
         [Authorize(Roles = "Guest")]
@@ -573,27 +716,28 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
         {
             try
             {
-                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-                var result = await _service.GetMyReviewsAsync(userId);
-
-                return Ok(result);
+                var result = await _service.GetMyReviewsAsync(GetUserId());
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }
+
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Transactions;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/transactions")]
     [ApiController]
     [Authorize]
     public class TransactionsController : ControllerBase
@@ -605,42 +749,61 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        
-        // CREATE PAYMENT (Guest)
-        
         [HttpPost]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> CreatePayment(CreatePaymentDto dto)
+        public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
         {
-            var result = await _service.CreatePaymentAsync(dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.CreatePaymentAsync(dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        
-
-        
-        // REFUND (Admin)
-        
         [HttpPost("{id}/refund")]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Refund(Guid id, RefundRequestDto dto)
+        public async Task<IActionResult> Refund(Guid id, [FromBody] RefundRequestDto dto)
         {
-            var result = await _service.RefundAsync(id, dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.RefundAsync(id, dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        
-        // PAGINATED LIST (Admin)
-        
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Guest")]
         public async Task<IActionResult> GetAll(int page = 1, int pageSize = 10)
         {
-            var result = await _service.GetAllTransactionsAsync(page, pageSize);
-            return Ok(result);
+            try
+            {
+                var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+                var role = User.FindFirstValue(ClaimTypes.Role)!;
+
+                var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize);
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
+
+
     }
+
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.UserDetails;
@@ -650,7 +813,7 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
 {
-    [Route("api/[controller]")]
+    [Route("api/user-profile")]
     [ApiController]
     [Authorize]
     public class UserProfileController : ControllerBase
@@ -662,48 +825,58 @@ namespace HotelBookingAppWebApi.Controllers.AdminORGuestORPublic
             _service = service;
         }
 
-        private Guid GetUserId()
-        {
-            return Guid.Parse(
-                User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        
-        // GET PROFILE (Guest/Admin)
-        
         [HttpGet]
         public async Task<IActionResult> GetProfile()
         {
-            var result = await _service.GetProfileAsync(GetUserId());
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetProfileAsync(GetUserId());
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        
-        // UPDATE PROFILE
-        
         [HttpPut]
-        public async Task<IActionResult> UpdateProfile(UpdateUserProfileDto dto)
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateUserProfileDto dto)
         {
-            var result = await _service.UpdateProfileAsync(GetUserId(), dto);
-            return Ok(result);
+            try
+            {
+                var result = await _service.UpdateProfileAsync(GetUserId(), dto);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
 
-        
-        // BOOKING HISTORY (Guest)
-        
-        [HttpGet("booking-history")]
+        [HttpPost("booking-history")]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> GetBookingHistory(
-            int page = 1,
-            int pageSize = 10)
+        public async Task<IActionResult> GetBookingHistory([FromBody] PaginationDto dto)
         {
-            var result = await _service
-                .GetBookingHistoryAsync(GetUserId(), page, pageSize);
-
-            return Ok(result);
+            try
+            {
+                var result = await _service.GetBookingHistoryAsync(GetUserId(), dto.Page, dto.PageSize);
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
         }
     }
+
+
 }
+
+
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
@@ -725,12 +898,9 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             _service = service;
         }
 
-        private Guid GetUserId()
-        {
-            return Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-        }
+        private Guid GetUserId() =>
+            Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        //  Create Reservation
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateReservationDto dto)
         {
@@ -738,73 +908,61 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             {
                 var result = await _service.CreateReservationAsync(GetUserId(), dto);
 
-                return CreatedAtAction(nameof(GetByCode),
-                    new { code = result.ReservationCode },
-                    result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-
-        // Get Reservation By Code
         [HttpGet("{code}")]
         public async Task<IActionResult> GetByCode(string code)
         {
             try
             {
                 var result = await _service.GetReservationByCodeAsync(GetUserId(), code);
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-
-        // Get My Reservations
         [HttpGet]
         public async Task<IActionResult> GetMyReservations()
         {
             try
             {
                 var result = await _service.GetMyReservationsAsync(GetUserId());
-                return Ok(result);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(new
-                {
-                    message = ex.Message
-                });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
-
-        // Cancel Reservation
-        [HttpPut("{code}/cancel")]
+        [HttpPatch("{code}/cancel")]
         public async Task<IActionResult> Cancel(string code, [FromBody] CancelReservationDto dto)
         {
             try
             {
                 await _service.CancelReservationAsync(GetUserId(), code, dto.Reason);
 
-                return Ok(new { message = "Reservation cancelled successfully" });
+                return Ok(new { success = true, message = "Reservation cancelled successfully" });
             }
             catch (Exception ex)
             {
-                return BadRequest(new { message = ex.Message });
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
-
     }
+
+
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Public;
 using Microsoft.AspNetCore.Mvc;
@@ -827,24 +985,26 @@ namespace HotelBookingAppWebApi.Controllers.Public
         {
             try
             {
-                return Ok(await _service.GetTopHotelsAsync());
+                var result = await _service.GetTopHotelsAsync();
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
         [HttpPost("search")]
-        public async Task<IActionResult> Search(SearchHotelRequestDto request)
+        public async Task<IActionResult> Search([FromBody] SearchHotelRequestDto request)
         {
             try
             {
-                return Ok(await _service.SearchHotelsAsync(request));
+                var result = await _service.SearchHotelsAsync(request);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -853,11 +1013,12 @@ namespace HotelBookingAppWebApi.Controllers.Public
         {
             try
             {
-                return Ok(await _service.GetHotelDetailsAsync(hotelId));
+                var result = await _service.GetHotelDetailsAsync(hotelId);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
@@ -866,28 +1027,44 @@ namespace HotelBookingAppWebApi.Controllers.Public
         {
             try
             {
-                return Ok(await _service.GetRoomTypesAsync(hotelId));
+                var result = await _service.GetRoomTypesAsync(hotelId);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
 
         [HttpGet("{hotelId}/availability")]
-        public async Task<IActionResult> GetAvailability(
-            Guid hotelId,
-            DateOnly checkIn,
-            DateOnly checkOut)
+        public async Task<IActionResult> GetAvailability(Guid hotelId, DateOnly checkIn, DateOnly checkOut)
         {
             try
             {
-                return Ok(await _service.GetAvailabilityAsync(hotelId, checkIn, checkOut));
+                var result = await _service.GetAvailabilityAsync(hotelId, checkIn, checkOut);
+                return Ok(new { success = true, data = result });
             }
             catch (Exception ex)
             {
-                return BadRequest(ex.Message);
+                return BadRequest(new { success = false, message = ex.Message });
             }
         }
     }
+
+
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

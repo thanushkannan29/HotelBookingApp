@@ -1,7 +1,10 @@
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
+using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
@@ -12,128 +15,154 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
+        private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(
             IRepository<Guid, User> userRepository,
             IRepository<Guid, Hotel> hotelRepository,
             IRepository<Guid, UserProfileDetails> userProfileRepository,
             IPasswordService passwordService,
-            ITokenService tokenService)
+            ITokenService tokenService,
+            IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
             _hotelRepository = hotelRepository;
             _userProfileRepository = userProfileRepository;
             _passwordService = passwordService;
             _tokenService = tokenService;
+            _unitOfWork = unitOfWork;
         }
 
-        // REGISTER GUEST
+        //  REGISTER GUEST (WITH TRANSACTION)
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
-            var existingUsers = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            if (existingUsers.Any())
+            var exists = await _userRepository.GetQueryable()
+                .AnyAsync(u => u.Email == dto.Email);
+
+            if (exists)
                 throw new ConflictException("Email already registered");
 
-            byte[]? salt;
-            var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
+            await _unitOfWork.BeginTransactionAsync();
 
-            var user = new User
+            try
             {
-                UserId = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                Password = hashedPassword,
-                PasswordSaltValue = salt!,
-                Role = UserRole.Guest,
-                CreatedAt = DateTime.UtcNow
-            };
+                byte[]? salt;
+                var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
-            await _userRepository.AddAsync(user);
+                var user = new User
+                {
+                    UserId = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Password = hashedPassword,
+                    PasswordSaltValue = salt!,
+                    Role = UserRole.Guest,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            // CREATE USER PROFILE DETAILS
-            var profile = new UserProfileDetails
+                await _userRepository.AddAsync(user);
+
+                var profile = new UserProfileDetails
+                {
+                    UserDetailsId = Guid.NewGuid(),
+                    UserId = user.UserId,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    PhoneNumber = "Not Updated",
+                    Address = "Not Updated",
+                    City = "Not Updated",
+                    State = "Not Updated",
+                    Pincode = "000000",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userProfileRepository.AddAsync(profile);
+
+                await _unitOfWork.CommitAsync();
+
+                return GenerateToken(user);
+            }
+            catch
             {
-                UserDetailsId = Guid.NewGuid(),
-                UserId = user.UserId,
-                Name = dto.Name,
-                Email = dto.Email,
-                PhoneNumber = "Not Updated",
-                Address = "Not Updated",
-                City = "Not Updated",
-                State = "Not Updated",
-                Pincode = "000000",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userProfileRepository.AddAsync(profile);
-
-            return GenerateToken(user);
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // REGISTER HOTEL ADMIN
+        //  REGISTER HOTEL ADMIN (WITH TRANSACTION)
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
-            var existing = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            if (existing.Any())
+            var exists = await _userRepository.GetQueryable()
+                .AnyAsync(u => u.Email == dto.Email);
+
+            if (exists)
                 throw new ConflictException("Email already registered");
 
-            // Create Hotel
-            var hotel = new Hotel
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
             {
-                HotelId = Guid.NewGuid(),
-                Name = dto.HotelName,
-                Address = dto.Address,
-                City = dto.City,
-                Description = dto.Description,
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
+                var hotel = new Hotel
+                {
+                    HotelId = Guid.NewGuid(),
+                    Name = dto.HotelName,
+                    Address = dto.Address,
+                    City = dto.City,
+                    Description = dto.Description,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
 
-            await _hotelRepository.AddAsync(hotel);
+                await _hotelRepository.AddAsync(hotel);
 
-            // Create Admin
-            byte[]? salt;
-            var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
+                byte[]? salt;
+                var hashedPassword = _passwordService.HashPassword(dto.Password, null, out salt);
 
-            var admin = new User
+                var admin = new User
+                {
+                    UserId = Guid.NewGuid(),
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    Password = hashedPassword,
+                    PasswordSaltValue = salt!,
+                    Role = UserRole.Admin,
+                    HotelId = hotel.HotelId,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userRepository.AddAsync(admin);
+
+                var profile = new UserProfileDetails
+                {
+                    UserDetailsId = Guid.NewGuid(),
+                    UserId = admin.UserId,
+                    Name = dto.Name,
+                    Email = dto.Email,
+                    PhoneNumber = "Not Updated",
+                    Address = dto.Address,
+                    City = dto.City,
+                    State = "Not Updated",
+                    Pincode = "000000",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                await _userProfileRepository.AddAsync(profile);
+
+                await _unitOfWork.CommitAsync();
+
+                return GenerateToken(admin);
+            }
+            catch
             {
-                UserId = Guid.NewGuid(),
-                Name = dto.Name,
-                Email = dto.Email,
-                Password = hashedPassword,
-                PasswordSaltValue = salt!,
-                Role = UserRole.Admin,
-                HotelId = hotel.HotelId,
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userRepository.AddAsync(admin);
-
-            // Create Profile
-            var profile = new UserProfileDetails
-            {
-                UserDetailsId = Guid.NewGuid(),
-                UserId = admin.UserId,
-                Name = dto.Name,
-                Email = dto.Email,
-                PhoneNumber = "Not Updated",
-                Address = dto.Address,
-                City = dto.City,
-                State = "Not Updated",
-                Pincode = "000000",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            await _userProfileRepository.AddAsync(profile);
-
-            return GenerateToken(admin);
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // LOGIN
+        // LOGIN 
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var users = await _userRepository.FindAsync(u => u.Email == dto.Email);
-            var user = users.FirstOrDefault();
+            var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == dto.Email);
 
             if (user == null)
                 throw new UnAuthorizedException("Invalid credentials");
@@ -146,6 +175,7 @@ namespace HotelBookingAppWebApi.Services
             return GenerateToken(user);
         }
 
+        //  TOKEN GENERATION
         private AuthResponseDto GenerateToken(User user)
         {
             var payload = new TokenPayloadDto
@@ -160,148 +190,271 @@ namespace HotelBookingAppWebApi.Services
 
             return new AuthResponseDto
             {
-                Token = token,
-                Expiration = DateTime.UtcNow.AddDays(1)
+                Token = token
             };
         }
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Dashboard;
-using HotelBookingAppWebApi.Repository;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
     public class DashboardService : IDashboardService
     {
-        private readonly DashboardRepository _repo;
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IRepository<Guid, Transaction> _transactionRepo;
+        private readonly IRepository<Guid, Review> _reviewRepo;
+        private readonly IRepository<Guid, Room> _roomRepo;
 
-        public DashboardService(DashboardRepository repo, HotelBookingContext context)
+        public DashboardService(
+            IRepository<Guid, User> userRepo,
+            IRepository<Guid, Hotel> hotelRepo,
+            IRepository<Guid, Reservation> reservationRepo,
+            IRepository<Guid, Transaction> transactionRepo,
+            IRepository<Guid, Review> reviewRepo,
+            IRepository<Guid, Room> roomRepo)
         {
-            _repo = repo;
-            _context = context;
+            _userRepo = userRepo;
+            _hotelRepo = hotelRepo;
+            _reservationRepo = reservationRepo;
+            _transactionRepo = transactionRepo;
+            _reviewRepo = reviewRepo;
+            _roomRepo = roomRepo;
         }
 
+        //  ADMIN DASHBOARD (OPTIMIZED)
         public async Task<AdminDashboardDto> GetAdminDashboardAsync(Guid userId)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _userRepo.GetQueryable()
+                .Where(u => u.UserId == userId)
+                .Select(u => new { u.HotelId })
+                .FirstOrDefaultAsync();
 
             if (user == null || user.HotelId == null)
                 throw new NotFoundException("Admin hotel not found");
 
             var hotelId = user.HotelId.Value;
 
+            var totalRooms = await _roomRepo.GetQueryable()
+                .Where(r => r.HotelId == hotelId)
+                .CountAsync();
+
+            var reservationQuery = _reservationRepo.GetQueryable()
+                .Where(r => r.HotelId == hotelId);
+
+            var totalReservations = await reservationQuery.CountAsync();
+
+            var activeReservations = await reservationQuery
+                .Where(r => r.Status == ReservationStatus.Confirmed)
+                .CountAsync();
+
+            var totalRevenue = await _transactionRepo.GetQueryable()
+                .Where(t => t.Status == PaymentStatus.Success &&
+                            t.Reservation!.HotelId == hotelId)
+                .SumAsync(t => (decimal?)t.Amount);
+
+            var reviewQuery = _reviewRepo.GetQueryable()
+                .Where(r => r.HotelId == hotelId);
+
+            var totalReviews = await reviewQuery.CountAsync();
+
+            var averageRating = totalReviews > 0
+                ? await reviewQuery.AverageAsync(r => (decimal?)r.Rating)
+                : 0;
+
             return new AdminDashboardDto
             {
                 HotelId = hotelId,
-                TotalRooms = await _repo.GetHotelRoomsAsync(hotelId),
-                TotalReservations = await _repo.GetHotelReservationsAsync(hotelId),
-                ActiveReservations = await _repo.GetActiveHotelReservationsAsync(hotelId),
-                TotalRevenue = await _repo.GetHotelRevenueAsync(hotelId),
-                TotalReviews = await _repo.GetHotelReviewsAsync(hotelId),
-                AverageRating = await _repo.GetHotelAverageRatingAsync(hotelId)
+                TotalRooms = totalRooms,
+                TotalReservations = totalReservations,
+                ActiveReservations = activeReservations,
+                TotalRevenue = totalRevenue ?? 0,
+                TotalReviews = totalReviews,
+                AverageRating = averageRating ?? 0
             };
         }
 
+
+
+        //  GUEST DASHBOARD (OPTIMIZED)
         public async Task<GuestDashboardDto> GetGuestDashboardAsync(Guid userId)
         {
+            var reservationQuery = _reservationRepo.GetQueryable()
+                .Where(r => r.UserId == userId);
+
+            var totalBookings = await reservationQuery.CountAsync();
+
+            var activeBookings = await reservationQuery
+                .Where(r => r.Status == ReservationStatus.Confirmed)
+                .CountAsync();
+
+            var completedBookings = await reservationQuery
+                .Where(r => r.Status == ReservationStatus.Completed)
+                .CountAsync();
+
+            var cancelledBookings = await reservationQuery
+                .Where(r => r.Status == ReservationStatus.Cancelled)
+                .CountAsync();
+
+            var totalSpent = await _transactionRepo.GetQueryable()
+                .Where(t => t.Status == PaymentStatus.Success &&
+                            t.Reservation!.UserId == userId)
+                .SumAsync(t => (decimal?)t.Amount);
+
             return new GuestDashboardDto
             {
-                TotalBookings = await _repo.GetGuestReservationsAsync(userId),
-                ActiveBookings = await _repo.GetGuestActiveReservationsAsync(userId),
-                CompletedBookings = await _repo.GetGuestCompletedReservationsAsync(userId),
-                CancelledBookings = await _repo.GetGuestCancelledReservationsAsync(userId),
-                TotalSpent = await _repo.GetGuestTotalSpentAsync(userId)
+                TotalBookings = totalBookings,
+                ActiveBookings = activeBookings,
+                CompletedBookings = completedBookings,
+                CancelledBookings = cancelledBookings,
+                TotalSpent = totalSpent ?? 0
             };
         }
 
+
+        //  SUPER ADMIN DASHBOARD (OPTIMIZED)
         public async Task<SuperAdminDashboardDto> GetSuperAdminDashboardAsync()
         {
+            var totalHotels = await _hotelRepo.GetQueryable().CountAsync();
+            var totalUsers = await _userRepo.GetQueryable().CountAsync();
+            var totalReservations = await _reservationRepo.GetQueryable().CountAsync();
+
+            var totalRevenue = await _transactionRepo.GetQueryable()
+                .Where(t => t.Status == PaymentStatus.Success)
+                .SumAsync(t => (decimal?)t.Amount);
+
+            var totalReviews = await _reviewRepo.GetQueryable().CountAsync();
+
             return new SuperAdminDashboardDto
             {
-                TotalHotels = await _repo.GetTotalHotelsAsync(),
-                TotalUsers = await _repo.GetTotalUsersAsync(),
-                TotalReservations = await _repo.GetTotalReservationsAsync(),
-                TotalRevenue = await _repo.GetTotalRevenueAsync(),
-                TotalReviews = await _repo.GetTotalReviewsAsync()
+                TotalHotels = totalHotels,
+                TotalUsers = totalUsers,
+                TotalReservations = totalReservations,
+                TotalRevenue = totalRevenue ?? 0,
+                TotalReviews = totalReviews
             };
         }
+
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Interfaces.Repository;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Public;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class HotelService : IHotelService
     {
-        private readonly IHotelRepository _hotelRepository;
-        private readonly IRepository<Guid, User> _userRepository;
+        private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         public HotelService(
-            IHotelRepository hotelRepository,
-            IRepository<Guid, User> userRepository)
+            IRepository<Guid, Hotel> hotelRepo,
+            IRepository<Guid, User> userRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IUnitOfWork unitOfWork)
         {
-            _hotelRepository = hotelRepository;
-            _userRepository = userRepository;
+            _hotelRepo = hotelRepo;
+            _userRepo = userRepo;
+            _roomTypeRepo = roomTypeRepo;
+            _unitOfWork = unitOfWork;
         }
 
+        
+        // TOP HOTELS
+        
         public async Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync()
         {
-            var result = await _hotelRepository.GetTopHotelsAsync();
+            return await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive)
+                .Select(h => new HotelListItemDto
+                {
+                    HotelId = h.HotelId,
+                    Name = h.Name,
+                    City = h.City,
+                    ImageUrl = h.ImageUrl,
 
-            return result.Select(h => new HotelListItemDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ImageUrl = h.ImageUrl,
-                AverageRating = h.AverageRating,
-                ReviewCount = h.ReviewCount,
-                StartingPrice = h.StartingPrice
-            });
+                    AverageRating = h.Reviews.Any()
+                        ? Math.Round(h.Reviews.Average(r => (decimal)r.Rating), 2)
+                        : 0m,
+
+
+                    ReviewCount = h.Reviews.Count(),
+
+                    StartingPrice = h.RoomTypes
+                        .SelectMany(rt => rt.Rates)
+                        .Min(r => (decimal?)r.Rate) ?? 0
+                })
+                .OrderByDescending(h => h.AverageRating)
+                .ThenByDescending(h => h.ReviewCount)
+                .Take(10)
+                .ToListAsync();
         }
 
+        
+        // SEARCH HOTELS
+        
         public async Task<SearchHotelResponseDto> SearchHotelsAsync(SearchHotelRequestDto request)
         {
-            var offset = (request.PageNumber - 1) * request.PageSize;
+            var query = _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive && h.City == request.City);
 
-            var hotels = await _hotelRepository.SearchHotelsAsync(
-                request.City,
-                offset,
-                request.PageSize,
-                request.CheckIn,
-                request.CheckOut);
+            var totalRecords = await query.CountAsync();
 
-            if (!hotels.Any())
+            if (totalRecords == 0)
                 throw new NotFoundException("No hotels found");
 
-            return new SearchHotelResponseDto
-            {
-                Hotels = hotels.Select(h => new HotelListItemDto
+            var hotels = await query
+                .OrderBy(h => h.Name)
+                .Skip((request.PageNumber - 1) * request.PageSize)
+                .Take(request.PageSize)
+                .Select(h => new HotelListItemDto
                 {
                     HotelId = h.HotelId,
                     Name = h.Name,
                     City = h.City,
                     ImageUrl = h.ImageUrl
-                }),
+                })
+                .ToListAsync();
+
+            return new SearchHotelResponseDto
+            {
+                Hotels = hotels,
                 PageNumber = request.PageNumber,
-                RecordsCount = hotels.Count()
+                RecordsCount = totalRecords
             };
         }
 
+        
+        // HOTEL DETAILS
+        
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
         {
-            var hotel = await _hotelRepository.GetHotelDetailsAsync(hotelId);
+            var hotel = await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Include(h => h.RoomTypes)
+                .Include(h => h.Reviews)
+                    .ThenInclude(r => r.User)
+                .FirstOrDefaultAsync(h => h.HotelId == hotelId);
 
             if (hotel == null)
                 throw new NotFoundException("Hotel not found");
@@ -322,10 +475,14 @@ namespace HotelBookingAppWebApi.Services
                 Address = hotel.Address,
                 City = hotel.City,
                 Description = hotel.Description,
+
                 AverageRating = reviews.Any()
-                    ? Math.Round(reviews.Average(r => r.Rating), 2)
-                    : 0,
+                    ? Math.Round(reviews.Average(r => (decimal)r.Rating), 2)
+                    : 0m,
+
+
                 Amenities = amenities,
+
                 Reviews = reviews.Select(r => new ReviewDto
                 {
                     UserName = r.User?.Name ?? "Anonymous",
@@ -336,9 +493,15 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
+        
+        // ROOM TYPES
+        
         public async Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId)
         {
-            var types = await _hotelRepository.GetRoomTypesAsync(hotelId);
+            var types = await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .ToListAsync();
 
             return types.Select(t => new RoomTypePublicDto
             {
@@ -346,113 +509,181 @@ namespace HotelBookingAppWebApi.Services
                 Name = t.Name,
                 Description = t.Description,
                 MaxOccupancy = t.MaxOccupancy,
-                Amenities = t.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                Amenities = t.Amenities?
+                    .Split(',', StringSplitOptions.RemoveEmptyEntries) ?? new string[] { }
             });
         }
 
+        
+        // AVAILABILITY
+        
         public async Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
             Guid hotelId,
             DateOnly checkIn,
             DateOnly checkOut)
         {
-            var inventories = await _hotelRepository.GetAvailabilityAsync(hotelId, checkIn, checkOut);
+            var inventories = await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(rt => rt.HotelId == hotelId)
+                .SelectMany(rt => rt.Inventories)
+                .Where(i => i.Date >= checkIn && i.Date <= checkOut)
+                .Include(i => i.RoomType!)
+                    .ThenInclude(rt => rt.Rates)
+                .ToListAsync();
 
             return inventories
                 .GroupBy(i => i.RoomType!)
-                .Select(g => new RoomAvailabilityDto
+                .Select(g =>
                 {
-                    RoomTypeId = g.Key.RoomTypeId,
-                    RoomTypeName = g.Key.Name,
-                    PricePerNight = g.Key.Rates?.FirstOrDefault()?.Rate ?? 0,
-                    AvailableRooms = g.Min(x => x.AvailableInventory)
+                    var rate = g.Key.Rates?
+                        .FirstOrDefault(r =>
+                            checkIn >= r.StartDate &&
+                            checkIn <= r.EndDate);
+
+                    return new RoomAvailabilityDto
+                    {
+                        RoomTypeId = g.Key.RoomTypeId,
+                        RoomTypeName = g.Key.Name,
+                        PricePerNight = rate?.Rate ?? 0,
+                        AvailableRooms = g.Min(x => x.AvailableInventory)
+                    };
                 });
         }
 
+        
+        // UPDATE HOTEL (WITH TRANSACTION)
+        
         public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
         {
-            var user = (await _userRepository.FindAsync(u => u.UserId == userId)).FirstOrDefault();
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (user == null || user.HotelId == null)
-                throw new UnAuthorizedException("Unauthorized");
+            try
+            {
+                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
 
-            var hotel = await _hotelRepository.GetByIdAsync(user.HotelId.Value);
+                if (user == null || user.HotelId == null)
+                    throw new UnAuthorizedException("Unauthorized");
 
-            if (hotel == null)
-                throw new NotFoundException("Hotel not found");
+                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
 
-            hotel.Name = dto.Name;
-            hotel.Address = dto.Address;
-            hotel.City = dto.City;
-            hotel.Description = dto.Description;
-            hotel.ContactNumber = dto.ContactNumber;
-            hotel.ImageUrl = dto.ImageUrl;
+                if (hotel == null)
+                    throw new NotFoundException("Hotel not found");
 
-            await _hotelRepository.UpdateAsync(hotel.HotelId, hotel);
+                hotel.Name = dto.Name;
+                hotel.Address = dto.Address;
+                hotel.City = dto.City;
+                hotel.Description = dto.Description;
+                hotel.ContactNumber = dto.ContactNumber;
+                hotel.ImageUrl = dto.ImageUrl;
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
+        
+        // TOGGLE HOTEL STATUS (WITH TRANSACTION)
+        
         public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
         {
-            var user = (await _userRepository.FindAsync(u => u.UserId == userId)).FirstOrDefault();
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (user == null || user.HotelId == null)
-                throw new UnAuthorizedException("Unauthorized");
+            try
+            {
+                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
 
-            var hotel = await _hotelRepository.GetByIdAsync(user.HotelId.Value);
+                if (user == null || user.HotelId == null)
+                    throw new UnAuthorizedException("Unauthorized");
 
-            if (hotel == null)
-                throw new NotFoundException("Hotel not found");
+                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value);
 
-            hotel.IsActive = isActive;
+                if (hotel == null)
+                    throw new NotFoundException("Hotel not found");
 
-            await _hotelRepository.UpdateAsync(hotel.HotelId, hotel);
+                hotel.IsActive = isActive;
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
     }
 }
-using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Inventory;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class InventoryService : IInventoryService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public InventoryService(HotelBookingContext context)
+        public InventoryService(
+            IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _inventoryRepo = inventoryRepo;
+            _roomTypeRepo = roomTypeRepo;
+            _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
+        
         // ADD INVENTORY (DATE RANGE)
-
+        
         public async Task AddInventoryAsync(Guid userId, CreateInventoryDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FindAsync(userId);
+                // Validate user
+                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
+
                 if (user?.HotelId == null)
                     throw new UnAuthorizedException("Unauthorized");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
-                                            && rt.HotelId == user.HotelId);
+                // Validate RoomType belongs to hotel
+                var roomType = await _roomTypeRepo.FirstOrDefaultAsync(rt =>
+                    rt.RoomTypeId == dto.RoomTypeId &&
+                    rt.HotelId == user.HotelId);
 
                 if (roomType == null)
                     throw new NotFoundException("Invalid RoomType");
 
+                // Get existing inventory in ONE query (Performance Optimization)
+                var existingDates = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == dto.RoomTypeId &&
+                                i.Date >= dto.StartDate &&
+                                i.Date <= dto.EndDate)
+                    .Select(i => i.Date)
+                    .ToListAsync();
+
+                var existingDateSet = existingDates.ToHashSet();
+
+                // Insert missing dates
                 for (var date = dto.StartDate; date <= dto.EndDate; date = date.AddDays(1))
                 {
-                    var exists = await _context.RoomTypeInventories
-                        .FirstOrDefaultAsync(i => i.RoomTypeId == dto.RoomTypeId
-                                               && i.Date == date);
-
-                    if (exists == null)
+                    if (!existingDateSet.Contains(date))
                     {
-                        await _context.RoomTypeInventories.AddAsync(new RoomTypeInventory
+                        await _inventoryRepo.AddAsync(new RoomTypeInventory
                         {
                             RoomTypeInventoryId = Guid.NewGuid(),
                             RoomTypeId = dto.RoomTypeId,
@@ -463,128 +694,170 @@ namespace HotelBookingAppWebApi.Services
                     }
                 }
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // UPDATE INVENTORY 
-
+        
+        // UPDATE INVENTORY
+        
         public async Task UpdateInventoryAsync(Guid userId, UpdateInventoryDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var inventory = await _context.RoomTypeInventories
+                var inventory = await _inventoryRepo.GetQueryable()
                     .Include(i => i.RoomType)
                     .FirstOrDefaultAsync(i => i.RoomTypeInventoryId == dto.RoomTypeInventoryId);
 
                 if (inventory == null)
-                    throw new InsufficientInventoryException("Inventory not found");
+                    throw new NotFoundException("Inventory not found");
 
+                // Business Rule
                 if (dto.TotalInventory < inventory.ReservedInventory)
-                    throw new InsufficientInventoryException("Cannot reduce below reserved inventory");
+                    throw new InsufficientInventoryException(
+                        "Cannot reduce below reserved inventory");
 
                 inventory.TotalInventory = dto.TotalInventory;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
+        
         // ADJUST RESERVED INVENTORY
+        
+        //public async Task AdjustReservedInventoryAsync(Guid userId, AdjustReservedInventoryDto dto)
+        //{
+        //    await _unitOfWork.BeginTransactionAsync();
 
-        public async Task AdjustReservedInventoryAsync(Guid userId, AdjustReservedInventoryDto dto)
-        {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+        //    try
+        //    {
+        //        var inventory = await _inventoryRepo.FirstOrDefaultAsync(i =>
+        //            i.RoomTypeId == dto.RoomTypeId &&
+        //            i.Date == dto.Date);
 
-            try
-            {
-                var inventory = await _context.RoomTypeInventories
-                    .FirstOrDefaultAsync(i => i.RoomTypeId == dto.RoomTypeId
-                                           && i.Date == dto.Date);
+        //        if (inventory == null)
+        //            throw new NotFoundException("Inventory not found");
 
-                if (inventory == null)
-                    throw new NotFoundException("Inventory not found");
+        //        var newReserved = inventory.ReservedInventory + dto.Quantity;
 
-                var newReserved = inventory.ReservedInventory + dto.Quantity;
+        //        if (newReserved < 0)
+        //            throw new InsufficientInventoryException("Reserved cannot be negative");
 
-                if (newReserved < 0)
-                    throw new InsufficientInventoryException("Reserved inventory cannot be negative");
+        //        if (newReserved > inventory.TotalInventory)
+        //            throw new InsufficientInventoryException("Overbooking detected");
 
-                if (newReserved > inventory.TotalInventory)
-                    throw new InsufficientInventoryException("Overbooking detected");
+        //        inventory.ReservedInventory = newReserved;
 
-                inventory.ReservedInventory = newReserved;
+        //        await _unitOfWork.CommitAsync();
+        //    }
+        //    catch
+        //    {
+        //        await _unitOfWork.RollbackAsync();
+        //        throw;
+        //    }
+        //}
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
-                throw;
-            }
-        }
-
-        // GET INVENTORY 
-
+        
+        // GET INVENTORY (READ ONLY)
+        
         public async Task<IEnumerable<InventoryResponseDto>> GetInventoryAsync(
-            Guid userId, Guid roomTypeId, DateOnly start, DateOnly end)
+            Guid userId,
+            Guid roomTypeId,
+            DateOnly start,
+            DateOnly end)
         {
-            var result = await _context.RoomTypeInventories
-                .FromSqlRaw("EXEC proc_GetInventoryByRoomType {0},{1},{2}",
-                    roomTypeId, start, end)
+            var inventories = await _inventoryRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(i =>
+                    i.RoomTypeId == roomTypeId &&
+                    i.Date >= start &&
+                    i.Date <= end)
+                .OrderBy(i => i.Date)
+                .Select(i => new InventoryResponseDto
+                {
+                    RoomTypeInventoryId = i.RoomTypeInventoryId,
+                    Date = i.Date,
+                    TotalInventory = i.TotalInventory,
+                    ReservedInventory = i.ReservedInventory,
+                    
+                })
                 .ToListAsync();
 
-            return result.Select(i => new InventoryResponseDto
-            {
-                RoomTypeInventoryId = i.RoomTypeInventoryId,
-                Date = i.Date,
-                TotalInventory = i.TotalInventory,
-                ReservedInventory = i.ReservedInventory
-            });
+            return inventories;
         }
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Log;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class LogService : ILogService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, Log> _logRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public LogService(HotelBookingContext context)
+        public LogService(
+            IRepository<Guid, Log> logRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _logRepo = logRepo;
+            _unitOfWork = unitOfWork;
         }
 
-       
+        
+        // COMMON SELECTOR 
+        
+        private static readonly Expression<Func<Log, LogResponseDto>> LogSelector =
+            l => new LogResponseDto
+            {
+                LogId = l.LogId,
+                Message = l.Message,
+                ExceptionType = l.ExceptionType,
+                StackTrace = l.StackTrace,
+                StatusCode = l.StatusCode,
 
-         
+                UserName = l.UserName,
+                Role = l.Role,
+                UserId = l.UserId,
+
+                Controller = l.Controller,
+                Action = l.Action,
+                HttpMethod = l.HttpMethod,
+                RequestPath = l.RequestPath,
+
+                CreatedAt = l.CreatedAt
+            };
+
+        
         // GET ALL LOGS (ADMIN)
-         
-        public async Task<PagedLogResponseDto> GetAllLogsAsync(
-            int page,
-            int pageSize)
+        
+        public async Task<PagedLogResponseDto> GetAllLogsAsync(int page, int pageSize)
         {
-            var query = _context.Logs
+            if (page <= 0 || pageSize <= 0)
+                throw new AppException("Invalid pagination parameters", 400);
+
+            var query = _logRepo.GetQueryable()
                 .OrderByDescending(l => l.CreatedAt);
 
             var total = await query.CountAsync();
@@ -592,7 +865,7 @@ namespace HotelBookingAppWebApi.Services
             var logs = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(l => MapToDto(l))
+                .Select(LogSelector)
                 .ToListAsync();
 
             return new PagedLogResponseDto
@@ -602,15 +875,15 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-         
+        
         // GET USER LOGS
-         
-        public async Task<PagedLogResponseDto> GetUserLogsAsync(
-            Guid userId,
-            int page,
-            int pageSize)
+        
+        public async Task<PagedLogResponseDto> GetUserLogsAsync(Guid userId, int page, int pageSize)
         {
-            var query = _context.Logs
+            if (page <= 0 || pageSize <= 0)
+                throw new AppException("Invalid pagination parameters", 400);
+
+            var query = _logRepo.GetQueryable()
                 .Where(l => l.UserId == userId)
                 .OrderByDescending(l => l.CreatedAt);
 
@@ -619,7 +892,7 @@ namespace HotelBookingAppWebApi.Services
             var logs = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(l => MapToDto(l))
+                .Select(LogSelector)
                 .ToListAsync();
 
             return new PagedLogResponseDto
@@ -628,21 +901,9 @@ namespace HotelBookingAppWebApi.Services
                 Logs = logs
             };
         }
-
-        private static LogResponseDto MapToDto(Log l)
-        {
-            return new LogResponseDto
-            {
-                LogId = l.LogId,
-                Message = l.Message,
-                ErrorNumber = l.ErrorCode,
-                Role = l.Role,
-                UserName = l.UserName,
-                CreatedAt = l.CreatedAt
-            };
-        }
     }
 }
+
 using HotelBookingAppWebApi.Interfaces;
 using System.Security.Cryptography;
 
@@ -675,9 +936,12 @@ namespace HotelBookingAppWebApi.Services
         }
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
 {
     public class ReservationCleanupService : BackgroundService
@@ -694,56 +958,130 @@ namespace HotelBookingAppWebApi.Services
             while (!stoppingToken.IsCancellationRequested)
             {
                 using var scope = _scopeFactory.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<HotelBookingContext>();
 
-                var expired = await context.Reservations
-                    .Include(r => r.ReservationRooms)
-                    .Where(r =>
-                        r.Status == ReservationStatus.Pending &&
-                        r.ExpiryTime != null &&
-                        r.ExpiryTime < DateTime.UtcNow)
-                    .ToListAsync(stoppingToken);
+                var reservationRepo = scope.ServiceProvider
+                    .GetRequiredService<IRepository<Guid, Reservation>>();
 
-                foreach (var reservation in expired)
+                var inventoryRepo = scope.ServiceProvider
+                    .GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
+
+                var unitOfWork = scope.ServiceProvider
+                    .GetRequiredService<IUnitOfWork>();
+
+                try
                 {
-                    var room = reservation.ReservationRooms!.FirstOrDefault();
+                    await unitOfWork.BeginTransactionAsync();
 
-                    if (room == null)
-                        continue;
+                    var now = DateTime.UtcNow;
 
-                    var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-
-                    var dates = Enumerable.Range(0, totalDays)
-                        .Select(d => reservation.CheckInDate.AddDays(d))
-                        .ToList();
-
-                    var inventories = await context.RoomTypeInventories
-                        .Where(i => i.RoomTypeId == room.RoomTypeId && dates.Contains(i.Date))
+                    
+                    // GET EXPIRED RESERVATIONS
+                    
+                    var expiredReservations = await reservationRepo.GetQueryable()
+                        .Include(r => r.ReservationRooms)
+                        .Where(r =>
+                            r.Status == ReservationStatus.Pending &&
+                            r.ExpiryTime != null &&
+                            r.ExpiryTime < now)
                         .ToListAsync(stoppingToken);
 
-                    foreach (var inv in inventories)
+                    if (!expiredReservations.Any())
                     {
-                        inv.ReservedInventory =
-                            Math.Max(0, inv.ReservedInventory - room.NumberOfRooms);
+                        await unitOfWork.RollbackAsync();
+                        await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+                        continue;
                     }
 
-                    reservation.Status = ReservationStatus.Cancelled;
-                    reservation.CancellationReason = "Payment timeout";
-                    reservation.CancelledDate = DateTime.UtcNow;
+                    
+                    // PREPARE DATA (OPTIMIZED)
+                    
+
+                    var roomTypeIds = expiredReservations
+                        .SelectMany(r => r.ReservationRooms)
+                        .Select(rr => rr.RoomTypeId)
+                        .Distinct()
+                        .ToList();
+
+                    var allDates = expiredReservations
+                        .SelectMany(r =>
+                        {
+                            var totalDays = r.CheckOutDate.DayNumber - r.CheckInDate.DayNumber;
+
+                            return Enumerable.Range(0, totalDays)
+                                .Select(d => r.CheckInDate.AddDays(d));
+                        })
+                        .Distinct()
+                        .ToList();
+
+                    
+                    // FETCH INVENTORY IN ONE QUERY
+                    
+                    var inventories = await inventoryRepo.GetQueryable()
+                        .Where(i =>
+                            roomTypeIds.Contains(i.RoomTypeId) &&
+                            allDates.Contains(i.Date))
+                        .ToListAsync(stoppingToken);
+
+                    // Convert to dictionary for fast lookup
+                    var inventoryLookup = inventories
+                        .GroupBy(i => new { i.RoomTypeId, i.Date })
+                        .ToDictionary(g => g.Key, g => g.First());
+
+                    
+                    // PROCESS RESERVATIONS
+                    
+                    foreach (var reservation in expiredReservations)
+                    {
+                        if (!reservation.ReservationRooms.Any())
+                            continue;
+
+                        var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
+                        var numberOfRooms = reservation.ReservationRooms.Count;
+
+                        var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+
+                        for (int d = 0; d < totalDays; d++)
+                        {
+                            var date = reservation.CheckInDate.AddDays(d);
+
+                            var key = new { RoomTypeId = roomTypeId, Date = date };
+
+                            if (inventoryLookup.TryGetValue(key, out var inventory))
+                            {
+                                inventory.ReservedInventory = Math.Max(
+                                    0,
+                                    inventory.ReservedInventory - numberOfRooms
+                                );
+                            }
+                        }
+
+                        // Update reservation
+                        reservation.Status = ReservationStatus.Cancelled;
+                        reservation.CancellationReason = "Payment timeout";
+                        reservation.CancelledDate = now;
+                    }
+
+                    await unitOfWork.CommitAsync();
+                }
+                catch
+                {
+                    await unitOfWork.RollbackAsync();
+                    throw;
                 }
 
-                await context.SaveChangesAsync(stoppingToken);
-
+                
+                // RUN EVERY 5 MINUTES
+                
                 await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
             }
         }
     }
-
-
 }
-using HotelBookingAppWebApi.Contexts;
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
 using Microsoft.EntityFrameworkCore;
@@ -752,90 +1090,111 @@ namespace HotelBookingAppWebApi.Services
 {
     public class ReservationService : IReservationService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IRepository<Guid, Room> _roomRepo;
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, RoomTypeRate> _rateRepo;
+        private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public ReservationService(HotelBookingContext context)
+        public ReservationService(
+            IRepository<Guid, Reservation> reservationRepo,
+            IRepository<Guid, Room> roomRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid, RoomTypeRate> rateRepo,
+            IRepository<Guid, ReservationRoom> reservationRoomRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _reservationRepo = reservationRepo;
+            _roomRepo = roomRepo;
+            _roomTypeRepo = roomTypeRepo;
+            _inventoryRepo = inventoryRepo;
+            _rateRepo = rateRepo;
+            _reservationRoomRepo = reservationRoomRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        #region CREATE RESERVATION
+        #region CREATE
 
         public async Task<ReservationResponseDto> CreateReservationAsync(Guid userId, CreateReservationDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
                 var today = DateOnly.FromDateTime(DateTime.UtcNow);
 
-                if (dto.CheckInDate < today)
-                    throw new ValidationException("Cannot book past dates");
+                if (dto.CheckInDate < today || dto.CheckInDate >= dto.CheckOutDate)
+                    throw new ValidationException("Invalid booking dates");
 
-                if (dto.CheckInDate >= dto.CheckOutDate)
-                    throw new ValidationException("Invalid date range");
+                if (dto.NumberOfRooms <= 0)
+                    throw new ValidationException("Invalid room count");
 
                 var totalDays = dto.CheckOutDate.DayNumber - dto.CheckInDate.DayNumber;
-
                 var dates = Enumerable.Range(0, totalDays)
                     .Select(d => dto.CheckInDate.AddDays(d))
                     .ToList();
 
-                var roomType = await _context.RoomTypes
+                //  Validate RoomType
+                var roomType = await _roomTypeRepo.GetQueryable()
                     .FirstOrDefaultAsync(r =>
                         r.RoomTypeId == dto.RoomTypeId &&
                         r.HotelId == dto.HotelId &&
                         r.IsActive);
 
                 if (roomType == null)
-                    throw new NotFoundException("Invalid hotel or room type");
+                    throw new NotFoundException("Invalid room type");
 
-                var physicalRooms = await _context.Rooms
+                //  Validate physical rooms
+                var totalRooms = await _roomRepo.GetQueryable()
                     .CountAsync(r =>
                         r.RoomTypeId == dto.RoomTypeId &&
                         r.HotelId == dto.HotelId &&
                         r.IsActive);
 
-                if (dto.NumberOfRooms > physicalRooms)
-                    throw new InsufficientInventoryException($"Only {physicalRooms} rooms available");
+                if (dto.NumberOfRooms > totalRooms)
+                    throw new InsufficientInventoryException($"Only {totalRooms} rooms available");
 
-                var inventories = await _context.RoomTypeInventories
+                //  Fetch inventory + rates (ONE DB HIT EACH)
+                var inventories = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == dto.RoomTypeId && dates.Contains(i.Date))
                     .ToListAsync();
 
-                if (inventories.Count != dates.Count)
-                    throw new InsufficientInventoryException("Inventory missing for selected dates");
-
-                var rates = await _context.RoomTypeRates
+                var rates = await _rateRepo.GetQueryable()
                     .Where(r =>
                         r.RoomTypeId == dto.RoomTypeId &&
                         r.StartDate <= dto.CheckOutDate &&
                         r.EndDate >= dto.CheckInDate)
                     .ToListAsync();
 
+                if (inventories.Count != dates.Count)
+                    throw new InsufficientInventoryException("Inventory missing");
+
+                //  Convert to dictionary (O(1))
+                var inventoryMap = inventories.ToDictionary(i => i.Date);
+
                 decimal totalAmount = 0;
 
                 foreach (var date in dates)
                 {
-                    var inventory = inventories.First(i => i.Date == date);
+                    var inventory = inventoryMap[date];
 
                     if (inventory.AvailableInventory < dto.NumberOfRooms)
-                        throw new InsufficientInventoryException($"Insufficient inventory for {date}");
+                        throw new InsufficientInventoryException($"Insufficient inventory on {date}");
 
-                    var rate = rates.FirstOrDefault(r =>
-                        date >= r.StartDate &&
-                        date <= r.EndDate);
-
-                    if (rate == null)
-                        throw new RateNotFoundException($"Rate not configured for {date}");
+                    var rate = rates.FirstOrDefault(r => date >= r.StartDate && date <= r.EndDate)
+                        ?? throw new RateNotFoundException($"Rate missing for {date}");
 
                     totalAmount += rate.Rate * dto.NumberOfRooms;
                 }
 
+                //  Create Reservation
                 var reservation = new Reservation
                 {
                     ReservationId = Guid.NewGuid(),
-                    ReservationCode = GenerateReservationCode(),
+                    ReservationCode = GenerateCode(),
                     UserId = userId,
                     HotelId = dto.HotelId,
                     CheckInDate = dto.CheckInDate,
@@ -843,25 +1202,42 @@ namespace HotelBookingAppWebApi.Services
                     TotalAmount = totalAmount,
                     Status = ReservationStatus.Pending,
                     CreatedDate = DateTime.UtcNow,
-                    ExpiryTime = DateTime.UtcNow.AddMinutes(10) // auto cancel if not paid
+                    ExpiryTime = DateTime.UtcNow.AddMinutes(10)
                 };
 
-                await _context.Reservations.AddAsync(reservation);
+                await _reservationRepo.AddAsync(reservation);
 
-                await _context.ReservationRooms.AddAsync(new ReservationRoom
+                //  Assign rooms
+                var rooms = await _roomRepo.GetQueryable()
+                    .Where(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == dto.HotelId &&
+                        r.IsActive)
+                    .Take(dto.NumberOfRooms)
+                    .ToListAsync();
+
+                if (rooms.Count < dto.NumberOfRooms)
+                    throw new InsufficientInventoryException("Not enough rooms");
+
+                var pricePerNight = totalAmount / totalDays / dto.NumberOfRooms;
+
+                foreach (var room in rooms)
                 {
-                    ReservationRoomId = Guid.NewGuid(),
-                    ReservationId = reservation.ReservationId,
-                    RoomTypeId = dto.RoomTypeId,
-                    NumberOfRooms = dto.NumberOfRooms,
-                    PricePerNight = totalAmount / totalDays / dto.NumberOfRooms
-                });
+                    await _reservationRoomRepo.AddAsync(new ReservationRoom
+                    {
+                        ReservationRoomId = Guid.NewGuid(),
+                        ReservationId = reservation.ReservationId,
+                        RoomTypeId = dto.RoomTypeId,
+                        RoomId = room.RoomId,
+                        PricePerNight = pricePerNight
+                    });
+                }
 
-                foreach (var inventory in inventories)
-                    inventory.ReservedInventory += dto.NumberOfRooms;
+                //  Update inventory
+                foreach (var inv in inventories)
+                    inv.ReservedInventory += dto.NumberOfRooms;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
 
                 return new ReservationResponseDto
                 {
@@ -873,11 +1249,10 @@ namespace HotelBookingAppWebApi.Services
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
-
 
         #endregion
 
@@ -885,54 +1260,23 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<ReservationDetailsDto> GetReservationByCodeAsync(Guid userId, string code)
         {
-            var reservation = await _context.Reservations
-                .AsNoTracking()
+            var res = await _reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms)
-                .FirstOrDefaultAsync(r =>
-                    r.ReservationCode == code &&
-                    r.UserId == userId);
+                .FirstOrDefaultAsync(r => r.ReservationCode == code && r.UserId == userId)
+                ?? throw new NotFoundException("Reservation not found");
 
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found");
-
-            var room = reservation.ReservationRooms!.First();
-
-            return new ReservationDetailsDto
-            {
-                ReservationCode = reservation.ReservationCode,
-                HotelId = reservation.HotelId,
-                RoomTypeId = room.RoomTypeId,
-                CheckInDate = reservation.CheckInDate,
-                CheckOutDate = reservation.CheckOutDate,
-                NumberOfRooms = room.NumberOfRooms,
-                TotalAmount = reservation.TotalAmount,
-                Status = reservation.Status.ToString()
-            };
+            return MapToDto(res);
         }
 
         public async Task<IEnumerable<ReservationDetailsDto>> GetMyReservationsAsync(Guid userId)
         {
-            return await _context.Reservations
-                .AsNoTracking()
+            var list = await _reservationRepo.GetQueryable()
+                .Include(r => r.ReservationRooms)
                 .Where(r => r.UserId == userId)
-                .Select(r => new ReservationDetailsDto
-                {
-                    ReservationCode = r.ReservationCode,
-                    HotelId = r.HotelId,
-                    RoomTypeId = r.ReservationRooms
-                        .Select(rr => rr.RoomTypeId)
-                        .FirstOrDefault(),
-                    NumberOfRooms = r.ReservationRooms
-                        .Select(rr => rr.NumberOfRooms)
-                        .FirstOrDefault(),
-                    CheckInDate = r.CheckInDate,
-                    CheckOutDate = r.CheckOutDate,
-                    TotalAmount = r.TotalAmount,
-                    Status = r.Status.ToString()
-                })
                 .ToListAsync();
-        }
 
+            return list.Select(MapToDto);
+        }
 
         #endregion
 
@@ -940,294 +1284,365 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<bool> CancelReservationAsync(Guid userId, string code, string reason)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var reservation = await _context.Reservations
+                var res = await _reservationRepo.GetQueryable()
                     .Include(r => r.ReservationRooms)
-                    .FirstOrDefaultAsync(r =>
-                        r.ReservationCode == code &&
-                        r.UserId == userId);
+                    .FirstOrDefaultAsync(r => r.ReservationCode == code && r.UserId == userId)
+                    ?? throw new NotFoundException("Reservation not found");
 
-                if (reservation == null)
-                    throw new NotFoundException("Reservation not found");
-
-                if (reservation.Status == ReservationStatus.Cancelled)
+                if (res.Status is ReservationStatus.Cancelled)
                     throw new ReservationFailedException("Already cancelled");
 
-                if (reservation.Status == ReservationStatus.Completed)
-                    throw new ValidationException("Cannot cancel completed reservation");
+                if (res.Status is ReservationStatus.Completed)
+                    throw new ValidationException("Cannot cancel completed");
 
-                var room = reservation.ReservationRooms!.First();
-
-                var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-
-                var dates = Enumerable.Range(0, totalDays)
-                    .Select(offset => reservation.CheckInDate.AddDays(offset))
+                var dates = Enumerable.Range(0,
+                        res.CheckOutDate.DayNumber - res.CheckInDate.DayNumber)
+                    .Select(d => res.CheckInDate.AddDays(d))
                     .ToList();
 
-                var inventories = await _context.RoomTypeInventories
-                    .Where(i =>
-                        i.RoomTypeId == room.RoomTypeId &&
-                        dates.Contains(i.Date))
+                var roomTypeId = res.ReservationRooms!.First().RoomTypeId;
+
+                var inventories = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
                     .ToListAsync();
 
-                foreach (var inventory in inventories)
-                    inventory.ReservedInventory = Math.Max(0, inventory.ReservedInventory - room.NumberOfRooms);
+                foreach (var inv in inventories)
+                    inv.ReservedInventory -= res.ReservationRooms.Count;
 
+                res.Status = ReservationStatus.Cancelled;
+                res.CancelledDate = DateTime.UtcNow;
+                res.CancellationReason = reason;
 
-                reservation.Status = ReservationStatus.Cancelled;
-                reservation.CancelledDate = DateTime.UtcNow;
-                reservation.CancellationReason = reason;
-
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
-
+                await _unitOfWork.CommitAsync();
                 return true;
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
         #endregion
 
-        #region COMPLETE (ADMIN)
+        #region COMPLETE
 
         public async Task<bool> CompleteReservationAsync(string code)
         {
-            var reservation = await _context.Reservations
-                .FirstOrDefaultAsync(r => r.ReservationCode == code);
+            var res = await _reservationRepo.FirstOrDefaultAsync(r => r.ReservationCode == code)
+                ?? throw new NotFoundException("Reservation not found");
 
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found");
+            if (res.Status != ReservationStatus.Confirmed)
+                throw new ValidationException("Only confirmed can complete");
 
-            if (reservation.Status != ReservationStatus.Confirmed)
-                throw new ValidationException("Only confirmed reservations can be completed");
+            res.Status = ReservationStatus.Completed;
 
-            reservation.Status = ReservationStatus.Completed;
-
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
             return true;
         }
 
         #endregion
 
-        private string GenerateReservationCode()
+        #region HELPERS
+
+        private static ReservationDetailsDto MapToDto(Reservation r) => new()
         {
-            return "RES-" + Guid.NewGuid().ToString("N")[..8].ToUpper();
-        }
+            ReservationCode = r.ReservationCode,
+            HotelId = r.HotelId,
+            RoomTypeId = r.ReservationRooms!.First().RoomTypeId,
+            NumberOfRooms = r.ReservationRooms.Count,
+            CheckInDate = r.CheckInDate,
+            CheckOutDate = r.CheckOutDate,
+            TotalAmount = r.TotalAmount,
+            Status = r.Status.ToString()
+        };
+
+        private static string GenerateCode()
+            => $"RES-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
+
+        #endregion
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Interfaces.Repository;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Review;
-using HotelBookingAppWebApi.Repository;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
     public class ReviewService : IReviewService
     {
-        private readonly IReviewRepository _reviewRepo;
+        private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
         public ReviewService(
-            IReviewRepository reviewRepo,
-            IRepository<Guid, Hotel> hotelRepo)
+            IRepository<Guid, Review> reviewRepo,
+            IRepository<Guid, Hotel> hotelRepo,
+            IUnitOfWork unitOfWork)
         {
             _reviewRepo = reviewRepo;
             _hotelRepo = hotelRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        // ADD REVIEW
+        #region ADD
 
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
-            var hotelExists = await _hotelRepo.ExistsAsync(dto.HotelId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (!hotelExists)
-                throw new NotFoundException("Hotel not found.");
-
-            var reviews = await _reviewRepo.FindAsync(r =>
-                r.HotelId == dto.HotelId && r.UserId == userId);
-
-            if (reviews.Any())
-                throw new ReviewException("You already reviewed this hotel.");
-
-            var review = new Review
+            try
             {
-                ReviewId = Guid.NewGuid(),
-                HotelId = dto.HotelId,
-                UserId = userId,
-                Rating = dto.Rating,
-                Comment = dto.Comment,
-                CreatedDate = DateTime.UtcNow
-            };
+                //  Validate hotel
+                var hotelExists = await _hotelRepo.GetQueryable()
+                    .AnyAsync(h => h.HotelId == dto.HotelId);
 
-            await _reviewRepo.AddAsync(review);
+                if (!hotelExists)
+                    throw new NotFoundException("Hotel not found");
 
-            return MapToDto(review);
+                //  Prevent duplicate review
+                var alreadyReviewed = await _reviewRepo.GetQueryable()
+                    .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);
+
+                if (alreadyReviewed)
+                    throw new ReviewException("Already reviewed");
+
+                var review = new Review
+                {
+                    ReviewId = Guid.NewGuid(),
+                    HotelId = dto.HotelId,
+                    UserId = userId,
+                    Rating = dto.Rating,
+                    Comment = dto.Comment,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                await _reviewRepo.AddAsync(review);
+
+                await _unitOfWork.CommitAsync();
+
+                return MapToDto(review);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // UPDATE REVIEW
+        #endregion
+
+        #region UPDATE
 
         public async Task<ReviewResponseDto> UpdateReviewAsync(Guid userId, Guid reviewId, UpdateReviewDto dto)
         {
-            var review = await _reviewRepo.GetByIdAsync(reviewId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (review == null)
-                throw new NotFoundException("Review not found.");
+            try
+            {
+                var review = await _reviewRepo.GetAsync(reviewId)
+                    ?? throw new NotFoundException("Review not found");
 
-            if (review.UserId != userId)
-                throw new ReviewException("You can update only your own review.");
+                if (review.UserId != userId)
+                    throw new ReviewException("Not allowed");
 
-            review.Rating = dto.Rating;
+                review.Rating = dto.Rating;
 
-            if (!string.IsNullOrWhiteSpace(dto.Comment))
-                review.Comment = dto.Comment;
+                if (!string.IsNullOrWhiteSpace(dto.Comment))
+                    review.Comment = dto.Comment;
 
-            await _reviewRepo.UpdateAsync(reviewId, review);
+                await _reviewRepo.UpdateAsync(reviewId, review);
 
-            return MapToDto(review);
+                await _unitOfWork.CommitAsync();
+
+                return MapToDto(review);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // DELETE REVIEW
+        #endregion
+
+        #region DELETE
 
         public async Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId)
         {
-            var review = await _reviewRepo.GetByIdAsync(reviewId);
+            await _unitOfWork.BeginTransactionAsync();
 
-            if (review == null)
-                throw new NotFoundException("Review not found.");
+            try
+            {
+                var review = await _reviewRepo.GetAsync(reviewId)
+                    ?? throw new NotFoundException("Review not found");
 
-            if (review.UserId != userId)
-                throw new ReviewException("You can delete only your own review.");
+                if (review.UserId != userId)
+                    throw new ReviewException("Not allowed");
 
-            return await _reviewRepo.DeleteAsync(reviewId);
+                var deleted = await _reviewRepo.DeleteAsync(reviewId);
+
+                await _unitOfWork.CommitAsync();
+
+                return deleted != null;
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-        // GET REVIEWS BY HOTEL
+        #endregion
+
+        #region GET
 
         public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize)
         {
-            var reviews = await _reviewRepo.GetReviewsByHotelAsync(hotelId);
+            var query = _reviewRepo.GetQueryable()
+                .Where(r => r.HotelId == hotelId)
+                .OrderByDescending(r => r.CreatedDate);
 
-            var total = reviews.Count();
+            var total = await query.CountAsync();
 
-            var paged = reviews
+            var reviews = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(MapToDto)
-                .ToList();
+                .ToListAsync();
 
             return new PagedReviewResponseDto
             {
                 TotalCount = total,
-                Reviews = paged
+                Reviews = reviews.Select(MapToDto)
             };
         }
 
-        // GET MY REVIEWS
-
         public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
         {
-            var reviews = await _reviewRepo.GetReviewsByUserAsync(userId);
+            var reviews = await _reviewRepo.GetQueryable()
+                .Include(r => r.Hotel)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
 
             return reviews.Select(r => new MyReviewsResponseDto
             {
                 ReviewId = r.ReviewId,
                 HotelId = r.HotelId,
-                HotelName = r.Hotel?.Name ?? "",
+                HotelName = r.Hotel!.Name,
                 Rating = r.Rating,
                 Comment = r.Comment,
                 CreatedDate = r.CreatedDate
             });
         }
 
-        private static ReviewResponseDto MapToDto(Review r)
+        #endregion
+
+        #region HELPER
+
+        private static ReviewResponseDto MapToDto(Review r) => new()
         {
-            return new ReviewResponseDto
-            {
-                ReviewId = r.ReviewId,
-                HotelId = r.HotelId,
-                UserId = r.UserId,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                CreatedDate = r.CreatedDate
-            };
-        }
+            ReviewId = r.ReviewId,
+            HotelId = r.HotelId,
+            UserId = r.UserId,
+            Rating = r.Rating,
+            Comment = r.Comment,
+            CreatedDate = r.CreatedDate
+        };
+
+        #endregion
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Room;
 using Microsoft.EntityFrameworkCore;
+
 namespace HotelBookingAppWebApi.Services
-{   
+{
     public class RoomService : IRoomService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, Room> _roomRepo;
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RoomService(HotelBookingContext context)
+        public RoomService(
+            IRepository<Guid, Room> roomRepo,
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid, User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _roomRepo = roomRepo;
+            _roomTypeRepo = roomTypeRepo;
+            _inventoryRepo = inventoryRepo;
+            _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        // ADD ROOM 
+        #region ADD
+
         public async Task AddRoomAsync(Guid userId, CreateRoomDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users
-                    .FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                if (user?.HotelId == null)
+                if (user.HotelId == null)
                     throw new UnAuthorizedException("Unauthorized");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
-                                            && rt.HotelId == user.HotelId);
+                // Validate RoomType
+                var roomTypeExists = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(rt => rt.RoomTypeId == dto.RoomTypeId &&
+                                    rt.HotelId == user.HotelId);
 
-                if (roomType == null)
+                if (!roomTypeExists)
                     throw new NotFoundException("Invalid RoomType");
 
-                var existingRoomNumber = await _context.Rooms
-                    .AnyAsync(r => r.HotelId == user.HotelId
-                                && r.RoomNumber == dto.RoomNumber);
+                // Unique Room Number
+                var exists = await _roomRepo.GetQueryable()
+                    .AnyAsync(r => r.HotelId == user.HotelId &&
+                                   r.RoomNumber == dto.RoomNumber);
 
-                if (existingRoomNumber)
+                if (exists)
                     throw new ConflictException("Room number already exists");
 
-                // INVENTORY CHECK STARTS HERE
+                // Inventory Check
+                var currentCount = await _roomRepo.GetQueryable()
+                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId &&
+                                     r.HotelId == user.HotelId);
 
-                var physicalRoomCount = await _context.Rooms
-                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                  && r.HotelId == user.HotelId);
-
-                var maxInventory = await _context.RoomTypeInventories
+                var maxInventory = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == dto.RoomTypeId)
                     .MaxAsync(i => (int?)i.TotalInventory);
 
                 if (maxInventory == null)
-                    throw new NotFoundException("Inventory not defined for this RoomType");
+                    throw new NotFoundException("Inventory not defined");
 
-                if (physicalRoomCount >= maxInventory)
-                    throw new ConflictException(
-                        $"Cannot create more rooms. Max allowed: {maxInventory}");
+                if (currentCount >= maxInventory)
+                    throw new ConflictException($"Max rooms allowed: {maxInventory}");
 
-                // INVENTORY CHECK ENDS HERE
-
+                // Create Room
                 var room = new Room
                 {
                     RoomId = Guid.NewGuid(),
@@ -1238,106 +1653,122 @@ namespace HotelBookingAppWebApi.Services
                     IsActive = true
                 };
 
-                await _context.Rooms.AddAsync(room);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _roomRepo.AddAsync(room);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
+        #endregion
 
-        // UPDATE ROOM
+        #region UPDATE
 
         public async Task UpdateRoomAsync(Guid userId, UpdateRoomDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FindAsync(userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                var room = await _context.Rooms
-                    .FirstOrDefaultAsync(r => r.RoomId == dto.RoomId
-                                           && r.HotelId == user!.HotelId);
+                var room = await _roomRepo.GetQueryable()
+                    .FirstOrDefaultAsync(r =>
+                        r.RoomId == dto.RoomId &&
+                        r.HotelId == user.HotelId);
 
                 if (room == null)
                     throw new NotFoundException("Room not found");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(rt => rt.RoomTypeId == dto.RoomTypeId
-                                            && rt.HotelId == user.HotelId);
+                var validRoomType = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(rt =>
+                        rt.RoomTypeId == dto.RoomTypeId &&
+                        rt.HotelId == user.HotelId);
 
-                if (roomType == null)
-                    throw new UnableToCreateEntityException("Invalid RoomType");
+                if (!validRoomType)
+                    throw new NotFoundException("Invalid RoomType");
 
                 room.RoomNumber = dto.RoomNumber;
                 room.Floor = dto.Floor;
                 room.RoomTypeId = dto.RoomTypeId;
 
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // TOGGLE ROOM STATUS
+        #endregion
+
+        #region TOGGLE STATUS
 
         public async Task ToggleRoomStatusAsync(Guid userId, Guid roomId, bool isActive)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            var room = await _context.Rooms
-                .FirstOrDefaultAsync(r => r.RoomId == roomId
-                                       && r.HotelId == user!.HotelId);
+            var room = await _roomRepo.GetQueryable()
+                .FirstOrDefaultAsync(r =>
+                    r.RoomId == roomId &&
+                    r.HotelId == user.HotelId);
 
             if (room == null)
                 throw new NotFoundException("Room not found");
 
             room.IsActive = isActive;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // LIST ROOMS 
+        #endregion
+
+        #region GET ROOMS 
 
         public async Task<IEnumerable<RoomListResponseDto>> GetRoomsByHotelAsync(
-    Guid userId, int pageNumber, int pageSize)
+            Guid userId, int pageNumber, int pageSize)
         {
-            var user = await _context.Users.FindAsync(userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            if (user?.HotelId == null)
+            if (user.HotelId == null)
                 throw new UnAuthorizedException("Unauthorized");
 
-            var offset = (pageNumber - 1) * pageSize;
+            var query = _roomRepo.GetQueryable()
+                .Include(r => r.RoomType)
+                .Where(r => r.HotelId == user.HotelId)
+                .OrderBy(r => r.RoomNumber);
 
-            var result = await _context.RoomListQueryModel
-                .FromSqlRaw("EXEC proc_GetRoomsByHotel {0},{1},{2}",
-                    user.HotelId, offset, pageSize)
+            var rooms = await query
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
                 .ToListAsync();
 
-            return result.Select(r => new RoomListResponseDto
+            return rooms.Select(r => new RoomListResponseDto
             {
                 RoomId = r.RoomId,
                 RoomNumber = r.RoomNumber,
                 Floor = r.Floor,
-                RoomTypeName = r.RoomTypeName,
+                RoomTypeName = r.RoomType!.Name,
                 IsActive = r.IsActive
             });
         }
 
+        #endregion
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.RoomType;
 using Microsoft.EntityFrameworkCore;
@@ -1346,25 +1777,35 @@ namespace HotelBookingAppWebApi.Services
 {
     public class RoomTypeService : IRoomTypeService
     {
-        private readonly HotelBookingContext _context;
-       
+        private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, RoomTypeRate> _rateRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RoomTypeService(HotelBookingContext context)
+        public RoomTypeService(
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, RoomTypeRate> rateRepo,
+            IRepository<Guid, User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
-            
+            _roomTypeRepo = roomTypeRepo;
+            _rateRepo = rateRepo;
+            _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        // ADD ROOM TYPE 
+        #region ADD ROOM TYPE
 
         public async Task AddRoomTypeAsync(Guid userId, CreateRoomTypeDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
-                if (user?.HotelId == null)
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
+
+                if (user.HotelId == null)
                     throw new UnAuthorizedException("Unauthorized");
 
                 var roomType = new RoomType
@@ -1378,26 +1819,30 @@ namespace HotelBookingAppWebApi.Services
                     IsActive = true
                 };
 
-                await _context.RoomTypes.AddAsync(roomType);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _roomTypeRepo.AddAsync(roomType);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        // UPDATE ROOM TYPE 
+        #endregion
+
+        #region UPDATE ROOM TYPE
 
         public async Task UpdateRoomTypeAsync(Guid userId, UpdateRoomTypeDto dto)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            var roomType = await _context.RoomTypes
-                .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                       && r.HotelId == user!.HotelId);
+            var roomType = await _roomTypeRepo.GetQueryable()
+                .FirstOrDefaultAsync(r =>
+                    r.RoomTypeId == dto.RoomTypeId &&
+                    r.HotelId == user.HotelId);
 
             if (roomType == null)
                 throw new NotFoundException("RoomType not found");
@@ -1407,65 +1852,64 @@ namespace HotelBookingAppWebApi.Services
             roomType.MaxOccupancy = dto.MaxOccupancy;
             roomType.Amenities = dto.Amenities;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // DEACTIVATE
+        #endregion
 
-        public async Task ToggleRoomTypeStatusAsync( Guid userId,Guid roomTypeId,bool isActive)
+        #region TOGGLE STATUS
+
+        public async Task ToggleRoomTypeStatusAsync(Guid userId, Guid roomTypeId, bool isActive)
         {
-            // 1️) Validate User
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
 
-            if (user == null || user.HotelId == null)
-                throw new UnauthorizedAccessException("Invalid user");
-
-            // 2️) Find RoomType belonging to user's hotel
-            var roomType = await _context.RoomTypes
+            var roomType = await _roomTypeRepo.GetQueryable()
                 .FirstOrDefaultAsync(r =>
                     r.RoomTypeId == roomTypeId &&
                     r.HotelId == user.HotelId);
 
             if (roomType == null)
-                throw new KeyNotFoundException("RoomType not found");
+                throw new NotFoundException("RoomType not found");
 
-            // 3️) Update Status
             roomType.IsActive = isActive;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
+        #endregion
 
-
-        // ADD RATE
+        #region ADD RATE
 
         public async Task AddRateAsync(Guid userId, CreateRoomTypeRateDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var user = await _context.Users.FirstOrDefaultAsync(u => u.UserId == userId);
+                var user = await _userRepo.GetAsync(userId)
+                    ?? throw new UnAuthorizedException("Unauthorized");
 
-                var roomType = await _context.RoomTypes
-                    .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId
-                                           && r.HotelId == user!.HotelId);
+                var roomTypeExists = await _roomTypeRepo.GetQueryable()
+                    .AnyAsync(r =>
+                        r.RoomTypeId == dto.RoomTypeId &&
+                        r.HotelId == user.HotelId);
 
-                if (roomType == null)
+                if (!roomTypeExists)
                     throw new NotFoundException("RoomType not found");
 
                 if (dto.StartDate > dto.EndDate)
-                    throw new UnableToCreateEntityException("Invalid date range");
+                    throw new ValidationException("Invalid date range");
 
-                var overlapping = await _context.RoomTypeRates
+                // Overlap check
+                var overlapping = await _rateRepo.GetQueryable()
                     .AnyAsync(r =>
                         r.RoomTypeId == dto.RoomTypeId &&
                         dto.StartDate <= r.EndDate &&
                         dto.EndDate >= r.StartDate);
 
                 if (overlapping)
-                    throw new UnableToCreateEntityException("Rate already exists for selected date range");
+                    throw new ValidationException("Rate already exists for date range");
 
                 var rate = new RoomTypeRate
                 {
@@ -1476,54 +1920,63 @@ namespace HotelBookingAppWebApi.Services
                     Rate = dto.Rate
                 };
 
-                await _context.RoomTypeRates.AddAsync(rate);
-                await _context.SaveChangesAsync();
-                await transaction.CommitAsync();
+                await _rateRepo.AddAsync(rate);
+
+                await _unitOfWork.CommitAsync();
             }
             catch
             {
-                await transaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
-        //UPDATE RATE
+        #endregion
+
+        #region UPDATE RATE
 
         public async Task UpdateRateAsync(Guid userId, UpdateRoomTypeRateDto dto)
         {
-            var rate = await _context.RoomTypeRates
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized");
+
+            var rate = await _rateRepo.GetQueryable()
                 .Include(r => r.RoomType)
                 .FirstOrDefaultAsync(r => r.RoomTypeRateId == dto.RoomTypeRateId);
 
-            if (rate == null || rate.RoomType!.HotelId !=
-                (await _context.Users.FindAsync(userId))!.HotelId)
-                throw new Exception("Unauthorized");
+            if (rate == null || rate.RoomType!.HotelId != user.HotelId)
+                throw new UnAuthorizedException("Unauthorized");
 
             rate.StartDate = dto.StartDate;
             rate.EndDate = dto.EndDate;
             rate.Rate = dto.Rate;
 
-            await _context.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
-        // GET RATE BY DATE
+        #endregion
+
+        #region GET RATE
 
         public async Task<decimal> GetRateByDateAsync(Guid userId, GetRateByDateRequestDto dto)
         {
-            var rate = await _context.RoomTypeRates
-                .Include(r => r.RoomType)
+            var rate = await _rateRepo.GetQueryable()
                 .FirstOrDefaultAsync(r =>
                     r.RoomTypeId == dto.RoomTypeId &&
                     dto.Date >= r.StartDate &&
                     dto.Date <= r.EndDate);
 
             if (rate == null)
-                throw new UnableToCreateEntityException("Rate not found for selected date");
+                throw new NotFoundException("Rate not found");
 
             return rate.Rate;
         }
+
+        #endregion
     }
 }
+
+
 
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
@@ -1572,9 +2025,11 @@ namespace HotelBookingAppWebApi.Services
         }
     }
 }
-using HotelBookingAppWebApi.Contexts;
+
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Transactions;
 using Microsoft.EntityFrameworkCore;
@@ -1583,67 +2038,86 @@ namespace HotelBookingAppWebApi.Services
 {
     public class TransactionService : ITransactionService
     {
-        private readonly HotelBookingContext _context;
+        private readonly IRepository<Guid, Transaction> _transactionRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public TransactionService(HotelBookingContext context)
+
+        public TransactionService(
+            IRepository<Guid, Transaction> transactionRepo,
+            IRepository<Guid, Reservation> reservationRepo,
+            IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid,User> userRepo,
+            IUnitOfWork unitOfWork)
         {
-            _context = context;
+            _transactionRepo = transactionRepo;
+            _reservationRepo = reservationRepo;
+            _inventoryRepo = inventoryRepo;
+            _unitOfWork = unitOfWork;
+            _userRepo = userRepo;
         }
 
-         
-        // CREATE PAYMENT
-         
+        #region CREATE PAYMENT
+
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
-            var reservation = await _context.Reservations
-                .Include(r => r.Transactions)
-                .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId);
-
-            if (reservation == null)
-                throw new NotFoundException("Reservation not found.");
-
-            if (reservation.Status == ReservationStatus.Cancelled)
-                throw new PaymentException("Cannot pay for cancelled reservation.");
-
-            if (reservation.Transactions.Any(t => t.Status == PaymentStatus.Success))
-                throw new PaymentException("Reservation already paid.");
-
-            var transaction = new Transaction
-            {
-                TransactionId = Guid.NewGuid(),
-                ReservationId = reservation.ReservationId,
-                Amount = reservation.TotalAmount,
-                PaymentMethod = dto.PaymentMethod,
-                Status = PaymentStatus.Success,
-                TransactionDate = DateTime.UtcNow
-            };
-
-            reservation.Status = ReservationStatus.Confirmed;
-
-            await _context.Transactions.AddAsync(transaction);
-            await _context.SaveChangesAsync();
-
-            return MapToDto(transaction);
-        }
-
-
-
-
-        // REFUND
-
-        public async Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto)
-        {
-            using var dbTransaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
             try
             {
-                var transaction = await _context.Transactions
+                var reservation = await _reservationRepo.GetQueryable()
+                    .Include(r => r.Transactions)
+                    .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId)
+                    ?? throw new NotFoundException("Reservation not found");
+
+                if (reservation.Status == ReservationStatus.Cancelled)
+                    throw new PaymentException("Cannot pay cancelled reservation");
+
+                if (reservation.Transactions.Any(t => t.Status == PaymentStatus.Success))
+                    throw new PaymentException("Already paid");
+
+                var transaction = new Transaction
+                {
+                    TransactionId = Guid.NewGuid(),
+                    ReservationId = reservation.ReservationId,
+                    Amount = reservation.TotalAmount,
+                    PaymentMethod = dto.PaymentMethod,
+                    Status = PaymentStatus.Success,
+                    TransactionDate = DateTime.UtcNow
+                };
+
+                reservation.Status = ReservationStatus.Confirmed;
+
+                await _transactionRepo.AddAsync(transaction);
+
+                await _unitOfWork.CommitAsync();
+
+                return MapToDto(transaction);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region REFUND
+
+        public async Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var transaction = await _transactionRepo.GetQueryable()
                     .Include(t => t.Reservation)
                     .ThenInclude(r => r.ReservationRooms)
-                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId);
-
-                if (transaction == null)
-                    throw new NotFoundException("Transaction not found");
+                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
+                    ?? throw new NotFoundException("Transaction not found");
 
                 if (transaction.Status != PaymentStatus.Success)
                     throw new PaymentException("Only successful payments can be refunded");
@@ -1653,13 +2127,15 @@ namespace HotelBookingAppWebApi.Services
                 if (reservation.Status == ReservationStatus.Completed)
                     throw new PaymentException("Completed reservations cannot be refunded");
 
+                // Update statuses
                 transaction.Status = PaymentStatus.Refunded;
-
                 reservation.Status = ReservationStatus.Cancelled;
                 reservation.CancelledDate = DateTime.UtcNow;
                 reservation.CancellationReason = dto.Reason;
 
+                // Inventory restore
                 var room = reservation.ReservationRooms.First();
+                var roomCount = reservation.ReservationRooms.Count;
 
                 var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
 
@@ -1667,97 +2143,171 @@ namespace HotelBookingAppWebApi.Services
                     .Select(d => reservation.CheckInDate.AddDays(d))
                     .ToList();
 
-                var inventories = await _context.RoomTypeInventories
+                var inventories = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == room.RoomTypeId && dates.Contains(i.Date))
                     .ToListAsync();
 
-                foreach (var inventory in inventories)
-                    inventory.ReservedInventory -= room.NumberOfRooms;
+                foreach (var inv in inventories)
+                {
+                    inv.ReservedInventory -= roomCount;
+                }
 
-                await _context.SaveChangesAsync();
-                await dbTransaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
 
                 return MapToDto(transaction);
             }
             catch
             {
-                await dbTransaction.RollbackAsync();
+                await _unitOfWork.RollbackAsync();
                 throw;
             }
         }
 
+        #endregion
 
+        #region GET ALL (PAGINATION)
 
-        // PAGINATION
-
-        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
-            int page,
-            int pageSize)
+        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize)
         {
-            var query = _context.Transactions.AsQueryable();
+            var query = _transactionRepo.GetQueryable();
+
+            //  ROLE-BASED FILTERING
+            if (role == "Guest")
+            {
+                query = query.Where(t => t.Reservation!.UserId == userId);
+            }
+            else if (role == "Admin")
+            {
+                // get admin hotel
+                var hotelId = await _userRepo.GetQueryable()
+                    .Where(u => u.UserId == userId)
+                    .Select(u => u.HotelId)
+                    .FirstOrDefaultAsync();
+
+                if (hotelId == null)
+                    throw new NotFoundException("Admin hotel not found");
+
+                query = query.Where(t => t.Reservation!.HotelId == hotelId);
+            }
+            // SuperAdmin → no filter (gets all)
 
             var total = await query.CountAsync();
 
-            var transactions = await query
+            var data = await query
                 .OrderByDescending(t => t.TransactionDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(t => new TransactionResponseDto
-                {
-                    TransactionId = t.TransactionId,
-                    ReservationId = t.ReservationId,
-                    Amount = t.Amount,
-                    PaymentMethod = t.PaymentMethod,
-                    Status = t.Status,
-                    TransactionDate = t.TransactionDate
-                })
                 .ToListAsync();
 
             return new PagedTransactionResponseDto
             {
                 TotalCount = total,
-                Transactions = transactions
+                Transactions = data.Select(MapToDto)
             };
-
         }
-        private static TransactionResponseDto MapToDto(Transaction t)
+
+
+        #endregion
+
+        #region HELPER
+
+        private static TransactionResponseDto MapToDto(Transaction t) => new()
         {
-            return new TransactionResponseDto
-            {
-                TransactionId = t.TransactionId,
-                ReservationId = t.ReservationId,
-                Amount = t.Amount,
-                PaymentMethod = t.PaymentMethod,
-                Status = t.Status,
-                TransactionDate = t.TransactionDate
-            };
-        }
+            TransactionId = t.TransactionId,
+            ReservationId = t.ReservationId,
+            Amount = t.Amount,
+            PaymentMethod = t.PaymentMethod,
+            Status = t.Status,
+            TransactionDate = t.TransactionDate
+        };
 
+        #endregion
     }
 }
+
 using HotelBookingAppWebApi.Contexts;
-using HotelBookingAppWebApi.Exceptions;
-using HotelBookingAppWebApi.Interfaces;
-using HotelBookingAppWebApi.Models;
-using HotelBookingAppWebApi.Models.DTOs.UserDetails;
-using Microsoft.EntityFrameworkCore;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
+using Microsoft.EntityFrameworkCore.Storage;
+
 namespace HotelBookingAppWebApi.Services
 {
-    public class UserService : IUserService
+    public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly HotelBookingContext _context;
+        private IDbContextTransaction? _transaction;
 
-        public UserService(HotelBookingContext context)
+        public UnitOfWork(HotelBookingContext context)
         {
             _context = context;
         }
 
-         
+        public async Task BeginTransactionAsync()
+        {
+            _transaction = await _context.Database.BeginTransactionAsync();
+        }
+
+        public async Task CommitAsync()
+        {
+            if (_transaction == null)
+                throw new InvalidOperationException("Transaction not started");
+
+            await _context.SaveChangesAsync();
+            await _transaction.CommitAsync();
+        }
+
+        public async Task RollbackAsync()
+        {
+            if (_transaction == null)
+                throw new InvalidOperationException("Transaction not started");
+
+            await _transaction.RollbackAsync();
+        }
+
+        public async Task SaveChangesAsync()
+        {
+            await _context.SaveChangesAsync();
+        }
+
+        public void Dispose()
+        {
+            _transaction?.Dispose();
+        }
+    }
+}
+
+using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
+using HotelBookingAppWebApi.Models;
+using HotelBookingAppWebApi.Models.DTOs.UserDetails;
+using Microsoft.EntityFrameworkCore;
+
+namespace HotelBookingAppWebApi.Services
+{
+    public class UserService : IUserService
+    {
+        private readonly IRepository<Guid, User> _userRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IUnitOfWork _unitOfWork;
+
+        public UserService(
+            IRepository<Guid, User> userRepo,
+            IRepository<Guid, Reservation> reservationRepo,
+            IUnitOfWork unitOfWork)
+        {
+            _userRepo = userRepo;
+            _reservationRepo = reservationRepo;
+            _unitOfWork = unitOfWork;
+        }
+
+        
         // GET PROFILE
-         
+        
         public async Task<UserProfileResponseDto> GetProfileAsync(Guid userId)
         {
-            var user = await _context.Users
+            var user = await _userRepo
+                .GetQueryable()
                 .Include(u => u.UserDetails)
                 .FirstOrDefaultAsync(u => u.UserId == userId);
 
@@ -1770,60 +2320,70 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(user);
         }
 
-         
-        // UPDATE PROFILE (Transactional)
-         
+        
+        // UPDATE PROFILE (TRANSACTION)
+        
         public async Task<UserProfileResponseDto> UpdateProfileAsync(
             Guid userId,
             UpdateUserProfileDto dto)
         {
-            using var transaction = await _context.Database.BeginTransactionAsync();
+            await _unitOfWork.BeginTransactionAsync();
 
-            var user = await _context.Users
-                .Include(u => u.UserDetails)
-                .FirstOrDefaultAsync(u => u.UserId == userId);
+            try
+            {
+                var user = await _userRepo
+                    .GetQueryable()
+                    .Include(u => u.UserDetails)
+                    .FirstOrDefaultAsync(u => u.UserId == userId);
 
-            if (user == null)
-                throw new NotFoundException("User not found.");
+                if (user == null)
+                    throw new NotFoundException("User not found.");
 
-            if (user.UserDetails == null)
-                throw new UserProfileException("Profile details not found.");
+                if (user.UserDetails == null)
+                    throw new UserProfileException("Profile details not found.");
 
-            var details = user.UserDetails;
+                var details = user.UserDetails;
 
-            if (!string.IsNullOrWhiteSpace(dto.Name))
-                details.Name = dto.Name;
+                // Update only if provided
+                if (!string.IsNullOrWhiteSpace(dto.Name))
+                    details.Name = dto.Name;
 
-            if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-                details.PhoneNumber = dto.PhoneNumber;
+                if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
+                    details.PhoneNumber = dto.PhoneNumber;
 
-            if (!string.IsNullOrWhiteSpace(dto.Address))
-                details.Address = dto.Address;
+                if (!string.IsNullOrWhiteSpace(dto.Address))
+                    details.Address = dto.Address;
 
-            if (!string.IsNullOrWhiteSpace(dto.State))
-                details.State = dto.State;
+                if (!string.IsNullOrWhiteSpace(dto.State))
+                    details.State = dto.State;
 
-            if (!string.IsNullOrWhiteSpace(dto.City))
-                details.City = dto.City;
+                if (!string.IsNullOrWhiteSpace(dto.City))
+                    details.City = dto.City;
 
-            if (!string.IsNullOrWhiteSpace(dto.Pincode))
-                details.Pincode = dto.Pincode;
+                if (!string.IsNullOrWhiteSpace(dto.Pincode))
+                    details.Pincode = dto.Pincode;
 
-            await _context.SaveChangesAsync();
-            await transaction.CommitAsync();
+                await _unitOfWork.CommitAsync();
 
-            return MapToDto(user);
+                return MapToDto(user);
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
-         
-        // BOOKING HISTORY (PAGINATED)
-         
+        
+        // BOOKING HISTORY (PAGINATION)
+        
         public async Task<PagedBookingHistoryDto> GetBookingHistoryAsync(
             Guid userId,
             int page,
             int pageSize)
         {
-            var query = _context.Reservations
+            var query = _reservationRepo
+                .GetQueryable()
                 .Include(r => r.Hotel)
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate);
@@ -1853,6 +2413,9 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
+        
+        // MAPPER
+        
         private static UserProfileResponseDto MapToDto(User user)
         {
             var d = user.UserDetails!;
@@ -1874,3 +2437,113 @@ namespace HotelBookingAppWebApi.Services
         }
     }
 }
+
+
+using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
+using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+
+namespace HotelBookingAppWebApi.Repository
+{
+    public class Repository<K, C> : IRepository<K, C> where C : class
+    {
+        protected readonly HotelBookingContext _context;
+
+        public Repository(HotelBookingContext context)
+        {
+            _context = context ?? throw new ArgumentNullException(nameof(context));
+        }
+
+        //  ADD (NO SaveChanges)
+        public async Task<C?> AddAsync(C entity)
+        {
+            if (entity == null)
+                throw new ArgumentNullException(nameof(entity));
+
+            await _context.Set<C>().AddAsync(entity);
+
+            return entity;
+        }
+
+        //  DELETE (NO SaveChanges)
+        public async Task<C?> DeleteAsync(K key)
+        {
+            var item = await GetAsync(key);
+
+            if (item == null)
+                return null;
+
+            _context.Set<C>().Remove(item);
+
+            return item;
+        }
+
+        //  GET ALL
+        public async Task<IEnumerable<C>> GetAllAsync()
+        {
+            return await _context.Set<C>().ToListAsync();
+        }
+
+        //  GET BY ID
+        public async Task<C?> GetAsync(K key)
+        {
+            return await _context.FindAsync<C>(key);
+        }
+
+        // UPDATE (NO SaveChanges)
+        public async Task<C?> UpdateAsync(K key, C item)
+        {
+            if (item == null)
+                return null;
+
+            var existingItem = await GetAsync(key);
+
+            if (existingItem == null)
+                return null;
+
+            _context.Entry(existingItem).CurrentValues.SetValues(item);
+
+            return existingItem;
+        }
+
+        //  FIRST OR DEFAULT
+        public async Task<C?> FirstOrDefaultAsync(Expression<Func<C, bool>> predicate)
+        {
+            return await _context.Set<C>().FirstOrDefaultAsync(predicate);
+        }
+
+        //  QUERYABLE (IMPORTANT FOR LINQ)
+        public IQueryable<C> GetQueryable()
+        {
+            return _context.Set<C>();
+        }
+
+        // PAGINATION / FILTER
+        public async Task<IEnumerable<C>> GetAllByForeignKeyAsync(
+            Expression<Func<C, bool>> predicate,
+            int limit,
+            int pageNumber)
+        {
+            return await _context.Set<C>()
+                .Where(predicate)
+                .Skip((pageNumber - 1) * limit)
+                .Take(limit)
+                .ToListAsync();
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
