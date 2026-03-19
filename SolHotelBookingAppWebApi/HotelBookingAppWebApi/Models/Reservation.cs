@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -18,9 +18,9 @@ namespace HotelBookingAppWebApi.Models
 
         [Required]
         public DateOnly CheckInDate { get; set; }
+
         [Required]
         public DateOnly CheckOutDate { get; set; }
-
 
         [Required]
         public decimal TotalAmount { get; set; }
@@ -28,10 +28,12 @@ namespace HotelBookingAppWebApi.Models
         [Required]
         public ReservationStatus Status { get; set; }
 
+        /// <summary>Tracks whether the guest physically checked in</summary>
+        public bool IsCheckedIn { get; set; } = false;
+
         public DateTime? CancelledDate { get; set; }
         public string? CancellationReason { get; set; }
         public DateTime? ExpiryTime { get; set; }
-
 
         [Required]
         public DateTime CreatedDate { get; set; }
@@ -41,6 +43,7 @@ namespace HotelBookingAppWebApi.Models
 
         public ICollection<ReservationRoom>? ReservationRooms { get; set; }
         public ICollection<Transaction>? Transactions { get; set; }
+        public ICollection<RefundRequest>? RefundRequests { get; set; }
     }
 
     public enum ReservationStatus
@@ -48,6 +51,7 @@ namespace HotelBookingAppWebApi.Models
         Pending = 1,
         Confirmed = 2,
         Cancelled = 3,
-        Completed = 4
+        Completed = 4,
+        NoShow = 5
     }
 }

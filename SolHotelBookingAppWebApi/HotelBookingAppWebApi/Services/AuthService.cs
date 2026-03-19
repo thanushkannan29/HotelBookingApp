@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
@@ -33,17 +33,16 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        //  REGISTER GUEST (WITH TRANSACTION)
+        // ── REGISTER GUEST ────────────────────────────────────────────────────
         public async Task<AuthResponseDto> RegisterGuestAsync(RegisterUserDto dto)
         {
             var exists = await _userRepository.GetQueryable()
                 .AnyAsync(u => u.Email == dto.Email);
 
             if (exists)
-                throw new ConflictException("Email already registered");
+                throw new ConflictException("Email already registered.");
 
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 byte[]? salt;
@@ -77,7 +76,6 @@ namespace HotelBookingAppWebApi.Services
                 };
 
                 await _userProfileRepository.AddAsync(profile);
-
                 await _unitOfWork.CommitAsync();
 
                 return GenerateToken(user);
@@ -89,17 +87,16 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        //  REGISTER HOTEL ADMIN (WITH TRANSACTION)
+        // ── REGISTER HOTEL ADMIN ──────────────────────────────────────────────
         public async Task<AuthResponseDto> RegisterHotelAdminAsync(RegisterHotelAdminDto dto)
         {
             var exists = await _userRepository.GetQueryable()
                 .AnyAsync(u => u.Email == dto.Email);
 
             if (exists)
-                throw new ConflictException("Email already registered");
+                throw new ConflictException("Email already registered.");
 
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var hotel = new Hotel
@@ -109,6 +106,7 @@ namespace HotelBookingAppWebApi.Services
                     Address = dto.Address,
                     City = dto.City,
                     Description = dto.Description,
+                    ContactNumber = dto.ContactNumber,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
@@ -147,7 +145,6 @@ namespace HotelBookingAppWebApi.Services
                 };
 
                 await _userProfileRepository.AddAsync(profile);
-
                 await _unitOfWork.CommitAsync();
 
                 return GenerateToken(admin);
@@ -159,23 +156,24 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        // LOGIN 
+        // ── LOGIN ─────────────────────────────────────────────────────────────
         public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
         {
-            var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == dto.Email);
+            var user = await _userRepository.FirstOrDefaultAsync(u => u.Email == dto.Email)
+                ?? throw new UnAuthorizedException("Invalid credentials.");
 
-            if (user == null)
-                throw new UnAuthorizedException("Invalid credentials");
+            if (!user.IsActive)
+                throw new UnAuthorizedException("Account is deactivated.");
 
             var hashed = _passwordService.HashPassword(dto.Password, user.PasswordSaltValue, out _);
 
             if (!hashed.SequenceEqual(user.Password))
-                throw new UnAuthorizedException("Invalid credentials");
+                throw new UnAuthorizedException("Invalid credentials.");
 
             return GenerateToken(user);
         }
 
-        //  TOKEN GENERATION
+        // ── HELPER ────────────────────────────────────────────────────────────
         private AuthResponseDto GenerateToken(User user)
         {
             var payload = new TokenPayloadDto
@@ -186,12 +184,7 @@ namespace HotelBookingAppWebApi.Services
                 HotelId = user.HotelId
             };
 
-            var token = _tokenService.CreateToken(payload);
-
-            return new AuthResponseDto
-            {
-                Token = token
-            };
+            return new AuthResponseDto { Token = _tokenService.CreateToken(payload) };
         }
     }
 }

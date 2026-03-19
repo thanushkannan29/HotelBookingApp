@@ -4,9 +4,9 @@ using HotelBookingAppWebApi.Exceptions.Middleware;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
-using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using HotelBookingAppWebApi.Services;
+using HotelBookingAppWebApi.Services.BackgroundServices;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -15,25 +15,24 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-#region controllers
-
+// ── CONTROLLERS ───────────────────────────────────────────────────────────────
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-#endregion
 
-#region RateLimiter
+// ── RATE LIMITING ──────────────────────────────────────────────────────────────
 builder.Services.AddMemoryCache();
 builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
 builder.Services.AddInMemoryRateLimiting();
 builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
-#endregion
-#region Swagger + JWT Support
+
+// ── SWAGGER + JWT ──────────────────────────────────────────────────────────────
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "Hotel Booking API",
-        Version = "v1"
+        Version = "v1",
+        Description = "Complete Hotel Booking System — Guest, Admin, SuperAdmin roles"
     });
 
     c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
@@ -43,7 +42,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
-        Description = "Enter Bearer {token}"
+        Description = "Enter: Bearer {your JWT token}"
     });
 
     c.AddSecurityRequirement(new OpenApiSecurityRequirement
@@ -51,77 +50,55 @@ builder.Services.AddSwaggerGen(c =>
         {
             new OpenApiSecurityScheme
             {
-                Reference = new OpenApiReference
-                {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
+                Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
             },
             Array.Empty<string>()
         }
     });
 });
 
-#endregion
-
-#region Database Context
+// ── DATABASE ───────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<HotelBookingContext>(options =>
-{
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("Developer"));
-});
-#endregion
+    options.UseSqlServer(builder.Configuration.GetConnectionString("Developer")));
 
-
-#region CORS
+// ── CORS ───────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
-    {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
-    });
+        policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 });
-#endregion
 
-
-#region Generic Repository
+// ── GENERIC REPOSITORY ─────────────────────────────────────────────────────────
 builder.Services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
 
+// ── UNIT OF WORK ───────────────────────────────────────────────────────────────
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-#endregion
-
-#region Services
-builder.Services.AddScoped<IAuthService, AuthService>();
+// ── APPLICATION SERVICES ──────────────────────────────────────────────────────
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHotelService, HotelService>();
 builder.Services.AddScoped<IRoomTypeService, RoomTypeService>();
 builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IInventoryService, InventoryService>();
-builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
+builder.Services.AddScoped<IRefundRequestService, RefundRequestService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<IReviewService, ReviewService>();
-builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ILogService, LogService>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAuditLogService, AuditLogService>();
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 
+// ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
+builder.Services.AddHostedService<ReservationCleanupService>();       // cancels expired pending reservations
+builder.Services.AddHostedService<HotelDeactivationRefundService>();  // auto-refunds when hotel deactivated
+builder.Services.AddHostedService<NoShowAutoCancelService>();          // marks no-shows
 
-
-
-
-
-
-#endregion
-#region Hosted Service For reservation cancel Time Out
-builder.Services.AddHostedService<ReservationCleanupService>();
-#endregion
-
-#region JWT Authentication
-string key = builder.Configuration["Keys:Jwt"]
-    ?? throw new InvalidOperationException("JWT Key not found.");
+// ── JWT AUTHENTICATION ─────────────────────────────────────────────────────────
+string jwtKey = builder.Configuration["Keys:Jwt"]
+    ?? throw new InvalidOperationException("JWT Key not found in configuration.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -131,16 +108,13 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             ValidateAudience = false,
             ValidateLifetime = true,
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey =
-                new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
         });
 
 builder.Services.AddAuthorization();
-#endregion
-// Build App
-var app = builder.Build();
 
-// Middleware Pipeline
+// ── BUILD ──────────────────────────────────────────────────────────────────────
+var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
@@ -151,8 +125,8 @@ if (app.Environment.IsDevelopment())
 app.UseCors();
 app.UseRouting();
 
-
-app.UseMiddleware<GlobalExceptionMiddleware>(); 
+// Global exception handler must be BEFORE auth so it catches all exceptions
+app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -160,6 +134,5 @@ app.UseAuthorization();
 app.UseIpRateLimiting();
 
 app.MapControllers();
-
 
 app.Run();

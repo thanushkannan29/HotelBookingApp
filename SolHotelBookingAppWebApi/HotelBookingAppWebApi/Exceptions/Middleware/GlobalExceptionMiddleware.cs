@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Models;
 using System.Security.Claims;
@@ -10,9 +10,7 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
         private readonly RequestDelegate _next;
         private readonly ILogger<GlobalExceptionMiddleware> _logger;
 
-        public GlobalExceptionMiddleware(
-            RequestDelegate next,
-            ILogger<GlobalExceptionMiddleware> logger)
+        public GlobalExceptionMiddleware(RequestDelegate next, ILogger<GlobalExceptionMiddleware> logger)
         {
             _next = next;
             _logger = logger;
@@ -33,60 +31,54 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
             var statusCode = ex is AppException appEx ? appEx.StatusCode : 500;
-            var message = ex is AppException ? ex.Message : "An unexpected error occurred";
+            var message = ex is AppException ? ex.Message : "An unexpected error occurred.";
 
+            // Extract user info from JWT claims
             var user = context.User;
-
             var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Guid? userId = Guid.TryParse(userIdClaim, out var uid) ? uid : null;
-
             var userName = user?.Identity?.Name ?? "Anonymous";
             var role = user?.FindFirst(ClaimTypes.Role)?.Value ?? "Anonymous";
 
-            var controller = context.Request.RouteValues["controller"]?.ToString() ?? "";
-            var action = context.Request.RouteValues["action"]?.ToString() ?? "";
+            var controller = context.Request.RouteValues["controller"]?.ToString() ?? string.Empty;
+            var action = context.Request.RouteValues["action"]?.ToString() ?? string.Empty;
 
-            //  ILogger (IMPORTANT)
+            // ILogger — structured logging
             _logger.LogError(ex,
-                "Error: {Message}, User: {User}, Controller: {Controller}, Action: {Action}",
-                message, userName, controller, action);
+                "Exception | Status:{StatusCode} | User:{User} | Role:{Role} | {Controller}/{Action} | {Message}",
+                statusCode, userName, role, controller, action, message);
 
-            //  Save log in DB
+            // Persist to DB log
             try
             {
                 using var scope = context.RequestServices.CreateScope();
                 var db = scope.ServiceProvider.GetRequiredService<HotelBookingContext>();
 
-                var log = new Log
+                await db.Logs.AddAsync(new Log
                 {
                     LogId = Guid.NewGuid(),
                     Message = message,
                     ExceptionType = ex.GetType().Name,
-                    StackTrace = ex.StackTrace ?? "",
-
+                    StackTrace = ex.StackTrace ?? string.Empty,
                     StatusCode = statusCode,
-
                     UserId = userId,
                     UserName = userName,
                     Role = role,
-
                     Controller = controller,
                     Action = action,
                     HttpMethod = context.Request.Method,
                     RequestPath = context.Request.Path,
-
                     CreatedAt = DateTime.UtcNow
-                };
+                });
 
-                await db.Logs.AddAsync(log);
                 await db.SaveChangesAsync();
             }
             catch (Exception logEx)
             {
-                _logger.LogCritical(logEx, "Error while saving log");
+                _logger.LogCritical(logEx, "CRITICAL: Failed to persist exception log to database.");
             }
 
-            //  API Response
+            // API Response
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
 

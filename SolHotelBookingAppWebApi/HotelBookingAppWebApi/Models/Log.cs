@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -26,6 +26,4 @@ namespace HotelBookingAppWebApi.Models
         public DateTime CreatedAt { get; set; }
         public User? User { get; set; }
     }
-
-
 }

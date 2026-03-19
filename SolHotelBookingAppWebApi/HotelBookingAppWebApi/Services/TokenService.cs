@@ -1,4 +1,3 @@
-﻿
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
 using Microsoft.IdentityModel.Tokens;
@@ -14,7 +13,8 @@ namespace HotelBookingAppWebApi.Services
 
         public TokenService(IConfiguration configuration)
         {
-            string secret = configuration["Keys:Jwt"]!;
+            string secret = configuration["Keys:Jwt"]
+                ?? throw new InvalidOperationException("JWT Key not configured.");
             _key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
         }
 
@@ -40,9 +40,7 @@ namespace HotelBookingAppWebApi.Services
             };
 
             var handler = new JwtSecurityTokenHandler();
-            var token = handler.CreateToken(tokenDescriptor);
-
-            return handler.WriteToken(token);
+            return handler.WriteToken(handler.CreateToken(tokenDescriptor));
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Contexts;
+using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using Microsoft.EntityFrameworkCore.Storage;
 
@@ -22,8 +22,7 @@ namespace HotelBookingAppWebApi.Services
         public async Task CommitAsync()
         {
             if (_transaction == null)
-                throw new InvalidOperationException("Transaction not started");
-
+                throw new InvalidOperationException("No active transaction to commit.");
             await _context.SaveChangesAsync();
             await _transaction.CommitAsync();
         }
@@ -31,19 +30,14 @@ namespace HotelBookingAppWebApi.Services
         public async Task RollbackAsync()
         {
             if (_transaction == null)
-                throw new InvalidOperationException("Transaction not started");
-
+                throw new InvalidOperationException("No active transaction to roll back.");
             await _transaction.RollbackAsync();
         }
 
         public async Task SaveChangesAsync()
-        {
-            await _context.SaveChangesAsync();
-        }
+            => await _context.SaveChangesAsync();
 
         public void Dispose()
-        {
-            _transaction?.Dispose();
-        }
+            => _transaction?.Dispose();
     }
 }

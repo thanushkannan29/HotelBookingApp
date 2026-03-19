@@ -22,6 +22,44 @@ namespace HotelBookingAppWebApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.AuditLog", b =>
+                {
+                    b.Property<Guid>("AuditLogId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Changes")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<Guid?>("EntityId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("EntityName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("AuditLogId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Hotel", b =>
                 {
                     b.Property<Guid>("HotelId")
@@ -58,6 +96,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsBlockedBySuperAdmin")
                         .HasColumnType("bit");
 
                     b.Property<string>("Name")
@@ -132,6 +173,45 @@ namespace HotelBookingAppWebApi.Migrations
                     b.ToTable("Logs");
                 });
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.RefundRequest", b =>
+                {
+                    b.Property<Guid>("RefundRequestId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("AdminResponse")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("ProcessedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("ReservationId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("RefundRequestId");
+
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("RefundRequests");
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
                 {
                     b.Property<Guid>("ReservationId")
@@ -160,6 +240,9 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsCheckedIn")
+                        .HasColumnType("bit");
 
                     b.Property<string>("ReservationCode")
                         .IsRequired()
@@ -232,6 +315,9 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<decimal>("Rating")
                         .HasPrecision(3, 2)
@@ -480,6 +566,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("ProfileImageUrl")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("State")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -495,12 +584,41 @@ namespace HotelBookingAppWebApi.Migrations
                     b.ToTable("UserProfileDetails");
                 });
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.AuditLog", b =>
+                {
+                    b.HasOne("HotelBookingAppWebApi.Models.User", "User")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Log", b =>
                 {
                     b.HasOne("HotelBookingAppWebApi.Models.User", "User")
                         .WithMany("Logs")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.RefundRequest", b =>
+                {
+                    b.HasOne("HotelBookingAppWebApi.Models.Reservation", "Reservation")
+                        .WithMany("RefundRequests")
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("HotelBookingAppWebApi.Models.User", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Reservation");
 
                     b.Navigation("User");
                 });
@@ -667,6 +785,8 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Reservation", b =>
                 {
+                    b.Navigation("RefundRequests");
+
                     b.Navigation("ReservationRooms");
 
                     b.Navigation("Transactions");
@@ -688,6 +808,8 @@ namespace HotelBookingAppWebApi.Migrations
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.User", b =>
                 {
+                    b.Navigation("AuditLogs");
+
                     b.Navigation("Logs");
 
                     b.Navigation("Reservations");

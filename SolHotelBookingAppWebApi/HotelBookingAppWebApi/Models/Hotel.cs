@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -25,6 +25,9 @@ namespace HotelBookingAppWebApi.Models
         public string ContactNumber { get; set; } = string.Empty;
 
         public bool IsActive { get; set; } = true;
+
+        /// <summary>SuperAdmin can block a hotel, preventing the Admin from activating it</summary>
+        public bool IsBlockedBySuperAdmin { get; set; } = false;
 
         [Required]
         public DateTime CreatedAt { get; set; }

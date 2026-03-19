@@ -1,10 +1,11 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Room;
 using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
 
 namespace HotelBookingAppWebApi.Services
 {
@@ -14,6 +15,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, RoomType> _roomTypeRepo;
         private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
         private readonly IRepository<Guid, User> _userRepo;
+        private readonly IAuditLogService _auditLogService;
         private readonly IUnitOfWork _unitOfWork;
 
         public RoomService(
@@ -21,61 +23,54 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, RoomType> roomTypeRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
             IRepository<Guid, User> userRepo,
+            IAuditLogService auditLogService,
             IUnitOfWork unitOfWork)
         {
             _roomRepo = roomRepo;
             _roomTypeRepo = roomTypeRepo;
             _inventoryRepo = inventoryRepo;
             _userRepo = userRepo;
+            _auditLogService = auditLogService;
             _unitOfWork = unitOfWork;
         }
 
-        #region ADD
-
+        // ── ADD ROOM ──────────────────────────────────────────────────────────
         public async Task AddRoomAsync(Guid userId, CreateRoomDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var user = await _userRepo.GetAsync(userId)
-                    ?? throw new UnAuthorizedException("Unauthorized");
+                    ?? throw new UnAuthorizedException("Unauthorized.");
 
                 if (user.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized");
+                    throw new UnAuthorizedException("Unauthorized.");
 
-                // Validate RoomType
                 var roomTypeExists = await _roomTypeRepo.GetQueryable()
-                    .AnyAsync(rt => rt.RoomTypeId == dto.RoomTypeId &&
-                                    rt.HotelId == user.HotelId);
+                    .AnyAsync(rt => rt.RoomTypeId == dto.RoomTypeId && rt.HotelId == user.HotelId);
 
                 if (!roomTypeExists)
-                    throw new NotFoundException("Invalid RoomType");
+                    throw new NotFoundException("Invalid RoomType.");
 
-                // Unique Room Number
                 var exists = await _roomRepo.GetQueryable()
-                    .AnyAsync(r => r.HotelId == user.HotelId &&
-                                   r.RoomNumber == dto.RoomNumber);
+                    .AnyAsync(r => r.HotelId == user.HotelId && r.RoomNumber == dto.RoomNumber);
 
                 if (exists)
-                    throw new ConflictException("Room number already exists");
+                    throw new ConflictException("Room number already exists.");
 
-                // Inventory Check
                 var currentCount = await _roomRepo.GetQueryable()
-                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId &&
-                                     r.HotelId == user.HotelId);
+                    .CountAsync(r => r.RoomTypeId == dto.RoomTypeId && r.HotelId == user.HotelId);
 
                 var maxInventory = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == dto.RoomTypeId)
                     .MaxAsync(i => (int?)i.TotalInventory);
 
                 if (maxInventory == null)
-                    throw new NotFoundException("Inventory not defined");
+                    throw new NotFoundException("Inventory not defined for this room type.");
 
                 if (currentCount >= maxInventory)
-                    throw new ConflictException($"Max rooms allowed: {maxInventory}");
+                    throw new ConflictException($"Maximum rooms allowed for this type: {maxInventory}.");
 
-                // Create Room
                 var room = new Room
                 {
                     RoomId = Guid.NewGuid(),
@@ -87,8 +82,10 @@ namespace HotelBookingAppWebApi.Services
                 };
 
                 await _roomRepo.AddAsync(room);
-
                 await _unitOfWork.CommitAsync();
+
+                await _auditLogService.LogAsync(userId, "RoomAdded", "Room",
+                    room.RoomId, JsonSerializer.Serialize(dto));
             }
             catch
             {
@@ -97,40 +94,35 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region UPDATE
-
+        // ── UPDATE ROOM ───────────────────────────────────────────────────────
         public async Task UpdateRoomAsync(Guid userId, UpdateRoomDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var user = await _userRepo.GetAsync(userId)
-                    ?? throw new UnAuthorizedException("Unauthorized");
+                    ?? throw new UnAuthorizedException("Unauthorized.");
 
                 var room = await _roomRepo.GetQueryable()
-                    .FirstOrDefaultAsync(r =>
-                        r.RoomId == dto.RoomId &&
-                        r.HotelId == user.HotelId);
-
-                if (room == null)
-                    throw new NotFoundException("Room not found");
+                    .FirstOrDefaultAsync(r => r.RoomId == dto.RoomId && r.HotelId == user.HotelId)
+                    ?? throw new NotFoundException("Room not found.");
 
                 var validRoomType = await _roomTypeRepo.GetQueryable()
-                    .AnyAsync(rt =>
-                        rt.RoomTypeId == dto.RoomTypeId &&
-                        rt.HotelId == user.HotelId);
+                    .AnyAsync(rt => rt.RoomTypeId == dto.RoomTypeId && rt.HotelId == user.HotelId);
 
                 if (!validRoomType)
-                    throw new NotFoundException("Invalid RoomType");
+                    throw new NotFoundException("Invalid RoomType.");
+
+                var before = new { room.RoomNumber, room.Floor, room.RoomTypeId };
 
                 room.RoomNumber = dto.RoomNumber;
                 room.Floor = dto.Floor;
                 room.RoomTypeId = dto.RoomTypeId;
 
                 await _unitOfWork.CommitAsync();
+
+                await _auditLogService.LogAsync(userId, "RoomUpdated", "Room",
+                    room.RoomId, JsonSerializer.Serialize(new { Before = before, After = dto }));
             }
             catch
             {
@@ -139,47 +131,34 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region TOGGLE STATUS
-
+        // ── TOGGLE ROOM STATUS ────────────────────────────────────────────────
         public async Task ToggleRoomStatusAsync(Guid userId, Guid roomId, bool isActive)
         {
             var user = await _userRepo.GetAsync(userId)
-                ?? throw new UnAuthorizedException("Unauthorized");
+                ?? throw new UnAuthorizedException("Unauthorized.");
 
             var room = await _roomRepo.GetQueryable()
-                .FirstOrDefaultAsync(r =>
-                    r.RoomId == roomId &&
-                    r.HotelId == user.HotelId);
-
-            if (room == null)
-                throw new NotFoundException("Room not found");
+                .FirstOrDefaultAsync(r => r.RoomId == roomId && r.HotelId == user.HotelId)
+                ?? throw new NotFoundException("Room not found.");
 
             room.IsActive = isActive;
-
             await _unitOfWork.SaveChangesAsync();
         }
 
-        #endregion
-
-        #region GET ROOMS 
-
+        // ── GET ROOMS ─────────────────────────────────────────────────────────
         public async Task<IEnumerable<RoomListResponseDto>> GetRoomsByHotelAsync(
             Guid userId, int pageNumber, int pageSize)
         {
             var user = await _userRepo.GetAsync(userId)
-                ?? throw new UnAuthorizedException("Unauthorized");
+                ?? throw new UnAuthorizedException("Unauthorized.");
 
             if (user.HotelId == null)
-                throw new UnAuthorizedException("Unauthorized");
+                throw new UnAuthorizedException("Unauthorized.");
 
-            var query = _roomRepo.GetQueryable()
+            var rooms = await _roomRepo.GetQueryable()
                 .Include(r => r.RoomType)
                 .Where(r => r.HotelId == user.HotelId)
-                .OrderBy(r => r.RoomNumber);
-
-            var rooms = await query
+                .OrderBy(r => r.RoomNumber)
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
@@ -189,11 +168,10 @@ namespace HotelBookingAppWebApi.Services
                 RoomId = r.RoomId,
                 RoomNumber = r.RoomNumber,
                 Floor = r.Floor,
+                RoomTypeId = r.RoomTypeId,
                 RoomTypeName = r.RoomType!.Name,
                 IsActive = r.IsActive
             });
         }
-
-        #endregion
     }
 }

@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Models;
+using HotelBookingAppWebApi.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Contexts
@@ -10,7 +10,7 @@ namespace HotelBookingAppWebApi.Contexts
         {
         }
 
-        // TABLES
+        // ─── TABLES ───────────────────────────────────────────────────────────
         public DbSet<User> Users { get; set; }
         public DbSet<UserProfileDetails> UserProfileDetails { get; set; }
         public DbSet<Hotel> Hotels { get; set; }
@@ -23,14 +23,14 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<RoomTypeInventory> RoomTypeInventories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Log> Logs { get; set; }
+        public DbSet<RefundRequest> RefundRequests { get; set; }
+        public DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
 
-            
-            // USER
-            
+            // ─── USER ─────────────────────────────────────────────────────────
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
@@ -68,14 +68,18 @@ namespace HotelBookingAppWebApi.Contexts
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<User>()
+                .HasMany(u => u.AuditLogs)
+                .WithOne(al => al.User)
+                .HasForeignKey(al => al.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<User>()
                 .HasOne(u => u.Hotel)
                 .WithMany()
                 .HasForeignKey(u => u.HotelId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
-            // HOTEL
-            
+            // ─── HOTEL ────────────────────────────────────────────────────────
             modelBuilder.Entity<Hotel>()
                 .HasIndex(h => h.City);
 
@@ -83,9 +87,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(h => h.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            
-            // ROOM TYPE
-            
+            // ─── ROOM TYPE ────────────────────────────────────────────────────
             modelBuilder.Entity<RoomType>()
                 .HasIndex(rt => rt.HotelId);
 
@@ -105,9 +107,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .WithOne(i => i.RoomType)
                 .HasForeignKey(i => i.RoomTypeId);
 
-            
-            // ROOM TYPE RATE
-            
+            // ─── ROOM TYPE RATE ───────────────────────────────────────────────
             modelBuilder.Entity<RoomTypeRate>()
                 .Property(r => r.Rate)
                 .HasPrecision(18, 2);
@@ -115,16 +115,12 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<RoomTypeRate>()
                 .HasIndex(r => new { r.RoomTypeId, r.StartDate, r.EndDate });
 
-            
-            // INVENTORY
-            
+            // ─── INVENTORY ────────────────────────────────────────────────────
             modelBuilder.Entity<RoomTypeInventory>()
                 .HasIndex(i => new { i.RoomTypeId, i.Date })
                 .IsUnique();
 
-            
-            // ROOM
-            
+            // ─── ROOM ─────────────────────────────────────────────────────────
             modelBuilder.Entity<Room>()
                 .HasIndex(r => new { r.HotelId, r.RoomNumber })
                 .IsUnique();
@@ -135,9 +131,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(rr => rr.RoomId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
-            // RESERVATION
-            
+            // ─── RESERVATION ──────────────────────────────────────────────────
             modelBuilder.Entity<Reservation>()
                 .HasIndex(r => r.ReservationCode)
                 .IsUnique();
@@ -166,9 +160,13 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(t => t.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            
-            // RESERVATION ROOM
-            
+            modelBuilder.Entity<Reservation>()
+                .HasMany(r => r.RefundRequests)
+                .WithOne(rr => rr.Reservation)
+                .HasForeignKey(rr => rr.ReservationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // ─── RESERVATION ROOM ─────────────────────────────────────────────
             modelBuilder.Entity<ReservationRoom>()
                 .Property(rr => rr.PricePerNight)
                 .HasPrecision(18, 2);
@@ -179,9 +177,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(rr => rr.RoomTypeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            
-            // TRANSACTION
-            
+            // ─── TRANSACTION ──────────────────────────────────────────────────
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.PaymentMethod)
                 .HasConversion<int>();
@@ -198,9 +194,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(t => t.TransactionDate)
                 .HasDefaultValueSql("GETUTCDATE()");
 
-            
-            // REVIEW
-            
+            // ─── REVIEW ───────────────────────────────────────────────────────
             modelBuilder.Entity<Review>()
                 .Property(r => r.Rating)
                 .HasPrecision(3, 2);
@@ -208,9 +202,27 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Review>()
                 .HasIndex(r => r.HotelId);
 
-            
-            // LOG
-            
+            // ─── REFUND REQUEST ───────────────────────────────────────────────
+            modelBuilder.Entity<RefundRequest>()
+                .Property(r => r.Status)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<RefundRequest>()
+                .Property(r => r.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<RefundRequest>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ─── AUDIT LOG ────────────────────────────────────────────────────
+            modelBuilder.Entity<AuditLog>()
+                .Property(al => al.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            // ─── LOG ──────────────────────────────────────────────────────────
             modelBuilder.Entity<Log>()
                 .Property(l => l.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");

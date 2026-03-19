@@ -1,4 +1,4 @@
-﻿namespace HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface
+namespace HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface
 {
     public interface IUnitOfWork
     {
@@ -6,8 +6,5 @@
         Task CommitAsync();
         Task RollbackAsync();
         Task SaveChangesAsync();
-        
-
     }
-
 }

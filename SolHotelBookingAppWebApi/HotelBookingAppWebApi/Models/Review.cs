@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -18,6 +18,9 @@ namespace HotelBookingAppWebApi.Models
 
         [Required]
         public string Comment { get; set; } = string.Empty;
+
+        /// <summary>Optional review image URL</summary>
+        public string? ImageUrl { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; }

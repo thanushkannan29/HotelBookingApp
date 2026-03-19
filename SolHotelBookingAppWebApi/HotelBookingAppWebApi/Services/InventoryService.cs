@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
@@ -27,30 +27,21 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        
-        // ADD INVENTORY (DATE RANGE)
-        
+        // ── ADD INVENTORY (DATE RANGE) ────────────────────────────────────────
         public async Task AddInventoryAsync(Guid userId, CreateInventoryDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
-                // Validate user
                 var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId);
-
                 if (user?.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized");
+                    throw new UnAuthorizedException("Unauthorized.");
 
-                // Validate RoomType belongs to hotel
                 var roomType = await _roomTypeRepo.FirstOrDefaultAsync(rt =>
-                    rt.RoomTypeId == dto.RoomTypeId &&
-                    rt.HotelId == user.HotelId);
+                    rt.RoomTypeId == dto.RoomTypeId && rt.HotelId == user.HotelId)
+                    ?? throw new NotFoundException("Invalid RoomType.");
 
-                if (roomType == null)
-                    throw new NotFoundException("Invalid RoomType");
-
-                // Get existing inventory in ONE query (Performance Optimization)
+                // Get existing dates in one query
                 var existingDates = await _inventoryRepo.GetQueryable()
                     .Where(i => i.RoomTypeId == dto.RoomTypeId &&
                                 i.Date >= dto.StartDate &&
@@ -60,7 +51,6 @@ namespace HotelBookingAppWebApi.Services
 
                 var existingDateSet = existingDates.ToHashSet();
 
-                // Insert missing dates
                 for (var date = dto.StartDate; date <= dto.EndDate; date = date.AddDays(1))
                 {
                     if (!existingDateSet.Contains(date))
@@ -85,29 +75,22 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        
-        // UPDATE INVENTORY
-        
+        // ── UPDATE INVENTORY ──────────────────────────────────────────────────
         public async Task UpdateInventoryAsync(Guid userId, UpdateInventoryDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var inventory = await _inventoryRepo.GetQueryable()
                     .Include(i => i.RoomType)
-                    .FirstOrDefaultAsync(i => i.RoomTypeInventoryId == dto.RoomTypeInventoryId);
+                    .FirstOrDefaultAsync(i => i.RoomTypeInventoryId == dto.RoomTypeInventoryId)
+                    ?? throw new NotFoundException("Inventory not found.");
 
-                if (inventory == null)
-                    throw new NotFoundException("Inventory not found");
-
-                // Business Rule
                 if (dto.TotalInventory < inventory.ReservedInventory)
                     throw new InsufficientInventoryException(
-                        "Cannot reduce below reserved inventory");
+                        "Cannot reduce total inventory below reserved inventory.");
 
                 inventory.TotalInventory = dto.TotalInventory;
-
                 await _unitOfWork.CommitAsync();
             }
             catch
@@ -117,68 +100,22 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        
-        // ADJUST RESERVED INVENTORY
-        
-        //public async Task AdjustReservedInventoryAsync(Guid userId, AdjustReservedInventoryDto dto)
-        //{
-        //    await _unitOfWork.BeginTransactionAsync();
-
-        //    try
-        //    {
-        //        var inventory = await _inventoryRepo.FirstOrDefaultAsync(i =>
-        //            i.RoomTypeId == dto.RoomTypeId &&
-        //            i.Date == dto.Date);
-
-        //        if (inventory == null)
-        //            throw new NotFoundException("Inventory not found");
-
-        //        var newReserved = inventory.ReservedInventory + dto.Quantity;
-
-        //        if (newReserved < 0)
-        //            throw new InsufficientInventoryException("Reserved cannot be negative");
-
-        //        if (newReserved > inventory.TotalInventory)
-        //            throw new InsufficientInventoryException("Overbooking detected");
-
-        //        inventory.ReservedInventory = newReserved;
-
-        //        await _unitOfWork.CommitAsync();
-        //    }
-        //    catch
-        //    {
-        //        await _unitOfWork.RollbackAsync();
-        //        throw;
-        //    }
-        //}
-
-        
-        // GET INVENTORY (READ ONLY)
-        
+        // ── GET INVENTORY ─────────────────────────────────────────────────────
         public async Task<IEnumerable<InventoryResponseDto>> GetInventoryAsync(
-            Guid userId,
-            Guid roomTypeId,
-            DateOnly start,
-            DateOnly end)
+            Guid userId, Guid roomTypeId, DateOnly start, DateOnly end)
         {
-            var inventories = await _inventoryRepo.GetQueryable()
+            return await _inventoryRepo.GetQueryable()
                 .AsNoTracking()
-                .Where(i =>
-                    i.RoomTypeId == roomTypeId &&
-                    i.Date >= start &&
-                    i.Date <= end)
+                .Where(i => i.RoomTypeId == roomTypeId && i.Date >= start && i.Date <= end)
                 .OrderBy(i => i.Date)
                 .Select(i => new InventoryResponseDto
                 {
                     RoomTypeInventoryId = i.RoomTypeInventoryId,
                     Date = i.Date,
                     TotalInventory = i.TotalInventory,
-                    ReservedInventory = i.ReservedInventory,
-                    
+                    ReservedInventory = i.ReservedInventory
                 })
                 .ToListAsync();
-
-            return inventories;
         }
     }
 }

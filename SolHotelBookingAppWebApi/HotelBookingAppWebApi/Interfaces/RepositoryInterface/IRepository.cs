@@ -1,4 +1,4 @@
-﻿using System.Linq.Expressions;
+using System.Linq.Expressions;
 
 namespace HotelBookingAppWebApi.Interfaces.RepositoryInterface
 {
@@ -11,8 +11,6 @@ namespace HotelBookingAppWebApi.Interfaces.RepositoryInterface
         Task<C?> UpdateAsync(K key, C entity);
         Task<C?> FirstOrDefaultAsync(Expression<Func<C, bool>> predicate);
         IQueryable<C> GetQueryable();
-        public Task<IEnumerable<C>> GetAllByForeignKeyAsync(Expression<Func<C, bool>> predicate, int limit, int pageNumber);
-        
-
+        Task<IEnumerable<C>> GetAllByForeignKeyAsync(Expression<Func<C, bool>> predicate, int limit, int pageNumber);
     }
 }

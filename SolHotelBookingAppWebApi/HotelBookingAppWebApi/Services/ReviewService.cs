@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
@@ -24,27 +24,23 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        #region ADD
-
+        // ── ADD REVIEW ────────────────────────────────────────────────────────
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
-                //  Validate hotel
                 var hotelExists = await _hotelRepo.GetQueryable()
                     .AnyAsync(h => h.HotelId == dto.HotelId);
 
                 if (!hotelExists)
-                    throw new NotFoundException("Hotel not found");
+                    throw new NotFoundException("Hotel not found.");
 
-                //  Prevent duplicate review
                 var alreadyReviewed = await _reviewRepo.GetQueryable()
                     .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);
 
                 if (alreadyReviewed)
-                    throw new ReviewException("Already reviewed");
+                    throw new ReviewException("You have already reviewed this hotel.");
 
                 var review = new Review
                 {
@@ -53,11 +49,11 @@ namespace HotelBookingAppWebApi.Services
                     UserId = userId,
                     Rating = dto.Rating,
                     Comment = dto.Comment,
+                    ImageUrl = dto.ImageUrl,
                     CreatedDate = DateTime.UtcNow
                 };
 
                 await _reviewRepo.AddAsync(review);
-
                 await _unitOfWork.CommitAsync();
 
                 return MapToDto(review);
@@ -69,29 +65,23 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region UPDATE
-
+        // ── UPDATE REVIEW ─────────────────────────────────────────────────────
         public async Task<ReviewResponseDto> UpdateReviewAsync(Guid userId, Guid reviewId, UpdateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var review = await _reviewRepo.GetAsync(reviewId)
-                    ?? throw new NotFoundException("Review not found");
+                    ?? throw new NotFoundException("Review not found.");
 
                 if (review.UserId != userId)
-                    throw new ReviewException("Not allowed");
+                    throw new ReviewException("You are not allowed to update this review.");
 
                 review.Rating = dto.Rating;
-
-                if (!string.IsNullOrWhiteSpace(dto.Comment))
-                    review.Comment = dto.Comment;
+                if (!string.IsNullOrWhiteSpace(dto.Comment)) review.Comment = dto.Comment;
+                if (dto.ImageUrl != null) review.ImageUrl = dto.ImageUrl;
 
                 await _reviewRepo.UpdateAsync(reviewId, review);
-
                 await _unitOfWork.CommitAsync();
 
                 return MapToDto(review);
@@ -103,24 +93,19 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region DELETE
-
+        // ── DELETE REVIEW ─────────────────────────────────────────────────────
         public async Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var review = await _reviewRepo.GetAsync(reviewId)
-                    ?? throw new NotFoundException("Review not found");
+                    ?? throw new NotFoundException("Review not found.");
 
                 if (review.UserId != userId)
-                    throw new ReviewException("Not allowed");
+                    throw new ReviewException("You are not allowed to delete this review.");
 
                 var deleted = await _reviewRepo.DeleteAsync(reviewId);
-
                 await _unitOfWork.CommitAsync();
 
                 return deleted != null;
@@ -132,10 +117,7 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region GET
-
+        // ── GET REVIEWS BY HOTEL ──────────────────────────────────────────────
         public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize)
         {
             var query = _reviewRepo.GetQueryable()
@@ -143,19 +125,12 @@ namespace HotelBookingAppWebApi.Services
                 .OrderByDescending(r => r.CreatedDate);
 
             var total = await query.CountAsync();
+            var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            var reviews = await query
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            return new PagedReviewResponseDto
-            {
-                TotalCount = total,
-                Reviews = reviews.Select(MapToDto)
-            };
+            return new PagedReviewResponseDto { TotalCount = total, Reviews = reviews.Select(MapToDto) };
         }
 
+        // ── GET MY REVIEWS ────────────────────────────────────────────────────
         public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
         {
             var reviews = await _reviewRepo.GetQueryable()
@@ -171,13 +146,10 @@ namespace HotelBookingAppWebApi.Services
                 HotelName = r.Hotel!.Name,
                 Rating = r.Rating,
                 Comment = r.Comment,
+                ImageUrl = r.ImageUrl,
                 CreatedDate = r.CreatedDate
             });
         }
-
-        #endregion
-
-        #region HELPER
 
         private static ReviewResponseDto MapToDto(Review r) => new()
         {
@@ -186,9 +158,8 @@ namespace HotelBookingAppWebApi.Services
             UserId = r.UserId,
             Rating = r.Rating,
             Comment = r.Comment,
+            ImageUrl = r.ImageUrl,
             CreatedDate = r.CreatedDate
         };
-
-        #endregion
     }
 }

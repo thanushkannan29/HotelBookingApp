@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -31,10 +31,10 @@ namespace HotelBookingAppWebApi.Models
         public Guid? HotelId { get; set; }
         public Hotel? Hotel { get; set; }
 
-
         public ICollection<Reservation>? Reservations { get; set; }
         public ICollection<Review>? Reviews { get; set; }
         public ICollection<Log>? Logs { get; set; }
+        public ICollection<AuditLog>? AuditLogs { get; set; }
     }
 
     public enum UserRole
@@ -43,5 +43,4 @@ namespace HotelBookingAppWebApi.Models
         Admin = 2,
         SuperAdmin = 3
     }
-
 }

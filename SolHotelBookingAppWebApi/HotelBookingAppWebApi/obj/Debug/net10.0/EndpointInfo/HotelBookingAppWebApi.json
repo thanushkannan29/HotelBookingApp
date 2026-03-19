@@ -2,9 +2,42 @@
   "openapi": "3.0.1",
   "info": {
     "title": "Hotel Booking API",
+    "description": "Complete Hotel Booking System — Guest, Admin, SuperAdmin roles",
     "version": "v1"
   },
   "paths": {
+    "/api/admin/audit-logs": {
+      "get": {
+        "tags": [
+          "AdminAuditLog"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/admin/hotels": {
       "put": {
         "tags": [
@@ -143,6 +176,134 @@
             "schema": {
               "type": "string",
               "format": "date"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/refund-requests": {
+      "get": {
+        "tags": [
+          "AdminRefundRequest"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/refund-requests/{id}/approve": {
+      "post": {
+        "tags": [
+          "AdminRefundRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/refund-requests/{id}/reject": {
+      "post": {
+        "tags": [
+          "AdminRefundRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProcessRefundDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/reservations": {
+      "get": {
+        "tags": [
+          "AdminReservation"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
             }
           }
         ],
@@ -296,6 +457,16 @@
       }
     },
     "/api/admin/roomtypes": {
+      "get": {
+        "tags": [
+          "AdminRoomType"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
       "post": {
         "tags": [
           "AdminRoomType"
@@ -605,6 +776,18 @@
         }
       }
     },
+    "/api/guest/refund-requests": {
+      "get": {
+        "tags": [
+          "GuestRefundRequest"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/guest/reservations": {
       "post": {
         "tags": [
@@ -668,6 +851,38 @@
         }
       }
     },
+    "/api/guest/reservations/history": {
+      "get": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/guest/reservations/{code}/cancel": {
       "patch": {
         "tags": [
@@ -702,6 +917,52 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/reservations/available-rooms": {
+      "get": {
+        "tags": [
+          "GuestReservation"
+        ],
+        "parameters": [
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "roomTypeId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "checkIn",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          },
+          {
+            "name": "checkOut",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -809,6 +1070,62 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/hotels/cities": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/hotels/by-city": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "parameters": [
+          {
+            "name": "city",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/hotels/{hotelId}/full-details": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "parameters": [
+          {
+            "name": "hotelId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -1030,6 +1347,96 @@
       "get": {
         "tags": [
           "Reviews"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/audit-logs": {
+      "get": {
+        "tags": [
+          "SuperAdminAuditLog"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/hotels": {
+      "get": {
+        "tags": [
+          "SuperAdminHotel"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/hotels/{id}/block": {
+      "patch": {
+        "tags": [
+          "SuperAdminHotel"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/hotels/{id}/unblock": {
+      "patch": {
+        "tags": [
+          "SuperAdminHotel"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
         ],
         "responses": {
           "200": {
@@ -1305,6 +1712,14 @@
             "minimum": 1,
             "type": "integer",
             "format": "int32"
+          },
+          "selectedRoomIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1331,6 +1746,10 @@
             "maxLength": 1000,
             "minLength": 1,
             "type": "string"
+          },
+          "imageUrl": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1492,6 +1911,19 @@
         "type": "integer",
         "format": "int32"
       },
+      "ProcessRefundDto": {
+        "required": [
+          "adminResponse"
+        ],
+        "type": "object",
+        "properties": {
+          "adminResponse": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "RefundRequestDto": {
         "required": [
           "reason"
@@ -1509,6 +1941,7 @@
         "required": [
           "address",
           "city",
+          "contactNumber",
           "email",
           "hotelName",
           "name",
@@ -1544,6 +1977,11 @@
           "description": {
             "type": "string",
             "nullable": true
+          },
+          "contactNumber": {
+            "maxLength": 15,
+            "minLength": 1,
+            "type": "string"
           }
         },
         "additionalProperties": false
@@ -1581,11 +2019,11 @@
           },
           "checkIn": {
             "type": "string",
-            "format": "date-time"
+            "format": "date"
           },
           "checkOut": {
             "type": "string",
-            "format": "date-time"
+            "format": "date"
           },
           "pageNumber": {
             "type": "integer",
@@ -1657,6 +2095,10 @@
           },
           "comment": {
             "maxLength": 1000,
+            "type": "string",
+            "nullable": true
+          },
+          "imageUrl": {
             "type": "string",
             "nullable": true
           }
@@ -1770,6 +2212,10 @@
           "pincode": {
             "type": "string",
             "nullable": true
+          },
+          "profileImageUrl": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -1778,7 +2224,7 @@
     "securitySchemes": {
       "Bearer": {
         "type": "http",
-        "description": "Enter Bearer {token}",
+        "description": "Enter: Bearer {your JWT token}",
         "scheme": "bearer",
         "bearerFormat": "JWT"
       }

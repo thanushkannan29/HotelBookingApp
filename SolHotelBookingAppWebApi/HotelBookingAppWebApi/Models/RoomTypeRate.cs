@@ -1,4 +1,3 @@
-﻿using Microsoft.EntityFrameworkCore;
 using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
@@ -16,10 +15,9 @@ namespace HotelBookingAppWebApi.Models
 
         [Required]
         public DateOnly EndDate { get; set; }
-        [Required]
-      
-        public decimal Rate { get; set; }
 
+        [Required]
+        public decimal Rate { get; set; }
 
         public RoomType? RoomType { get; set; }
     }

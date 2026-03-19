@@ -1,0 +1,46 @@
+<div class="container d-flex justify-content-center align-items-center vh-100">
+  <div class="card shadow p-4" style="width: 400px;">
+
+    <h3 class="text-center mb-3">Hotel Booking</h3>
+
+    <div class="btn-group w-100 mb-3">
+      <button class="btn btn-outline-primary" (click)="mode='login'">Login</button>
+      <button class="btn btn-outline-success" (click)="mode='guest'">Guest</button>
+      <button class="btn btn-outline-warning" (click)="mode='admin'">Admin</button>
+    </div>
+
+    <form (ngSubmit)="submit()">
+
+      <input class="form-control mb-2" placeholder="Name"
+             *ngIf="mode !== 'login'"
+             [(ngModel)]="form.name" name="name">
+
+      <input class="form-control mb-2" placeholder="Email"
+             [(ngModel)]="form.email" name="email">
+
+      <input class="form-control mb-2" type="password"
+             placeholder="Password"
+             [(ngModel)]="form.password" name="password">
+
+      <!-- Admin extra fields -->
+      <div *ngIf="mode === 'admin'">
+        <input class="form-control mb-2" placeholder="Hotel Name"
+               [(ngModel)]="form.hotelName" name="hotelName">
+
+        <input class="form-control mb-2" placeholder="Address"
+               [(ngModel)]="form.address" name="address">
+
+        <input class="form-control mb-2" placeholder="City"
+               [(ngModel)]="form.city" name="city">
+
+        <input class="form-control mb-2" placeholder="Description"
+               [(ngModel)]="form.description" name="description">
+      </div>
+
+      <button class="btn btn-primary w-100 mt-2">
+        {{ mode | uppercase }}
+      </button>
+
+    </form>
+  </div>
+</div>

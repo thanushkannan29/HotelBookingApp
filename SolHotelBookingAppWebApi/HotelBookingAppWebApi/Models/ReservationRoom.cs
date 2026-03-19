@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -20,11 +20,7 @@ namespace HotelBookingAppWebApi.Models
         public decimal PricePerNight { get; set; }
 
         public Reservation? Reservation { get; set; }
-
         public RoomType? RoomType { get; set; }
-
         public Room? Room { get; set; }
     }
-
-
 }

@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
@@ -16,39 +16,43 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IUnitOfWork _unitOfWork;
 
-
         public TransactionService(
             IRepository<Guid, Transaction> transactionRepo,
             IRepository<Guid, Reservation> reservationRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
-            IRepository<Guid,User> userRepo,
+            IRepository<Guid, User> userRepo,
             IUnitOfWork unitOfWork)
         {
             _transactionRepo = transactionRepo;
             _reservationRepo = reservationRepo;
             _inventoryRepo = inventoryRepo;
-            _unitOfWork = unitOfWork;
             _userRepo = userRepo;
+            _unitOfWork = unitOfWork;
         }
 
-        #region CREATE PAYMENT
-
+        // ── CREATE PAYMENT ────────────────────────────────────────────────────
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var reservation = await _reservationRepo.GetQueryable()
                     .Include(r => r.Transactions)
                     .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId)
-                    ?? throw new NotFoundException("Reservation not found");
+                    ?? throw new NotFoundException("Reservation not found.");
 
                 if (reservation.Status == ReservationStatus.Cancelled)
-                    throw new PaymentException("Cannot pay cancelled reservation");
+                    throw new PaymentException("Cannot pay for a cancelled reservation.");
 
-                if (reservation.Transactions.Any(t => t.Status == PaymentStatus.Success))
-                    throw new PaymentException("Already paid");
+                if (reservation.Status == ReservationStatus.Completed)
+                    throw new PaymentException("Cannot pay for a completed reservation.");
+
+                if (reservation.ExpiryTime.HasValue && reservation.ExpiryTime < DateTime.UtcNow
+                    && reservation.Status == ReservationStatus.Pending)
+                    throw new PaymentException("Reservation has expired. Please create a new booking.");
+
+                if (reservation.Transactions!.Any(t => t.Status == PaymentStatus.Success))
+                    throw new PaymentException("This reservation has already been paid.");
 
                 var transaction = new Transaction
                 {
@@ -60,10 +64,10 @@ namespace HotelBookingAppWebApi.Services
                     TransactionDate = DateTime.UtcNow
                 };
 
+                // Promote reservation to Confirmed on successful payment
                 reservation.Status = ReservationStatus.Confirmed;
 
                 await _transactionRepo.AddAsync(transaction);
-
                 await _unitOfWork.CommitAsync();
 
                 return MapToDto(transaction);
@@ -75,40 +79,39 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region REFUND
-
+        // ── DIRECT REFUND (Legacy / admin-initiated) ──────────────────────────
+        // NOTE: In the new flow, refunds go through RefundRequestService (approve step).
+        // This endpoint is kept for backward compatibility / admin override.
         public async Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
                 var transaction = await _transactionRepo.GetQueryable()
                     .Include(t => t.Reservation)
-                    .ThenInclude(r => r.ReservationRooms)
+                        .ThenInclude(r => r!.ReservationRooms)
                     .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
-                    ?? throw new NotFoundException("Transaction not found");
+                    ?? throw new NotFoundException("Transaction not found.");
 
                 if (transaction.Status != PaymentStatus.Success)
-                    throw new PaymentException("Only successful payments can be refunded");
+                    throw new PaymentException("Only successful transactions can be refunded.");
 
-                var reservation = transaction.Reservation;
+                var reservation = transaction.Reservation!;
 
                 if (reservation.Status == ReservationStatus.Completed)
-                    throw new PaymentException("Completed reservations cannot be refunded");
+                    throw new PaymentException("Completed reservations cannot be refunded.");
 
-                // Update statuses
+                // Mark transaction refunded
                 transaction.Status = PaymentStatus.Refunded;
+
+                // Cancel reservation
                 reservation.Status = ReservationStatus.Cancelled;
                 reservation.CancelledDate = DateTime.UtcNow;
                 reservation.CancellationReason = dto.Reason;
 
-                // Inventory restore
-                var room = reservation.ReservationRooms.First();
+                // Restore inventory
+                var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
                 var roomCount = reservation.ReservationRooms.Count;
-
                 var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
 
                 var dates = Enumerable.Range(0, totalDays)
@@ -116,16 +119,13 @@ namespace HotelBookingAppWebApi.Services
                     .ToList();
 
                 var inventories = await _inventoryRepo.GetQueryable()
-                    .Where(i => i.RoomTypeId == room.RoomTypeId && dates.Contains(i.Date))
+                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
                     .ToListAsync();
 
                 foreach (var inv in inventories)
-                {
-                    inv.ReservedInventory -= roomCount;
-                }
+                    inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
 
                 await _unitOfWork.CommitAsync();
-
                 return MapToDto(transaction);
             }
             catch
@@ -135,33 +135,29 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        #endregion
-
-        #region GET ALL (PAGINATION)
-
-        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize)
+        // ── GET ALL TRANSACTIONS (Role-based) ─────────────────────────────────
+        public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
+            Guid userId, string role, int page, int pageSize)
         {
-            var query = _transactionRepo.GetQueryable();
+            var query = _transactionRepo.GetQueryable().AsQueryable();
 
-            //  ROLE-BASED FILTERING
             if (role == "Guest")
             {
                 query = query.Where(t => t.Reservation!.UserId == userId);
             }
             else if (role == "Admin")
             {
-                // get admin hotel
                 var hotelId = await _userRepo.GetQueryable()
                     .Where(u => u.UserId == userId)
                     .Select(u => u.HotelId)
                     .FirstOrDefaultAsync();
 
                 if (hotelId == null)
-                    throw new NotFoundException("Admin hotel not found");
+                    throw new NotFoundException("Admin hotel not found.");
 
                 query = query.Where(t => t.Reservation!.HotelId == hotelId);
             }
-            // SuperAdmin → no filter (gets all)
+            // SuperAdmin → no filter
 
             var total = await query.CountAsync();
 
@@ -178,11 +174,6 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-
-        #endregion
-
-        #region HELPER
-
         private static TransactionResponseDto MapToDto(Transaction t) => new()
         {
             TransactionId = t.TransactionId,
@@ -192,7 +183,5 @@ namespace HotelBookingAppWebApi.Services
             Status = t.Status,
             TransactionDate = t.TransactionDate
         };
-
-        #endregion
     }
 }

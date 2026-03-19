@@ -1,4 +1,4 @@
-﻿using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
@@ -24,18 +24,13 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        
-        // GET PROFILE
-        
+        // ── GET PROFILE ───────────────────────────────────────────────────────
         public async Task<UserProfileResponseDto> GetProfileAsync(Guid userId)
         {
-            var user = await _userRepo
-                .GetQueryable()
+            var user = await _userRepo.GetQueryable()
                 .Include(u => u.UserDetails)
-                .FirstOrDefaultAsync(u => u.UserId == userId);
-
-            if (user == null)
-                throw new NotFoundException("User not found.");
+                .FirstOrDefaultAsync(u => u.UserId == userId)
+                ?? throw new NotFoundException("User not found.");
 
             if (user.UserDetails == null)
                 throw new UserProfileException("Profile details not found.");
@@ -43,51 +38,31 @@ namespace HotelBookingAppWebApi.Services
             return MapToDto(user);
         }
 
-        
-        // UPDATE PROFILE (TRANSACTION)
-        
-        public async Task<UserProfileResponseDto> UpdateProfileAsync(
-            Guid userId,
-            UpdateUserProfileDto dto)
+        // ── UPDATE PROFILE ────────────────────────────────────────────────────
+        public async Task<UserProfileResponseDto> UpdateProfileAsync(Guid userId, UpdateUserProfileDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
-
             try
             {
-                var user = await _userRepo
-                    .GetQueryable()
+                var user = await _userRepo.GetQueryable()
                     .Include(u => u.UserDetails)
-                    .FirstOrDefaultAsync(u => u.UserId == userId);
-
-                if (user == null)
-                    throw new NotFoundException("User not found.");
+                    .FirstOrDefaultAsync(u => u.UserId == userId)
+                    ?? throw new NotFoundException("User not found.");
 
                 if (user.UserDetails == null)
                     throw new UserProfileException("Profile details not found.");
 
-                var details = user.UserDetails;
+                var d = user.UserDetails;
 
-                // Update only if provided
-                if (!string.IsNullOrWhiteSpace(dto.Name))
-                    details.Name = dto.Name;
-
-                if (!string.IsNullOrWhiteSpace(dto.PhoneNumber))
-                    details.PhoneNumber = dto.PhoneNumber;
-
-                if (!string.IsNullOrWhiteSpace(dto.Address))
-                    details.Address = dto.Address;
-
-                if (!string.IsNullOrWhiteSpace(dto.State))
-                    details.State = dto.State;
-
-                if (!string.IsNullOrWhiteSpace(dto.City))
-                    details.City = dto.City;
-
-                if (!string.IsNullOrWhiteSpace(dto.Pincode))
-                    details.Pincode = dto.Pincode;
+                if (!string.IsNullOrWhiteSpace(dto.Name)) d.Name = dto.Name;
+                if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) d.PhoneNumber = dto.PhoneNumber;
+                if (!string.IsNullOrWhiteSpace(dto.Address)) d.Address = dto.Address;
+                if (!string.IsNullOrWhiteSpace(dto.State)) d.State = dto.State;
+                if (!string.IsNullOrWhiteSpace(dto.City)) d.City = dto.City;
+                if (!string.IsNullOrWhiteSpace(dto.Pincode)) d.Pincode = dto.Pincode;
+                if (dto.ProfileImageUrl != null) d.ProfileImageUrl = dto.ProfileImageUrl;
 
                 await _unitOfWork.CommitAsync();
-
                 return MapToDto(user);
             }
             catch
@@ -97,16 +72,10 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        
-        // BOOKING HISTORY (PAGINATION)
-        
-        public async Task<PagedBookingHistoryDto> GetBookingHistoryAsync(
-            Guid userId,
-            int page,
-            int pageSize)
+        // ── BOOKING HISTORY ───────────────────────────────────────────────────
+        public async Task<PagedBookingHistoryDto> GetBookingHistoryAsync(Guid userId, int page, int pageSize)
         {
-            var query = _reservationRepo
-                .GetQueryable()
+            var query = _reservationRepo.GetQueryable()
                 .Include(r => r.Hotel)
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate);
@@ -124,37 +93,30 @@ namespace HotelBookingAppWebApi.Services
                     CheckInDate = r.CheckInDate,
                     CheckOutDate = r.CheckOutDate,
                     TotalAmount = r.TotalAmount,
-                    Status = r.Status,
+                    Status = r.Status.ToString(),
                     CreatedDate = r.CreatedDate
                 })
                 .ToListAsync();
 
-            return new PagedBookingHistoryDto
-            {
-                TotalCount = total,
-                Bookings = bookings
-            };
+            return new PagedBookingHistoryDto { TotalCount = total, Bookings = bookings };
         }
 
-        
-        // MAPPER
-        
+        // ── MAPPER ────────────────────────────────────────────────────────────
         private static UserProfileResponseDto MapToDto(User user)
         {
             var d = user.UserDetails!;
-
             return new UserProfileResponseDto
             {
                 UserId = user.UserId,
                 Email = user.Email,
                 Role = user.Role.ToString(),
-
                 Name = d.Name,
                 PhoneNumber = d.PhoneNumber,
                 Address = d.Address,
                 State = d.State,
                 City = d.City,
                 Pincode = d.Pincode,
+                ProfileImageUrl = d.ProfileImageUrl,
                 CreatedAt = d.CreatedAt
             };
         }

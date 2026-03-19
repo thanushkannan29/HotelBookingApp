@@ -2,19 +2,21 @@ select * from Users
 select * from Hotels
 select * from UserProfileDetails
 select * from Rooms
-select * from ReservationRooms
+select * from ReservationRooms--booking complte means guest was checked in the hotel need to update in table
 order by RoomId
 select * from RoomTypeRates
 select * from RoomTypes
-select * from RoomTypeInventories -- check toommorw moring cancel or remove this thanush [HttpPatch("adjust")]//this is for reception work offine reserve the room for customer with cash
+select * from RoomTypeInventories
 order by ReservedInventory desc
 select * from Reservations
-select * from Transactions
+select * from Transactions --refund api need to check or remove guest also refund immedily
+--after transaction refund request doing to admin
+--need to remove or make only admin can approve then transaction refund run by admin
 select * from Reviews
-select * from Logs
+select * from Logs -- my log controller need to remove
+select * from AuditLogs
+select * from RefundRequests
 --my superadmin mail id
---thanuhs need to check more service only inventory check for now and remove inventory -ajust tommorow from api
---need to ask mam tommorow about golbal exception have working in response showing but app crash is need to add try catch ask pk and chatgbt
 select * from Users where Email='Thanush@test.com'
 --after add migration run this below command
 UPDATE Users
