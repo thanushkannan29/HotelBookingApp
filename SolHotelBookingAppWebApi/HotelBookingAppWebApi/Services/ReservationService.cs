@@ -270,7 +270,6 @@ namespace HotelBookingAppWebApi.Services
         public async Task<PagedReservationResponseDto> GetHotelReservationsAsync(
             Guid userId, int page, int pageSize)
         {
-            // Resolve the admin's hotel via userRepo
             var admin = await _userRepo.GetAsync(userId)
                 ?? throw new UnAuthorizedException("Unauthorized.");
 
@@ -355,6 +354,10 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── COMPLETE RESERVATION (Admin) ──────────────────────────────────────
+        // When admin marks a reservation as Completed, we also set IsCheckedIn = true.
+        // This means "complete" implies the guest checked in and stayed.
+        // This prevents the NoShowAutoCancelService from mistakenly flagging it,
+        // and gives the frontend a clear checked-in indicator for the guest's history.
         public async Task<bool> CompleteReservationAsync(string code)
         {
             var res = await _reservationRepo.FirstOrDefaultAsync(r => r.ReservationCode == code)
@@ -364,6 +367,7 @@ namespace HotelBookingAppWebApi.Services
                 throw new ValidationException("Only confirmed reservations can be marked as completed.");
 
             res.Status = ReservationStatus.Completed;
+            res.IsCheckedIn = true; // Guest physically checked in — set alongside completion
             await _unitOfWork.SaveChangesAsync();
             return true;
         }

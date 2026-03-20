@@ -7,15 +7,22 @@ order by RoomId
 select * from RoomTypeRates
 select * from RoomTypes
 select * from RoomTypeInventories
-order by ReservedInventory desc
+order by ReservedInventory 
 select * from Reservations
-select * from Transactions --refund api need to check or remove guest also refund immedily
---after transaction refund request doing to admin
---need to remove or make only admin can approve then transaction refund run by admin
+select * from Transactions 
 select * from Reviews
 select * from Logs -- my log controller need to remove
 select * from AuditLogs
-select * from RefundRequests
+select * from RefundRequests 
+
+--changing rejected to pending so check approve is doing refund
+SELECT * 
+FROM RefundRequests 
+WHERE RefundRequestId = 'C79096F3-75E7-461D-B974-5C79A09CE7B2';
+UPDATE RefundRequests
+SET Status = 1
+WHERE RefundRequestId = 'C79096F3-75E7-461D-B974-5C79A09CE7B2';
+
 --my superadmin mail id
 select * from Users where Email='Thanush@test.com'
 --after add migration run this below command

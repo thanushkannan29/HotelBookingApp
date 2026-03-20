@@ -936,7 +936,7 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
-    "Method": "Refund",
+    "Method": "DirectRefund",
     "RelativePath": "api/transactions/{id}/refund",
     "HttpMethod": "POST",
     "IsController": true,

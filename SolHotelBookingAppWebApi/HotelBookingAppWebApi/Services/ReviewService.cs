@@ -12,19 +12,24 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public ReviewService(
             IRepository<Guid, Review> reviewRepo,
             IRepository<Guid, Hotel> hotelRepo,
+            IRepository<Guid, Reservation> reservationRepo,
             IUnitOfWork unitOfWork)
         {
             _reviewRepo = reviewRepo;
             _hotelRepo = hotelRepo;
+            _reservationRepo = reservationRepo;
             _unitOfWork = unitOfWork;
         }
 
         // ── ADD REVIEW ────────────────────────────────────────────────────────
+        // Guest must have a Completed reservation at this hotel before reviewing.
+        // This ensures reviews are from real guests who actually stayed.
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
@@ -35,6 +40,17 @@ namespace HotelBookingAppWebApi.Services
 
                 if (!hotelExists)
                     throw new NotFoundException("Hotel not found.");
+
+                // Verify guest has a completed stay at this hotel
+                var hasCompletedStay = await _reservationRepo.GetQueryable()
+                    .AnyAsync(r =>
+                        r.UserId == userId &&
+                        r.HotelId == dto.HotelId &&
+                        r.Status == ReservationStatus.Completed);
+
+                if (!hasCompletedStay)
+                    throw new ReviewException(
+                        "You can only review a hotel after completing a stay there.");
 
                 var alreadyReviewed = await _reviewRepo.GetQueryable()
                     .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);

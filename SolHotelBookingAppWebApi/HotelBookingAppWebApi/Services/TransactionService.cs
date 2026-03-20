@@ -79,10 +79,11 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        // ── DIRECT REFUND (Legacy / admin-initiated) ──────────────────────────
-        // NOTE: In the new flow, refunds go through RefundRequestService (approve step).
-        // This endpoint is kept for backward compatibility / admin override.
-        public async Task<TransactionResponseDto> RefundAsync(Guid transactionId, RefundRequestDto dto)
+        // ── DIRECT REFUND (Guest only — within 30 minutes of payment) ─────────
+        // The UI hides this button after 30 min. The backend also enforces the window.
+        // Admin refunds must go through the RefundRequest approve/reject flow.
+        public async Task<TransactionResponseDto> DirectGuestRefundAsync(
+            Guid transactionId, Guid userId, RefundRequestDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -90,8 +91,13 @@ namespace HotelBookingAppWebApi.Services
                 var transaction = await _transactionRepo.GetQueryable()
                     .Include(t => t.Reservation)
                         .ThenInclude(r => r!.ReservationRooms)
+                    .Include(t => t.Reservation!.Transactions)
                     .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
                     ?? throw new NotFoundException("Transaction not found.");
+
+                // Ensure the reservation belongs to this guest
+                if (transaction.Reservation!.UserId != userId)
+                    throw new UnAuthorizedException("You are not authorized to refund this transaction.");
 
                 if (transaction.Status != PaymentStatus.Success)
                     throw new PaymentException("Only successful transactions can be refunded.");
@@ -100,6 +106,15 @@ namespace HotelBookingAppWebApi.Services
 
                 if (reservation.Status == ReservationStatus.Completed)
                     throw new PaymentException("Completed reservations cannot be refunded.");
+
+                if (reservation.Status == ReservationStatus.Cancelled)
+                    throw new PaymentException("This reservation is already cancelled.");
+
+                // ── 30-minute guest window enforcement ────────────────────────
+                var minutesSincePayment = (DateTime.UtcNow - transaction.TransactionDate).TotalMinutes;
+                if (minutesSincePayment > 30)
+                    throw new PaymentException(
+                        "Direct refund window has expired. Please submit a refund request instead.");
 
                 // Mark transaction refunded
                 transaction.Status = PaymentStatus.Refunded;

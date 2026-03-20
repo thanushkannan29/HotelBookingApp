@@ -295,7 +295,6 @@ namespace HotelBookingAppWebApi.Services
                 var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
                     ?? throw new NotFoundException("Hotel not found.");
 
-                // Admin cannot activate a hotel blocked by SuperAdmin
                 if (isActive && hotel.IsBlockedBySuperAdmin)
                     throw new ValidationException("Hotel is blocked by SuperAdmin and cannot be activated.");
 
@@ -313,38 +312,44 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── SUPERADMIN: LIST ALL HOTELS ───────────────────────────────────────
+        // Fixed: single query with grouped joins instead of N+1 per-hotel loops.
+        // Fetches all reservation counts and revenue sums in 2 queries, then merges in memory.
         public async Task<IEnumerable<SuperAdminHotelListDto>> GetAllHotelsForSuperAdminAsync()
         {
+            // Query 1: all hotels
             var hotels = await _hotelRepo.GetQueryable()
                 .AsNoTracking()
+                .OrderBy(h => h.Name)
                 .ToListAsync();
 
-            var result = new List<SuperAdminHotelListDto>();
+            // Query 2: reservation counts grouped by hotel
+            var reservationCounts = await _reservationRepo.GetQueryable()
+                .AsNoTracking()
+                .GroupBy(r => r.HotelId)
+                .Select(g => new { HotelId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Count);
 
-            foreach (var h in hotels)
+            // Query 3: revenue sums grouped by hotel (success transactions only)
+            var revenueByHotel = await _transactionRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(t => t.Status == PaymentStatus.Success)
+                .GroupBy(t => t.Reservation!.HotelId)
+                .Select(g => new { HotelId = g.Key, Revenue = g.Sum(t => t.Amount) })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Revenue);
+
+            // Merge in memory — no N+1
+            return hotels.Select(h => new SuperAdminHotelListDto
             {
-                var totalRes = await _reservationRepo.GetQueryable()
-                    .CountAsync(r => r.HotelId == h.HotelId);
-
-                var totalRev = await _transactionRepo.GetQueryable()
-                    .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.HotelId == h.HotelId)
-                    .SumAsync(t => (decimal?)t.Amount) ?? 0;
-
-                result.Add(new SuperAdminHotelListDto
-                {
-                    HotelId = h.HotelId,
-                    Name = h.Name,
-                    City = h.City,
-                    ContactNumber = h.ContactNumber,
-                    IsActive = h.IsActive,
-                    IsBlockedBySuperAdmin = h.IsBlockedBySuperAdmin,
-                    CreatedAt = h.CreatedAt,
-                    TotalReservations = totalRes,
-                    TotalRevenue = totalRev
-                });
-            }
-
-            return result;
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+                ContactNumber = h.ContactNumber,
+                IsActive = h.IsActive,
+                IsBlockedBySuperAdmin = h.IsBlockedBySuperAdmin,
+                CreatedAt = h.CreatedAt,
+                TotalReservations = reservationCounts.TryGetValue(h.HotelId, out var rc) ? rc : 0,
+                TotalRevenue = revenueByHotel.TryGetValue(h.HotelId, out var rv) ? rv : 0m
+            });
         }
 
         // ── SUPERADMIN: BLOCK HOTEL ───────────────────────────────────────────

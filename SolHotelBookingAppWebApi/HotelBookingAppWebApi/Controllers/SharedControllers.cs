@@ -86,6 +86,7 @@ namespace HotelBookingAppWebApi.Controllers
         public TransactionsController(ITransactionService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        /// <summary>Guest pays for a pending reservation</summary>
         [HttpPost]
         [Authorize(Roles = "Guest")]
         public async Task<IActionResult> CreatePayment([FromBody] CreatePaymentDto dto)
@@ -94,14 +95,21 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result });
         }
 
+        /// <summary>
+        /// Guest-only direct refund within 30 minutes of payment.
+        /// The UI should hide this button after 30 min (check TransactionDate).
+        /// Backend also enforces the 30-min window as a safety net.
+        /// After 30 min, guest must cancel reservation → RefundRequest flow instead.
+        /// </summary>
         [HttpPost("{id}/refund")]
-        [Authorize(Roles = "Guest,Admin")]
-        public async Task<IActionResult> Refund(Guid id, [FromBody] RefundRequestDto dto)
+        [Authorize(Roles = "Guest")]
+        public async Task<IActionResult> DirectRefund(Guid id, [FromBody] RefundRequestDto dto)
         {
-            var result = await _service.RefundAsync(id, dto);
+            var result = await _service.DirectGuestRefundAsync(id, GetUserId(), dto);
             return Ok(new { success = true, data = result });
         }
 
+        /// <summary>Get transactions — Guest sees own, Admin sees hotel's, SuperAdmin sees all</summary>
         [HttpGet]
         [Authorize(Roles = "Admin,Guest,SuperAdmin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
@@ -173,7 +181,6 @@ namespace HotelBookingAppWebApi.Controllers
         public LogsController(ILogService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        /// <summary>Any authenticated user can view their own logs</summary>
         [HttpGet("my-logs")]
         public async Task<IActionResult> GetMyLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
@@ -181,7 +188,6 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result });
         }
 
-        /// <summary>SuperAdmin sees all system logs</summary>
         [HttpGet]
         [Authorize(Roles = "SuperAdmin")]
         public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
