@@ -1,0 +1,124 @@
+.page-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.filter-pill {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1.5px solid var(--color-border);
+  background: white;
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: var(--font-body);
+
+  &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  &.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+  }
+}
+
+.booking-list { display: flex; flex-direction: column; gap: 12px; }
+
+.booking-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+  cursor: pointer;
+  transition: all var(--transition);
+
+  &:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+  }
+}
+
+.booking-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.booking-code {
+  font-family: monospace;
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  background: var(--color-surface-alt);
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.booking-hotel {
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin-bottom: 2px;
+}
+
+.booking-room {
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 6px;
+}
+
+.booking-dates {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  color: var(--color-text-secondary);
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}
+
+.booking-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.booking-amount {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+.booked-on {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.checked-in-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  font-size: 0.78rem;
+  color: var(--color-success);
+  font-weight: 500;
+
+  mat-icon { font-size: 14px; width: 14px; height: 14px; }
+}

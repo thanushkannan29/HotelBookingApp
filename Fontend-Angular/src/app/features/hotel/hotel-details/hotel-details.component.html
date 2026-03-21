@@ -1,0 +1,218 @@
+@if (hotel(); as h) {
+  <div class="hotel-details-page animate-fade-in">
+
+    <!-- Hero -->
+    <div class="hotel-hero">
+      @if (h.imageUrl) {
+        <img [src]="h.imageUrl" [alt]="h.name" class="hero-img" />
+      } @else {
+        <div class="hero-placeholder"><span>{{ h.name.charAt(0) }}</span></div>
+      }
+      <div class="hero-overlay">
+        <div class="container">
+          <a routerLink="/hotels" class="back-link">
+            <mat-icon>arrow_back</mat-icon> All Hotels
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="details-layout">
+
+        <!-- Main -->
+        <div class="main-content">
+          <div class="hotel-header">
+            <div>
+              <h1 class="hotel-title">{{ h.name }}</h1>
+              <div class="hotel-meta">
+                <span><mat-icon>place</mat-icon>{{ h.address }}, {{ h.city }}</span>
+                <span><mat-icon>phone</mat-icon>{{ h.contactNumber }}</span>
+              </div>
+            </div>
+            <div class="rating-block">
+              <div class="big-rating">{{ h.averageRating | number:'1.1-1' }}</div>
+              <div class="star-row">
+                @for (s of stars; track $index) {
+                  <mat-icon class="star" [class.filled]="s <= h.averageRating">star</mat-icon>
+                }
+              </div>
+              <span class="review-count">{{ h.reviewCount }} reviews</span>
+            </div>
+          </div>
+
+          <mat-divider />
+
+          <mat-tab-group animationDuration="200ms">
+
+            <!-- Overview -->
+            <mat-tab label="Overview">
+              <div class="tab-content">
+                @if (h.description) {
+                  <p class="description">{{ h.description }}</p>
+                }
+                @if (h.amenities.length > 0) {
+                  <h3 class="section-label">Amenities</h3>
+                  <div class="amenities-grid">
+                    @for (a of h.amenities; track $index) {
+                      <div class="amenity-chip">
+                        <mat-icon>check_circle</mat-icon>{{ a }}
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </mat-tab>
+
+            <!-- Rooms -->
+            <mat-tab label="Rooms">
+              <div class="tab-content">
+                @for (rt of h.roomTypes; track rt.roomTypeId) {
+                  <div class="room-type-card">
+                    <div class="rt-header">
+                      <h3>{{ rt.name }}</h3>
+                      <span class="occupancy">
+                        <mat-icon>people</mat-icon>Up to {{ rt.maxOccupancy }} guests
+                      </span>
+                    </div>
+                    @if (rt.description) { <p class="rt-desc">{{ rt.description }}</p> }
+                    @if (rt.amenities.length > 0) {
+                      <div class="rt-amenities">
+                        @for (a of rt.amenities; track $index) {
+                          <span class="rt-amenity">{{ a }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+              </div>
+            </mat-tab>
+
+            <!-- Reviews -->
+            <mat-tab [label]="'Reviews (' + h.reviewCount + ')'">
+              <div class="tab-content">
+                @if (h.reviews.length === 0) {
+                  <div class="empty-state">
+                    <mat-icon class="empty-icon">star_border</mat-icon>
+                    <h3>No reviews yet</h3>
+                  </div>
+                }
+                @for (review of h.reviews; track review.createdDate) {
+                  <div class="review-card">
+                    <div class="review-header">
+                      <div class="reviewer-avatar">{{ review.userName.charAt(0).toUpperCase() }}</div>
+                      <div>
+                        <strong>{{ review.userName }}</strong>
+                        <div class="review-stars">
+                          @for (s of stars; track $index) {
+                            <mat-icon class="review-star" [class.filled]="s <= review.rating">star</mat-icon>
+                          }
+                        </div>
+                      </div>
+                      <span class="review-date">{{ review.createdDate | date:'MMM d, y' }}</span>
+                    </div>
+                    <p class="review-text">{{ review.comment }}</p>
+                    @if (review.imageUrl) {
+                      <img [src]="review.imageUrl" alt="Review photo" class="review-photo" />
+                    }
+                  </div>
+                }
+              </div>
+            </mat-tab>
+
+          </mat-tab-group>
+        </div>
+
+        <!-- Booking Sidebar -->
+        <aside class="booking-sidebar">
+          <div class="booking-card">
+            <h3 class="booking-title">Check Availability</h3>
+
+            <!-- Date Picker -->
+            <form [formGroup]="dateForm" class="date-form">
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Check-in</mat-label>
+                <input matInput [matDatepicker]="ciPick"
+                       formControlName="checkIn" [min]="today" readonly />
+                <mat-datepicker-toggle matSuffix [for]="ciPick" />
+                <mat-datepicker #ciPick />
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="date-field">
+                <mat-label>Check-out</mat-label>
+                <input matInput [matDatepicker]="coPick"
+                       formControlName="checkOut" [min]="checkOutMin" readonly />
+                <mat-datepicker-toggle matSuffix [for]="coPick" />
+                <mat-datepicker #coPick />
+              </mat-form-field>
+            </form>
+
+            @if (totalNights > 0) {
+              <div class="nights-pill">
+                <mat-icon>nights_stay</mat-icon>
+                {{ totalNights }} night{{ totalNights > 1 ? 's' : '' }}
+              </div>
+            }
+
+            <!-- Availability Results -->
+            @if (isLoadingAvail()) {
+              <div class="avail-loading">
+                <span>Checking availability…</span>
+              </div>
+            } @else if (availability().length > 0) {
+              <div class="avail-list">
+                @for (avail of availability(); track avail.roomTypeId) {
+                  <div class="avail-item" [class.full]="avail.availableRooms === 0">
+                    <div class="avail-top">
+                      <span class="avail-name">{{ avail.roomTypeName }}</span>
+                      @if (avail.availableRooms === 0) {
+                        <span class="badge badge-error">Fully Booked</span>
+                      } @else {
+                        <span class="badge badge-success">{{ avail.availableRooms }} left</span>
+                      }
+                    </div>
+                    <div class="avail-price-row">
+                      <div class="avail-price">
+                        ₹{{ avail.pricePerNight | number:'1.0-0' }}<span>/night</span>
+                      </div>
+                      @if (totalNights > 0 && avail.availableRooms > 0) {
+                        <div class="avail-total">
+                          ₹{{ avail.pricePerNight * totalNights | number:'1.0-0' }} total
+                        </div>
+                      }
+                    </div>
+                    @if (avail.availableRooms > 0) {
+                      @if (auth.isGuest()) {
+                        <a mat-flat-button color="primary" class="book-btn"
+                           [routerLink]="['/booking/create']"
+                           [queryParams]="{hotelId: hotelId, roomTypeId: avail.roomTypeId, checkIn: checkInStr, checkOut: checkOutStr}">
+                          Book Now
+                        </a>
+                      } @else if (!auth.isAuthenticated()) {
+                        <a mat-flat-button color="primary" class="book-btn"
+                           routerLink="/auth/login">
+                          Sign in to Book
+                        </a>
+                      }
+                    }
+                  </div>
+                }
+              </div>
+            } @else {
+              <div class="no-avail">
+                <mat-icon>event_busy</mat-icon>
+                <p>No rooms available for these dates</p>
+              </div>
+            }
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+} @else {
+  <div class="page-wrapper container">
+    <div class="empty-state">
+      <mat-icon class="empty-icon">hotel</mat-icon>
+      <h3>Loading hotel details…</h3>
+    </div>
+  </div>
+}

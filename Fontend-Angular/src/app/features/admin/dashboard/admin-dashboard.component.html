@@ -1,0 +1,148 @@
+<div class="page-wrapper">
+  <div class="container">
+
+    @if (data(); as d) {
+      <!-- Header with hotel status -->
+      <div class="admin-header animate-fade-in">
+        <div class="welcome-block">
+          <div class="welcome-avatar">
+            @if (profile()?.profileImageUrl) {
+              <img [src]="profile()!.profileImageUrl!" [alt]="auth.currentUser()?.userName" />
+            } @else {
+              <span>{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</span>
+            }
+          </div>
+          <div>
+            <p class="welcome-greeting">Welcome back, {{ auth.currentUser()?.userName }}</p>
+            <h1 class="section-title" style="margin-bottom:6px;">{{ d.hotelName }}</h1>
+            <div class="header-badges">
+              @if (d.isBlockedBySuperAdmin) {
+                <span class="badge badge-error">🚫 Blocked by SuperAdmin</span>
+              } @else if (d.isActive) {
+                <span class="badge badge-success">● Live</span>
+              } @else {
+                <span class="badge badge-muted">○ Inactive</span>
+              }
+              <span class="badge badge-muted">{{ d.averageRating }} ★ avg</span>
+            </div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button mat-stroked-button [color]="d.isActive ? 'warn' : 'primary'"
+                  [disabled]="isTogglingStatus() || d.isBlockedBySuperAdmin"
+                  (click)="toggleHotelStatus()">
+            <mat-icon>{{ d.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+            {{ d.isActive ? 'Deactivate' : 'Activate' }} Hotel
+          </button>
+          <a mat-flat-button color="primary" routerLink="/admin/hotel">
+            <mat-icon>edit</mat-icon> Edit Hotel
+          </a>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-icon rooms"><mat-icon>meeting_room</mat-icon></div>
+          <div class="kpi-body">
+            <div class="kpi-value">{{ d.activeRooms }}<span>/{{ d.totalRooms }}</span></div>
+            <div class="kpi-label">Active Rooms</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon bookings"><mat-icon>book_online</mat-icon></div>
+          <div class="kpi-body">
+            <div class="kpi-value">{{ d.totalReservations }}</div>
+            <div class="kpi-label">Total Reservations</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon revenue"><mat-icon>payments</mat-icon></div>
+          <div class="kpi-body">
+            <div class="kpi-value">₹{{ d.totalRevenue | number:'1.0-0' }}</div>
+            <div class="kpi-label">Total Revenue</div>
+          </div>
+        </div>
+
+        <div class="kpi-card">
+          <div class="kpi-icon reviews"><mat-icon>star</mat-icon></div>
+          <div class="kpi-body">
+            <div class="kpi-value">{{ d.averageRating | number:'1.1-1' }}</div>
+            <div class="kpi-label">Average Rating ({{ d.totalReviews }} reviews)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reservation Breakdown + Quick Nav -->
+      <div class="grid-2">
+        <!-- Reservation Status -->
+        <div class="panel">
+          <h3 class="panel-title">Reservation Status</h3>
+          <div class="status-list">
+            <div class="status-row">
+              <span class="s-label">Pending</span>
+              <div class="s-bar-wrap">
+                <div class="s-bar warning" [style.width.%]="d.totalReservations ? (d.pendingReservations / d.totalReservations * 100) : 0"></div>
+              </div>
+              <span class="s-num">{{ d.pendingReservations }}</span>
+            </div>
+            <div class="status-row">
+              <span class="s-label">Confirmed</span>
+              <div class="s-bar-wrap">
+                <div class="s-bar success" [style.width.%]="d.totalReservations ? (d.activeReservations / d.totalReservations * 100) : 0"></div>
+              </div>
+              <span class="s-num">{{ d.activeReservations }}</span>
+            </div>
+            <div class="status-row">
+              <span class="s-label">Completed</span>
+              <div class="s-bar-wrap">
+                <div class="s-bar primary" [style.width.%]="d.totalReservations ? (d.completedReservations / d.totalReservations * 100) : 0"></div>
+              </div>
+              <span class="s-num">{{ d.completedReservations }}</span>
+            </div>
+            <div class="status-row">
+              <span class="s-label">Cancelled</span>
+              <div class="s-bar-wrap">
+                <div class="s-bar error" [style.width.%]="d.totalReservations ? (d.cancelledReservations / d.totalReservations * 100) : 0"></div>
+              </div>
+              <span class="s-num">{{ d.cancelledReservations }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Navigation -->
+        <div class="panel">
+          <h3 class="panel-title">Manage</h3>
+          <div class="nav-grid">
+            <a class="nav-item" routerLink="/admin/rooms">
+              <mat-icon>bed</mat-icon><span>Rooms</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/roomtypes">
+              <mat-icon>category</mat-icon><span>Room Types</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/inventory">
+              <mat-icon>inventory_2</mat-icon><span>Inventory</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/reservations">
+              <mat-icon>event_note</mat-icon><span>Reservations</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/refunds" [class.alert]="d.pendingRefundRequests > 0">
+              <mat-icon>replay</mat-icon>
+              <span>Refunds
+                @if (d.pendingRefundRequests > 0) {
+                  <span class="alert-dot">{{ d.pendingRefundRequests }}</span>
+                }
+              </span>
+            </a>
+            <a class="nav-item" routerLink="/admin/audit-logs">
+              <mat-icon>history</mat-icon><span>Audit Logs</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    }
+
+  </div>
+</div>

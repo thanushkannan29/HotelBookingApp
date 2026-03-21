@@ -1,0 +1,74 @@
+.page-header-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: 8px;
+    &:hover { color: var(--color-primary); }
+  }
+}
+
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+
+.filter-pill {
+  padding: 6px 16px; border-radius: 20px; border: 1.5px solid var(--color-border);
+  background: white; font-size: 0.82rem; font-weight: 500; color: var(--color-text-secondary);
+  cursor: pointer; transition: all var(--transition); font-family: var(--font-body);
+  &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  &.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+}
+
+.hotels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+.hotel-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+
+  &:hover { box-shadow: var(--shadow-md); }
+  &.blocked { border-left: 3px solid var(--color-error); }
+}
+
+.hc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 20px 20px 0;
+  gap: 12px;
+
+  .hc-name { font-size: 1rem; font-weight: 600; margin-bottom: 3px; }
+  .hc-city {
+    display: flex; align-items: center; gap: 3px;
+    font-size: 0.8rem; color: var(--color-text-secondary);
+    mat-icon { font-size: 13px; width: 13px; height: 13px; }
+  }
+}
+
+.hc-badges { display: flex; flex-direction: column; gap: 4px; align-items: flex-end; }
+
+.hc-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 16px 20px;
+
+  .hc-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    .label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); }
+    .value { font-size: 0.9rem; font-weight: 500; color: var(--color-text-primary); }
+  }
+}
+
+.hc-actions {
+  padding: 12px 20px 20px;
+  border-top: 1px solid var(--color-border);
+}

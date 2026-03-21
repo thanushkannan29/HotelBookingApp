@@ -1,0 +1,73 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">Reservations</h1>
+        <p class="section-subtitle">{{ total() }} total reservations</p>
+      </div>
+    </div>
+
+    <!-- Filter Row -->
+    <div class="filter-row">
+      @for (f of filters; track f) {
+        <button class="filter-pill" [class.active]="filter() === f" (click)="filter.set(f)">
+          {{ f === 'all' ? 'All' : f }}
+        </button>
+      }
+    </div>
+
+    <!-- Table -->
+    @if (filtered.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">event_note</mat-icon>
+        <h3>No reservations</h3>
+      </div>
+    } @else {
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Code</th><th>Guest</th><th>Room Type</th>
+              <th>Check-in</th><th>Check-out</th><th>Amount</th>
+              <th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (res of filtered; track res.reservationId) {
+              <tr>
+                <td><span class="res-code">{{ res.reservationCode }}</span></td>
+                <td>{{ res.hotelName }}</td>
+                <td>{{ res.roomTypeName }}</td>
+                <td>{{ res.checkInDate | date:'MMM d, y' }}</td>
+                <td>{{ res.checkOutDate | date:'MMM d, y' }}</td>
+                <td>₹{{ res.totalAmount | number:'1.0-0' }}</td>
+                <td><span class="badge {{ statusClass(res.status) }}">{{ res.status }}</span></td>
+                <td>
+                  @if (res.status === 'Confirmed') {
+                    <button mat-stroked-button color="primary" (click)="complete(res.reservationCode)">
+                      <mat-icon>check_circle</mat-icon> Complete
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button mat-stroked-button [disabled]="page() === 1" (click)="prevPage()">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span>Page {{ page() }} of {{ totalPages }}</span>
+          <button mat-stroked-button [disabled]="page() === totalPages" (click)="nextPage()">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

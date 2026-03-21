@@ -1,0 +1,103 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width: 900px;">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">Refund Requests</h1>
+        <p class="section-subtitle">{{ pendingRefunds.length }} pending · {{ refunds().length }} total</p>
+      </div>
+    </div>
+
+    <!-- Pending Refunds -->
+    @if (pendingRefunds.length > 0) {
+      <h3 class="group-label">Pending Action</h3>
+      <div class="refund-list mb-6">
+        @for (r of pendingRefunds; track r.refundRequestId) {
+          <div class="refund-card pending">
+            <div class="rf-main">
+              <div>
+                <div class="rf-code">{{ r.reservationCode }}</div>
+                <div class="rf-guest">{{ r.guestName }}</div>
+                <p class="rf-reason">{{ r.reason }}</p>
+                <div class="rf-meta">
+                  <span>₹{{ r.refundAmount | number:'1.0-0' }}</span>
+                  <span>{{ r.createdAt | date:'MMM d, y' }}</span>
+                </div>
+              </div>
+              @if (processingId() !== r.refundRequestId) {
+                <div class="rf-actions">
+                  <button mat-flat-button color="primary" (click)="startAction(r.refundRequestId, 'approve')">
+                    <mat-icon>check</mat-icon> Approve
+                  </button>
+                  <button mat-stroked-button color="warn" (click)="startAction(r.refundRequestId, 'reject')">
+                    <mat-icon>close</mat-icon> Reject
+                  </button>
+                </div>
+              }
+            </div>
+
+            <!-- Inline Response Form -->
+            @if (processingId() === r.refundRequestId) {
+              <div class="response-form" [class]="actionType() === 'approve' ? 'approve-form' : 'reject-form'">
+                <p class="action-label">
+                  {{ actionType() === 'approve' ? '✓ Approving refund' : '✕ Rejecting refund' }} for {{ r.guestName }}
+                </p>
+                <form [formGroup]="responseForm">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Response message to guest</mat-label>
+                    <textarea matInput formControlName="adminResponse" rows="2"></textarea>
+                    @if (responseForm.get('adminResponse')?.hasError('required') && responseForm.get('adminResponse')?.touched) {
+                      <mat-error>Response is required</mat-error>
+                    }
+                  </mat-form-field>
+                </form>
+                <div class="response-actions">
+                  <button mat-stroked-button (click)="cancelAction()" type="button">Cancel</button>
+                  <button mat-flat-button [color]="actionType() === 'approve' ? 'primary' : 'warn'"
+                          (click)="submit()" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Processing…' : (actionType() === 'approve' ? 'Confirm Approval' : 'Confirm Rejection') }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Processed Refunds -->
+    @if (otherRefunds.length > 0) {
+      <h3 class="group-label">Processed</h3>
+      <div class="refund-list">
+        @for (r of otherRefunds; track r.refundRequestId) {
+          <div class="refund-card">
+            <div class="rf-main">
+              <div>
+                <div class="rf-code">{{ r.reservationCode }}</div>
+                <div class="rf-guest">{{ r.guestName }}</div>
+                <p class="rf-reason">{{ r.reason }}</p>
+                <div class="rf-meta">
+                  <span>₹{{ r.refundAmount | number:'1.0-0' }}</span>
+                  <span>{{ r.createdAt | date:'MMM d, y' }}</span>
+                  @if (r.processedAt) { <span>Processed {{ r.processedAt | date:'MMM d' }}</span> }
+                </div>
+                @if (r.adminResponse) {
+                  <p class="rf-admin-note">Admin: {{ r.adminResponse }}</p>
+                }
+              </div>
+              <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    }
+
+    @if (refunds().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">replay</mat-icon>
+        <h3>No refund requests</h3>
+        <p>Refund requests will appear here when guests cancel paid bookings</p>
+      </div>
+    }
+  </div>
+</div>

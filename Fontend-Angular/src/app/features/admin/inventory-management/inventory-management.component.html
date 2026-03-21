@@ -1,0 +1,174 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">Inventory Management</h1>
+        <p class="section-subtitle">Set room availability per day and date range</p>
+      </div>
+    </div>
+
+    <div class="inv-layout">
+      <!-- Left: Controls -->
+      <div class="inv-controls">
+
+        <!-- Set Inventory -->
+        <div class="form-card">
+          <h3 class="form-card-title">Set Inventory (Date Range)</h3>
+          <form [formGroup]="addForm" (ngSubmit)="addInventory()">
+            <div class="inv-form-grid">
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Room Type</mat-label>
+                <mat-select formControlName="roomTypeId">
+                  @for (rt of roomTypes(); track rt.roomTypeId) {
+                    <mat-option [value]="rt.roomTypeId">{{ rt.name }}</mat-option>
+                  }
+                </mat-select>
+                @if (addForm.get('roomTypeId')?.hasError('required') && addForm.get('roomTypeId')?.touched) {
+                  <mat-error>Select a room type</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Start Date</mat-label>
+                <input matInput [matDatepicker]="startPicker"
+                       formControlName="startDate" [min]="today" readonly />
+                <mat-datepicker-toggle matSuffix [for]="startPicker" />
+                <mat-datepicker #startPicker />
+                @if (addForm.get('startDate')?.hasError('required') && addForm.get('startDate')?.touched) {
+                  <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>End Date</mat-label>
+                <input matInput [matDatepicker]="endPicker"
+                       formControlName="endDate"
+                       [min]="addForm.get('startDate')?.value ?? today" readonly />
+                <mat-datepicker-toggle matSuffix [for]="endPicker" />
+                <mat-datepicker #endPicker />
+                @if (addForm.get('endDate')?.hasError('required') && addForm.get('endDate')?.touched) {
+                  <mat-error>Required</mat-error>
+                }
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Rooms Available Per Day</mat-label>
+                <input matInput type="number" formControlName="totalInventory" min="1" />
+                <mat-icon matPrefix>meeting_room</mat-icon>
+                @if (addForm.get('totalInventory')?.hasError('min')) {
+                  <mat-error>At least 1 room</mat-error>
+                }
+              </mat-form-field>
+            </div>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+              @if (isSaving()) { Saving… } @else { Set Inventory }
+            </button>
+          </form>
+        </div>
+
+        <!-- View Inventory -->
+        <div class="form-card">
+          <h3 class="form-card-title">View Inventory</h3>
+          <form [formGroup]="viewForm" class="inv-form-grid">
+            <mat-form-field appearance="outline" class="span-2">
+              <mat-label>Room Type</mat-label>
+              <mat-select formControlName="roomTypeId">
+                @for (rt of roomTypes(); track rt.roomTypeId) {
+                  <mat-option [value]="rt.roomTypeId">{{ rt.name }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>From</mat-label>
+              <input matInput [matDatepicker]="viewStartPicker"
+                     formControlName="start" readonly />
+              <mat-datepicker-toggle matSuffix [for]="viewStartPicker" />
+              <mat-datepicker #viewStartPicker />
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>To</mat-label>
+              <input matInput [matDatepicker]="viewEndPicker"
+                     formControlName="end"
+                     [min]="viewForm.get('start')?.value" readonly />
+              <mat-datepicker-toggle matSuffix [for]="viewEndPicker" />
+              <mat-datepicker #viewEndPicker />
+            </mat-form-field>
+          </form>
+          <button mat-stroked-button color="primary" (click)="loadInventory()"
+                  [disabled]="viewForm.invalid">
+            <mat-icon>search</mat-icon> Load Inventory
+          </button>
+        </div>
+      </div>
+
+      <!-- Right: Table -->
+      <div class="inv-table-wrap">
+        @if (inventory().length === 0) {
+          <div class="empty-state" style="padding:40px;">
+            <mat-icon class="empty-icon">inventory_2</mat-icon>
+            <h3>Select a room type and date range</h3>
+            <p>Inventory records will appear here</p>
+          </div>
+        } @else {
+          <div class="table-card">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Total</th><th>Reserved</th>
+                  <th>Available</th><th>Edit</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (inv of inventory(); track inv.roomTypeInventoryId) {
+                  <tr>
+                    <td>{{ inv.date | date:'EEE, MMM d, y' }}</td>
+                    <td>
+                      @if (editingId() === inv.roomTypeInventoryId) {
+                        <input class="inline-input" type="number"
+                               [value]="editValue()"
+                               (input)="editValue.set(+$any($event.target).value)"
+                               min="1" />
+                      } @else {
+                        {{ inv.totalInventory }}
+                      }
+                    </td>
+                    <td>{{ inv.reservedInventory }}</td>
+                    <td>
+                      <span class="badge"
+                            [class]="inv.available > 0 ? 'badge-success' : 'badge-error'">
+                        {{ inv.available }}
+                      </span>
+                    </td>
+                    <td>
+                      @if (editingId() === inv.roomTypeInventoryId) {
+                        <button mat-icon-button color="primary"
+                                (click)="saveEditInv(inv)"
+                                matTooltip="Save">
+                          <mat-icon>check</mat-icon>
+                        </button>
+                        <button mat-icon-button
+                                (click)="editingId.set(null)"
+                                matTooltip="Cancel">
+                          <mat-icon>close</mat-icon>
+                        </button>
+                      } @else {
+                        <button mat-icon-button
+                                (click)="startEditInv(inv)"
+                                matTooltip="Edit total inventory">
+                          <mat-icon>edit</mat-icon>
+                        </button>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

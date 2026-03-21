@@ -1,0 +1,110 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="sa-header">
+      <div>
+        <h1 class="section-title">System Overview</h1>
+        <p class="section-subtitle">SuperAdmin Dashboard — Platform-wide metrics</p>
+      </div>
+      <div class="sa-nav">
+        <a mat-stroked-button routerLink="/superadmin/hotels">
+          <mat-icon>domain</mat-icon> Manage Hotels
+        </a>
+        <a mat-stroked-button routerLink="/superadmin/audit-logs">
+          <mat-icon>history</mat-icon> Audit Logs
+        </a>
+      </div>
+    </div>
+
+    @if (data(); as d) {
+      <!-- Top KPIs -->
+      <div class="sa-kpi-grid animate-fade-in">
+        <div class="sa-kpi">
+          <div class="sa-kpi-icon hotels"><mat-icon>domain</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">{{ d.totalHotels }}</div>
+            <div class="sa-kpi-label">Total Hotels</div>
+            <div class="sa-kpi-sub">
+              <span class="badge badge-success">{{ d.activeHotels }} active</span>
+              @if (d.blockedHotels > 0) {
+                <span class="badge badge-error">{{ d.blockedHotels }} blocked</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="sa-kpi">
+          <div class="sa-kpi-icon users"><mat-icon>group</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">{{ d.totalUsers }}</div>
+            <div class="sa-kpi-label">Total Users</div>
+          </div>
+        </div>
+
+        <div class="sa-kpi">
+          <div class="sa-kpi-icon reservations"><mat-icon>book_online</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">{{ d.totalReservations }}</div>
+            <div class="sa-kpi-label">All Reservations</div>
+          </div>
+        </div>
+
+        <div class="sa-kpi">
+          <div class="sa-kpi-icon revenue"><mat-icon>payments</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">₹{{ d.totalRevenue | number:'1.0-0' }}</div>
+            <div class="sa-kpi-label">Platform Revenue</div>
+          </div>
+        </div>
+
+        <div class="sa-kpi">
+          <div class="sa-kpi-icon reviews"><mat-icon>star</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">{{ d.totalReviews }}</div>
+            <div class="sa-kpi-label">Total Reviews</div>
+          </div>
+        </div>
+
+        <div class="sa-kpi" [class.alert-kpi]="d.pendingRefundRequests > 0">
+          <div class="sa-kpi-icon refunds"><mat-icon>replay</mat-icon></div>
+          <div class="sa-kpi-data">
+            <div class="sa-kpi-val">{{ d.pendingRefundRequests }}</div>
+            <div class="sa-kpi-label">Pending Refunds</div>
+            @if (d.pendingRefundRequests > 0) {
+              <div class="sa-kpi-sub">
+                <span class="badge badge-warning">Requires attention</span>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="sa-quick-links">
+        <a class="quick-link-card" routerLink="/superadmin/hotels">
+          <mat-icon>domain</mat-icon>
+          <div>
+            <strong>Hotel Control</strong>
+            <span>Block / unblock hotels, view stats</span>
+          </div>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a class="quick-link-card" routerLink="/superadmin/audit-logs">
+          <mat-icon>history</mat-icon>
+          <div>
+            <strong>System Audit Logs</strong>
+            <span>All admin actions across the platform</span>
+          </div>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a class="quick-link-card error" routerLink="/superadmin/error-logs">
+          <mat-icon>bug_report</mat-icon>
+          <div>
+            <strong>System Error Logs</strong>
+            <span>API errors, exceptions and stack traces</span>
+          </div>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+      </div>
+    }
+  </div>
+</div>

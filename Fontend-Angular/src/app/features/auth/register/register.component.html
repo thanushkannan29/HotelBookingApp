@@ -1,0 +1,79 @@
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="brand">
+        <span class="brand-icon">⬡</span>
+        <span class="brand-name">ThanushStayHub</span>
+      </div>
+      <h1>Start your journey with us today.</h1>
+      <p>Join thousands of travellers who trust ThanushStayHub for every trip.</p>
+      <div class="stats">
+        <div class="stat"><strong>Free</strong><span>To Join</span></div>
+        <div class="stat"><strong>Instant</strong><span>Booking</span></div>
+        <div class="stat"><strong>24/7</strong><span>Support</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right">
+    <div class="auth-card animate-fade-in">
+      <div class="auth-header">
+        <h2>Create account</h2>
+        <p>Register as a guest to start booking</p>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="submit()" class="auth-form">
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Full Name</mat-label>
+          <input matInput formControlName="name" autocomplete="name" />
+          <mat-icon matPrefix>person_outline</mat-icon>
+          @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+            <mat-error>Name is required</mat-error>
+          }
+          @if (form.get('name')?.hasError('minlength') && form.get('name')?.touched) {
+            <mat-error>Name must be at least 2 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Email address</mat-label>
+          <input matInput type="email" formControlName="email" autocomplete="email" />
+          <mat-icon matPrefix>mail_outline</mat-icon>
+          @if (form.get('email')?.hasError('required') && form.get('email')?.touched) {
+            <mat-error>Email is required</mat-error>
+          }
+          @if (form.get('email')?.hasError('email') && form.get('email')?.touched) {
+            <mat-error>Enter a valid email</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="w-full">
+          <mat-label>Password</mat-label>
+          <input matInput [type]="hidePassword() ? 'password' : 'text'"
+                 formControlName="password" autocomplete="new-password" />
+          <mat-icon matPrefix>lock_outline</mat-icon>
+          <button mat-icon-button matSuffix type="button"
+                  (click)="hidePassword.set(!hidePassword())">
+            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          @if (form.get('password')?.hasError('required') && form.get('password')?.touched) {
+            <mat-error>Password is required</mat-error>
+          }
+          @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
+            <mat-error>Password must be at least 6 characters</mat-error>
+          }
+        </mat-form-field>
+
+        <button mat-flat-button color="primary" type="submit" class="submit-btn"
+                [disabled]="isLoading()">
+          {{ isLoading() ? 'Creating account…' : 'Create Account' }}
+        </button>
+      </form>
+
+      <div class="auth-footer">
+        <p>Already have an account? <a routerLink="/auth/login">Sign in</a></p>
+        <p>Hotel owner? <a routerLink="/auth/register-admin">Register your property</a></p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -7,7 +7,7 @@ order by RoomId
 select * from RoomTypeRates
 select * from RoomTypes
 select * from RoomTypeInventories
-order by ReservedInventory 
+order by ReservedInventory desc
 select * from Reservations
 select * from Transactions 
 select * from Reviews

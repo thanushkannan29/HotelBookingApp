@@ -1,0 +1,127 @@
+<nav class="navbar">
+  <div class="nav-container">
+    <!-- Logo -->
+    <a class="nav-brand" routerLink="/">
+      <span class="brand-icon">🏨</span>
+      <span class="brand-name">ThanushStayHub</span>
+    </a>
+
+    <!-- Desktop Nav Links -->
+    <div class="nav-links">
+      <a routerLink="/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
+      <a routerLink="/contact" routerLinkActive="active" class="nav-link">Support</a>
+
+      @if (!auth.isAuthenticated()) {
+        <a routerLink="/auth/login" class="nav-link">Sign In</a>
+        <a routerLink="/auth/register" class="nav-cta">Get Started</a>
+      }
+
+      @if (auth.isGuest()) {
+        <a routerLink="/guest/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/guest/bookings" routerLinkActive="active" class="nav-link">My Bookings</a>
+        <a routerLink="/guest/transactions" routerLinkActive="active" class="nav-link">Payments</a>
+      }
+
+      @if (auth.isAdmin()) {
+        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/reservations" routerLinkActive="active" class="nav-link">Reservations</a>
+        <a routerLink="/admin/rooms" routerLinkActive="active" class="nav-link">Rooms</a>
+      }
+
+      @if (auth.isSuperAdmin()) {
+        <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/superadmin/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
+        <a routerLink="/superadmin/error-logs" routerLinkActive="active" class="nav-link">Error Logs</a>
+      }
+    </div>
+
+    <!-- User Menu -->
+    @if (auth.isAuthenticated()) {
+      <button class="user-btn" [matMenuTriggerFor]="userMenu">
+        <div class="avatar">{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</div>
+        <span class="user-name">{{ auth.currentUser()?.userName }}</span>
+        <mat-icon>expand_more</mat-icon>
+      </button>
+
+      <mat-menu #userMenu="matMenu" xPosition="before">
+        <div class="menu-header">
+          <span class="menu-user">{{ auth.currentUser()?.userName }}</span>
+          <span class="menu-role badge badge-primary">{{ auth.currentUser()?.role }}</span>
+        </div>
+        <mat-divider />
+        @if (auth.isGuest()) {
+          <button mat-menu-item routerLink="/guest/profile">
+            <mat-icon>person</mat-icon> Profile
+          </button>
+          <button mat-menu-item routerLink="/guest/bookings">
+            <mat-icon>book_online</mat-icon> My Bookings
+          </button>
+          <button mat-menu-item routerLink="/guest/transactions">
+            <mat-icon>receipt_long</mat-icon> Payments
+          </button>
+          <button mat-menu-item routerLink="/guest/reviews">
+            <mat-icon>star</mat-icon> My Reviews
+          </button>
+          <button mat-menu-item routerLink="/guest/refunds">
+            <mat-icon>replay</mat-icon> Refund Requests
+          </button>
+        }
+        @if (auth.isAdmin()) {
+          <button mat-menu-item routerLink="/admin/dashboard">
+            <mat-icon>dashboard</mat-icon> Dashboard
+          </button>
+          <button mat-menu-item routerLink="/admin/hotel">
+            <mat-icon>edit</mat-icon> Edit Hotel
+          </button>
+        }
+        @if (auth.isSuperAdmin()) {
+          <button mat-menu-item routerLink="/superadmin/dashboard">
+            <mat-icon>dashboard</mat-icon> Dashboard
+          </button>
+        }
+        <mat-divider />
+        <button mat-menu-item routerLink="/contact">
+          <mat-icon>support_agent</mat-icon> Support
+        </button>
+        <button mat-menu-item (click)="auth.logout()" class="logout-btn">
+          <mat-icon>logout</mat-icon> Sign Out
+        </button>
+      </mat-menu>
+    }
+
+    <!-- Mobile Toggle -->
+    <button class="mobile-toggle" (click)="toggleMobile()">
+      <mat-icon>{{ mobileOpen() ? 'close' : 'menu' }}</mat-icon>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  @if (mobileOpen()) {
+    <div class="mobile-menu" (click)="closeMobile()">
+      <a routerLink="/hotels" class="mobile-link">Hotels</a>
+      <a routerLink="/contact" class="mobile-link">Support</a>
+      @if (!auth.isAuthenticated()) {
+        <a routerLink="/auth/login" class="mobile-link">Sign In</a>
+        <a routerLink="/auth/register" class="mobile-link">Register</a>
+      }
+      @if (auth.isGuest()) {
+        <a routerLink="/guest/dashboard" class="mobile-link">Dashboard</a>
+        <a routerLink="/guest/bookings" class="mobile-link">My Bookings</a>
+        <a routerLink="/guest/transactions" class="mobile-link">Payments</a>
+        <a routerLink="/guest/reviews" class="mobile-link">My Reviews</a>
+        <a routerLink="/guest/refunds" class="mobile-link">Refund Requests</a>
+      }
+      @if (auth.isAdmin()) {
+        <a routerLink="/admin/dashboard" class="mobile-link">Dashboard</a>
+        <a routerLink="/admin/reservations" class="mobile-link">Reservations</a>
+      }
+      @if (auth.isSuperAdmin()) {
+        <a routerLink="/superadmin/dashboard" class="mobile-link">Dashboard</a>
+        <a routerLink="/superadmin/hotels" class="mobile-link">Hotels</a>
+      }
+      @if (auth.isAuthenticated()) {
+        <button class="mobile-link logout" (click)="auth.logout()">Sign Out</button>
+      }
+    </div>
+  }
+</nav>

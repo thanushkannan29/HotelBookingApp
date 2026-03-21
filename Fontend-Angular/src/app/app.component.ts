@@ -1,0 +1,45 @@
+import { Component, inject, computed } from '@angular/core';
+import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
+import { filter, map } from 'rxjs/operators';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { NavbarComponent } from './shared/components/navbar/navbar.component';
+import { FooterComponent } from './shared/components/footer/footer.component';
+import { SpinnerComponent } from './shared/components/spinner/spinner.component';
+
+@Component({
+  selector: 'app-root',
+  standalone: true,
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, SpinnerComponent],
+  template: `
+    <app-spinner />
+    @if (showChrome()) {
+      <app-navbar />
+    }
+    <main [class.auth-main]="!showChrome()">
+      <router-outlet />
+    </main>
+    @if (showChrome()) {
+      <app-footer />
+    }
+  `,
+  styles: [`
+    main { min-height: calc(100vh - 64px - 80px); }
+    main.auth-main { min-height: 100vh; }
+  `]
+})
+export class AppComponent {
+  private router = inject(Router);
+
+  private currentUrl = toSignal(
+    this.router.events.pipe(
+      filter(e => e instanceof NavigationEnd),
+      map(e => (e as NavigationEnd).urlAfterRedirects)
+    ),
+    { initialValue: this.router.url }
+  );
+
+  showChrome = computed(() => {
+    const url = this.currentUrl() ?? '';
+    return !url.startsWith('/auth');
+  });
+}

@@ -1,0 +1,39 @@
+.page-header-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    color: var(--color-text-secondary); font-size: 0.875rem; margin-bottom: 8px;
+    &:hover { color: var(--color-primary); }
+  }
+}
+
+.filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+
+.filter-pill {
+  padding: 5px 14px; border-radius: 20px;
+  border: 1.5px solid var(--color-border); background: white;
+  font-size: 0.8rem; font-weight: 500; color: var(--color-text-secondary);
+  cursor: pointer; transition: all var(--transition); font-family: var(--font-body);
+  &:hover { border-color: var(--color-primary); color: var(--color-primary); }
+  &.active { background: var(--color-primary); border-color: var(--color-primary); color: white; }
+}
+
+.table-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow-x: auto; }
+
+.data-table {
+  width: 100%; border-collapse: collapse; min-width: 800px;
+  th {
+    background: var(--color-surface-alt); padding: 11px 14px; text-align: left;
+    font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--color-text-muted); font-weight: 600; border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+  }
+  td { padding: 12px 14px; font-size: 0.85rem; border-bottom: 1px solid var(--color-border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(45,58,140,0.02); }
+}
+
+.res-code { font-family: monospace; font-size: 0.8rem; color: var(--color-text-muted); }
+
+.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; font-size: 0.875rem; color: var(--color-text-secondary); }

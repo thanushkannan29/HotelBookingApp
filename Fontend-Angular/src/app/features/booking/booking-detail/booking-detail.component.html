@@ -1,0 +1,118 @@
+<div class="page-wrapper">
+  <div class="container">
+    <a routerLink="/booking/list" class="back-link">
+      <mat-icon>arrow_back</mat-icon> My Bookings
+    </a>
+
+    @if (reservation(); as res) {
+      <div class="detail-layout animate-fade-in">
+
+        <!-- Main Info Card -->
+        <div class="detail-main">
+          <div class="detail-header">
+            <div>
+              <div class="reservation-code">{{ res.reservationCode }}</div>
+              <h1 class="hotel-name">{{ res.hotelName }}</h1>
+              <p class="room-type">{{ res.roomTypeName }}</p>
+            </div>
+            <span class="badge {{ statusClass(res.status) }} badge-lg">{{ res.status }}</span>
+          </div>
+
+          <!-- Stay Dates -->
+          <div class="stay-timeline">
+            <div class="timeline-point">
+              <div class="timeline-label">Check-in</div>
+              <div class="timeline-date">{{ res.checkInDate | date:'EEE, MMM d, y' }}</div>
+            </div>
+            <div class="timeline-bar">
+              <mat-icon>arrow_forward</mat-icon>
+            </div>
+            <div class="timeline-point right">
+              <div class="timeline-label">Check-out</div>
+              <div class="timeline-date">{{ res.checkOutDate | date:'EEE, MMM d, y' }}</div>
+            </div>
+          </div>
+
+          <!-- Details Grid -->
+          <div class="details-grid">
+            <div class="detail-item">
+              <span class="label">Rooms Booked</span>
+              <span class="value">{{ res.numberOfRooms }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Total Amount</span>
+              <span class="value amount">₹{{ res.totalAmount | number:'1.0-0' }}</span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Check-in Status</span>
+              <span class="value" [class.checked-in]="res.isCheckedIn">
+                {{ res.isCheckedIn ? '✓ Checked In' : 'Not Checked In' }}
+              </span>
+            </div>
+            <div class="detail-item">
+              <span class="label">Booked On</span>
+              <span class="value">{{ res.createdDate | date:'MMM d, y' }}</span>
+            </div>
+          </div>
+
+          <!-- Assigned Rooms -->
+          @if (res.rooms.length > 0) {
+            <div class="assigned-rooms">
+              <h4>Assigned Rooms</h4>
+              <div class="room-tags">
+                @for (room of res.rooms; track room.roomId) {
+                  <div class="room-tag">
+                    <mat-icon>meeting_room</mat-icon>
+                    Room {{ room.roomNumber }}
+                    <span class="floor">Floor {{ room.floor }}</span>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+
+          <!-- Cancel Form -->
+          @if (canCancel(res)) {
+            <div class="action-section">
+              @if (!showCancelForm()) {
+                <button mat-stroked-button color="warn" (click)="showCancelForm.set(true)">
+                  <mat-icon>cancel</mat-icon> Cancel Reservation
+                </button>
+              } @else {
+                <div class="cancel-form-card">
+                  <h4>Cancel Reservation</h4>
+                  <p class="cancel-warning">
+                    If you've already paid, a refund request will be created automatically.
+                  </p>
+                  <form [formGroup]="cancelForm" (ngSubmit)="cancel()" class="cancel-form">
+                    <mat-form-field appearance="outline" class="w-full">
+                      <mat-label>Reason for cancellation</mat-label>
+                      <textarea matInput formControlName="reason" rows="3"></textarea>
+                      @if (cancelForm.get('reason')?.hasError('required') && cancelForm.get('reason')?.touched) {
+                        <mat-error>Reason is required</mat-error>
+                      }
+                    </mat-form-field>
+                    <div class="cancel-actions">
+                      <button mat-stroked-button type="button" (click)="showCancelForm.set(false)">
+                        Keep Booking
+                      </button>
+                      <button mat-flat-button color="warn" type="submit" [disabled]="isCancelling()">
+                        {{ isCancelling() ? 'Cancelling…' : 'Confirm Cancellation' }}
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+      </div>
+    } @else {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">search</mat-icon>
+        <h3>Loading reservation…</h3>
+      </div>
+    }
+  </div>
+</div>

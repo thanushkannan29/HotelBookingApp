@@ -1,0 +1,106 @@
+<div class="hotel-list-page">
+
+  <!-- Hero Search -->
+  <section class="hero">
+    <div class="hero-content">
+      <h1 class="hero-title">Where will you go next?</h1>
+      <p class="hero-sub">Discover exceptional hotels across India. Real prices. Instant booking.</p>
+
+      <div class="search-card">
+        <form [formGroup]="searchForm" (ngSubmit)="search()" class="search-form">
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Destination city</mat-label>
+            <mat-icon matPrefix>search</mat-icon>
+            <mat-select formControlName="city">
+              @for (city of cities(); track city) {
+                <mat-option [value]="city">{{ city }}</mat-option>
+              }
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Check-in</mat-label>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <input matInput [matDatepicker]="checkinPicker" formControlName="checkIn"
+                   [min]="today" readonly />
+            <mat-datepicker-toggle matSuffix [for]="checkinPicker" />
+            <mat-datepicker #checkinPicker />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="search-field">
+            <mat-label>Check-out</mat-label>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <input matInput [matDatepicker]="checkoutPicker" formControlName="checkOut"
+                   [min]="searchForm.get('checkIn')?.value ?? today" readonly />
+            <mat-datepicker-toggle matSuffix [for]="checkoutPicker" />
+            <mat-datepicker #checkoutPicker />
+          </mat-form-field>
+
+          <button mat-flat-button color="primary" type="submit" class="search-btn"
+                  [disabled]="isSearching()">
+            <mat-icon>search</mat-icon>
+            {{ isSearching() ? 'Searching…' : 'Search' }}
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- Results Section -->
+  <section class="results-section">
+    <div class="container">
+
+      <!-- Search Results Header -->
+      @if (searchResults() !== null) {
+        <div class="results-header">
+          <div>
+            <h2 class="section-title">
+              {{ totalResults() }} hotels in {{ searchForm.get('city')?.value }}
+            </h2>
+            <p class="section-subtitle">
+              {{ searchForm.get('checkIn')?.value | date:'MMM d' }} –
+              {{ searchForm.get('checkOut')?.value | date:'MMM d, y' }}
+            </p>
+          </div>
+          <button mat-stroked-button (click)="clearSearch()">
+            <mat-icon>close</mat-icon> Clear Search
+          </button>
+        </div>
+      } @else {
+        <div class="results-header">
+          <div>
+            <h2 class="section-title">Top Rated Hotels</h2>
+            <p class="section-subtitle">Our highest-rated properties across all destinations</p>
+          </div>
+        </div>
+      }
+
+      <!-- Hotel Grid -->
+      @if (displayHotels.length > 0) {
+        <div class="hotel-grid">
+          @for (hotel of displayHotels; track hotel.hotelId) {
+            <app-hotel-card [hotel]="hotel" />
+          }
+        </div>
+
+        <!-- Load More -->
+        @if (hasMoreResults) {
+          <div class="load-more">
+            <button mat-stroked-button color="primary" (click)="loadMore()">
+              Load more hotels
+            </button>
+          </div>
+        }
+      } @else if (!isSearching()) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">hotel</mat-icon>
+          <h3>No hotels found</h3>
+          <p>Try a different city or date range</p>
+          <button mat-flat-button color="primary" (click)="clearSearch()">Browse All Hotels</button>
+        </div>
+      }
+
+    </div>
+  </section>
+
+</div>

@@ -1,0 +1,225 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header">
+      <a routerLink="/hotels" class="back-link">
+        <mat-icon>arrow_back</mat-icon> Back to Hotels
+      </a>
+      <h1 class="section-title">Book Your Stay</h1>
+      @if (hotel(); as h) {
+        <p class="section-subtitle">{{ h.name }} · {{ h.city }}</p>
+      }
+    </div>
+
+    @if (isLoadingHotel()) {
+      <div class="loading-center"><mat-spinner diameter="40" /></div>
+    } @else {
+      <div class="booking-layout">
+
+        <!-- Stepper -->
+        <div class="stepper-container">
+          <mat-stepper orientation="vertical" linear #stepper>
+
+            <!-- STEP 1: Room Details -->
+            <mat-step label="Choose Dates & Room">
+              <form [formGroup]="bookingForm" class="step-form">
+
+                <!-- Date Pickers -->
+                <div class="form-grid">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Check-in Date</mat-label>
+                    <mat-icon matPrefix>login</mat-icon>
+                    <input matInput [matDatepicker]="ciPicker"
+                           formControlName="checkInDate"
+                           [min]="today" readonly
+                           placeholder="Select date" />
+                    <mat-datepicker-toggle matSuffix [for]="ciPicker" />
+                    <mat-datepicker #ciPicker />
+                    @if (bookingForm.get('checkInDate')?.hasError('required') && bookingForm.get('checkInDate')?.touched) {
+                      <mat-error>Check-in date is required</mat-error>
+                    }
+                  </mat-form-field>
+
+                  <mat-form-field appearance="outline">
+                    <mat-label>Check-out Date</mat-label>
+                    <mat-icon matPrefix>logout</mat-icon>
+                    <input matInput [matDatepicker]="coPicker"
+                           formControlName="checkOutDate"
+                           [min]="checkOutMin" readonly
+                           placeholder="Select date" />
+                    <mat-datepicker-toggle matSuffix [for]="coPicker" />
+                    <mat-datepicker #coPicker />
+                    @if (bookingForm.get('checkOutDate')?.hasError('required') && bookingForm.get('checkOutDate')?.touched) {
+                      <mat-error>Check-out date is required</mat-error>
+                    }
+                  </mat-form-field>
+                </div>
+
+                @if (totalNights() > 0) {
+                  <div class="nights-badge">
+                    <mat-icon>nights_stay</mat-icon>
+                    {{ totalNights() }} night{{ totalNights() > 1 ? 's' : '' }}
+                  </div>
+                }
+
+                <!-- Room Type Selection with Availability -->
+                @if (availability().length > 0) {
+                  <div class="avail-selector">
+                    <label class="avail-label">Select Room Type</label>
+                    <div class="avail-cards">
+                      @for (a of availability(); track a.roomTypeId) {
+                        <button type="button"
+                                class="avail-card"
+                                [class.selected]="bookingForm.get('roomTypeId')?.value === a.roomTypeId"
+                                [class.full]="a.availableRooms === 0"
+                                [disabled]="a.availableRooms === 0"
+                                (click)="bookingForm.patchValue({roomTypeId: a.roomTypeId}); onRoomTypeChange(a.roomTypeId)">
+                          <div class="avail-card-top">
+                            <span class="avail-card-name">{{ a.roomTypeName }}</span>
+                            @if (a.availableRooms === 0) {
+                              <span class="badge badge-error">Fully Booked</span>
+                            } @else {
+                              <span class="badge badge-success">{{ a.availableRooms }} left</span>
+                            }
+                          </div>
+                          <div class="avail-card-price">
+                            ₹{{ a.pricePerNight | number:'1.0-0' }}<span>/night</span>
+                          </div>
+                        </button>
+                      }
+                    </div>
+                  </div>
+                } @else if (totalNights() > 0) {
+                  <div class="no-avail-notice">
+                    <mat-icon>info</mat-icon>
+                    Select dates above to see room availability
+                  </div>
+                }
+
+                <!-- Number of Rooms -->
+                @if (selectedRoomType()) {
+                  <mat-form-field appearance="outline">
+                    <mat-label>Number of Rooms</mat-label>
+                    <mat-icon matPrefix>meeting_room</mat-icon>
+                    <input matInput type="number" formControlName="numberOfRooms"
+                           [min]="1" [max]="selectedRoomType()!.availableRooms" />
+                    <mat-hint>Max {{ selectedRoomType()!.availableRooms }} rooms available</mat-hint>
+                    @if (bookingForm.get('numberOfRooms')?.hasError('min')) {
+                      <mat-error>At least 1 room required</mat-error>
+                    }
+                  </mat-form-field>
+                }
+
+                <!-- Price Preview -->
+                @if (estimatedTotal() > 0) {
+                  <div class="price-preview">
+                    <div class="pp-breakdown">
+                      ₹{{ selectedRoomType()?.pricePerNight | number:'1.0-0' }} × {{ totalNights() }} night(s) × {{ bookingForm.get('numberOfRooms')?.value }} room(s)
+                    </div>
+                    <div class="pp-total">≈ ₹{{ estimatedTotal() | number:'1.0-0' }}</div>
+                  </div>
+                }
+
+                <div class="step-actions">
+                  <button mat-flat-button color="primary" matStepperNext
+                          [disabled]="bookingForm.invalid || isBooking()"
+                          (click)="createReservation()">
+                    @if (isBooking()) {
+                      <mat-spinner diameter="18" style="display:inline-block; margin-right:8px;" />
+                      Creating Reservation…
+                    } @else {
+                      Confirm & Proceed to Payment
+                    }
+                  </button>
+                </div>
+              </form>
+            </mat-step>
+
+            <!-- STEP 2: Payment -->
+            <mat-step label="Complete Payment">
+              <div class="step-form">
+
+                @if (createdReservation(); as res) {
+                  <div class="reservation-summary">
+                    <div class="rs-row">
+                      <span>Reservation Code</span>
+                      <strong class="code-tag">{{ res.reservationCode }}</strong>
+                    </div>
+                    <div class="rs-row">
+                      <span>Rooms Assigned</span>
+                      <span>
+                        @for (room of res.rooms; track room.roomId) {
+                          <span class="room-tag">{{ room.roomNumber }} (Fl.{{ room.floor }})</span>
+                        }
+                      </span>
+                    </div>
+                    <div class="rs-row total-row">
+                      <span>Total Payable</span>
+                      <strong class="total-amt">₹{{ res.totalAmount | number:'1.0-0' }}</strong>
+                    </div>
+                    <div class="expiry-notice">
+                      <mat-icon>timer</mat-icon>
+                      Complete payment within 10 minutes to confirm your booking
+                    </div>
+                  </div>
+                }
+
+                <form [formGroup]="paymentForm">
+                  <h4 class="pay-method-label">Select Payment Method</h4>
+                  <mat-radio-group formControlName="paymentMethod" class="pay-methods">
+                    @for (pm of paymentMethods; track pm.id) {
+                      <label class="pay-option"
+                             [class.selected]="paymentForm.get('paymentMethod')?.value === pm.id">
+                        <mat-radio-button [value]="pm.id">{{ pm.label }}</mat-radio-button>
+                      </label>
+                    }
+                  </mat-radio-group>
+                </form>
+
+                <div class="step-actions">
+                  <button mat-stroked-button matStepperPrevious type="button">Back</button>
+                  <button mat-flat-button color="primary" (click)="pay()"
+                          [disabled]="!createdReservation() || isPaying()">
+                    @if (isPaying()) {
+                      <mat-spinner diameter="18" style="display:inline-block; margin-right:8px;" />
+                      Processing…
+                    } @else {
+                      Pay ₹{{ createdReservation()?.totalAmount | number:'1.0-0' }}
+                    }
+                  </button>
+                </div>
+              </div>
+            </mat-step>
+          </mat-stepper>
+        </div>
+
+        <!-- Booking Summary Sidebar -->
+        <aside class="booking-sidebar">
+          @if (hotel(); as h) {
+            <div class="summary-card">
+              @if (h.imageUrl) {
+                <img [src]="h.imageUrl" [alt]="h.name" class="summary-img" />
+              }
+              <div class="summary-body">
+                <h3>{{ h.name }}</h3>
+                <p class="summary-city"><mat-icon>place</mat-icon>{{ h.city }}</p>
+                @if (h.averageRating > 0) {
+                  <p class="summary-rating">⭐ {{ h.averageRating }} ({{ h.reviewCount }} reviews)</p>
+                }
+              </div>
+
+              @if (selectedRoomType(); as rt) {
+                <div class="summary-breakdown">
+                  <div class="sb-row"><span>Room Type</span><span>{{ rt.roomTypeName }}</span></div>
+                  <div class="sb-row"><span>Rate/Night</span><span>₹{{ rt.pricePerNight | number:'1.0-0' }}</span></div>
+                  <div class="sb-row"><span>Nights</span><span>{{ totalNights() }}</span></div>
+                  <div class="sb-row"><span>Rooms</span><span>{{ bookingForm.get('numberOfRooms')?.value }}</span></div>
+                  <div class="sb-row sb-total"><span>Estimated Total</span><strong>₹{{ estimatedTotal() | number:'1.0-0' }}</strong></div>
+                </div>
+              }
+            </div>
+          }
+        </aside>
+      </div>
+    }
+  </div>
+</div>

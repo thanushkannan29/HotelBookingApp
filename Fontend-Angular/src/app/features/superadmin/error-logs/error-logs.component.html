@@ -1,0 +1,84 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/superadmin/dashboard" class="back-link">
+          <mat-icon>arrow_back</mat-icon> Dashboard
+        </a>
+        <h1 class="section-title">System Error Logs</h1>
+        <p class="section-subtitle">{{ total() }} total logs · Page {{ page() }} of {{ totalPages }}</p>
+      </div>
+      <button mat-stroked-button (click)="load()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+
+    @if (logs().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">check_circle</mat-icon>
+        <h3>No errors logged</h3>
+        <p>System is running clean</p>
+      </div>
+    } @else {
+      <mat-accordion>
+        @for (log of logs(); track log.logId) {
+          <mat-expansion-panel class="log-panel">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="log-title">
+                <span class="badge {{ statusClass(log.statusCode) }}">{{ log.statusCode }}</span>
+                <span class="log-path">{{ log.httpMethod }} {{ log.requestPath }}</span>
+              </mat-panel-title>
+              <mat-panel-description class="log-desc">
+                <span class="log-user">{{ log.userName }}</span>
+                <span class="log-time">{{ log.createdAt | date:'MMM d, HH:mm' }}</span>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
+
+            <div class="log-detail">
+              <div class="log-detail-grid">
+                <div class="ld-item">
+                  <span class="ld-label">Message</span>
+                  <span class="ld-value">{{ log.message }}</span>
+                </div>
+                <div class="ld-item">
+                  <span class="ld-label">Exception Type</span>
+                  <span class="ld-value exception">{{ log.exceptionType }}</span>
+                </div>
+                <div class="ld-item">
+                  <span class="ld-label">Controller / Action</span>
+                  <span class="ld-value">{{ log.controller }} / {{ log.action }}</span>
+                </div>
+                <div class="ld-item">
+                  <span class="ld-label">Role</span>
+                  <span class="ld-value">{{ log.role }}</span>
+                </div>
+                <div class="ld-item">
+                  <span class="ld-label">Timestamp</span>
+                  <span class="ld-value">{{ log.createdAt | date:'EEE MMM d, y HH:mm:ss' }}</span>
+                </div>
+              </div>
+              @if (log.stackTrace) {
+                <div class="stacktrace">
+                  <div class="st-label">Stack Trace</div>
+                  <pre class="st-content">{{ log.stackTrace }}</pre>
+                </div>
+              }
+            </div>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button mat-stroked-button [disabled]="page() === 1" (click)="prev()">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span>Page {{ page() }} of {{ totalPages }}</span>
+          <button mat-stroked-button [disabled]="page() >= totalPages" (click)="next()">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

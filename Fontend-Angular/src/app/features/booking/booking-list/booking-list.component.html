@@ -1,0 +1,60 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <h1 class="section-title">My Bookings</h1>
+        <p class="section-subtitle">{{ reservations().length }} total reservations</p>
+      </div>
+      <a mat-flat-button color="primary" routerLink="/hotels">
+        <mat-icon>add</mat-icon> New Booking
+      </a>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="filter-row">
+      @for (f of filters; track f) {
+        <button class="filter-pill" [class.active]="filter() === f" (click)="filter.set(f)">
+          {{ f === 'all' ? 'All' : f }}
+        </button>
+      }
+    </div>
+
+    <!-- List -->
+    @if (filtered.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">book_online</mat-icon>
+        <h3>No bookings found</h3>
+        <p>{{ filter() === 'all' ? "You haven't made any bookings yet." : 'No ' + filter() + ' bookings.' }}</p>
+        <a mat-flat-button color="primary" routerLink="/hotels">Browse Hotels</a>
+      </div>
+    } @else {
+      <div class="booking-list">
+        @for (res of filtered; track res.reservationId) {
+          <div class="booking-card" [routerLink]="['/booking', res.reservationCode]">
+            <div class="booking-main">
+              <div class="booking-info">
+                <div class="booking-code">{{ res.reservationCode }}</div>
+                <h3 class="booking-hotel">{{ res.hotelName }}</h3>
+                <p class="booking-room">{{ res.roomTypeName }} · {{ res.numberOfRooms }} room(s)</p>
+                <div class="booking-dates">
+                  <mat-icon>calendar_today</mat-icon>
+                  {{ res.checkInDate | date:'MMM d' }} – {{ res.checkOutDate | date:'MMM d, y' }}
+                </div>
+              </div>
+              <div class="booking-right">
+                <span class="badge {{ statusClass(res.status) }}">{{ res.status }}</span>
+                <div class="booking-amount">₹{{ res.totalAmount | number:'1.0-0' }}</div>
+                <span class="booked-on">Booked {{ res.createdDate | date:'MMM d, y' }}</span>
+              </div>
+            </div>
+            @if (res.isCheckedIn) {
+              <div class="checked-in-tag">
+                <mat-icon>check_circle</mat-icon> Checked In
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

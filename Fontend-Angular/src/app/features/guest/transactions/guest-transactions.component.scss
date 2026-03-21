@@ -1,0 +1,12 @@
+.page-header-row { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:24px; flex-wrap:wrap; gap:16px; }
+.tx-list { display:flex; flex-direction:column; gap:12px; }
+.tx-card { background:var(--color-surface); border:1px solid var(--color-border); border-radius:var(--radius-lg); overflow:hidden; }
+.tx-main { display:flex; align-items:center; gap:16px; padding:18px 22px; flex-wrap:wrap; }
+.tx-icon { width:44px; height:44px; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; mat-icon { font-size:20px; } &.badge-success { background:rgba(46,125,50,.12); color:var(--color-success); } &.badge-warning { background:rgba(201,125,27,.12); color:var(--color-accent); } &.badge-error { background:rgba(198,40,40,.12); color:var(--color-error); } &.badge-info { background:rgba(21,101,192,.12); color:#1565c0; } &.badge-muted { background:var(--color-surface-alt); color:var(--color-text-muted); } }
+.tx-info { flex:1; .tx-method { font-weight:600; font-size:.95rem; margin-bottom:3px; } .tx-date { font-size:.8rem; color:var(--color-text-secondary); } .tx-id { font-size:.72rem; color:var(--color-text-muted); font-family:monospace; margin-top:2px; } }
+.tx-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; .tx-amount { font-family:var(--font-display); font-size:1.4rem; font-weight:700; } }
+.refund-timer { display:flex; align-items:center; gap:4px; font-size:.75rem; color:var(--color-accent); font-weight:600; mat-icon { font-size:13px; width:13px; height:13px; } }
+.tx-actions { padding:0 22px 16px; }
+.refund-form { padding:16px 22px; border-top:1px solid var(--color-border); background:rgba(198,40,40,.03); .refund-note { display:flex; align-items:center; gap:8px; font-size:.82rem; color:var(--color-text-secondary); margin-bottom:14px; mat-icon { font-size:16px; width:16px; height:16px; color:var(--color-accent); } } }
+.refund-actions { display:flex; gap:10px; margin-top:12px; }
+.pagination { display:flex; align-items:center; justify-content:center; gap:16px; margin-top:24px; font-size:.875rem; color:var(--color-text-secondary); }

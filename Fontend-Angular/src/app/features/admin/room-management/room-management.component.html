@@ -1,0 +1,124 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">Room Management</h1>
+        <p class="section-subtitle">{{ rooms().length }} rooms configured</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="showAddForm.set(!showAddForm())">
+        <mat-icon>{{ showAddForm() ? 'close' : 'add' }}</mat-icon>
+        {{ showAddForm() ? 'Cancel' : 'Add Room' }}
+      </button>
+    </div>
+
+    <!-- Add Room Form -->
+    @if (showAddForm()) {
+      <div class="form-card mb-6 animate-slide-in">
+        <h3 class="form-card-title">New Room</h3>
+        <form [formGroup]="addForm" (ngSubmit)="addRoom()">
+          <div class="form-row-3">
+            <mat-form-field appearance="outline">
+              <mat-label>Room Number</mat-label>
+              <input matInput formControlName="roomNumber" placeholder="101" />
+              @if (addForm.get('roomNumber')?.hasError('required') && addForm.get('roomNumber')?.touched) {
+                <mat-error>Required</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Floor</mat-label>
+              <input matInput type="number" formControlName="floor" min="0" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Room Type</mat-label>
+              <mat-select formControlName="roomTypeId">
+                @for (rt of roomTypes(); track rt.roomTypeId) {
+                  <mat-option [value]="rt.roomTypeId">{{ rt.name }}</mat-option>
+                }
+              </mat-select>
+              @if (addForm.get('roomTypeId')?.hasError('required') && addForm.get('roomTypeId')?.touched) {
+                <mat-error>Required</mat-error>
+              }
+            </mat-form-field>
+          </div>
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving…' : 'Add Room' }}
+          </button>
+        </form>
+      </div>
+    }
+
+    <!-- Room Table -->
+    @if (rooms().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">meeting_room</mat-icon>
+        <h3>No rooms yet</h3>
+        <p>Add rooms to your hotel to start taking bookings</p>
+      </div>
+    } @else {
+      <div class="table-card">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Room No.</th><th>Floor</th><th>Type</th><th>Status</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (room of rooms(); track room.roomId) {
+              <tr>
+                @if (editingRoom()?.roomId === room.roomId) {
+                  <td colspan="4">
+                    <form [formGroup]="editForm" class="inline-edit-form">
+                      <mat-form-field appearance="outline" class="inline-field">
+                        <mat-label>Room No.</mat-label>
+                        <input matInput formControlName="roomNumber" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="inline-field-sm">
+                        <mat-label>Floor</mat-label>
+                        <input matInput type="number" formControlName="floor" />
+                      </mat-form-field>
+                      <mat-form-field appearance="outline" class="inline-field">
+                        <mat-label>Type</mat-label>
+                        <mat-select formControlName="roomTypeId">
+                          @for (rt of roomTypes(); track rt.roomTypeId) {
+                            <mat-option [value]="rt.roomTypeId">{{ rt.name }}</mat-option>
+                          }
+                        </mat-select>
+                      </mat-form-field>
+                    </form>
+                  </td>
+                  <td>
+                    <button mat-icon-button color="primary" (click)="saveEdit()" [disabled]="isSaving()">
+                      <mat-icon>check</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="editingRoom.set(null)">
+                      <mat-icon>close</mat-icon>
+                    </button>
+                  </td>
+                } @else {
+                  <td><strong>{{ room.roomNumber }}</strong></td>
+                  <td>{{ room.floor }}</td>
+                  <td><span class="type-chip">{{ room.roomTypeName }}</span></td>
+                  <td>
+                    <span class="badge" [class]="room.isActive ? 'badge-success' : 'badge-muted'">
+                      {{ room.isActive ? 'Active' : 'Inactive' }}
+                    </span>
+                  </td>
+                  <td>
+                    <button mat-icon-button (click)="startEdit(room)" matTooltip="Edit">
+                      <mat-icon>edit</mat-icon>
+                    </button>
+                    <button mat-icon-button (click)="toggleStatus(room)"
+                            [matTooltip]="room.isActive ? 'Deactivate' : 'Activate'">
+                      <mat-icon>{{ room.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+                    </button>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+</div>

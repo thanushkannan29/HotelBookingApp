@@ -1,0 +1,118 @@
+<div class="auth-page">
+  <div class="auth-left">
+    <div class="auth-left-content">
+      <div class="brand">
+        <span class="brand-icon">⬡</span>
+        <span class="brand-name">ThanushStayHub</span>
+      </div>
+      <h1>List your hotel and reach thousands of guests.</h1>
+      <p>Join our platform in minutes. Set your own rates. Manage everything from your dashboard.</p>
+      <div class="stats">
+        <div class="stat"><strong>50K+</strong><span>Guests</span></div>
+        <div class="stat"><strong>Free</strong><span>To List</span></div>
+        <div class="stat"><strong>Full</strong><span>Control</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="auth-right" style="overflow-y: auto; align-items: flex-start; padding-top: 48px;">
+    <div class="auth-card animate-fade-in" style="max-width: 500px;">
+      <div class="auth-header">
+        <h2>Register your hotel</h2>
+        <p>Create your account and hotel in two steps</p>
+      </div>
+
+      <mat-stepper orientation="vertical" linear #stepper>
+        <!-- Step 1: Admin Account -->
+        <mat-step [stepControl]="adminForm" label="Your Account">
+          <form [formGroup]="adminForm" class="auth-form" style="padding: 16px 0;">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Full Name</mat-label>
+              <input matInput formControlName="name" />
+              <mat-icon matPrefix>person_outline</mat-icon>
+              @if (adminForm.get('name')?.hasError('required') && adminForm.get('name')?.touched) {
+                <mat-error>Name is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Email address</mat-label>
+              <input matInput type="email" formControlName="email" />
+              <mat-icon matPrefix>mail_outline</mat-icon>
+              @if (adminForm.get('email')?.hasError('email') && adminForm.get('email')?.touched) {
+                <mat-error>Enter a valid email</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Password</mat-label>
+              <input matInput [type]="hidePassword() ? 'password' : 'text'" formControlName="password" />
+              <mat-icon matPrefix>lock_outline</mat-icon>
+              <button mat-icon-button matSuffix type="button" (click)="hidePassword.set(!hidePassword())">
+                <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+              </button>
+              @if (adminForm.get('password')?.hasError('minlength') && adminForm.get('password')?.touched) {
+                <mat-error>Minimum 6 characters</mat-error>
+              }
+            </mat-form-field>
+
+            <div>
+              <button mat-flat-button color="primary" matStepperNext [disabled]="adminForm.invalid">
+                Next: Hotel Details
+              </button>
+            </div>
+          </form>
+        </mat-step>
+
+        <!-- Step 2: Hotel Details -->
+        <mat-step [stepControl]="hotelForm" label="Hotel Details">
+          <form [formGroup]="hotelForm" class="auth-form" style="padding: 16px 0;">
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Hotel Name</mat-label>
+              <input matInput formControlName="hotelName" />
+              <mat-icon matPrefix>hotel</mat-icon>
+              @if (hotelForm.get('hotelName')?.hasError('required') && hotelForm.get('hotelName')?.touched) {
+                <mat-error>Hotel name is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" />
+              <mat-icon matPrefix>location_city</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Address</mat-label>
+              <input matInput formControlName="address" />
+              <mat-icon matPrefix>place</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Contact Number</mat-label>
+              <input matInput formControlName="contactNumber" />
+              <mat-icon matPrefix>phone</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="w-full">
+              <mat-label>Description (optional)</mat-label>
+              <textarea matInput formControlName="description" rows="3"></textarea>
+            </mat-form-field>
+
+            <div style="display:flex; gap:12px;">
+              <button mat-stroked-button matStepperPrevious type="button">Back</button>
+              <button mat-flat-button color="primary" type="button"
+                      [disabled]="hotelForm.invalid || isLoading()" (click)="submit()">
+                {{ isLoading() ? 'Registering…' : 'Register Hotel' }}
+              </button>
+            </div>
+          </form>
+        </mat-step>
+      </mat-stepper>
+
+      <div class="auth-footer">
+        <p>Already registered? <a routerLink="/auth/login">Sign in</a></p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,158 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width:800px;">
+    <div class="page-header-row">
+      <div>
+        <h1 class="section-title">My Reviews</h1>
+        <p class="section-subtitle">Share your experience with hotels you've stayed at</p>
+      </div>
+      @if (reviewableHotels.length > 0 && !showAddForm()) {
+        <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
+          <mat-icon>rate_review</mat-icon> Write a Review
+        </button>
+      }
+    </div>
+
+    <!-- Add Review Form -->
+    @if (showAddForm()) {
+      <div class="review-form-card animate-slide-in">
+        <h3 class="form-card-title">New Review</h3>
+        <form [formGroup]="addForm" (ngSubmit)="addReview()">
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Which hotel are you reviewing?</mat-label>
+            <mat-icon matPrefix>hotel</mat-icon>
+            <mat-select formControlName="hotelId">
+              @for (stay of reviewableHotels; track stay.hotelId) {
+                <mat-option [value]="stay.hotelId">{{ stay.hotelName }}</mat-option>
+              }
+            </mat-select>
+            @if (addForm.get('hotelId')?.hasError('required') && addForm.get('hotelId')?.touched) {
+              <mat-error>Please select a hotel</mat-error>
+            }
+          </mat-form-field>
+
+          <div class="rating-row">
+            <label class="rating-label">Your Rating</label>
+            <div class="star-picker">
+              @for (s of stars; track s) {
+                <button type="button" class="star-btn"
+                        [class.active]="s <= (addForm.get('rating')?.value ?? 0)"
+                        (click)="addForm.patchValue({rating: s})">
+                  <mat-icon>star</mat-icon>
+                </button>
+              }
+              <span class="rating-text">{{ addForm.get('rating')?.value }}/5</span>
+            </div>
+          </div>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Your Review</mat-label>
+            <textarea matInput formControlName="comment" rows="4"
+                      placeholder="Share your experience — what did you love?"></textarea>
+            @if (addForm.get('comment')?.hasError('required') && addForm.get('comment')?.touched) {
+              <mat-error>Please write a review</mat-error>
+            }
+            @if (addForm.get('comment')?.hasError('minlength') && addForm.get('comment')?.touched) {
+              <mat-error>At least 10 characters</mat-error>
+            }
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="w-full">
+            <mat-label>Photo URL (optional)</mat-label>
+            <mat-icon matPrefix>image</mat-icon>
+            <input matInput formControlName="imageUrl" placeholder="https://…" />
+            <mat-hint>Add a photo from your stay</mat-hint>
+          </mat-form-field>
+
+          <div style="display:flex; gap:12px; margin-top:4px;">
+            <button mat-stroked-button type="button" (click)="showAddForm.set(false)">Cancel</button>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+              {{ isSaving() ? 'Posting…' : 'Post Review' }}
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+
+    <!-- No completed stays message -->
+    @if (reviewableHotels.length === 0 && reviews().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">hotel</mat-icon>
+        <h3>No reviews yet</h3>
+        <p>Complete a stay to write your first review</p>
+        <a mat-flat-button color="primary" routerLink="/hotels">Find Hotels</a>
+      </div>
+    }
+
+    <!-- Reviews List -->
+    @if (reviews().length > 0) {
+      <div class="reviews-list">
+        @for (review of reviews(); track review.reviewId) {
+          <div class="review-card animate-fade-in">
+            <div class="review-header">
+              <div class="review-hotel-info">
+                <h3 class="hotel-name">{{ review.hotelName }}</h3>
+                <span class="review-date">{{ review.createdDate | date:'MMM d, y' }}</span>
+              </div>
+              @if (editingId() !== review.reviewId) {
+                <div class="review-actions">
+                  <button mat-icon-button (click)="startEdit(review)" matTooltip="Edit review">
+                    <mat-icon>edit</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteReview(review.reviewId)"
+                          matTooltip="Delete review">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              }
+            </div>
+
+            @if (editingId() === review.reviewId) {
+              <!-- Edit Form -->
+              <form [formGroup]="editForm" class="edit-form">
+                <div class="rating-row">
+                  <label class="rating-label">Rating</label>
+                  <div class="star-picker">
+                    @for (s of stars; track s) {
+                      <button type="button" class="star-btn"
+                              [class.active]="s <= (editForm.get('rating')?.value ?? 0)"
+                              (click)="editForm.patchValue({rating: s})">
+                        <mat-icon>star</mat-icon>
+                      </button>
+                    }
+                  </div>
+                </div>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Comment</mat-label>
+                  <textarea matInput formControlName="comment" rows="3"></textarea>
+                </mat-form-field>
+                <mat-form-field appearance="outline" class="w-full">
+                  <mat-label>Photo URL (optional)</mat-label>
+                  <input matInput formControlName="imageUrl" placeholder="https://…" />
+                </mat-form-field>
+                <div style="display:flex; gap:10px; margin-top:4px;">
+                  <button mat-stroked-button type="button" (click)="editingId.set(null)">Cancel</button>
+                  <button mat-flat-button color="primary" type="button"
+                          [disabled]="isSaving()" (click)="saveEdit(review.reviewId)">
+                    {{ isSaving() ? 'Saving…' : 'Save Changes' }}
+                  </button>
+                </div>
+              </form>
+            } @else {
+              <!-- Display -->
+              <div class="star-display">
+                @for (s of stars; track s) {
+                  <mat-icon class="star-icon" [class.filled]="s <= review.rating">star</mat-icon>
+                }
+                <span class="rating-num">{{ review.rating }}/5</span>
+              </div>
+              <p class="review-comment">{{ review.comment }}</p>
+              @if (review.imageUrl) {
+                <img [src]="review.imageUrl" alt="Review photo" class="review-img" />
+              }
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,57 @@
+.page-header-row {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+}
+
+.review-form-card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl); padding: 24px; margin-bottom: 28px;
+  .form-card-title {
+    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--color-text-muted); font-weight: 600; margin-bottom: 20px;
+  }
+  form { display: flex; flex-direction: column; gap: 16px; }
+}
+
+.rating-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.rating-label { font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500; min-width: 80px; }
+.rating-text { font-size: 0.85rem; color: var(--color-text-muted); margin-left: 4px; }
+
+.star-picker { display: flex; align-items: center; gap: 4px; }
+.star-btn {
+  background: none; border: none; cursor: pointer; padding: 2px;
+  transition: transform var(--transition);
+  mat-icon { font-size: 28px; width: 28px; height: 28px; color: var(--color-border); transition: color var(--transition); }
+  &.active mat-icon { color: #f59e0b; }
+  &:hover mat-icon { color: #f59e0b; transform: scale(1.2); }
+}
+
+.reviews-list { display: flex; flex-direction: column; gap: 16px; }
+
+.review-card {
+  background: var(--color-surface); border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg); padding: 20px 24px;
+}
+
+.review-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 12px;
+  .hotel-name { font-size: 1rem; font-weight: 600; margin-bottom: 2px; }
+  .review-date { font-size: 0.78rem; color: var(--color-text-muted); }
+  .review-actions { display: flex; gap: 4px; }
+}
+
+.star-display {
+  display: flex; align-items: center; gap: 2px; margin-bottom: 10px;
+  .star-icon { font-size: 18px; width: 18px; height: 18px; color: var(--color-border); &.filled { color: #f59e0b; } }
+  .rating-num { margin-left: 8px; font-size: 0.82rem; color: var(--color-text-muted); font-weight: 600; }
+}
+
+.review-comment { font-size: 0.9rem; color: var(--color-text-secondary); line-height: 1.65; margin-bottom: 12px; }
+
+.review-img {
+  width: 100%; max-height: 200px; object-fit: cover;
+  border-radius: var(--radius-md); margin-top: 8px;
+}
+
+.edit-form { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }

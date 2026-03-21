@@ -1,0 +1,184 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">Room Types</h1>
+        <p class="section-subtitle">Configure categories, occupancy, amenities and pricing</p>
+      </div>
+      <button mat-flat-button color="primary" (click)="showAddForm.set(!showAddForm())">
+        <mat-icon>{{ showAddForm() ? 'close' : 'add' }}</mat-icon>
+        {{ showAddForm() ? 'Cancel' : 'Add Room Type' }}
+      </button>
+    </div>
+
+    <!-- Add Form -->
+    @if (showAddForm()) {
+      <div class="form-card mb-6 animate-slide-in">
+        <h3 class="form-card-title">New Room Type</h3>
+        <form [formGroup]="addForm" (ngSubmit)="add()">
+          <div class="form-row-3">
+            <mat-form-field appearance="outline">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" placeholder="Deluxe Room" />
+              @if (addForm.get('name')?.hasError('required') && addForm.get('name')?.touched) {
+                <mat-error>Required</mat-error>
+              }
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Max Occupancy</mat-label>
+              <input matInput type="number" formControlName="maxOccupancy" min="1" />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Amenities (comma-separated)</mat-label>
+              <input matInput formControlName="amenities" placeholder="WiFi, AC, TV" />
+            </mat-form-field>
+          </div>
+          <mat-form-field appearance="outline" class="w-full" style="margin-bottom:16px;">
+            <mat-label>Description</mat-label>
+            <textarea matInput formControlName="description" rows="2"></textarea>
+          </mat-form-field>
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+            {{ isSaving() ? 'Saving…' : 'Add Room Type' }}
+          </button>
+        </form>
+      </div>
+    }
+
+    <!-- Room Types List -->
+    @if (roomTypes().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">category</mat-icon>
+        <h3>No room types yet</h3>
+        <p>Add room types before adding physical rooms</p>
+      </div>
+    } @else {
+      <div class="rt-grid">
+        @for (rt of roomTypes(); track rt.roomTypeId) {
+          <div class="rt-card">
+            <div class="rt-card-header">
+              <div>
+                <h3 class="rt-name">{{ rt.name }}</h3>
+                <span class="rt-count">{{ rt.roomCount }} room(s)</span>
+              </div>
+              <div class="rt-actions">
+                <span class="badge" [class]="rt.isActive ? 'badge-success' : 'badge-muted'">
+                  {{ rt.isActive ? 'Active' : 'Inactive' }}
+                </span>
+                <button mat-icon-button (click)="startEdit(rt)" matTooltip="Edit">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button (click)="toggleStatus(rt)"
+                        [matTooltip]="rt.isActive ? 'Deactivate' : 'Activate'">
+                  <mat-icon>{{ rt.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+                </button>
+              </div>
+            </div>
+
+            @if (editingId() === rt.roomTypeId) {
+              <!-- Inline Edit Form -->
+              <form [formGroup]="editForm" class="inline-edit-panel">
+                <div class="form-row-3">
+                  <mat-form-field appearance="outline">
+                    <mat-label>Name</mat-label>
+                    <input matInput formControlName="name" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Max Occupancy</mat-label>
+                    <input matInput type="number" formControlName="maxOccupancy" />
+                  </mat-form-field>
+                  <mat-form-field appearance="outline">
+                    <mat-label>Amenities</mat-label>
+                    <input matInput formControlName="amenities" />
+                  </mat-form-field>
+                </div>
+                <mat-form-field appearance="outline" class="w-full" style="margin-bottom:12px;">
+                  <mat-label>Description</mat-label>
+                  <textarea matInput formControlName="description" rows="2"></textarea>
+                </mat-form-field>
+                <div style="display:flex; gap:10px;">
+                  <button mat-flat-button color="primary" type="button"
+                          (click)="saveEdit()" [disabled]="isSaving()">Save</button>
+                  <button mat-stroked-button type="button" (click)="editingId.set(null)">Cancel</button>
+                </div>
+              </form>
+            } @else {
+              <!-- Display -->
+              <div class="rt-details">
+                <div class="rt-meta">
+                  <mat-icon>people</mat-icon> Up to {{ rt.maxOccupancy }} guests
+                </div>
+                @if (rt.description) {
+                  <p class="rt-desc">{{ rt.description }}</p>
+                }
+                @if (rt.amenities) {
+                  <div class="rt-amenities">
+                    @for (a of rt.amenities.split(','); track $index) {
+                      <span class="amenity-tag">{{ a.trim() }}</span>
+                    }
+                  </div>
+                }
+              </div>
+
+              <!-- Rate Section -->
+              <div class="rt-rate-section">
+                @if (showRateForm() === rt.roomTypeId) {
+                  <form [formGroup]="rateForm" class="rate-form">
+                    <h4 class="rate-form-title">Set Pricing</h4>
+                    <div class="rate-row">
+                      <mat-form-field appearance="outline" class="rate-field">
+                        <mat-label>Start Date</mat-label>
+                        <input matInput [matDatepicker]="rateStartPicker"
+                               formControlName="startDate"
+                               [min]="today" readonly />
+                        <mat-datepicker-toggle matSuffix [for]="rateStartPicker" />
+                        <mat-datepicker #rateStartPicker />
+                        @if (rateForm.get('startDate')?.hasError('required') && rateForm.get('startDate')?.touched) {
+                          <mat-error>Required</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="rate-field">
+                        <mat-label>End Date</mat-label>
+                        <input matInput [matDatepicker]="rateEndPicker"
+                               formControlName="endDate"
+                               [min]="rateForm.get('startDate')?.value ?? today" readonly />
+                        <mat-datepicker-toggle matSuffix [for]="rateEndPicker" />
+                        <mat-datepicker #rateEndPicker />
+                        @if (rateForm.get('endDate')?.hasError('required') && rateForm.get('endDate')?.touched) {
+                          <mat-error>Required</mat-error>
+                        }
+                      </mat-form-field>
+
+                      <mat-form-field appearance="outline" class="rate-field">
+                        <mat-label>Rate (₹ / night)</mat-label>
+                        <input matInput type="number" formControlName="rate" min="1" />
+                        <mat-icon matPrefix>currency_rupee</mat-icon>
+                        @if (rateForm.get('rate')?.hasError('min') && rateForm.get('rate')?.touched) {
+                          <mat-error>Must be > 0</mat-error>
+                        }
+                      </mat-form-field>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                      <button mat-flat-button color="primary" type="button"
+                              (click)="addRate()" [disabled]="isSaving()">
+                        {{ isSaving() ? 'Saving…' : 'Save Rate' }}
+                      </button>
+                      <button mat-stroked-button type="button" (click)="showRateForm.set(null)">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                } @else {
+                  <button mat-stroked-button (click)="openRateForm(rt.roomTypeId)">
+                    <mat-icon>attach_money</mat-icon> Set Pricing
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

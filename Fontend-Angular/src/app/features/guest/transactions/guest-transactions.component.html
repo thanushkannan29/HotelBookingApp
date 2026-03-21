@@ -1,0 +1,94 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width:860px;">
+    <div class="page-header-row">
+      <div>
+        <h1 class="section-title">My Transactions</h1>
+        <p class="section-subtitle">{{ total() }} transactions · Page {{ page() }} of {{ totalPages }}</p>
+      </div>
+      <button mat-stroked-button (click)="load()">
+        <mat-icon>refresh</mat-icon> Refresh
+      </button>
+    </div>
+
+    @if (transactions().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <h3>No transactions yet</h3>
+        <p>Your payment history will appear here</p>
+        <a mat-flat-button color="primary" routerLink="/hotels">Browse Hotels</a>
+      </div>
+    } @else {
+      <div class="tx-list">
+        @for (tx of transactions(); track tx.transactionId) {
+          <div class="tx-card">
+            <div class="tx-main">
+              <div class="tx-icon" [class]="statusClass(tx.status)">
+                <mat-icon>{{ tx.status === 4 ? 'replay' : tx.status === 2 ? 'check_circle' : tx.status === 3 ? 'cancel' : 'schedule' }}</mat-icon>
+              </div>
+              <div class="tx-info">
+                <div class="tx-method">{{ paymentMethodLabel(tx.paymentMethod) }}</div>
+                <div class="tx-date">{{ tx.transactionDate | date:'EEE, MMM d, y · HH:mm' }}</div>
+                <div class="tx-id">ID: {{ tx.transactionId | slice:0:16 }}…</div>
+              </div>
+              <div class="tx-right">
+                <div class="tx-amount">₹{{ tx.amount | number:'1.0-0' }}</div>
+                <span class="badge {{ statusClass(tx.status) }}">{{ paymentStatusLabel(tx.status) }}</span>
+                @if (canDirectRefund(tx)) {
+                  <div class="refund-timer">
+                    <mat-icon>timer</mat-icon>
+                    Refundable · {{ 30 - minutesSince(tx) }}m left
+                  </div>
+                }
+              </div>
+            </div>
+
+            <!-- Direct refund form (30-min window) -->
+            @if (canDirectRefund(tx) && refundingId() !== tx.transactionId) {
+              <div class="tx-actions">
+                <button mat-stroked-button color="warn" (click)="startRefund(tx.transactionId)">
+                  <mat-icon>undo</mat-icon> Refund This Payment
+                </button>
+              </div>
+            }
+
+            @if (refundingId() === tx.transactionId) {
+              <div class="refund-form">
+                <p class="refund-note">
+                  <mat-icon>info</mat-icon>
+                  Instant refund available within 30 minutes of payment. Your reservation will be cancelled.
+                </p>
+                <form [formGroup]="refundForm">
+                  <mat-form-field appearance="outline" class="w-full">
+                    <mat-label>Reason for refund</mat-label>
+                    <textarea matInput formControlName="reason" rows="2"></textarea>
+                    @if (refundForm.get('reason')?.hasError('required') && refundForm.get('reason')?.touched) {
+                      <mat-error>Reason is required</mat-error>
+                    }
+                  </mat-form-field>
+                </form>
+                <div class="refund-actions">
+                  <button mat-stroked-button (click)="refundingId.set(null)">Cancel</button>
+                  <button mat-flat-button color="warn" (click)="submitRefund()" [disabled]="isSaving()">
+                    {{ isSaving() ? 'Processing…' : 'Confirm Refund' }}
+                  </button>
+                </div>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (totalPages > 1) {
+        <div class="pagination">
+          <button mat-stroked-button [disabled]="page() === 1" (click)="prev()">
+            <mat-icon>chevron_left</mat-icon>
+          </button>
+          <span>{{ page() }} / {{ totalPages }}</span>
+          <button mat-stroked-button [disabled]="page() >= totalPages" (click)="next()">
+            <mat-icon>chevron_right</mat-icon>
+          </button>
+        </div>
+      }
+    }
+  </div>
+</div>

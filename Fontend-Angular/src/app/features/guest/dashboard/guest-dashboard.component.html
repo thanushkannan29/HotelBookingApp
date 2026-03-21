@@ -1,0 +1,106 @@
+<div class="page-wrapper">
+  <div class="container">
+
+    <div class="dashboard-header">
+      <div class="welcome-block">
+        <div class="welcome-avatar">
+          @if (profile()?.profileImageUrl) {
+            <img [src]="profile()!.profileImageUrl!" [alt]="auth.currentUser()?.userName" />
+          } @else {
+            <span>{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</span>
+          }
+        </div>
+        <div>
+          <h1 class="section-title">Welcome back, {{ auth.currentUser()?.userName }}!</h1>
+          <p class="section-subtitle">Here's a summary of your travel activity.</p>
+        </div>
+      </div>
+      <a mat-flat-button color="primary" routerLink="/hotels">
+        <mat-icon>search</mat-icon> Find Hotels
+      </a>
+    </div>
+
+    @if (data(); as d) {
+      <!-- Stats Grid -->
+      <div class="stats-grid animate-fade-in">
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(45,58,140,0.1)">
+            <mat-icon style="color: var(--color-primary)">book_online</mat-icon>
+          </div>
+          <div class="stat-label">Total Bookings</div>
+          <div class="stat-value">{{ d.totalBookings }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(46,125,50,0.1)">
+            <mat-icon style="color: var(--color-success)">event_available</mat-icon>
+          </div>
+          <div class="stat-label">Active Bookings</div>
+          <div class="stat-value">{{ d.activeBookings }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(201,125,27,0.1)">
+            <mat-icon style="color: var(--color-accent)">payments</mat-icon>
+          </div>
+          <div class="stat-label">Total Spent</div>
+          <div class="stat-value">₹{{ d.totalSpent | number:'1.0-0' }}</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon" style="background: rgba(198,40,40,0.1)">
+            <mat-icon style="color: var(--color-error)">replay</mat-icon>
+          </div>
+          <div class="stat-label">Pending Refunds</div>
+          <div class="stat-value">{{ d.pendingRefunds }}</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="quick-actions">
+        <h2 class="section-title" style="font-size:1.25rem; margin-bottom: 16px;">Quick Actions</h2>
+        <div class="action-cards">
+          <a class="action-card" routerLink="/booking/list">
+            <mat-icon>list_alt</mat-icon>
+            <span>View All Bookings</span>
+            <small>{{ d.totalBookings }} total</small>
+          </a>
+          <a class="action-card" routerLink="/guest/reviews">
+            <mat-icon>star_rate</mat-icon>
+            <span>My Reviews</span>
+            <small>Write & manage</small>
+          </a>
+          <a class="action-card" routerLink="/guest/refunds">
+            <mat-icon>account_balance_wallet</mat-icon>
+            <span>Refund Requests</span>
+            <small>{{ d.pendingRefunds }} pending</small>
+          </a>
+          <a class="action-card" routerLink="/guest/profile">
+            <mat-icon>manage_accounts</mat-icon>
+            <span>My Profile</span>
+            <small>Update details</small>
+          </a>
+        </div>
+      </div>
+
+      <!-- Booking Breakdown -->
+      <div class="breakdown-card">
+        <h2 class="section-title" style="font-size:1.1rem; margin-bottom: 16px;">Booking Breakdown</h2>
+        <div class="breakdown-grid">
+          <div class="breakdown-item">
+            <span class="b-label">Active (Confirmed)</span>
+            <span class="b-value success">{{ d.activeBookings }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="b-label">Completed Stays</span>
+            <span class="b-value primary">{{ d.completedBookings }}</span>
+          </div>
+          <div class="breakdown-item">
+            <span class="b-label">Cancelled</span>
+            <span class="b-value error">{{ d.cancelledBookings }}</span>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

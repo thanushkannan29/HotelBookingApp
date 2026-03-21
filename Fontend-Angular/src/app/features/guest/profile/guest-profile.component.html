@@ -1,0 +1,117 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width: 720px;">
+
+    <div class="page-header-row">
+      <div>
+        <h1 class="section-title">My Profile</h1>
+        <p class="section-subtitle">Manage your personal information</p>
+      </div>
+      @if (!isEditing()) {
+        <button mat-stroked-button (click)="isEditing.set(true)">
+          <mat-icon>edit</mat-icon> Edit Profile
+        </button>
+      }
+    </div>
+
+    @if (profile(); as p) {
+      <div class="profile-card animate-fade-in">
+
+        <!-- Avatar Section -->
+        <div class="profile-avatar-section">
+          <div class="avatar-circle">
+            @if (p.profileImageUrl) {
+              <img [src]="p.profileImageUrl" [alt]="p.name" />
+            } @else {
+              <span>{{ p.name.charAt(0).toUpperCase() }}</span>
+            }
+          </div>
+          <div>
+            <h2 class="profile-name">{{ p.name }}</h2>
+            <p class="profile-email">{{ p.email }}</p>
+            <span class="badge badge-primary">{{ p.role }}</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        @if (!isEditing()) {
+          <!-- Read-only View -->
+          <div class="profile-details">
+            <div class="detail-group">
+              <h4>Contact Information</h4>
+              <div class="detail-grid">
+                <div class="detail-row">
+                  <span class="label">Phone</span>
+                  <span class="value">{{ p.phoneNumber }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Address</span>
+                  <span class="value">{{ p.address }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">City</span>
+                  <span class="value">{{ p.city }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">State</span>
+                  <span class="value">{{ p.state }}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="label">Pincode</span>
+                  <span class="value">{{ p.pincode }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <!-- Edit Form -->
+          <form [formGroup]="form" (ngSubmit)="save()" class="profile-form">
+            <div class="form-grid-2">
+              <mat-form-field appearance="outline">
+                <mat-label>Full Name</mat-label>
+                <input matInput formControlName="name" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Phone Number</mat-label>
+                <input matInput formControlName="phoneNumber" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="col-span-2">
+                <mat-label>Address</mat-label>
+                <input matInput formControlName="address" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>City</mat-label>
+                <input matInput formControlName="city" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>State</mat-label>
+                <input matInput formControlName="state" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Pincode</mat-label>
+                <input matInput formControlName="pincode" />
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Profile Image URL</mat-label>
+                <input matInput formControlName="profileImageUrl" placeholder="https://…" />
+              </mat-form-field>
+            </div>
+
+            <div class="form-actions">
+              <button mat-stroked-button type="button" (click)="isEditing.set(false)">Cancel</button>
+              <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+                {{ isSaving() ? 'Saving…' : 'Save Changes' }}
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    }
+  </div>
+</div>

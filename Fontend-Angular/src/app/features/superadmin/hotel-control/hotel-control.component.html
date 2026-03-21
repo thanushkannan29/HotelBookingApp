@@ -1,0 +1,80 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/superadmin/dashboard" class="back-link">
+          <mat-icon>arrow_back</mat-icon> Dashboard
+        </a>
+        <h1 class="section-title">Hotel Control</h1>
+        <p class="section-subtitle">{{ hotels().length }} hotels registered on the platform</p>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-row">
+      <button class="filter-pill" [class.active]="filterMode() === 'all'"     (click)="filterMode.set('all')">All ({{ hotels().length }})</button>
+      <button class="filter-pill" [class.active]="filterMode() === 'active'"  (click)="filterMode.set('active')">Active</button>
+      <button class="filter-pill" [class.active]="filterMode() === 'blocked'" (click)="filterMode.set('blocked')">Blocked</button>
+    </div>
+
+    @if (filtered.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">domain</mat-icon>
+        <h3>No hotels found</h3>
+      </div>
+    } @else {
+      <div class="hotels-grid">
+        @for (hotel of filtered; track hotel.hotelId) {
+          <div class="hotel-card" [class.blocked]="hotel.isBlockedBySuperAdmin">
+            <div class="hc-header">
+              <div>
+                <h3 class="hc-name">{{ hotel.name }}</h3>
+                <p class="hc-city"><mat-icon>place</mat-icon>{{ hotel.city }}</p>
+              </div>
+              <div class="hc-badges">
+                @if (hotel.isBlockedBySuperAdmin) {
+                  <span class="badge badge-error">🚫 Blocked</span>
+                } @else if (hotel.isActive) {
+                  <span class="badge badge-success">● Live</span>
+                } @else {
+                  <span class="badge badge-muted">○ Inactive</span>
+                }
+              </div>
+            </div>
+
+            <div class="hc-stats">
+              <div class="hc-stat">
+                <span class="label">Reservations</span>
+                <span class="value">{{ hotel.totalReservations }}</span>
+              </div>
+              <div class="hc-stat">
+                <span class="label">Revenue</span>
+                <span class="value">₹{{ hotel.totalRevenue | number:'1.0-0' }}</span>
+              </div>
+              <div class="hc-stat">
+                <span class="label">Contact</span>
+                <span class="value">{{ hotel.contactNumber }}</span>
+              </div>
+              <div class="hc-stat">
+                <span class="label">Joined</span>
+                <span class="value">{{ hotel.createdAt | date:'MMM y' }}</span>
+              </div>
+            </div>
+
+            <div class="hc-actions">
+              @if (hotel.isBlockedBySuperAdmin) {
+                <button mat-flat-button color="primary" (click)="unblock(hotel)">
+                  <mat-icon>lock_open</mat-icon> Unblock Hotel
+                </button>
+              } @else {
+                <button mat-stroked-button color="warn" (click)="block(hotel)">
+                  <mat-icon>block</mat-icon> Block Hotel
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

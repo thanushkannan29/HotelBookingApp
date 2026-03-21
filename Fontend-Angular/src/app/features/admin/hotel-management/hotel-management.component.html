@@ -1,0 +1,82 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width:720px;">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link">
+          <mat-icon>arrow_back</mat-icon> Dashboard
+        </a>
+        <h1 class="section-title">Edit Hotel</h1>
+        @if (dashboard(); as d) {
+          <p class="section-subtitle">{{ d.hotelName }}</p>
+        }
+      </div>
+    </div>
+
+    @if (isLoading()) {
+      <div style="display:flex; justify-content:center; padding:60px;">
+        <mat-spinner diameter="40" />
+      </div>
+    } @else {
+      <div class="form-card">
+        <form [formGroup]="form" (ngSubmit)="save()">
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="col-span-2">
+              <mat-label>Hotel Name</mat-label>
+              <input matInput formControlName="name" />
+              <mat-icon matPrefix>hotel</mat-icon>
+              @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+                <mat-error>Hotel name is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>City</mat-label>
+              <input matInput formControlName="city" />
+              <mat-icon matPrefix>location_city</mat-icon>
+              @if (form.get('city')?.hasError('required') && form.get('city')?.touched) {
+                <mat-error>City is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline">
+              <mat-label>Contact Number</mat-label>
+              <input matInput formControlName="contactNumber" />
+              <mat-icon matPrefix>phone</mat-icon>
+              @if (form.get('contactNumber')?.hasError('required') && form.get('contactNumber')?.touched) {
+                <mat-error>Contact number is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="col-span-2">
+              <mat-label>Address</mat-label>
+              <input matInput formControlName="address" />
+              <mat-icon matPrefix>place</mat-icon>
+              @if (form.get('address')?.hasError('required') && form.get('address')?.touched) {
+                <mat-error>Address is required</mat-error>
+              }
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="col-span-2">
+              <mat-label>Description</mat-label>
+              <textarea matInput formControlName="description" rows="4"
+                        placeholder="Describe your hotel…"></textarea>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="col-span-2">
+              <mat-label>Image URL</mat-label>
+              <input matInput formControlName="imageUrl" placeholder="https://…" />
+              <mat-icon matPrefix>image</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="form-actions">
+            <a mat-stroked-button routerLink="/admin/dashboard">Cancel</a>
+            <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+              @if (isSaving()) { Saving… } @else { Save Changes }
+            </button>
+          </div>
+        </form>
+      </div>
+    }
+  </div>
+</div>

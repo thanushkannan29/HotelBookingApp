@@ -1,0 +1,142 @@
+<div class="contact-page">
+  <div class="contact-hero">
+    <div class="container">
+      <h1 class="hero-title">Contact & Support</h1>
+      <p class="hero-sub">We're here to help. Reach us any time.</p>
+    </div>
+  </div>
+
+  <div class="container contact-body">
+
+    <!-- Top Cards -->
+    <div class="contact-cards">
+      <div class="contact-card primary">
+        <div class="cc-icon"><mat-icon>mail</mat-icon></div>
+        <div class="cc-body">
+          <h3>Email Support</h3>
+          <p>For hotel issues, bugs, or general enquiries</p>
+          <a href="mailto:thanush@superadmin.com" class="cc-link">
+            thanush&#64;superadmin.com
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="cc-icon phone"><mat-icon>phone</mat-icon></div>
+        <div class="cc-body">
+          <h3>Call Support</h3>
+          <p>Available Monday – Saturday, 9 AM – 7 PM</p>
+          <a href="tel:+919840650390" class="cc-link">
+            +91 98406 50390
+          </a>
+        </div>
+      </div>
+
+      <div class="contact-card">
+        <div class="cc-icon hours"><mat-icon>schedule</mat-icon></div>
+        <div class="cc-body">
+          <h3>Support Hours</h3>
+          <p>Mon – Sat: 9:00 AM – 7:00 PM IST</p>
+          <p>Sunday: 10:00 AM – 4:00 PM IST</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Detailed Sections -->
+    <div class="contact-sections">
+
+      <!-- Hotel Partner Support -->
+      <div class="cs-section">
+        <h2 class="cs-title">
+          <mat-icon>hotel</mat-icon> Hotel Partner Support
+        </h2>
+        <p class="cs-desc">Are you a hotel owner experiencing issues with your dashboard, room management, or payments? Our dedicated partner support team is here to help.</p>
+        <div class="cs-actions">
+          <a href="mailto:thanush@superadmin.com?subject=Hotel Partner Issue" mat-flat-button color="primary">
+            <mat-icon>email</mat-icon> Email Hotel Support
+          </a>
+          <a href="tel:+919840650390" mat-stroked-button>
+            <mat-icon>phone</mat-icon> Call Now
+          </a>
+        </div>
+      </div>
+
+      <div class="cs-divider"></div>
+
+      <!-- Bug Reports -->
+      <div class="cs-section">
+        <h2 class="cs-title">
+          <mat-icon>bug_report</mat-icon> Report a Bug
+        </h2>
+        <p class="cs-desc">Found something broken? Please describe the issue clearly — which page, what you did, and what happened — and send it to our support email.</p>
+        <div class="cs-info-grid">
+          <div class="cs-info-item">
+            <span class="label">Bug Report Email</span>
+            <a href="mailto:thanush@superadmin.com?subject=Bug Report" class="value link">thanush&#64;superadmin.com</a>
+          </div>
+          <div class="cs-info-item">
+            <span class="label">Subject Line</span>
+            <span class="value">Bug Report: [brief description]</span>
+          </div>
+          <div class="cs-info-item">
+            <span class="label">Include In Email</span>
+            <span class="value">Page URL, steps to reproduce, screenshot if possible</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="cs-divider"></div>
+
+      <!-- Guest Support -->
+      <div class="cs-section">
+        <h2 class="cs-title">
+          <mat-icon>person</mat-icon> Guest Support
+        </h2>
+        <p class="cs-desc">Having trouble with a booking, payment, or refund? Our guest support team responds within 24 hours on business days.</p>
+        <div class="cs-info-grid">
+          <div class="cs-info-item">
+            <span class="label">Email</span>
+            <a href="mailto:thanush@superadmin.com?subject=Guest Support" class="value link">thanush&#64;superadmin.com</a>
+          </div>
+          <div class="cs-info-item">
+            <span class="label">Phone</span>
+            <a href="tel:+919840650390" class="value link">+91 98406 50390</a>
+          </div>
+          <div class="cs-info-item">
+            <span class="label">Response Time</span>
+            <span class="value">Within 24 hours on weekdays</span>
+          </div>
+        </div>
+        <div class="cs-actions" style="margin-top:16px;">
+          <a routerLink="/guest/bookings" mat-stroked-button>View My Bookings</a>
+          <a routerLink="/guest/refunds" mat-stroked-button>Refund Requests</a>
+        </div>
+      </div>
+
+      <div class="cs-divider"></div>
+
+      <!-- FAQ -->
+      <div class="cs-section">
+        <h2 class="cs-title"><mat-icon>help_outline</mat-icon> Quick FAQ</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <h4>How do I cancel a booking?</h4>
+            <p>Go to <strong>My Bookings</strong>, open the reservation, and click <strong>Cancel Reservation</strong>. If you paid, a refund request is created automatically.</p>
+          </div>
+          <div class="faq-item">
+            <h4>When will I receive my refund?</h4>
+            <p>Direct refunds (within 30 min of payment) are instant. Admin-approved refunds are processed within 3–5 business days.</p>
+          </div>
+          <div class="faq-item">
+            <h4>How do I list my hotel?</h4>
+            <p>Register as a Hotel Admin at <a routerLink="/auth/register-admin">Register Your Property</a>. Setup takes under 5 minutes.</p>
+          </div>
+          <div class="faq-item">
+            <h4>My hotel is showing as blocked. What do I do?</h4>
+            <p>Contact our platform support at <a href="mailto:thanush@superadmin.com">thanush&#64;superadmin.com</a> and we will review your case.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
