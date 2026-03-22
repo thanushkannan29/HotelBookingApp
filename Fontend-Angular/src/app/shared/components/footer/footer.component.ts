@@ -12,9 +12,9 @@ import { RouterLink } from '@angular/router';
         <!-- Brand -->
         <div class="footer-brand">
           <div class="brand-header">
-            <span class="brand-icon">🏨</span>
-            <span class="brand-name">ThanushStayHub</span>
-          </div>
+  <img src="assets/dark.png" alt="ThanushStayHub Logo" class="brand-icon" />
+  <span class="brand-name">ThanushStayHub</span>
+</div>
           <p class="brand-tagline">
             Smart Hotel Booking & Management Platform for guests and hotel admins.
           </p>
@@ -90,10 +90,12 @@ import { RouterLink } from '@angular/router';
       margin-bottom: 10px;
     }
 
-    .brand-icon {
-      font-size: 1.6rem;
-      color: #22c55e;
-    }
+.brand-icon {
+  width: 36px;
+  height: 36px;
+  object-fit: contain;
+  border-radius: 8px;
+}
 
     .brand-name {
       font-size: 1.3rem;

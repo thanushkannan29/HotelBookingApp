@@ -1,13 +1,13 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
-import { DatePipe, DecimalPipe, NgClass } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { RefundService } from '../../../core/services/api.services';
 import { RefundRequestResponseDto } from '../../../core/models/models';
 
 @Component({
   selector: 'app-guest-refunds',
   standalone: true,
-  imports: [MatIconModule, DatePipe, DecimalPipe, NgClass],
+  imports: [MatIconModule, DatePipe, DecimalPipe],
   template: `
     <div class="page-wrapper">
       <div class="container" style="max-width:760px;">

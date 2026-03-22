@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
@@ -17,7 +17,7 @@ import { HotelCardComponent } from '../hotel-card/hotel-card.component';
   selector: 'app-hotel-list',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink,
+    ReactiveFormsModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatDatepickerModule, MatNativeDateModule,
     HotelCardComponent, DatePipe
