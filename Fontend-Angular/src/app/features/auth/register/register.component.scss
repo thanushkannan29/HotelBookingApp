@@ -34,22 +34,25 @@
   color: white;
   max-width: 400px;
 
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-bottom: 48px;
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 48px;
 
-    .brand-icon {
-      font-size: 2rem;
-      color: var(--color-accent-light);
-    }
-    .brand-name {
-      font-family: var(--font-display);
-      font-size: 1.5rem;
-      font-weight: 600;
-    }
+  .brand-icon {
+    width: 40px;   // control logo size
+    height: 40px;
+    object-fit: contain;
   }
+
+  .brand-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 600;
+  }
+}
+
 
   h1 {
     font-family: var(--font-display);

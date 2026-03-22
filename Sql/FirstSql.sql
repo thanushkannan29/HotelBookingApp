@@ -1,4 +1,4 @@
-select * from Users
+select * from Users order by Email 9D778C9B-5359-47FF-BDC6-F781620CB66E
 select * from Hotels
 select * from UserProfileDetails
 select * from Rooms
