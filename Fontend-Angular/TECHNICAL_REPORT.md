@@ -386,4 +386,4 @@ The same component is used for both Admin (`/admin/audit-logs`) and SuperAdmin (
 
 ---
 
-*Generated for ThanushStayHub Hotel Booking System — Angular 18 Frontend*
+*ThanushStayHub Hotel Booking System — Angular 18 Frontend*
