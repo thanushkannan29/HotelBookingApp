@@ -5,7 +5,7 @@
         <a routerLink="/admin/dashboard" class="back-link">
           <mat-icon>arrow_back</mat-icon> Dashboard
         </a>
-        <h1 class="section-title">Edit Hotel</h1>
+        <h1 class="section-title">🏨 Edit Hotel</h1>
         @if (dashboard(); as d) {
           <p class="section-subtitle">{{ d.hotelName }}</p>
         }
@@ -13,42 +13,48 @@
     </div>
 
     @if (isLoading()) {
-      <div style="display:flex; justify-content:center; padding:60px;">
+      <div style="display:flex;justify-content:center;padding:60px;">
         <mat-spinner diameter="40" />
       </div>
     } @else {
-      <div class="form-card">
+      <!-- Hotel Info Form -->
+      <div class="form-card mb-4">
         <form [formGroup]="form" (ngSubmit)="save()">
           <div class="form-grid">
             <mat-form-field appearance="outline" class="col-span-2">
               <mat-label>Hotel Name</mat-label>
-              <input matInput formControlName="name" />
+              <input matInput formControlName="name" maxlength="200" />
               <mat-icon matPrefix>hotel</mat-icon>
               @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
                 <mat-error>Hotel name is required</mat-error>
               }
+              @if (form.get('name')?.hasError('maxlength')) {
+                <mat-error>Max 200 characters</mat-error>
+              }
             </mat-form-field>
 
-            <!-- F2D: City autocomplete replaces plain city input -->
             <div class="col-span-1">
               <app-city-autocomplete [control]="cityControl" />
               @if (cityControl.hasError('required') && cityControl.touched) {
-                <mat-error style="font-size:12px; margin: -8px 0 8px 16px;">City is required</mat-error>
+                <mat-error style="font-size:12px;margin:-8px 0 8px 16px;">City is required</mat-error>
               }
             </div>
 
             <mat-form-field appearance="outline">
               <mat-label>Contact Number</mat-label>
-              <input matInput formControlName="contactNumber" />
+              <input matInput formControlName="contactNumber" maxlength="10" />
               <mat-icon matPrefix>phone</mat-icon>
               @if (form.get('contactNumber')?.hasError('required') && form.get('contactNumber')?.touched) {
-                <mat-error>Contact number is required</mat-error>
+                <mat-error>Required</mat-error>
+              }
+              @if (form.get('contactNumber')?.hasError('pattern')) {
+                <mat-error>Must be 10 digits</mat-error>
               }
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="col-span-2">
               <mat-label>Address</mat-label>
-              <input matInput formControlName="address" />
+              <input matInput formControlName="address" maxlength="500" />
               <mat-icon matPrefix>place</mat-icon>
               @if (form.get('address')?.hasError('required') && form.get('address')?.touched) {
                 <mat-error>Address is required</mat-error>
@@ -57,8 +63,7 @@
 
             <mat-form-field appearance="outline" class="col-span-2">
               <mat-label>Description</mat-label>
-              <textarea matInput formControlName="description" rows="4"
-                        placeholder="Describe your hotel…"></textarea>
+              <textarea matInput formControlName="description" rows="4" placeholder="Describe your hotel…"></textarea>
             </mat-form-field>
 
             <mat-form-field appearance="outline" class="col-span-2">
@@ -67,12 +72,14 @@
               <mat-icon matPrefix>image</mat-icon>
             </mat-form-field>
 
-            <!-- F7D: UPI ID field -->
             <mat-form-field appearance="outline" class="col-span-2">
-              <mat-label>Hotel UPI ID (e.g. hotelname&#64;upi)</mat-label>
+              <mat-label>💳 Hotel UPI ID</mat-label>
               <input matInput formControlName="upiId" placeholder="yourhotel@upi" />
               <mat-icon matPrefix>account_balance_wallet</mat-icon>
               <mat-hint>Guests will see this to make payment</mat-hint>
+              @if (form.get('upiId')?.hasError('pattern')) {
+                <mat-error>Format: name&#64;bank (e.g. hotel&#64;okaxis)</mat-error>
+              }
             </mat-form-field>
           </div>
 
@@ -84,14 +91,11 @@
           </div>
         </form>
       </div>
-    }
-  </div>
-</div>
 
       <!-- GST Settings Card -->
-      <div class="form-card mt-4">
+      <div class="form-card">
         <h3 class="form-card-title">🧾 GST Settings</h3>
-        <form [formGroup]="gstForm" (ngSubmit)="saveGst()" class="d-flex gap-3 align-items-start">
+        <form [formGroup]="gstForm" (ngSubmit)="saveGst()" class="d-flex gap-3 align-items-start mt-2">
           <mat-form-field appearance="outline" style="width:200px">
             <mat-label>GST Percentage (%)</mat-label>
             <input matInput type="number" formControlName="gstPercent" min="0" max="28" />

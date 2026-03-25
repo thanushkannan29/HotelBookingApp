@@ -215,18 +215,31 @@ namespace HotelBookingAppWebApi.Services
             var hotel = await _hotelRepo.GetQueryable()
                 .AsNoTracking()
                 .Include(h => h.RoomTypes!.Where(rt => rt.IsActive))
+                    .ThenInclude(rt => rt.RoomTypeAmenities!)
+                        .ThenInclude(rta => rta.Amenity)
                 .Include(h => h.Reviews!)
                     .ThenInclude(r => r.User)
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
 
             var reviews = hotel.Reviews ?? new List<Review>();
-            var amenities = hotel.RoomTypes?
+
+            // Collect unique amenities from join table (new) + legacy string (fallback)
+            var amenitiesFromJoin = hotel.RoomTypes?
+                .SelectMany(rt => rt.RoomTypeAmenities ?? Enumerable.Empty<RoomTypeAmenity>())
+                .Select(rta => rta.Amenity?.Name ?? string.Empty)
+                .Where(n => !string.IsNullOrEmpty(n))
+                .Distinct()
+                .ToList() ?? new List<string>();
+
+            var amenitiesFromString = hotel.RoomTypes?
                 .Where(rt => !string.IsNullOrEmpty(rt.Amenities))
                 .SelectMany(rt => rt.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries))
                 .Select(a => a.Trim())
                 .Distinct()
                 .ToList() ?? new List<string>();
+
+            var allAmenities = amenitiesFromJoin.Union(amenitiesFromString).Distinct().ToList();
 
             var roomTypeDtos = hotel.RoomTypes?.Select(t => new RoomTypePublicDto
             {
@@ -234,8 +247,16 @@ namespace HotelBookingAppWebApi.Services
                 Name = t.Name,
                 Description = t.Description,
                 MaxOccupancy = t.MaxOccupancy,
-                Amenities = t.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(a => a.Trim()) ?? Enumerable.Empty<string>(),
+                Amenities = t.RoomTypeAmenities?.Any() == true
+                    ? t.RoomTypeAmenities.Select(rta => rta.Amenity?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n))
+                    : t.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()) ?? Enumerable.Empty<string>(),
+                AmenityList = t.RoomTypeAmenities?.Select(rta => new AmenityPublicDto
+                {
+                    AmenityId = rta.AmenityId,
+                    Name = rta.Amenity?.Name ?? string.Empty,
+                    Category = rta.Amenity?.Category ?? string.Empty,
+                    IconName = rta.Amenity?.IconName
+                }) ?? Enumerable.Empty<AmenityPublicDto>(),
                 ImageUrl = t.ImageUrl
             }) ?? Enumerable.Empty<RoomTypePublicDto>();
 
@@ -248,10 +269,11 @@ namespace HotelBookingAppWebApi.Services
                 Description = hotel.Description,
                 ImageUrl = hotel.ImageUrl,
                 ContactNumber = hotel.ContactNumber,
+                GstPercent = hotel.GstPercent,
                 AverageRating = reviews.Any()
                     ? Math.Round(reviews.Average(r => (decimal)r.Rating), 2) : 0m,
                 ReviewCount = reviews.Count,
-                Amenities = amenities,
+                Amenities = allAmenities,
                 RoomTypes = roomTypeDtos,
                 Reviews = reviews.OrderByDescending(r => r.CreatedDate).Take(10).Select(r => new ReviewDto
                 {
@@ -269,6 +291,8 @@ namespace HotelBookingAppWebApi.Services
         {
             return await _roomTypeRepo.GetQueryable()
                 .AsNoTracking()
+                .Include(rt => rt.RoomTypeAmenities!)
+                    .ThenInclude(rta => rta.Amenity)
                 .Where(r => r.HotelId == hotelId && r.IsActive)
                 .Select(t => new RoomTypePublicDto
                 {
@@ -276,8 +300,15 @@ namespace HotelBookingAppWebApi.Services
                     Name = t.Name,
                     Description = t.Description,
                     MaxOccupancy = t.MaxOccupancy,
-                    Amenities = t.Amenities != null
-                        ? t.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries) : new string[] { }
+                    Amenities = t.RoomTypeAmenities!.Select(rta => rta.Amenity!.Name),
+                    AmenityList = t.RoomTypeAmenities!.Select(rta => new AmenityPublicDto
+                    {
+                        AmenityId = rta.AmenityId,
+                        Name = rta.Amenity!.Name,
+                        Category = rta.Amenity.Category,
+                        IconName = rta.Amenity.IconName
+                    }),
+                    ImageUrl = t.ImageUrl
                 })
                 .ToListAsync();
         }

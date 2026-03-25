@@ -144,7 +144,7 @@
                       <mat-slide-toggle [(ngModel)]="useWallet" [ngModelOptions]="{standalone: true}" class="mb-2">
                         Use Wallet Balance
                       </mat-slide-toggle>
-                      @if (useWallet()) {
+                      @if (useWallet) {
                         <mat-form-field appearance="outline" class="w-100">
                           <mat-label>Amount to use from wallet (₹)</mat-label>
                           <input matInput type="number" [formControl]="bookingForm.get('walletAmount')!"

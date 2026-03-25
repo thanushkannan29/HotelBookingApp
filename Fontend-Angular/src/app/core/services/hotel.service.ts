@@ -6,7 +6,7 @@ import {
   ApiResponse, HotelListItemDto, HotelDetailsDto, SearchHotelRequestDto,
   SearchHotelResponseDto, RoomTypePublicDto, RoomAvailabilityDto,
   UpdateHotelDto, SuperAdminHotelListDto, PagedSuperAdminHotelResponseDto,
-  IndianCityDto, AmenityResponseDto,
+  AmenityResponseDto,
 } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -68,10 +68,10 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
-  // F9A: City search API
-  searchCities(query: string): Observable<IndianCityDto[]> {
-    return this.http.get<ApiResponse<IndianCityDto[]>>(
-      `${this.base}/public/cities/search?query=${query}`
+  // F9A: City search API (deprecated - use CityService instead)
+  searchCities(query: string): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(
+      `${this.base}/public/cities`, { params: { search: query } }
     ).pipe(map(r => r.data ?? []));
   }
 

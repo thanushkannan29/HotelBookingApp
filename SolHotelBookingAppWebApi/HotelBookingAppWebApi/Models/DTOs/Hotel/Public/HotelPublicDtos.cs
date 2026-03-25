@@ -22,6 +22,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public string ContactNumber { get; set; } = string.Empty;
         public decimal AverageRating { get; set; }
         public int ReviewCount { get; set; }
+        public decimal GstPercent { get; set; }
         public IEnumerable<string> Amenities { get; set; } = new List<string>();
         public IEnumerable<ReviewDto> Reviews { get; set; } = new List<ReviewDto>();
         public IEnumerable<RoomTypePublicDto> RoomTypes { get; set; } = new List<RoomTypePublicDto>();
@@ -43,9 +44,18 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public string Description { get; set; } = string.Empty;
         public int MaxOccupancy { get; set; }
         public IEnumerable<string> Amenities { get; set; } = new List<string>();
+        public IEnumerable<AmenityPublicDto> AmenityList { get; set; } = new List<AmenityPublicDto>();
 
         /// <summary>Optional room type photo URL</summary>
         public string? ImageUrl { get; set; }
+    }
+
+    public class AmenityPublicDto
+    {
+        public Guid AmenityId { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string? IconName { get; set; }
     }
 
     public class RoomAvailabilityDto

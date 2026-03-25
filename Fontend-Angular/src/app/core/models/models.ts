@@ -81,6 +81,7 @@ export interface HotelDetailsDto {
   contactNumber: string;
   averageRating: number;
   reviewCount: number;
+  gstPercent: number;
   amenities: string[];
   reviews: ReviewDto[];
   roomTypes: RoomTypePublicDto[];
@@ -94,13 +95,21 @@ export interface ReviewDto {
   createdDate: string;
 }
 
-// F8B: Added imageUrl
+export interface AmenityPublicDto {
+  amenityId: string;
+  name: string;
+  category: string;
+  iconName?: string;
+}
+
+// F8B: Added imageUrl + amenityList
 export interface RoomTypePublicDto {
   roomTypeId: string;
   name: string;
   description: string;
   maxOccupancy: number;
   amenities: string[];
+  amenityList: AmenityPublicDto[];
   imageUrl?: string;
 }
 

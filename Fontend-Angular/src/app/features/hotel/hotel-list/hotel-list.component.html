@@ -146,14 +146,14 @@
             </div>
 
             <!-- Amenities -->
-            @if (amenities().length > 0) {
+            @if (amenityObjects().length > 0) {
               <div class="filter-group">
                 <label class="filter-label">🏷️ Amenities</label>
-                @for (a of amenities().slice(0, 10); track a) {
+                @for (a of amenityObjects().slice(0, 12); track a.amenityId) {
                   <div>
-                    <mat-checkbox [checked]="selectedAmenities().includes(a)"
-                                  (change)="toggleAmenity(a)">
-                      {{ a }}
+                    <mat-checkbox [checked]="selectedAmenities().includes(a.amenityId)"
+                                  (change)="toggleAmenity(a.amenityId)">
+                      {{ a.name }}
                     </mat-checkbox>
                   </div>
                 }

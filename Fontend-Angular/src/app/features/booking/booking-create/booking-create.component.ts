@@ -65,7 +65,7 @@ export class BookingCreateComponent implements OnInit {
   promoValid         = signal<boolean | null>(null);
   promoMessage       = signal('');
   promoDiscount      = signal(0);
-  useWallet          = signal(false);
+  useWallet          = false;  // plain boolean for ngModel binding
   today              = new Date();
   tomorrow           = new Date(Date.now() + 86400000); // same-day block: min is tomorrow
 
@@ -103,11 +103,11 @@ export class BookingCreateComponent implements OnInit {
     return (rt?.pricePerNight ?? 0) * this.totalNights() * rooms;
   });
 
-  gstPercent = computed(() => (this.hotel() as any)?.gstPercent ?? 0);
+  gstPercent = computed(() => this.hotel()?.gstPercent ?? 0);
   gstAmount  = computed(() => Math.round(this.baseTotal() * this.gstPercent() / 100 * 100) / 100);
 
   finalTotal = computed(() => {
-    const walletUsed = this.useWallet()
+    const walletUsed = this.useWallet
       ? Math.min(this.bookingForm.get('walletAmount')?.value ?? 0, this.walletInfo()?.balance ?? 0)
       : 0;
     return Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - walletUsed);
@@ -213,7 +213,7 @@ export class BookingCreateComponent implements OnInit {
       return;
     }
 
-    const walletUsed = this.useWallet()
+    const walletUsed = this.useWallet
       ? Math.min(v.walletAmount ?? 0, this.walletInfo()?.balance ?? 0)
       : 0;
 

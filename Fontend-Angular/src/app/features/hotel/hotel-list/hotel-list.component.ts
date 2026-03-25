@@ -159,14 +159,14 @@ export class HotelListComponent implements OnInit, AfterViewInit {
     this.minRating.set(0);
   }
 
-  toggleAmenity(name: string) {
+  toggleAmenity(amenityId: string) {
     const current = this.selectedAmenities();
-    if (current.includes(name)) {
-      this.selectedAmenities.set(current.filter(a => a !== name));
+    if (current.includes(amenityId)) {
+      this.selectedAmenities.set(current.filter(a => a !== amenityId));
     } else {
-      this.selectedAmenities.set([...current, name]);
+      this.selectedAmenities.set([...current, amenityId]);
     }
-    this.applyFilters();
+    this.search();
   }
 
   private formatDate(d: Date): string {
