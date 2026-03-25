@@ -15,6 +15,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IAuditLogService _auditLogService;
+        private readonly IWalletService _walletService;
         private readonly IUnitOfWork _unitOfWork;
 
         public RefundRequestService(
@@ -23,6 +24,7 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Reservation> reservationRepo,
             IRepository<Guid, User> userRepo,
             IAuditLogService auditLogService,
+            IWalletService walletService,
             IUnitOfWork unitOfWork)
         {
             _refundRepo = refundRepo;
@@ -30,6 +32,7 @@ namespace HotelBookingAppWebApi.Services
             _reservationRepo = reservationRepo;
             _userRepo = userRepo;
             _auditLogService = auditLogService;
+            _walletService = walletService;
             _unitOfWork = unitOfWork;
         }
 
@@ -99,6 +102,12 @@ namespace HotelBookingAppWebApi.Services
                 refundRequest.ProcessedAt = DateTime.UtcNow;
 
                 await _unitOfWork.CommitAsync();
+
+                // Credit refund amount to guest's wallet
+                await _walletService.CreditAsync(
+                    refundRequest.UserId,
+                    transaction.Amount,
+                    $"Refund for reservation {refundRequest.Reservation.ReservationCode}");
 
                 await _auditLogService.LogAsync(adminId, "RefundApproved", "RefundRequest",
                     refundRequest.RefundRequestId,

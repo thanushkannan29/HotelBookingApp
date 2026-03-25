@@ -1,3 +1,4 @@
+using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
@@ -13,22 +14,28 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, RoomType> _roomTypeRepo;
         private readonly IRepository<Guid, RoomTypeRate> _rateRepo;
+        private readonly IRepository<Guid, RoomTypeAmenity> _roomTypeAmenityRepo;
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IAuditLogService _auditLogService;
         private readonly IUnitOfWork _unitOfWork;
+        private readonly HotelBookingContext _context;
 
         public RoomTypeService(
             IRepository<Guid, RoomType> roomTypeRepo,
             IRepository<Guid, RoomTypeRate> rateRepo,
+            IRepository<Guid, RoomTypeAmenity> roomTypeAmenityRepo,
             IRepository<Guid, User> userRepo,
             IAuditLogService auditLogService,
-            IUnitOfWork unitOfWork)
+            IUnitOfWork unitOfWork,
+            HotelBookingContext context)
         {
             _roomTypeRepo = roomTypeRepo;
             _rateRepo = rateRepo;
+            _roomTypeAmenityRepo = roomTypeAmenityRepo;
             _userRepo = userRepo;
             _auditLogService = auditLogService;
             _unitOfWork = unitOfWork;
+            _context = context;
         }
 
         // ── ADD ROOM TYPE ─────────────────────────────────────────────────────
@@ -58,6 +65,20 @@ namespace HotelBookingAppWebApi.Services
                 await _roomTypeRepo.AddAsync(roomType);
                 await _unitOfWork.CommitAsync();
 
+                // Save amenity associations
+                if (dto.AmenityIds != null && dto.AmenityIds.Count > 0)
+                {
+                    foreach (var amenityId in dto.AmenityIds)
+                    {
+                        await _roomTypeAmenityRepo.AddAsync(new RoomTypeAmenity
+                        {
+                            RoomTypeId = roomType.RoomTypeId,
+                            AmenityId = amenityId
+                        });
+                    }
+                    await _unitOfWork.CommitAsync();
+                }
+
                 await _auditLogService.LogAsync(userId, "RoomTypeAdded", "RoomType",
                     roomType.RoomTypeId, JsonSerializer.Serialize(dto));
             }
@@ -85,6 +106,25 @@ namespace HotelBookingAppWebApi.Services
             roomType.MaxOccupancy = dto.MaxOccupancy;
             roomType.Amenities = dto.Amenities;
             roomType.ImageUrl = dto.ImageUrl;
+
+            // Update amenity associations
+            if (dto.AmenityIds != null)
+            {
+                var existing = await _context.RoomTypeAmenities
+                    .Where(rta => rta.RoomTypeId == dto.RoomTypeId)
+                    .ToListAsync();
+
+                _context.RoomTypeAmenities.RemoveRange(existing);
+
+                foreach (var amenityId in dto.AmenityIds)
+                {
+                    await _roomTypeAmenityRepo.AddAsync(new RoomTypeAmenity
+                    {
+                        RoomTypeId = dto.RoomTypeId,
+                        AmenityId = amenityId
+                    });
+                }
+            }
 
             await _unitOfWork.SaveChangesAsync();
             await _auditLogService.LogAsync(userId, "RoomTypeUpdated", "RoomType",
@@ -193,6 +233,8 @@ namespace HotelBookingAppWebApi.Services
                 throw new UnAuthorizedException("Unauthorized.");
 
             return await _roomTypeRepo.GetQueryable()
+                .Include(rt => rt.RoomTypeAmenities!)
+                    .ThenInclude(rta => rta.Amenity)
                 .Where(rt => rt.HotelId == user.HotelId)
                 .Select(rt => new RoomTypeListDto
                 {
@@ -201,6 +243,13 @@ namespace HotelBookingAppWebApi.Services
                     Description = rt.Description,
                     MaxOccupancy = rt.MaxOccupancy,
                     Amenities = rt.Amenities,
+                    AmenityList = rt.RoomTypeAmenities!.Select(rta => new AmenityItemDto
+                    {
+                        AmenityId = rta.AmenityId,
+                        Name = rta.Amenity!.Name,
+                        Category = rta.Amenity.Category,
+                        IconName = rta.Amenity.IconName
+                    }).ToList(),
                     IsActive = rt.IsActive,
                     RoomCount = rt.Rooms!.Count,
                     ImageUrl = rt.ImageUrl
@@ -218,6 +267,8 @@ namespace HotelBookingAppWebApi.Services
                 throw new UnAuthorizedException("Unauthorized.");
 
             var query = _roomTypeRepo.GetQueryable()
+                .Include(rt => rt.RoomTypeAmenities!)
+                    .ThenInclude(rta => rta.Amenity)
                 .Where(rt => rt.HotelId == user.HotelId);
 
             var total = await query.CountAsync();
@@ -230,6 +281,13 @@ namespace HotelBookingAppWebApi.Services
                     Description = rt.Description,
                     MaxOccupancy = rt.MaxOccupancy,
                     Amenities = rt.Amenities,
+                    AmenityList = rt.RoomTypeAmenities!.Select(rta => new AmenityItemDto
+                    {
+                        AmenityId = rta.AmenityId,
+                        Name = rta.Amenity!.Name,
+                        Category = rta.Amenity.Category,
+                        IconName = rta.Amenity.IconName
+                    }).ToList(),
                     IsActive = rt.IsActive,
                     RoomCount = rt.Rooms!.Count,
                     ImageUrl = rt.ImageUrl
