@@ -1,13 +1,19 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ReservationDetailsDto } from '../../../core/models/models';
@@ -16,69 +22,79 @@ import { ReservationDetailsDto } from '../../../core/models/models';
   selector: 'app-reservation-management',
   standalone: true,
   imports: [
-    RouterLink, MatButtonModule, MatIconModule, DatePipe, DecimalPipe,
-    MatFormFieldModule, MatInputModule,
+    CommonModule, RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatTableModule, MatSortModule, MatPaginatorModule,
+    MatTabsModule, MatProgressSpinnerModule, MatChipsModule,
   ],
   templateUrl: './reservation-management.component.html',
   styleUrl: './reservation-management.component.scss'
 })
-export class ReservationManagementComponent implements OnInit, AfterViewInit {
+export class ReservationManagementComponent implements OnInit {
   private bookingService = inject(BookingService);
-  private toast = inject(ToastService);
+  private toast          = inject(ToastService);
 
-  dataSource = new MatTableDataSource<ReservationDetailsDto>([]);
+  reservations   = signal<ReservationDetailsDto[]>([]);
+  totalCount     = signal(0);
+  loading        = signal(false);
+  pageSize       = 10;
+  currentPage    = 1;
+  selectedStatus = 'All';
+  searchTerm     = '';
   displayedColumns = ['reservationCode', 'guestName', 'checkIn', 'checkOut', 'rooms', 'amount', 'status', 'actions'];
 
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  readonly statusTabs = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
+  private searchSubject = new Subject<string>();
 
-  filter = signal('all');
-  readonly filters = ['all', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
-
-  ngOnInit() { this.load(); }
-
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
+  ngOnInit() {
+    this.load();
+    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(s => { this.searchTerm = s; this.currentPage = 1; this.load(); });
   }
 
   load() {
-    this.bookingService.getHotelReservations(1, 200).subscribe(res => {
-      this.dataSource.data = res.reservations as ReservationDetailsDto[];
-      this.applyStatusFilter();
+    this.loading.set(true);
+    this.bookingService.getHotelReservations(
+      this.currentPage, this.pageSize, this.selectedStatus, this.searchTerm
+    ).subscribe({
+      next: res => {
+        this.reservations.set(res.reservations as ReservationDetailsDto[]);
+        this.totalCount.set(res.totalCount);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
   }
 
-  applyFilter(event: Event) {
-    const val = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = val.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  onTabChange(index: number) {
+    this.selectedStatus = this.statusTabs[index];
+    this.currentPage = 1;
+    this.load();
   }
 
-  setStatusFilter(f: string) {
-    this.filter.set(f);
-    this.applyStatusFilter();
+  onSearch(e: Event) {
+    this.searchSubject.next((e.target as HTMLInputElement).value);
   }
 
-  private applyStatusFilter() {
-    const f = this.filter();
-    if (f === 'all') {
-      this.dataSource.filterPredicate = () => true;
-    } else {
-      this.dataSource.filterPredicate = (row: ReservationDetailsDto) => row.status === f;
-    }
-    this.dataSource.filter = this.dataSource.filter || ' '; // trigger re-filter
-    this.dataSource.filter = this.dataSource.filter.trim();
+  onPage(e: PageEvent) {
+    this.currentPage = e.pageIndex + 1;
+    this.pageSize = e.pageSize;
+    this.load();
   }
 
   complete(code: string) {
     if (!confirm(`Mark reservation ${code} as Completed?`)) return;
     this.bookingService.completeReservation(code).subscribe(() => {
       this.toast.success('Reservation marked as completed.');
-      this.dataSource.data = this.dataSource.data.map(x =>
-        x.reservationCode === code ? { ...x, status: 'Completed', isCheckedIn: true } : x
-      );
+      this.load();
+    });
+  }
+
+  confirm(code: string) {
+    if (!confirm(`Confirm reservation ${code}?`)) return;
+    this.bookingService.confirmReservation(code).subscribe(() => {
+      this.toast.success('Reservation confirmed.');
+      this.load();
     });
   }
 
@@ -88,5 +104,12 @@ export class ReservationManagementComponent implements OnInit, AfterViewInit {
       Completed: 'badge-primary', Cancelled: 'badge-error', NoShow: 'badge-muted',
     };
     return m[s] ?? 'badge-muted';
+  }
+
+  statusEmoji(s: string): string {
+    const m: Record<string, string> = {
+      Pending: '⏳', Confirmed: '✅', Completed: '🏆', Cancelled: '❌', NoShow: '👻'
+    };
+    return m[s] ?? '';
   }
 }

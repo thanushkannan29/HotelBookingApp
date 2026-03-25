@@ -3,94 +3,102 @@
     <div class="page-header-row">
       <div>
         <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
-        <h1 class="section-title">Reservation Management</h1>
-        <p class="section-subtitle">{{ dataSource.data.length }} total reservations</p>
+        <h1 class="section-title">📋 Reservation Management</h1>
+        <p class="section-subtitle">{{ totalCount() }} total reservations</p>
       </div>
     </div>
 
-    <!-- Status Filter Chips -->
-    <div class="filter-chips mb-4">
-      @for (f of filters; track f) {
-        <button mat-stroked-button class="filter-chip"
-                [class.active]="filter() === f"
-                (click)="setStatusFilter(f)">
-          {{ f === 'all' ? 'All' : f }}
-        </button>
+    <!-- Status Tabs -->
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="mb-3">
+      @for (tab of statusTabs; track tab) {
+        <mat-tab [label]="tab === 'All' ? 'All' : statusEmoji(tab) + ' ' + tab" />
       }
-    </div>
+    </mat-tab-group>
 
     <!-- Search -->
-    <mat-form-field appearance="outline" class="w-full mb-4">
-      <mat-label>Search</mat-label>
-      <input matInput (keyup)="applyFilter($event)" placeholder="Filter by code, hotel, guest…" />
+    <mat-form-field appearance="outline" class="w-100 mb-3">
+      <mat-label>🔍 Search by code or guest name</mat-label>
+      <input matInput (input)="onSearch($event)" placeholder="Search…" />
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <div class="table-card">
-      <mat-table [dataSource]="dataSource" matSort>
+    @if (loading()) {
+      <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+    } @else {
+      <div class="table-card">
+        <mat-table [dataSource]="reservations()">
 
-        <ng-container matColumnDef="reservationCode">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Code</mat-header-cell>
-          <mat-cell *matCellDef="let r"><span class="code-tag">{{ r.reservationCode }}</span></mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="reservationCode">
+            <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+            <mat-cell *matCellDef="let r"><span class="code-tag">{{ r.reservationCode }}</span></mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="guestName">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Hotel</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.hotelName }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="guestName">
+            <mat-header-cell *matHeaderCellDef>👤 Guest / Hotel</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.hotelName }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="checkIn">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Check-In</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.checkInDate | date:'MMM d, y' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="checkIn">
+            <mat-header-cell *matHeaderCellDef>📅 Check-In</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.checkInDate | date:'MMM d, y' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="checkOut">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Check-Out</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.checkOutDate | date:'MMM d, y' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="checkOut">
+            <mat-header-cell *matHeaderCellDef>📅 Check-Out</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.checkOutDate | date:'MMM d, y' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="rooms">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Rooms</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.numberOfRooms }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="rooms">
+            <mat-header-cell *matHeaderCellDef>🛏️ Rooms</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.numberOfRooms }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="amount">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
-          <mat-cell *matCellDef="let r">₹{{ r.totalAmount | number:'1.0-0' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="amount">
+            <mat-header-cell *matHeaderCellDef>💰 Amount</mat-header-cell>
+            <mat-cell *matCellDef="let r">₹{{ (r.finalAmount || r.totalAmount) | number:'1.0-0' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="status">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-          <mat-cell *matCellDef="let r">
-            <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
-          </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <span class="badge {{ statusClass(r.status) }}">{{ statusEmoji(r.status) }} {{ r.status }}</span>
+            </mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="actions">
-          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
-          <mat-cell *matCellDef="let r">
-            @if (r.status === 'Confirmed' && r.isCheckedIn === false) {
-              <button mat-stroked-button color="primary" (click)="complete(r.reservationCode)">
-                <mat-icon>check_circle</mat-icon> Complete
-              </button>
-            }
-          </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="actions">
+            <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              @if (r.status === 'Pending') {
+                <button mat-stroked-button color="primary" (click)="confirm(r.reservationCode)" class="me-1">
+                  <mat-icon>check</mat-icon> Confirm
+                </button>
+              }
+              @if (r.status === 'Confirmed') {
+                <button mat-stroked-button color="accent" (click)="complete(r.reservationCode)">
+                  <mat-icon>check_circle</mat-icon> Complete
+                </button>
+              }
+            </mat-cell>
+          </ng-container>
 
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
 
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center; padding:32px;">
-            No reservations found
-          </td>
-        </tr>
-      </mat-table>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
+              🏨 No reservations found
+            </td>
+          </tr>
+        </mat-table>
 
-      <mat-paginator [pageSizeOptions]="[10, 25, 50]"
-                     showFirstLastButtons
-                     aria-label="Select page">
-      </mat-paginator>
-    </div>
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 25, 50]"
+          showFirstLastButtons
+          (page)="onPage($event)"
+        />
+      </div>
+    }
   </div>
 </div>

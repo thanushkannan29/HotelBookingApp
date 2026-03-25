@@ -40,8 +40,30 @@
               <span class="value">{{ res.numberOfRooms }}</span>
             </div>
             <div class="detail-item">
-              <span class="label">Total Amount</span>
-              <span class="value amount">₹{{ res.totalAmount | number:'1.0-0' }}</span>
+              <span class="label">Base Amount</span>
+              <span class="value amount">₹{{ res.totalAmount | number:'1.2-2' }}</span>
+            </div>
+            @if (res.gstAmount > 0) {
+              <div class="detail-item">
+                <span class="label">GST ({{ res.gstPercent }}%)</span>
+                <span class="value">₹{{ res.gstAmount | number:'1.2-2' }}</span>
+              </div>
+            }
+            @if (res.discountAmount > 0) {
+              <div class="detail-item">
+                <span class="label">🎫 Discount</span>
+                <span class="value" style="color:green">-₹{{ res.discountAmount | number:'1.2-2' }}</span>
+              </div>
+            }
+            @if (res.walletAmountUsed > 0) {
+              <div class="detail-item">
+                <span class="label">💰 Wallet Used</span>
+                <span class="value" style="color:green">-₹{{ res.walletAmountUsed | number:'1.2-2' }}</span>
+              </div>
+            }
+            <div class="detail-item">
+              <span class="label"><strong>Final Amount</strong></span>
+              <span class="value amount"><strong>₹{{ res.finalAmount | number:'1.2-2' }}</strong></span>
             </div>
             <div class="detail-item">
               <span class="label">Check-in Status</span>
@@ -53,6 +75,14 @@
               <span class="label">Booked On</span>
               <span class="value">{{ res.createdDate | date:'MMM d, y' }}</span>
             </div>
+          </div>
+
+          <!-- PDF Download -->
+          <div class="action-section">
+            <button mat-raised-button color="accent" (click)="downloadPdf()" [disabled]="isDownloading()">
+              <mat-icon>download</mat-icon>
+              {{ isDownloading() ? 'Generating...' : 'Download Booking PDF' }}
+            </button>
           </div>
 
           <!-- Assigned Rooms -->

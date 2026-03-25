@@ -51,11 +51,18 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
         private readonly IAuditLogService _service;
         public SuperAdminAuditLogController(IAuditLogService service) => _service = service;
 
-        /// <summary>View all audit logs across the entire system</summary>
+        /// <summary>View all audit logs with optional filters</summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            [FromQuery] Guid? hotelId = null,
+            [FromQuery] Guid? userId = null,
+            [FromQuery] string? action = null,
+            [FromQuery] DateTime? dateFrom = null,
+            [FromQuery] DateTime? dateTo = null)
         {
-            var result = await _service.GetAllAuditLogsAsync(page, pageSize);
+            var result = await _service.GetAllAuditLogsAsync(page, pageSize, hotelId, userId, action, dateFrom, dateTo);
             return Ok(new { success = true, data = result });
         }
     }

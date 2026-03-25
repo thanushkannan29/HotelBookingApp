@@ -1,12 +1,16 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ViewChild, Input } from '@angular/core';
+import { Component, inject, signal, OnInit, Input } from '@angular/core';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe, SlicePipe } from '@angular/common';
 import { AuditLogService } from '../../../core/services/api.services';
 import { AuditLogResponseDto } from '../../../core/models/models';
@@ -15,48 +19,64 @@ import { AuditLogResponseDto } from '../../../core/models/models';
   selector: 'app-audit-logs',
   standalone: true,
   imports: [
-    RouterLink, MatButtonModule, MatIconModule, DatePipe, SlicePipe,
-    MatFormFieldModule, MatInputModule,
-    MatTableModule, MatSortModule, MatPaginatorModule,
+    CommonModule, RouterLink, ReactiveFormsModule, DatePipe, SlicePipe,
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+    MatTableModule, MatPaginatorModule,
+    MatDatepickerModule, MatNativeDateModule, MatProgressSpinnerModule,
   ],
   templateUrl: './audit-logs.component.html',
- 
 })
-export class AuditLogsComponent implements OnInit, AfterViewInit {
+export class AuditLogsComponent implements OnInit {
   private auditLogService = inject(AuditLogService);
-  private route = inject(ActivatedRoute);
+  private route           = inject(ActivatedRoute);
+  private fb              = inject(FormBuilder);
 
   @Input() isSuperAdmin = false;
 
-  dataSource = new MatTableDataSource<AuditLogResponseDto>([]);
+  logs         = signal<AuditLogResponseDto[]>([]);
+  totalCount   = signal(0);
+  loading      = signal(false);
+  pageSize     = 20;
+  currentPage  = 1;
+  isSuperMode  = false;
   displayedColumns = ['action', 'entityName', 'changes', 'createdAt'];
 
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  // SuperAdmin filters
+  filterForm = this.fb.group({
+    action:   [''],
+    dateFrom: [null as Date | null],
+    dateTo:   [null as Date | null],
+  });
 
-  get backLink() {
-    return this.isSuperAdmin ? '/superadmin/dashboard' : '/admin/dashboard';
-  }
+  get backLink() { return this.isSuperMode ? '/superadmin/dashboard' : '/admin/dashboard'; }
 
   ngOnInit() {
-    const isSuper = this.route.snapshot.data['isSuperAdmin'] ?? this.isSuperAdmin;
-    const obs = isSuper
-      ? this.auditLogService.getAllAuditLogs(1, 500)
-      : this.auditLogService.getAdminAuditLogs(1, 500);
-
-    obs.subscribe(r => { this.dataSource.data = r.logs; });
+    this.isSuperMode = this.route.snapshot.data['mode'] === 'superadmin' || this.isSuperAdmin;
+    this.load();
   }
 
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
+  load() {
+    this.loading.set(true);
+    const f = this.filterForm.value;
+    const obs = this.isSuperMode
+      ? this.auditLogService.getAllAuditLogs(
+          this.currentPage, this.pageSize,
+          undefined, undefined,
+          f.action || undefined,
+          f.dateFrom ? f.dateFrom.toISOString() : undefined,
+          f.dateTo   ? f.dateTo.toISOString()   : undefined
+        )
+      : this.auditLogService.getAdminAuditLogs(this.currentPage, this.pageSize);
+
+    obs.subscribe({
+      next: r => { this.logs.set(r.logs); this.totalCount.set(r.totalCount); this.loading.set(false); },
+      error: () => this.loading.set(false)
+    });
   }
 
-  applyFilter(event: Event) {
-    const val = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = val.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
-  }
+  applyFilters() { this.currentPage = 1; this.load(); }
+  clearFilters() { this.filterForm.reset(); this.currentPage = 1; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 
   actionClass(action: string): string {
     const m: Record<string, string> = {

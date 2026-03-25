@@ -1,14 +1,16 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { RefundService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
@@ -18,29 +20,29 @@ import { RefundRequestResponseDto } from '../../../core/models/models';
   selector: 'app-refund-management',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe,
+    CommonModule, ReactiveFormsModule, RouterLink, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatTableModule, MatSortModule, MatPaginatorModule,
+    MatTableModule, MatSortModule, MatPaginatorModule, MatProgressSpinnerModule,
   ],
   templateUrl: './refund-management.component.html',
   styleUrl: './refund-management.component.scss'
 })
-export class RefundManagementComponent implements OnInit, AfterViewInit {
+export class RefundManagementComponent implements OnInit {
   private refundService = inject(RefundService);
-  private toast = inject(ToastService);
-  private fb = inject(FormBuilder);
+  private toast         = inject(ToastService);
+  private fb            = inject(FormBuilder);
 
-  dataSource = new MatTableDataSource<RefundRequestResponseDto>([]);
+  refunds      = signal<RefundRequestResponseDto[]>([]);
+  totalCount   = signal(0);
+  loading      = signal(false);
+  pageSize     = 10;
+  currentPage  = 1;
   displayedColumns = ['reservationCode', 'guestName', 'amount', 'status', 'createdAt', 'actions'];
 
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-
   processingId = signal<string | null>(null);
-  actionType = signal<'approve' | 'reject' | null>(null);
-  isSaving = signal(false);
+  actionType   = signal<'approve' | 'reject' | null>(null);
+  isSaving     = signal(false);
 
-  // F7C: Added refundPaymentMethod and refundTransactionRef
   responseForm = this.fb.group({
     adminResponse:        ['', [Validators.required, Validators.minLength(3)]],
     refundPaymentMethod:  [''],
@@ -50,20 +52,25 @@ export class RefundManagementComponent implements OnInit, AfterViewInit {
   readonly refundPaymentMethods = ['UPI', 'Bank Transfer', 'Cash', 'Cheque'];
 
   ngOnInit() {
-    this.refundService.getHotelRefundRequests().subscribe(r => {
-      this.dataSource.data = r.refundRequests ?? (r as any);
+    this.load();
+  }
+
+  load() {
+    this.refundService.getHotelRefundRequests(this.currentPage, this.pageSize).subscribe((res: any) => {
+      if (Array.isArray(res)) {
+        this.refunds.set(res);
+        this.totalCount.set(res.length);
+      } else {
+        this.refunds.set(res.refundRequests ?? res.items ?? []);
+        this.totalCount.set(res.totalCount ?? 0);
+      }
     });
   }
 
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
-  }
+  onPage(e: any) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 
   applyFilter(event: Event) {
-    const val = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = val.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+    // kept for template compatibility — filtering is now server-side
   }
 
   startAction(id: string, type: 'approve' | 'reject') {
@@ -93,12 +100,13 @@ export class RefundManagementComponent implements OnInit, AfterViewInit {
       : this.refundService.rejectRefund(id, dto);
 
     obs.subscribe({
-      next: (updated) => {
-        this.toast.success(`Refund ${this.actionType()}d successfully.`);
-        this.dataSource.data = this.dataSource.data.map(x =>
-          x.refundRequestId === id ? updated : x
-        );
+      next: () => {
+        const msg = this.actionType() === 'approve'
+          ? 'Refund approved! Amount credited to guest wallet.'
+          : 'Refund rejected.';
+        this.toast.success(msg);
         this.cancelAction();
+        this.load();
         this.isSaving.set(false);
       },
       error: () => this.isSaving.set(false),

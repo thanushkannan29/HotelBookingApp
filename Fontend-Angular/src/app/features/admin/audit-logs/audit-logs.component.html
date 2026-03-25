@@ -2,39 +2,64 @@
   <div class="container">
     <div class="page-header-row">
       <div>
-        <a [routerLink]="backLink" class="back-link">
-          <mat-icon>arrow_back</mat-icon> Dashboard
-        </a>
-        <h1 class="section-title">Audit Logs</h1>
-        <p class="section-subtitle">{{ dataSource.data.length }} records</p>
+        <a [routerLink]="backLink" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">📋 Audit Logs</h1>
+        <p class="section-subtitle">{{ totalCount() }} records</p>
       </div>
     </div>
 
-    <!-- Search -->
-    <mat-form-field appearance="outline" class="w-full mb-4">
-      <mat-label>Search</mat-label>
-      <input matInput (keyup)="applyFilter($event)" placeholder="Filter by action, entity, changes…" />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
+    <!-- SuperAdmin Filters -->
+    @if (isSuperMode) {
+      <form [formGroup]="filterForm" class="row g-3 mb-3">
+        <div class="col-md-4">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>Filter by Action</mat-label>
+            <input matInput formControlName="action" placeholder="e.g. HotelUpdated" />
+          </mat-form-field>
+        </div>
+        <div class="col-md-3">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>📅 From Date</mat-label>
+            <input matInput [matDatepicker]="fromPicker" formControlName="dateFrom" readonly />
+            <mat-datepicker-toggle matSuffix [for]="fromPicker" />
+            <mat-datepicker #fromPicker />
+          </mat-form-field>
+        </div>
+        <div class="col-md-3">
+          <mat-form-field appearance="outline" class="w-100">
+            <mat-label>📅 To Date</mat-label>
+            <input matInput [matDatepicker]="toPicker" formControlName="dateTo" readonly />
+            <mat-datepicker-toggle matSuffix [for]="toPicker" />
+            <mat-datepicker #toPicker />
+          </mat-form-field>
+        </div>
+        <div class="col-md-2 d-flex gap-2 align-items-center">
+          <button mat-raised-button color="primary" type="button" (click)="applyFilters()">Apply</button>
+          <button mat-button type="button" (click)="clearFilters()">Clear</button>
+        </div>
+      </form>
+    }
 
-    @if (dataSource.data.length === 0) {
+    @if (loading()) {
+      <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+    } @else if (logs().length === 0) {
       <div class="empty-state">
         <mat-icon class="empty-icon">history</mat-icon>
         <h3>No audit logs yet</h3>
       </div>
     } @else {
       <div class="table-card">
-        <mat-table [dataSource]="dataSource" matSort>
+        <mat-table [dataSource]="logs()">
 
           <ng-container matColumnDef="action">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Action</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>Action</mat-header-cell>
             <mat-cell *matCellDef="let log">
               <span class="action-chip badge {{ actionClass(log.action) }}">{{ log.action }}</span>
             </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="entityName">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>Entity</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>Entity</mat-header-cell>
             <mat-cell *matCellDef="let log">{{ log.entityName }}</mat-cell>
           </ng-container>
 
@@ -42,13 +67,13 @@
             <mat-header-cell *matHeaderCellDef>Changes</mat-header-cell>
             <mat-cell *matCellDef="let log" class="changes-cell">
               <span class="changes-preview">
-                {{ log.changes | slice:0:100 }}{{ log.changes.length > 100 ? '…' : '' }}
+                {{ log.changes | slice:0:100 }}{{ log.changes?.length > 100 ? '…' : '' }}
               </span>
             </mat-cell>
           </ng-container>
 
           <ng-container matColumnDef="createdAt">
-            <mat-header-cell *matHeaderCellDef mat-sort-header>When</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef>When</mat-header-cell>
             <mat-cell *matCellDef="let log" class="date-cell">
               {{ log.createdAt | date:'MMM d, y HH:mm' }}
             </mat-cell>
@@ -58,16 +83,19 @@
           <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
 
           <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center; padding:32px;">
-              No logs found matching filter
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
+              No logs found
             </td>
           </tr>
         </mat-table>
 
-        <mat-paginator [pageSizeOptions]="[10, 25, 50]"
-                       showFirstLastButtons
-                       aria-label="Select page">
-        </mat-paginator>
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[10, 25, 50]"
+          showFirstLastButtons
+          (page)="onPage($event)"
+        />
       </div>
     }
   </div>

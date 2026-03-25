@@ -197,8 +197,17 @@ export class AuditLogService {
     ).pipe(map(r => r.data!));
   }
 
-  getAllAuditLogs(page: number, pageSize: number): Observable<PagedAuditLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getAllAuditLogs(
+    page: number, pageSize: number,
+    hotelId?: string, userId?: string,
+    action?: string, dateFrom?: string, dateTo?: string
+  ): Observable<PagedAuditLogResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (hotelId)   params = params.set('hotelId', hotelId);
+    if (userId)    params = params.set('userId', userId);
+    if (action)    params = params.set('action', action);
+    if (dateFrom)  params = params.set('dateFrom', dateFrom);
+    if (dateTo)    params = params.set('dateTo', dateTo);
     return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
       `${this.base}/superadmin/audit-logs`, { params }
     ).pipe(map(r => r.data!));
