@@ -82,6 +82,7 @@ export interface HotelDetailsDto {
   averageRating: number;
   reviewCount: number;
   gstPercent: number;
+  upiId?: string;
   amenities: string[];
   reviews: ReviewDto[];
   roomTypes: RoomTypePublicDto[];
@@ -199,6 +200,7 @@ export interface RoomTypeListDto {
   description: string;
   maxOccupancy: number;
   amenities: string;
+  amenityList?: { amenityId: string; name: string; iconName?: string }[];
   isActive: boolean;
   roomCount: number;
   imageUrl?: string;

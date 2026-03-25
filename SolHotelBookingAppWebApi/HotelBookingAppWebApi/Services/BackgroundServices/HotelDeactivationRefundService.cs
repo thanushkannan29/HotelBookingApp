@@ -122,7 +122,7 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                     {
                         successTx.Status = PaymentStatus.Refunded;
 
-                        // 4. Auto-approve a refund request
+                        // 4. Auto-approve a refund request and credit wallet
                         var alreadyExists = await refundRepo.GetQueryable()
                             .AnyAsync(rr => rr.ReservationId == reservation.ReservationId, ct);
 
@@ -139,6 +139,14 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                                 CreatedAt = now,
                                 ProcessedAt = now
                             });
+
+                            // Credit refund amount to guest wallet
+                            var walletService = scope.ServiceProvider.GetRequiredService<HotelBookingAppWebApi.Interfaces.IWalletService>();
+                            var refundAmount = reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount;
+                            await walletService.CreditAsync(
+                                reservation.UserId,
+                                refundAmount,
+                                $"Refund for cancelled reservation {reservation.ReservationCode} (hotel deactivated)");
                         }
                     }
                 }

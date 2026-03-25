@@ -241,8 +241,9 @@ export class RoomTypeService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getRoomTypes(): Observable<RoomTypeListDto[]> {
-    return this.http.get<ApiResponse<RoomTypeListDto[]>>(`${this.base}/admin/roomtypes`)
+  getRoomTypes(page = 1, pageSize = 100): Observable<any> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<any>>(`${this.base}/admin/roomtypes`, { params })
       .pipe(map(r => r.data!));
   }
 

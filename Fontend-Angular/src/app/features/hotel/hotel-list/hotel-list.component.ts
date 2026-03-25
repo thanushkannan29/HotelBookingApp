@@ -12,8 +12,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { DatePipe } from '@angular/common';
+import { AmenityResponseDto, HotelListItemDto } from '../../../core/models/models';
 import { HotelService } from '../../../core/services/hotel.service';
-import { HotelListItemDto } from '../../../core/models/models';
 import { HotelCardComponent } from '../hotel-card/hotel-card.component';
 import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
 
