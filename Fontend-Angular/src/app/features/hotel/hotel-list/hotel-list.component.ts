@@ -48,6 +48,8 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   minRating = signal(0);
   selectedAmenities = signal<string[]>([]);
   amenities = signal<string[]>([]);
+  sortBy = signal('');
+  amenityObjects = signal<any[]>([]);
 
   // Paginated results
   paginatedResults = signal<HotelListItemDto[]>([]);
@@ -112,21 +114,25 @@ export class HotelListComponent implements OnInit, AfterViewInit {
     this.isSearching.set(true);
     this.currentPage.set(1);
 
-    this.hotelService.searchHotels({
+    this.hotelService.searchHotelsWithFilters({
       city,
       checkIn: this.formatDate(checkIn!),
       checkOut: this.formatDate(checkOut!),
       pageNumber: 1,
-      pageSize: 100, // load all for client-side filter
+      pageSize: 100,
+      amenityIds: this.selectedAmenities().length > 0 ? this.selectedAmenities() : undefined,
+      minPrice: this.minPrice() > 0 ? this.minPrice() : undefined,
+      maxPrice: this.maxPrice() < 50000 ? this.maxPrice() : undefined,
+      sortBy: this.sortBy() || undefined,
     }).subscribe({
       next: res => {
         this.searchResults.set(res.hotels);
         this.totalResults.set(res.recordsCount);
         this.isSearching.set(false);
         this.updatePaginatedResults();
-        // Load amenities for filter
         this.hotelService.getAmenities().subscribe(a => {
           this.amenities.set(a.map(x => x.name));
+          this.amenityObjects.set(a);
         });
       },
       error: () => this.isSearching.set(false),

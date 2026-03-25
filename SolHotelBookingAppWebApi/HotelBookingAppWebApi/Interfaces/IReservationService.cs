@@ -16,5 +16,6 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<IEnumerable<AvailableRoomDto>> GetAvailableRoomsAsync(Guid hotelId, Guid roomTypeId, DateOnly checkIn, DateOnly checkOut);
         Task<IEnumerable<RoomOccupancyDto>> GetRoomOccupancyAsync(Guid adminUserId, DateOnly date);
         Task<QrPaymentResponseDto> GetPaymentQrAsync(Guid userId, Guid reservationId);
+        Task<bool> ConfirmReservationAsync(string reservationCode);
     }
 }

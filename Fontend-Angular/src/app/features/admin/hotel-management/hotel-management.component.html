@@ -87,3 +87,24 @@
     }
   </div>
 </div>
+
+      <!-- GST Settings Card -->
+      <div class="form-card mt-4">
+        <h3 class="form-card-title">🧾 GST Settings</h3>
+        <form [formGroup]="gstForm" (ngSubmit)="saveGst()" class="d-flex gap-3 align-items-start">
+          <mat-form-field appearance="outline" style="width:200px">
+            <mat-label>GST Percentage (%)</mat-label>
+            <input matInput type="number" formControlName="gstPercent" min="0" max="28" />
+            <mat-hint>0–28%</mat-hint>
+            @if (gstForm.get('gstPercent')?.hasError('min') || gstForm.get('gstPercent')?.hasError('max')) {
+              <mat-error>GST must be between 0 and 28</mat-error>
+            }
+          </mat-form-field>
+          <button mat-raised-button color="accent" type="submit" [disabled]="gstForm.invalid || isSavingGst()">
+            {{ isSavingGst() ? 'Saving...' : 'Update GST' }}
+          </button>
+        </form>
+      </div>
+    }
+  </div>
+</div>

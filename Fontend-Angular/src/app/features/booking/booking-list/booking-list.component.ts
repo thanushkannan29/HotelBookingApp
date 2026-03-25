@@ -1,12 +1,15 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
 import { ReservationDetailsDto } from '../../../core/models/models';
@@ -15,61 +18,65 @@ import { ReservationDetailsDto } from '../../../core/models/models';
   selector: 'app-booking-list',
   standalone: true,
   imports: [
-    RouterLink, MatButtonModule, MatIconModule, DatePipe, DecimalPipe,
-    MatFormFieldModule, MatInputModule,
-    MatTableModule, MatSortModule, MatPaginatorModule,
+    CommonModule, RouterLink, DatePipe, DecimalPipe,
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+    MatTableModule, MatPaginatorModule, MatTabsModule,
+    MatProgressSpinnerModule, MatChipsModule,
   ],
   templateUrl: './booking-list.component.html',
   styleUrl: './booking-list.component.scss'
 })
-export class BookingListComponent implements OnInit, AfterViewInit {
+export class BookingListComponent implements OnInit {
   private bookingService = inject(BookingService);
 
-  dataSource = new MatTableDataSource<ReservationDetailsDto>([]);
+  reservations = signal<ReservationDetailsDto[]>([]);
+  totalCount   = signal(0);
+  loading      = signal(false);
+  pageSize     = 10;
+  currentPage  = 1;
+
   displayedColumns = ['reservationCode', 'hotelName', 'checkIn', 'checkOut', 'amount', 'status'];
-  filter = signal<string>('all');
-  readonly filters = ['all', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
+  readonly statusTabs = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
+  selectedStatus = 'All';
 
-  @ViewChild(MatSort) sort!: MatSort;
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  ngOnInit() { this.load(); }
 
-  ngOnInit() {
-    this.bookingService.getMyReservations().subscribe(r => {
-      this.dataSource.data = r as ReservationDetailsDto[];
+  load() {
+    this.loading.set(true);
+    this.bookingService.getMyReservationsHistory(this.currentPage, this.pageSize).subscribe({
+      next: res => {
+        this.reservations.set(res.reservations as ReservationDetailsDto[]);
+        this.totalCount.set(res.totalCount);
+        this.loading.set(false);
+      },
+      error: () => this.loading.set(false)
     });
   }
 
-  ngAfterViewInit() {
-    this.dataSource.sort = this.sort;
-    this.dataSource.paginator = this.paginator;
+  onTabChange(index: number) {
+    this.selectedStatus = this.statusTabs[index];
+    this.currentPage = 1;
+    this.load();
   }
 
-  applyFilter(event: Event) {
-    const val = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = val.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
-  }
-
-  setStatusFilter(f: string) {
-    this.filter.set(f);
-    if (f === 'all') {
-      this.dataSource.filterPredicate = () => true;
-    } else {
-      this.dataSource.filterPredicate = (row: ReservationDetailsDto) => row.status === f;
-    }
-    this.dataSource.filter = ' ';
-    this.dataSource.filter = '';
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  onPage(e: PageEvent) {
+    this.currentPage = e.pageIndex + 1;
+    this.pageSize = e.pageSize;
+    this.load();
   }
 
   statusClass(status: string): string {
     const map: Record<string, string> = {
-      Pending: 'badge-warning',
-      Confirmed: 'badge-success',
-      Completed: 'badge-primary',
-      Cancelled: 'badge-error',
-      NoShow: 'badge-muted',
+      Pending: 'badge-warning', Confirmed: 'badge-success',
+      Completed: 'badge-primary', Cancelled: 'badge-error', NoShow: 'badge-muted',
     };
     return map[status] ?? 'badge-muted';
+  }
+
+  statusEmoji(s: string): string {
+    const m: Record<string, string> = {
+      Pending: '⏳', Confirmed: '✅', Completed: '🏆', Cancelled: '❌', NoShow: '👻'
+    };
+    return m[s] ?? '';
   }
 }

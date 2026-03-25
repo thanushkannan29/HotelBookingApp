@@ -484,6 +484,20 @@ namespace HotelBookingAppWebApi.Services
             return true;
         }
 
+        // ── CONFIRM RESERVATION (Admin) ───────────────────────────────────────
+        public async Task<bool> ConfirmReservationAsync(string code)
+        {
+            var res = await _reservationRepo.FirstOrDefaultAsync(r => r.ReservationCode == code)
+                ?? throw new NotFoundException("Reservation not found.");
+
+            if (res.Status != ReservationStatus.Pending)
+                throw new ValidationException("Only pending reservations can be confirmed.");
+
+            res.Status = ReservationStatus.Confirmed;
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
         // ── AVAILABLE ROOMS ───────────────────────────────────────────────────
         public async Task<IEnumerable<AvailableRoomDto>> GetAvailableRoomsAsync(
             Guid hotelId, Guid roomTypeId, DateOnly checkIn, DateOnly checkOut)

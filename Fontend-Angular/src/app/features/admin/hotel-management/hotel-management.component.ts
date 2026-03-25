@@ -7,7 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
 import { HotelService } from '../../../core/services/hotel.service';
-import { DashboardService } from '../../../core/services/api.services';
+import { DashboardService, RoomTypeService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
 import { AdminDashboardDto } from '../../../core/models/models';
 import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
@@ -25,26 +25,30 @@ import { CityAutocompleteComponent } from '../../../shared/components/city-autoc
   styleUrl: './hotel-management.component.scss'
 })
 export class HotelManagementComponent implements OnInit {
-  private hotelService = inject(HotelService);
+  private hotelService     = inject(HotelService);
   private dashboardService = inject(DashboardService);
-  private toast = inject(ToastService);
-  private fb = inject(FormBuilder);
+  private roomTypeService  = inject(RoomTypeService);
+  private toast            = inject(ToastService);
+  private fb               = inject(FormBuilder);
 
-  isSaving  = signal(false);
-  isLoading = signal(true);
-  dashboard = signal<AdminDashboardDto | null>(null);
+  isSaving    = signal(false);
+  isSavingGst = signal(false);
+  isLoading   = signal(true);
+  dashboard   = signal<AdminDashboardDto | null>(null);
 
-  // F2D: separate FormControl for city autocomplete
   cityControl = new FormControl('', [Validators.required]);
 
   form = this.fb.group({
-    name:          ['', Validators.required],
-    address:       ['', Validators.required],
+    name:          ['', [Validators.required, Validators.maxLength(200)]],
+    address:       ['', [Validators.required, Validators.maxLength(500)]],
     description:   [''],
-    contactNumber: ['', Validators.required],
+    contactNumber: ['', [Validators.required, Validators.pattern(/^\d{10}$/)]],
     imageUrl:      [''],
-    // F7D: UPI ID field
-    upiId:         [''],
+    upiId:         ['', Validators.pattern(/^[a-zA-Z0-9._-]+@[a-zA-Z]+$/)],
+  });
+
+  gstForm = this.fb.group({
+    gstPercent: [0, [Validators.required, Validators.min(0), Validators.max(28)]],
   });
 
   ngOnInit() {
@@ -59,7 +63,7 @@ export class HotelManagementComponent implements OnInit {
           imageUrl:      hotel.imageUrl,
           upiId:         (hotel as any).upiId ?? '',
         });
-        // F2D: patch city control separately
+        this.gstForm.patchValue({ gstPercent: (hotel as any).gstPercent ?? 0 });
         this.cityControl.setValue(hotel.city);
         this.isLoading.set(false);
       });
@@ -73,16 +77,19 @@ export class HotelManagementComponent implements OnInit {
       return;
     }
     this.isSaving.set(true);
-    const payload = {
-      ...this.form.value,
-      city: this.cityControl.value,
-    };
+    const payload = { ...this.form.value, city: this.cityControl.value };
     this.hotelService.updateHotel(payload as any).subscribe({
-      next: () => {
-        this.toast.success('Hotel updated successfully.');
-        this.isSaving.set(false);
-      },
+      next: () => { this.toast.success('Hotel updated successfully.'); this.isSaving.set(false); },
       error: () => this.isSaving.set(false),
+    });
+  }
+
+  saveGst() {
+    if (this.gstForm.invalid) return;
+    this.isSavingGst.set(true);
+    this.roomTypeService.updateHotelGst(this.gstForm.value.gstPercent!).subscribe({
+      next: () => { this.toast.success('GST updated!'); this.isSavingGst.set(false); },
+      error: () => this.isSavingGst.set(false),
     });
   }
 }

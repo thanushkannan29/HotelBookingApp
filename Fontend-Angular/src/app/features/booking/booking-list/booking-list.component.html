@@ -2,90 +2,87 @@
   <div class="container">
     <div class="page-header-row">
       <div>
-        <h1 class="section-title">My Bookings</h1>
-        <p class="section-subtitle">{{ dataSource.data.length }} total reservations</p>
+        <h1 class="section-title">📋 My Bookings</h1>
+        <p class="section-subtitle">{{ totalCount() }} total reservations</p>
       </div>
       <a mat-flat-button color="primary" routerLink="/hotels">
         <mat-icon>add</mat-icon> New Booking
       </a>
     </div>
 
-    <!-- Status Filter Pills -->
-    <div class="filter-row">
-      @for (f of filters; track f) {
-        <button class="filter-pill" [class.active]="filter() === f" (click)="setStatusFilter(f)">
-          {{ f === 'all' ? 'All' : f }}
-        </button>
+    <!-- Status Tabs -->
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="mb-3">
+      @for (tab of statusTabs; track tab) {
+        <mat-tab [label]="tab === 'All' ? 'All' : statusEmoji(tab) + ' ' + tab" />
       }
-    </div>
+    </mat-tab-group>
 
-    <!-- Search -->
-    <mat-form-field appearance="outline" class="w-full mb-4">
-      <mat-label>Search</mat-label>
-      <input matInput (keyup)="applyFilter($event)" placeholder="Search by code, hotel…" />
-      <mat-icon matSuffix>search</mat-icon>
-    </mat-form-field>
+    @if (loading()) {
+      <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+    } @else {
+      <div class="table-card">
+        <mat-table [dataSource]="reservations()">
 
-    <div class="table-card">
-      <mat-table [dataSource]="dataSource" matSort>
+          <ng-container matColumnDef="reservationCode">
+            <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <a class="code-tag" [routerLink]="['/booking', r.reservationCode]">{{ r.reservationCode }}</a>
+            </mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="reservationCode">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Code</mat-header-cell>
-          <mat-cell *matCellDef="let r">
-            <a class="code-tag" [routerLink]="['/booking', r.reservationCode]">{{ r.reservationCode }}</a>
-          </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="hotelName">
+            <mat-header-cell *matHeaderCellDef>🏨 Hotel</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <div>
+                <strong>{{ r.hotelName }}</strong>
+                <div style="font-size:0.8rem;color:var(--color-text-muted)">{{ r.roomTypeName }}</div>
+              </div>
+            </mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="hotelName">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Hotel</mat-header-cell>
-          <mat-cell *matCellDef="let r">
-            <div>
-              <strong>{{ r.hotelName }}</strong>
-              <div style="font-size:0.8rem; color:var(--color-text-muted);">{{ r.roomTypeName }}</div>
-            </div>
-          </mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="checkIn">
+            <mat-header-cell *matHeaderCellDef>📅 Check-in</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.checkInDate | date:'MMM d, y' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="checkIn">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Check-in</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.checkInDate | date:'MMM d, y' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="checkOut">
+            <mat-header-cell *matHeaderCellDef>📅 Check-out</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.checkOutDate | date:'MMM d, y' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="checkOut">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Check-out</mat-header-cell>
-          <mat-cell *matCellDef="let r">{{ r.checkOutDate | date:'MMM d, y' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="amount">
+            <mat-header-cell *matHeaderCellDef>💰 Amount</mat-header-cell>
+            <mat-cell *matCellDef="let r">₹{{ (r.finalAmount || r.totalAmount) | number:'1.0-0' }}</mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="amount">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Amount</mat-header-cell>
-          <mat-cell *matCellDef="let r">₹{{ r.totalAmount | number:'1.0-0' }}</mat-cell>
-        </ng-container>
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <span class="badge {{ statusClass(r.status) }}">{{ statusEmoji(r.status) }} {{ r.status }}</span>
+            </mat-cell>
+          </ng-container>
 
-        <ng-container matColumnDef="status">
-          <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
-          <mat-cell *matCellDef="let r">
-            <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
-          </mat-cell>
-        </ng-container>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"
+                   [routerLink]="['/booking', row.reservationCode]"
+                   style="cursor:pointer;"></mat-row>
 
-        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;"
-                 [routerLink]="['/booking', row.reservationCode]"
-                 style="cursor:pointer;"></mat-row>
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:40px;">
+              <mat-icon style="font-size:48px;color:var(--color-text-muted)">book_online</mat-icon>
+              <p>🏨 No bookings found</p>
+            </td>
+          </tr>
+        </mat-table>
 
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length"
-              style="text-align:center; padding:40px;">
-            <mat-icon style="font-size:48px; color:var(--color-text-muted);">book_online</mat-icon>
-            <p>No bookings found</p>
-          </td>
-        </tr>
-      </mat-table>
-
-      <mat-paginator [pageSizeOptions]="[5, 10, 25, 50]"
-                     showFirstLastButtons
-                     aria-label="Select page">
-      </mat-paginator>
-    </div>
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[5, 10, 25, 50]"
+          showFirstLastButtons
+          (page)="onPage($event)"
+        />
+      </div>
+    }
   </div>
 </div>

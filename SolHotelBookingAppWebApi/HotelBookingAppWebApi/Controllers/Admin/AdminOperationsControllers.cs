@@ -210,9 +210,27 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPatch("{code}/confirm")]
         public async Task<IActionResult> Confirm(string code)
         {
-            // Reuse complete flow — confirm sets status to Confirmed
-            // This is handled in a separate service method if needed
+            await _service.ConfirmReservationAsync(code);
             return Ok(new { success = true, message = "Reservation confirmed." });
+        }
+    }
+
+    // ── ADMIN WALLET VIEW ─────────────────────────────────────────────────────
+    [Route("api/admin/wallet")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class AdminWalletController : ControllerBase
+    {
+        private readonly IWalletService _service;
+        public AdminWalletController(IWalletService service) => _service = service;
+        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        /// <summary>Admin views a guest's wallet balance</summary>
+        [HttpGet("guest/{guestUserId}")]
+        public async Task<IActionResult> GetGuestWallet(Guid guestUserId)
+        {
+            var result = await _service.GetGuestWalletByAdminAsync(GetUserId(), guestUserId);
+            return Ok(new { success = true, data = result });
         }
     }
 

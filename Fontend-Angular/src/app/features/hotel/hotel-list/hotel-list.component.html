@@ -101,28 +101,41 @@
           <aside class="filter-sidebar">
             <h3 class="filter-title">Filters</h3>
 
+            <!-- Sort By -->
+            <div class="filter-group">
+              <label class="filter-label">Sort By</label>
+              <mat-form-field appearance="outline" style="width:100%">
+                <mat-select [value]="sortBy()" (selectionChange)="sortBy.set($event.value); search()">
+                  <mat-option value="">Default</mat-option>
+                  <mat-option value="price_asc">💰 Price: Low → High</mat-option>
+                  <mat-option value="price_desc">💰 Price: High → Low</mat-option>
+                  <mat-option value="rating">⭐ Rating</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+
             <!-- Price Range -->
             <div class="filter-group">
-              <label class="filter-label">Price Range</label>
+              <label class="filter-label">💰 Price Range</label>
               <div class="price-inputs">
                 <mat-form-field appearance="outline" style="width:100px;">
                   <mat-label>Min ₹</mat-label>
                   <input matInput type="number" [value]="minPrice()"
-                         (change)="minPrice.set(+$any($event.target).value); applyFilters()" />
+                         (change)="minPrice.set(+$any($event.target).value); search()" />
                 </mat-form-field>
                 <span>–</span>
                 <mat-form-field appearance="outline" style="width:110px;">
                   <mat-label>Max ₹</mat-label>
                   <input matInput type="number" [value]="maxPrice()"
-                         (change)="maxPrice.set(+$any($event.target).value); applyFilters()" />
+                         (change)="maxPrice.set(+$any($event.target).value); search()" />
                 </mat-form-field>
               </div>
             </div>
 
             <!-- Min Rating -->
             <div class="filter-group">
-              <label class="filter-label">Minimum Rating</label>
-              <mat-form-field appearance="outline" style="width:100%;">
+              <label class="filter-label">⭐ Minimum Rating</label>
+              <mat-form-field appearance="outline" style="width:100%">
                 <mat-select [value]="minRating()" (selectionChange)="minRating.set($event.value); applyFilters()">
                   <mat-option [value]="0">Any</mat-option>
                   <mat-option [value]="3">3+ ⭐</mat-option>
@@ -131,6 +144,25 @@
                 </mat-select>
               </mat-form-field>
             </div>
+
+            <!-- Amenities -->
+            @if (amenities().length > 0) {
+              <div class="filter-group">
+                <label class="filter-label">🏷️ Amenities</label>
+                @for (a of amenities().slice(0, 10); track a) {
+                  <div>
+                    <mat-checkbox [checked]="selectedAmenities().includes(a)"
+                                  (change)="toggleAmenity(a)">
+                      {{ a }}
+                    </mat-checkbox>
+                  </div>
+                }
+              </div>
+            }
+
+            <button mat-stroked-button class="w-100 mt-2" (click)="clearSearch()">
+              Clear All Filters
+            </button>
           </aside>
 
           <!-- RIGHT: Results Grid -->
