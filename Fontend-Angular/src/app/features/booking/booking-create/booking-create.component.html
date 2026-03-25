@@ -116,7 +116,7 @@
                     <div class="d-flex gap-2 align-items-start mt-2">
                       <mat-form-field appearance="outline" class="flex-grow-1">
                         <mat-label>Enter promo code</mat-label>
-                        <input matInput [formControl]="bookingForm.get('promoCode')!" />
+                        <input matInput formControlName="promoCode" />
                         @if (promoValid() === true) {
                           <mat-icon matSuffix style="color:green">check_circle</mat-icon>
                         }
@@ -147,7 +147,7 @@
                       @if (useWallet) {
                         <mat-form-field appearance="outline" class="w-100">
                           <mat-label>Amount to use from wallet (₹)</mat-label>
-                          <input matInput type="number" [formControl]="bookingForm.get('walletAmount')!"
+                          <input matInput type="number" formControlName="walletAmount"
                                  [max]="walletInfo()!.balance" min="0" />
                           <mat-hint>Available: ₹{{ walletInfo()!.balance | number:'1.2-2' }}</mat-hint>
                         </mat-form-field>

@@ -61,7 +61,10 @@
             <mat-error>Password is required</mat-error>
           }
           @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
-            <mat-error>Password must be at least 6 characters</mat-error>
+            <mat-error>Password must be at least 8 characters</mat-error>
+          }
+          @if (form.get('password')?.hasError('pattern') && form.get('password')?.touched) {
+            <mat-error>Must include uppercase, number and special character</mat-error>
           }
         </mat-form-field>
 
