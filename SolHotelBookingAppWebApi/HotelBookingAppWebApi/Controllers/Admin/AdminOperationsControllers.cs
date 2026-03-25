@@ -51,8 +51,10 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpGet]
         public async Task<IActionResult> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var rooms = await _service.GetRoomsByHotelAsync(GetUserId(), pageNumber, pageSize);
-            return Ok(new { success = true, data = rooms });
+            var userId = GetUserId();
+            var rooms = await _service.GetRoomsByHotelAsync(userId, pageNumber, pageSize);
+            var totalCount = await _service.GetRoomCountByHotelAsync(userId);
+            return Ok(new { success = true, data = new { totalCount, items = rooms } });
         }
 
         /// <summary>

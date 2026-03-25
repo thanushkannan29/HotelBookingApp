@@ -53,7 +53,10 @@
                 <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               @if (adminForm.get('password')?.hasError('minlength') && adminForm.get('password')?.touched) {
-                <mat-error>Minimum 6 characters</mat-error>
+                <mat-error>Minimum 8 characters</mat-error>
+              }
+              @if (adminForm.get('password')?.hasError('pattern') && adminForm.get('password')?.touched) {
+                <mat-error>Must include uppercase, number and special character</mat-error>
               }
             </mat-form-field>
 

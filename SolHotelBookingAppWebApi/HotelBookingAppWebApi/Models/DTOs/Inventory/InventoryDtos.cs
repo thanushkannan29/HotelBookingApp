@@ -32,6 +32,6 @@ namespace HotelBookingAppWebApi.Models.DTOs.Inventory
         public DateOnly Date { get; set; }
         public int TotalInventory { get; set; }
         public int ReservedInventory { get; set; }
-        public int Available => TotalInventory - ReservedInventory;
+        public int Available { get; set; }
     }
 }

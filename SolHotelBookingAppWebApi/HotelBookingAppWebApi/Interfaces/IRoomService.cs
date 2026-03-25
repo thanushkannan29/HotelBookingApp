@@ -8,5 +8,6 @@ namespace HotelBookingAppWebApi.Interfaces
         Task UpdateRoomAsync(Guid userId, UpdateRoomDto dto);
         Task ToggleRoomStatusAsync(Guid userId, Guid roomId, bool isActive);
         Task<IEnumerable<RoomListResponseDto>> GetRoomsByHotelAsync(Guid userId, int pageNumber, int pageSize);
+        Task<int> GetRoomCountByHotelAsync(Guid userId);
     }
 }

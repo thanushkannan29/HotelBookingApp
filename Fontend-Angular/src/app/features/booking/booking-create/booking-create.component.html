@@ -141,10 +141,10 @@
                   <mat-card class="mb-3">
                     <mat-card-header><mat-card-title>💰 Wallet Balance: ₹{{ walletInfo()!.balance | number:'1.2-2' }}</mat-card-title></mat-card-header>
                     <mat-card-content>
-                      <mat-slide-toggle [(ngModel)]="useWallet" [ngModelOptions]="{standalone: true}" class="mb-2">
+                      <mat-slide-toggle [checked]="useWallet()" (change)="useWallet.set($event.checked)" class="mb-2">
                         Use Wallet Balance
                       </mat-slide-toggle>
-                      @if (useWallet) {
+                      @if (useWallet()) {
                         <mat-form-field appearance="outline" class="w-100">
                           <mat-label>Amount to use from wallet (₹)</mat-label>
                           <input matInput type="number" formControlName="walletAmount"
@@ -168,7 +168,7 @@
                       @if (promoDiscount() > 0) {
                         <div class="pb-row text-success"><span>🎫 Promo Discount</span><span>-₹{{ promoDiscount() | number:'1.2-2' }}</span></div>
                       }
-                      @if (useWallet && (bookingForm.get('walletAmount')?.value ?? 0) > 0) {
+                      @if (useWallet() && (bookingForm.get('walletAmount')?.value ?? 0) > 0) {
                         <div class="pb-row text-success"><span>💰 Wallet Used</span><span>-₹{{ bookingForm.get('walletAmount')?.value | number:'1.2-2' }}</span></div>
                       }
                       <div class="pb-row pb-total"><span><strong>Final Amount</strong></span><strong>₹{{ finalTotal() | number:'1.2-2' }}</strong></div>

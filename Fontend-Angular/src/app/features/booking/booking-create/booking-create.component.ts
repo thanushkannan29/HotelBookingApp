@@ -1,6 +1,5 @@
 import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -33,7 +32,7 @@ import {
   selector: 'app-booking-create',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, FormsModule, RouterLink,
+    CommonModule, ReactiveFormsModule, RouterLink,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatStepperModule,
     MatRadioModule, MatDatepickerModule, MatNativeDateModule,
@@ -66,7 +65,7 @@ export class BookingCreateComponent implements OnInit {
   promoValid         = signal<boolean | null>(null);
   promoMessage       = signal('');
   promoDiscount      = signal(0);
-  useWallet          = false;  // plain boolean for ngModel binding
+  useWallet          = signal(false);
   today              = new Date();
   tomorrow           = new Date(Date.now() + 86400000); // same-day block: min is tomorrow
 
@@ -108,7 +107,7 @@ export class BookingCreateComponent implements OnInit {
   gstAmount  = computed(() => Math.round(this.baseTotal() * this.gstPercent() / 100 * 100) / 100);
 
   finalTotal = computed(() => {
-    const walletUsed = this.useWallet
+    const walletUsed = this.useWallet()
       ? Math.min(this.bookingForm.get('walletAmount')?.value ?? 0, this.walletInfo()?.balance ?? 0)
       : 0;
     return Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - walletUsed);
@@ -214,7 +213,7 @@ export class BookingCreateComponent implements OnInit {
       return;
     }
 
-    const walletUsed = this.useWallet
+    const walletUsed = this.useWallet()
       ? Math.min(v.walletAmount ?? 0, this.walletInfo()?.balance ?? 0)
       : 0;
 

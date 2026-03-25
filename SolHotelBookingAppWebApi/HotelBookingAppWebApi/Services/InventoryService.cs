@@ -113,7 +113,8 @@ namespace HotelBookingAppWebApi.Services
                     RoomTypeInventoryId = i.RoomTypeInventoryId,
                     Date = i.Date,
                     TotalInventory = i.TotalInventory,
-                    ReservedInventory = i.ReservedInventory
+                    ReservedInventory = i.ReservedInventory,
+                    Available = i.TotalInventory - i.ReservedInventory
                 })
                 .ToListAsync();
         }

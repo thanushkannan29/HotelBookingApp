@@ -173,5 +173,14 @@ namespace HotelBookingAppWebApi.Services
                 IsActive = r.IsActive
             });
         }
+
+        public async Task<int> GetRoomCountByHotelAsync(Guid userId)
+        {
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (user.HotelId == null) return 0;
+            return await _roomRepo.GetQueryable()
+                .CountAsync(r => r.HotelId == user.HotelId);
+        }
     }
 }
