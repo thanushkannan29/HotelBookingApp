@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -7,6 +7,9 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { RouterLink } from '@angular/router';
 import { RoomTypeService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
@@ -19,28 +22,35 @@ import { RoomTypeListDto } from '../../../core/models/models';
     ReactiveFormsModule, RouterLink,
     MatFormFieldModule, MatInputModule, MatButtonModule,
     MatIconModule, MatTooltipModule,
-    MatDatepickerModule, MatNativeDateModule
+    MatDatepickerModule, MatNativeDateModule,
+    MatTableModule, MatSortModule, MatPaginatorModule,
   ],
   templateUrl: './roomtype-management.component.html',
   styleUrl: './roomtype-management.component.scss'
 })
-export class RoomTypeManagementComponent implements OnInit {
+export class RoomTypeManagementComponent implements OnInit, AfterViewInit {
   private roomTypeService = inject(RoomTypeService);
   private toast           = inject(ToastService);
   private fb              = inject(FormBuilder);
 
-  roomTypes    = signal<RoomTypeListDto[]>([]);
+  dataSource   = new MatTableDataSource<RoomTypeListDto>([]);
+  displayedColumns = ['name', 'maxOccupancy', 'amenities', 'roomCount', 'isActive', 'actions'];
   showAddForm  = signal(false);
   editingId    = signal<string | null>(null);
   isSaving     = signal(false);
   showRateForm = signal<string | null>(null);
   today        = new Date();
 
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  // F10: imageUrl in forms
   addForm = this.fb.group({
     name:         ['', Validators.required],
     description:  [''],
     maxOccupancy: [2, [Validators.required, Validators.min(1)]],
     amenities:    [''],
+    imageUrl:     [''],
   });
 
   editForm = this.fb.group({
@@ -49,6 +59,7 @@ export class RoomTypeManagementComponent implements OnInit {
     description:  [''],
     maxOccupancy: [2, [Validators.required, Validators.min(1)]],
     amenities:    [''],
+    imageUrl:     [''],
   });
 
   rateForm = this.fb.group({
@@ -60,8 +71,21 @@ export class RoomTypeManagementComponent implements OnInit {
 
   ngOnInit() { this.load(); }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+  }
+
   load() {
-    this.roomTypeService.getRoomTypes().subscribe(rt => this.roomTypes.set(rt));
+    this.roomTypeService.getRoomTypes().subscribe(rt => {
+      this.dataSource.data = rt;
+    });
+  }
+
+  applyFilter(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = val.trim().toLowerCase();
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   private formatDate(d: Date): string {
@@ -91,6 +115,7 @@ export class RoomTypeManagementComponent implements OnInit {
       description: rt.description,
       maxOccupancy: rt.maxOccupancy,
       amenities: rt.amenities,
+      imageUrl: rt.imageUrl ?? '',
     });
   }
 
@@ -111,8 +136,8 @@ export class RoomTypeManagementComponent implements OnInit {
   toggleStatus(rt: RoomTypeListDto) {
     this.roomTypeService.toggleRoomTypeStatus(rt.roomTypeId, !rt.isActive).subscribe(() => {
       this.toast.success(`Room type ${!rt.isActive ? 'activated' : 'deactivated'}.`);
-      this.roomTypes.update(r =>
-        r.map(x => x.roomTypeId === rt.roomTypeId ? { ...x, isActive: !x.isActive } : x)
+      this.dataSource.data = this.dataSource.data.map(x =>
+        x.roomTypeId === rt.roomTypeId ? { ...x, isActive: !x.isActive } : x
       );
     });
   }

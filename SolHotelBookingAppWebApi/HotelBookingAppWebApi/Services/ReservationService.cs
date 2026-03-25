@@ -4,6 +4,7 @@ using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
+using HotelBookingAppWebApi.Models.DTOs.Room;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
@@ -56,10 +57,13 @@ namespace HotelBookingAppWebApi.Services
                 if (dto.CheckInDate >= dto.CheckOutDate)
                     throw new ValidationException("Check-out must be after check-in.");
 
+                var totalDays = dto.CheckOutDate.DayNumber - dto.CheckInDate.DayNumber;
+                if (totalDays < 1)
+                    throw new ValidationException("Minimum booking is 1 full night (check-out must be at least 1 day after check-in).");
+
                 if (dto.NumberOfRooms <= 0)
                     throw new ValidationException("Number of rooms must be at least 1.");
 
-                var totalDays = dto.CheckOutDate.DayNumber - dto.CheckInDate.DayNumber;
                 var dates = Enumerable.Range(0, totalDays)
                     .Select(d => dto.CheckInDate.AddDays(d))
                     .ToList();
@@ -404,6 +408,51 @@ namespace HotelBookingAppWebApi.Services
                 RoomNumber = r.RoomNumber,
                 Floor = r.Floor,
                 RoomTypeName = r.RoomType!.Name
+            });
+        }
+
+        // ── ROOM OCCUPANCY (Correction 6B) ────────────────────────────────────
+        // For a given hotel + date, returns every physical room with IsOccupied flag.
+        // NOTE (Correction 10A): Each ReservationRoom has a distinct RoomId because
+        // _roomRepo.GetQueryable() returns physical rooms with unique IDs — no duplicates.
+        public async Task<IEnumerable<RoomOccupancyDto>> GetRoomOccupancyAsync(Guid adminUserId, DateOnly date)
+        {
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized.");
+
+            var hotelId = admin.HotelId.Value;
+
+            // Get all active rooms for the hotel
+            var rooms = await _roomRepo.GetQueryable()
+                .Include(r => r.RoomType)
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .ToListAsync();
+
+            // Get all reservations covering this date (Confirmed or Pending)
+            var occupiedRoomIds = await _reservationRoomRepo.GetQueryable()
+                .Include(rr => rr.Reservation)
+                .Where(rr =>
+                    rr.Reservation!.HotelId == hotelId &&
+                    (rr.Reservation.Status == ReservationStatus.Confirmed ||
+                     rr.Reservation.Status == ReservationStatus.Pending) &&
+                    rr.Reservation.CheckInDate <= date &&
+                    rr.Reservation.CheckOutDate > date)
+                .Select(rr => new { rr.RoomId, rr.Reservation!.ReservationCode })
+                .ToListAsync();
+
+            var occupancyMap = occupiedRoomIds.ToDictionary(x => x.RoomId, x => x.ReservationCode);
+
+            return rooms.Select(r => new RoomOccupancyDto
+            {
+                RoomId = r.RoomId,
+                RoomNumber = r.RoomNumber,
+                Floor = r.Floor,
+                RoomTypeName = r.RoomType?.Name ?? string.Empty,
+                IsOccupied = occupancyMap.ContainsKey(r.RoomId),
+                ReservationCode = occupancyMap.TryGetValue(r.RoomId, out var code) ? code : null
             });
         }
 

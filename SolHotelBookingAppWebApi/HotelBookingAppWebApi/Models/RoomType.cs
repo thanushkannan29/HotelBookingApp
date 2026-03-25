@@ -20,6 +20,9 @@ namespace HotelBookingAppWebApi.Models
 
         public string Amenities { get; set; } = string.Empty;
 
+        /// <summary>Optional photo URL for this room type — admin can add later</summary>
+        public string? ImageUrl { get; set; }
+
         public bool IsActive { get; set; } = true;
 
         public Hotel? Hotel { get; set; }

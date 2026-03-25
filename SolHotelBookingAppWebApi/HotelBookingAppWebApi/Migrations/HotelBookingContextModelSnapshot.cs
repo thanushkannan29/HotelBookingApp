@@ -22,6 +22,277 @@ namespace HotelBookingAppWebApi.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("HotelBookingAppWebApi.Models.Amenity", b =>
+                {
+                    b.Property<Guid>("AmenityId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IconName")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("AmenityId");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Amenities");
+
+                    b.HasData(
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000001"),
+                            Category = "Tech",
+                            IconName = "wifi",
+                            IsActive = true,
+                            Name = "WiFi"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000002"),
+                            Category = "Room",
+                            IconName = "ac_unit",
+                            IsActive = true,
+                            Name = "AC"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000003"),
+                            Category = "Room",
+                            IconName = "tv",
+                            IsActive = true,
+                            Name = "TV"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000004"),
+                            Category = "Services",
+                            IconName = "pool",
+                            IsActive = true,
+                            Name = "Pool"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000005"),
+                            Category = "Services",
+                            IconName = "local_parking",
+                            IsActive = true,
+                            Name = "Parking"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000006"),
+                            Category = "Services",
+                            IconName = "fitness_center",
+                            IsActive = true,
+                            Name = "Gym"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000007"),
+                            Category = "Food",
+                            IconName = "restaurant",
+                            IsActive = true,
+                            Name = "Restaurant"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000008"),
+                            Category = "Food",
+                            IconName = "local_bar",
+                            IsActive = true,
+                            Name = "Bar"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000009"),
+                            Category = "Services",
+                            IconName = "room_service",
+                            IsActive = true,
+                            Name = "Room Service"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000010"),
+                            Category = "Services",
+                            IconName = "local_laundry_service",
+                            IsActive = true,
+                            Name = "Laundry"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000011"),
+                            Category = "Services",
+                            IconName = "spa",
+                            IsActive = true,
+                            Name = "Spa"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000012"),
+                            Category = "Food",
+                            IconName = "free_breakfast",
+                            IsActive = true,
+                            Name = "Breakfast Included"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000013"),
+                            Category = "Room",
+                            IconName = "lock",
+                            IsActive = true,
+                            Name = "Safe"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000014"),
+                            Category = "Room",
+                            IconName = "liquor",
+                            IsActive = true,
+                            Name = "Mini Bar"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000015"),
+                            Category = "Room",
+                            IconName = "balcony",
+                            IsActive = true,
+                            Name = "Balcony"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000016"),
+                            Category = "Room",
+                            IconName = "beach_access",
+                            IsActive = true,
+                            Name = "Sea View"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000017"),
+                            Category = "Room",
+                            IconName = "landscape",
+                            IsActive = true,
+                            Name = "Mountain View"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000018"),
+                            Category = "Services",
+                            IconName = "accessible",
+                            IsActive = true,
+                            Name = "Wheelchair Access"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000019"),
+                            Category = "Services",
+                            IconName = "pets",
+                            IsActive = true,
+                            Name = "Pet Friendly"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000020"),
+                            Category = "Services",
+                            IconName = "child_friendly",
+                            IsActive = true,
+                            Name = "Kids Area"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000021"),
+                            Category = "Services",
+                            IconName = "meeting_room",
+                            IsActive = true,
+                            Name = "Conference Room"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000022"),
+                            Category = "Services",
+                            IconName = "airport_shuttle",
+                            IsActive = true,
+                            Name = "Airport Shuttle"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000023"),
+                            Category = "Services",
+                            IconName = "videocam",
+                            IsActive = true,
+                            Name = "CCTV"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000024"),
+                            Category = "Services",
+                            IconName = "support_agent",
+                            IsActive = true,
+                            Name = "24h Reception"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000025"),
+                            Category = "Room",
+                            IconName = "whatshot",
+                            IsActive = true,
+                            Name = "Heating"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000026"),
+                            Category = "Services",
+                            IconName = "elevator",
+                            IsActive = true,
+                            Name = "Elevator"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000027"),
+                            Category = "Bathroom",
+                            IconName = "dry",
+                            IsActive = true,
+                            Name = "Hair Dryer"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000028"),
+                            Category = "Room",
+                            IconName = "iron",
+                            IsActive = true,
+                            Name = "Iron"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000029"),
+                            Category = "Room",
+                            IconName = "coffee",
+                            IsActive = true,
+                            Name = "Coffee Maker"
+                        },
+                        new
+                        {
+                            AmenityId = new Guid("10000000-0000-0000-0000-000000000030"),
+                            Category = "Bathroom",
+                            IconName = "bathtub",
+                            IsActive = true,
+                            Name = "Bathtub"
+                        });
+                });
+
             modelBuilder.Entity("HotelBookingAppWebApi.Models.AuditLog", b =>
                 {
                     b.Property<Guid>("AuditLogId")
@@ -105,6 +376,10 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("UpiId")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("HotelId");
 
@@ -192,6 +467,12 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.Property<string>("Reason")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RefundPaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RefundTransactionRef")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<Guid>("ReservationId")
@@ -323,6 +604,9 @@ namespace HotelBookingAppWebApi.Migrations
                         .HasPrecision(3, 2)
                         .HasColumnType("decimal(3,2)");
 
+                    b.Property<Guid>("ReservationId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("UserId")
                         .HasColumnType("uniqueidentifier");
 
@@ -330,7 +614,10 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.HasIndex("HotelId");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("ReservationId");
+
+                    b.HasIndex("UserId", "ReservationId")
+                        .IsUnique();
 
                     b.ToTable("Reviews");
                 });
@@ -383,6 +670,9 @@ namespace HotelBookingAppWebApi.Migrations
 
                     b.Property<Guid>("HotelId")
                         .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ImageUrl")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
@@ -677,6 +967,12 @@ namespace HotelBookingAppWebApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("HotelBookingAppWebApi.Models.Reservation", "Reservation")
+                        .WithMany()
+                        .HasForeignKey("ReservationId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("HotelBookingAppWebApi.Models.User", "User")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
@@ -684,6 +980,8 @@ namespace HotelBookingAppWebApi.Migrations
                         .IsRequired();
 
                     b.Navigation("Hotel");
+
+                    b.Navigation("Reservation");
 
                     b.Navigation("User");
                 });

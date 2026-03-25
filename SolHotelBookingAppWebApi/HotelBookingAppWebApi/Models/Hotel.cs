@@ -29,6 +29,10 @@ namespace HotelBookingAppWebApi.Models
         /// <summary>SuperAdmin can block a hotel, preventing the Admin from activating it</summary>
         public bool IsBlockedBySuperAdmin { get; set; } = false;
 
+        /// <summary>UPI ID for simulated payment flow e.g. 'hotel@upi'</summary>
+        [MaxLength(50)]
+        public string? UpiId { get; set; }
+
         [Required]
         public DateTime CreatedAt { get; set; }
 

@@ -58,8 +58,10 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── ADMIN: APPROVE REFUND ─────────────────────────────────────────────
+        // FIX CS0535: Changed signature from (string adminResponse) to (ProcessRefundDto dto)
+        // so RefundPaymentMethod and RefundTransactionRef (Correction 8) are now saved.
         public async Task<RefundRequestResponseDto> ApproveRefundAsync(
-            Guid refundRequestId, Guid adminId, string adminResponse)
+            Guid refundRequestId, Guid adminId, ProcessRefundDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
@@ -89,16 +91,21 @@ namespace HotelBookingAppWebApi.Services
                 // Mark transaction as Refunded
                 transaction.Status = PaymentStatus.Refunded;
 
-                // Mark refund request as Approved
+                // Mark refund request as Approved — save all Correction 8 fields
                 refundRequest.Status = RefundRequestStatus.Approved;
-                refundRequest.AdminResponse = adminResponse;
+                refundRequest.AdminResponse = dto.AdminResponse;
+                refundRequest.RefundPaymentMethod = dto.RefundPaymentMethod;
+                refundRequest.RefundTransactionRef = dto.RefundTransactionRef;
                 refundRequest.ProcessedAt = DateTime.UtcNow;
 
                 await _unitOfWork.CommitAsync();
 
                 await _auditLogService.LogAsync(adminId, "RefundApproved", "RefundRequest",
                     refundRequest.RefundRequestId,
-                    $"Reservation {refundRequest.Reservation.ReservationCode} refund approved. Response: {adminResponse}");
+                    $"Reservation {refundRequest.Reservation.ReservationCode} refund approved. " +
+                    $"Response: {dto.AdminResponse}. " +
+                    $"Method: {dto.RefundPaymentMethod ?? "N/A"}. " +
+                    $"Ref: {dto.RefundTransactionRef ?? "N/A"}.");
 
                 return MapToDto(refundRequest, transaction.Amount);
             }
@@ -157,7 +164,67 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        // ── ADMIN: LIST HOTEL REFUND REQUESTS ─────────────────────────────────
+        // ── ADMIN: LIST HOTEL REFUND REQUESTS (PAGED) ─────────────────────────
+        // FIX CS0535: New method — implements IRefundRequestService.GetHotelRefundRequestsPagedAsync
+        public async Task<PagedRefundRequestResponseDto> GetHotelRefundRequestsPagedAsync(
+            Guid adminUserId, int page, int pageSize)
+        {
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized.");
+
+            var query = _refundRepo.GetQueryable()
+                .Include(r => r.Reservation)
+                .Include(r => r.User)
+                .Where(r => r.Reservation!.HotelId == admin.HotelId)
+                .OrderByDescending(r => r.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+
+            var requests = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dtos = await EnrichWithAmount(requests);
+
+            return new PagedRefundRequestResponseDto
+            {
+                TotalCount = totalCount,
+                RefundRequests = dtos
+            };
+        }
+
+        // ── GUEST: LIST OWN REFUND REQUESTS (PAGED) ──────────────────────────
+        // FIX CS0535: New method — implements IRefundRequestService.GetGuestRefundRequestsPagedAsync
+        public async Task<PagedRefundRequestResponseDto> GetGuestRefundRequestsPagedAsync(
+            Guid userId, int page, int pageSize)
+        {
+            var query = _refundRepo.GetQueryable()
+                .Include(r => r.Reservation)
+                .Include(r => r.User)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedAt);
+
+            var totalCount = await query.CountAsync();
+
+            var requests = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var dtos = await EnrichWithAmount(requests);
+
+            return new PagedRefundRequestResponseDto
+            {
+                TotalCount = totalCount,
+                RefundRequests = dtos
+            };
+        }
+
+        // ── ADMIN: LIST HOTEL REFUND REQUESTS (non-paged, legacy) ─────────────
         public async Task<IEnumerable<RefundRequestResponseDto>> GetHotelRefundRequestsAsync(
             Guid adminUserId)
         {
@@ -177,7 +244,7 @@ namespace HotelBookingAppWebApi.Services
             return await EnrichWithAmount(requests);
         }
 
-        // ── GUEST: LIST OWN REFUND REQUESTS ──────────────────────────────────
+        // ── GUEST: LIST OWN REFUND REQUESTS (non-paged, legacy) ──────────────
         public async Task<IEnumerable<RefundRequestResponseDto>> GetGuestRefundRequestsAsync(
             Guid userId)
         {
@@ -223,6 +290,8 @@ namespace HotelBookingAppWebApi.Services
             Status = r.Status.ToString(),
             AdminResponse = r.AdminResponse,
             RefundAmount = amount,
+            RefundPaymentMethod = r.RefundPaymentMethod,
+            RefundTransactionRef = r.RefundTransactionRef,
             CreatedAt = r.CreatedAt,
             ProcessedAt = r.ProcessedAt
         };

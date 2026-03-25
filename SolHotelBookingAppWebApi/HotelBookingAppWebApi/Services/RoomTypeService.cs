@@ -51,6 +51,7 @@ namespace HotelBookingAppWebApi.Services
                     Description = dto.Description,
                     MaxOccupancy = dto.MaxOccupancy,
                     Amenities = dto.Amenities,
+                    ImageUrl = dto.ImageUrl,
                     IsActive = true
                 };
 
@@ -77,12 +78,13 @@ namespace HotelBookingAppWebApi.Services
                 .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId && r.HotelId == user.HotelId)
                 ?? throw new NotFoundException("RoomType not found.");
 
-            var before = new { roomType.Name, roomType.Description, roomType.MaxOccupancy, roomType.Amenities };
+            var before = new { roomType.Name, roomType.Description, roomType.MaxOccupancy, roomType.Amenities, roomType.ImageUrl };
 
             roomType.Name = dto.Name;
             roomType.Description = dto.Description;
             roomType.MaxOccupancy = dto.MaxOccupancy;
             roomType.Amenities = dto.Amenities;
+            roomType.ImageUrl = dto.ImageUrl;
 
             await _unitOfWork.SaveChangesAsync();
             await _auditLogService.LogAsync(userId, "RoomTypeUpdated", "RoomType",
@@ -200,9 +202,41 @@ namespace HotelBookingAppWebApi.Services
                     MaxOccupancy = rt.MaxOccupancy,
                     Amenities = rt.Amenities,
                     IsActive = rt.IsActive,
-                    RoomCount = rt.Rooms!.Count
+                    RoomCount = rt.Rooms!.Count,
+                    ImageUrl = rt.ImageUrl
                 })
                 .ToListAsync();
+        }
+
+        // ── GET ROOM TYPES BY HOTEL (paged) ───────────────────────────────────
+        public async Task<PagedRoomTypeResponseDto> GetRoomTypesByHotelPagedAsync(Guid userId, int page, int pageSize)
+        {
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            if (user.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized.");
+
+            var query = _roomTypeRepo.GetQueryable()
+                .Where(rt => rt.HotelId == user.HotelId);
+
+            var total = await query.CountAsync();
+            var roomTypes = await query
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .Select(rt => new RoomTypeListDto
+                {
+                    RoomTypeId = rt.RoomTypeId,
+                    Name = rt.Name,
+                    Description = rt.Description,
+                    MaxOccupancy = rt.MaxOccupancy,
+                    Amenities = rt.Amenities,
+                    IsActive = rt.IsActive,
+                    RoomCount = rt.Rooms!.Count,
+                    ImageUrl = rt.ImageUrl
+                })
+                .ToListAsync();
+
+            return new PagedRoomTypeResponseDto { TotalCount = total, RoomTypes = roomTypes };
         }
     }
 }

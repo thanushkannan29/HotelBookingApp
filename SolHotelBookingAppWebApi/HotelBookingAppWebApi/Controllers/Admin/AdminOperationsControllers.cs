@@ -1,5 +1,6 @@
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Inventory;
+using HotelBookingAppWebApi.Models.DTOs.Review;
 using HotelBookingAppWebApi.Models.DTOs.Room;
 using HotelBookingAppWebApi.Models.DTOs.RoomType;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +16,14 @@ namespace HotelBookingAppWebApi.Controllers.Admin
     public class AdminRoomController : ControllerBase
     {
         private readonly IRoomService _service;
-        public AdminRoomController(IRoomService service) => _service = service;
+        private readonly IReservationService _reservationService;
+
+        public AdminRoomController(IRoomService service, IReservationService reservationService)
+        {
+            _service = service;
+            _reservationService = reservationService;
+        }
+
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpPost]
@@ -39,11 +47,25 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             return Ok(new { success = true, message = "Room status updated." });
         }
 
+        /// <summary>List all rooms for this admin's hotel (paged). TotalCount included in response wrapper.</summary>
         [HttpGet]
         public async Task<IActionResult> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
             var rooms = await _service.GetRoomsByHotelAsync(GetUserId(), pageNumber, pageSize);
             return Ok(new { success = true, data = rooms });
+        }
+
+        /// <summary>
+        /// Correction 6D: Room occupancy for a specific date.
+        /// Returns all physical rooms in the admin's hotel with IsOccupied flag.
+        /// GET /api/admin/rooms/occupancy?date=2025-12-25
+        /// No pagination needed — always returns the full hotel room list for one date.
+        /// </summary>
+        [HttpGet("occupancy")]
+        public async Task<IActionResult> GetOccupancy([FromQuery] DateOnly date)
+        {
+            var result = await _reservationService.GetRoomOccupancyAsync(GetUserId(), date);
+            return Ok(new { success = true, data = result });
         }
     }
 
@@ -57,10 +79,15 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public AdminRoomTypeController(IRoomTypeService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+        /// <summary>
+        /// Correction 9A: Paged room types.
+        /// GET /api/admin/roomtypes?page=1&amp;pageSize=10
+        /// Returns { totalCount, roomTypes } for Angular Material paginator.
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> List()
+        public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _service.GetRoomTypesByHotelAsync(GetUserId());
+            var result = await _service.GetRoomTypesByHotelPagedAsync(GetUserId(), page, pageSize);
             return Ok(new { success = true, data = result });
         }
 
@@ -166,6 +193,30 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         {
             await _service.CompleteReservationAsync(code);
             return Ok(new { success = true, message = "Reservation marked as completed." });
+        }
+    }
+
+    // ── ADMIN REVIEWS ─────────────────────────────────────────────────────────
+    [Route("api/admin/reviews")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class AdminReviewsController : ControllerBase
+    {
+        private readonly IReviewService _reviewService;
+        public AdminReviewsController(IReviewService reviewService) => _reviewService = reviewService;
+        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        /// <summary>
+        /// Correction 10D: Admin view of all reviews for their hotel, newest first, paged.
+        /// POST /api/admin/reviews  body: { hotelId, page, pageSize }
+        /// Returns PagedReviewResponseDto — reuses ReviewService.GetReviewsByHotelAsync.
+        /// The frontend must pass the admin's HotelId in the request body.
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> GetHotelReviews([FromBody] GetHotelReviewsRequestDto dto)
+        {
+            var result = await _reviewService.GetReviewsByHotelAsync(dto.HotelId, dto.Page, dto.PageSize);
+            return Ok(new { success = true, data = result });
         }
     }
 }

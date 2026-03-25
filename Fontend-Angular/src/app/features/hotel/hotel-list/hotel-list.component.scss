@@ -51,21 +51,26 @@
 
 .search-form {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1fr auto;
+  grid-template-columns: 1.5fr auto;
   gap: 12px;
   align-items: flex-start;
 
-  @media (max-width: 900px) {
+  .date-fields {
+    display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    .date-fields { grid-template-columns: 1fr 1fr; }
   }
   @media (max-width: 600px) {
-    grid-template-columns: 1fr;
+    .date-fields { grid-template-columns: 1fr; }
   }
 }
 
-.search-field {
-  width: 100%;
-}
+.search-field { width: 100%; }
 
 .search-btn {
   height: 56px;
@@ -77,34 +82,133 @@
   align-items: center;
   gap: 6px;
   margin-top: 4px;
-
-  @media (max-width: 600px) { width: 100%; }
+  @media (max-width: 900px) { width: 100%; }
 }
 
-// ─── RESULTS SECTION ──────────────────────────────────────────────────────────
-.results-section {
+// ─── CONTENT ──────────────────────────────────────────────────────────────────
+.content-section {
   padding: 48px 0 80px;
 }
 
+// ─── F3B: NETFLIX SCROLL ROWS ─────────────────────────────────────────────────
+.netflix-row {
+  margin-bottom: 40px;
+}
+
+.row-title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text);
+  margin-bottom: 16px;
+  padding-left: 4px;
+}
+
+.scroll-row {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+
+  &::-webkit-scrollbar {
+    height: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-border);
+    border-radius: 3px;
+  }
+}
+
+.scroll-card-wrapper {
+  flex: 0 0 280px;
+}
+
+// ─── SEARCH RESULTS ───────────────────────────────────────────────────────────
 .results-header {
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  margin-bottom: 32px;
+  margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
 }
 
-// ─── HOTEL GRID ───────────────────────────────────────────────────────────────
-.hotel-grid {
+// F3D: 2-column layout
+.search-layout {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: 300px 1fr;
   gap: 24px;
-  animation: fadeIn 0.4s ease;
+  align-items: flex-start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
 }
 
-.load-more {
+// F3D: Filter sidebar
+.filter-sidebar {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  position: sticky;
+  top: 80px;
+}
+
+.filter-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: var(--color-text);
+}
+
+.filter-group {
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+
+  &:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+}
+
+.filter-label {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.price-inputs {
   display: flex;
-  justify-content: center;
-  margin-top: 40px;
+  align-items: center;
+  gap: 8px;
+}
+
+.amenity-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+// Results area
+.results-area {
+  min-height: 400px;
+}
+
+.hotel-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+  margin-bottom: 24px;
 }

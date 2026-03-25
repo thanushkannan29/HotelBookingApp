@@ -1,5 +1,5 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,6 +10,7 @@ import { HotelService } from '../../../core/services/hotel.service';
 import { DashboardService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
 import { AdminDashboardDto } from '../../../core/models/models';
+import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-hotel-management',
@@ -17,7 +18,8 @@ import { AdminDashboardDto } from '../../../core/models/models';
   imports: [
     ReactiveFormsModule, RouterLink,
     MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatProgressSpinnerModule
+    MatIconModule, MatProgressSpinnerModule,
+    CityAutocompleteComponent,
   ],
   templateUrl: './hotel-management.component.html',
   styleUrl: './hotel-management.component.scss'
@@ -32,38 +34,50 @@ export class HotelManagementComponent implements OnInit {
   isLoading = signal(true);
   dashboard = signal<AdminDashboardDto | null>(null);
 
+  // F2D: separate FormControl for city autocomplete
+  cityControl = new FormControl('', [Validators.required]);
+
   form = this.fb.group({
     name:          ['', Validators.required],
     address:       ['', Validators.required],
-    city:          ['', Validators.required],
     description:   [''],
     contactNumber: ['', Validators.required],
     imageUrl:      [''],
+    // F7D: UPI ID field
+    upiId:         [''],
   });
 
   ngOnInit() {
-    // Load dashboard to get hotel info, then fetch full details to pre-fill all fields
     this.dashboardService.getAdminDashboard().subscribe(d => {
       this.dashboard.set(d);
-      // Fetch full hotel details to get address, description etc.
       this.hotelService.getHotelDetails(d.hotelId).subscribe(hotel => {
         this.form.patchValue({
           name:          hotel.name,
           address:       hotel.address,
-          city:          hotel.city,
           description:   hotel.description,
           contactNumber: hotel.contactNumber,
           imageUrl:      hotel.imageUrl,
+          upiId:         (hotel as any).upiId ?? '',
         });
+        // F2D: patch city control separately
+        this.cityControl.setValue(hotel.city);
         this.isLoading.set(false);
       });
     });
   }
 
   save() {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.invalid || this.cityControl.invalid) {
+      this.form.markAllAsTouched();
+      this.cityControl.markAsTouched();
+      return;
+    }
     this.isSaving.set(true);
-    this.hotelService.updateHotel(this.form.value as any).subscribe({
+    const payload = {
+      ...this.form.value,
+      city: this.cityControl.value,
+    };
+    this.hotelService.updateHotel(payload as any).subscribe({
       next: () => {
         this.toast.success('Hotel updated successfully.');
         this.isSaving.set(false);

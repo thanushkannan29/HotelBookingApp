@@ -13,11 +13,15 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
         private readonly IHotelService _service;
         public SuperAdminHotelController(IHotelService service) => _service = service;
 
-        /// <summary>List all hotels with revenue and reservation stats</summary>
+        /// <summary>
+        /// Correction 9A: Paged list of all hotels with revenue and reservation stats.
+        /// GET /api/superadmin/hotels?page=1&amp;pageSize=10
+        /// Returns { totalCount, hotels } for Angular Material paginator.
+        /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _service.GetAllHotelsForSuperAdminAsync();
+            var result = await _service.GetAllHotelsForSuperAdminPagedAsync(page, pageSize);
             return Ok(new { success = true, data = result });
         }
 
@@ -55,4 +59,5 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
             return Ok(new { success = true, data = result });
         }
     }
+
 }

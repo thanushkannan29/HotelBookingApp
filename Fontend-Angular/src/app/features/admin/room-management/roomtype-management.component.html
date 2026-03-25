@@ -38,147 +38,198 @@
             <mat-label>Description</mat-label>
             <textarea matInput formControlName="description" rows="2"></textarea>
           </mat-form-field>
-          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()">
+
+          <!-- F10: imageUrl field with preview -->
+          <div class="image-field-row">
+            <mat-form-field appearance="outline" style="flex:1;">
+              <mat-label>Room Photo URL</mat-label>
+              <mat-icon matPrefix>image</mat-icon>
+              <input matInput formControlName="imageUrl" type="url" placeholder="https://…" />
+              <mat-hint>Paste a direct image URL (https://…). Guests see this photo during booking.</mat-hint>
+            </mat-form-field>
+            @if (addForm.get('imageUrl')?.value) {
+              <img [src]="addForm.get('imageUrl')?.value" alt="Preview"
+                   class="image-preview" />
+            }
+          </div>
+
+          <button mat-flat-button color="primary" type="submit" [disabled]="isSaving()" style="margin-top:8px;">
             {{ isSaving() ? 'Saving…' : 'Add Room Type' }}
           </button>
         </form>
       </div>
     }
 
-    <!-- Room Types List -->
-    @if (roomTypes().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">category</mat-icon>
-        <h3>No room types yet</h3>
-        <p>Add room types before adding physical rooms</p>
-      </div>
-    } @else {
-      <div class="rt-grid">
-        @for (rt of roomTypes(); track rt.roomTypeId) {
-          <div class="rt-card">
-            <div class="rt-card-header">
-              <div>
-                <h3 class="rt-name">{{ rt.name }}</h3>
-                <span class="rt-count">{{ rt.roomCount }} room(s)</span>
-              </div>
-              <div class="rt-actions">
-                <span class="badge" [class]="rt.isActive ? 'badge-success' : 'badge-muted'">
-                  {{ rt.isActive ? 'Active' : 'Inactive' }}
-                </span>
-                <button mat-icon-button (click)="startEdit(rt)" matTooltip="Edit">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button (click)="toggleStatus(rt)"
-                        [matTooltip]="rt.isActive ? 'Deactivate' : 'Activate'">
-                  <mat-icon>{{ rt.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
-                </button>
-              </div>
+    <!-- Search Filter -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Search</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Filter by name, amenities…" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <!-- Room Types Table -->
+    <div class="table-card">
+      <mat-table [dataSource]="dataSource" matSort>
+
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Name</mat-header-cell>
+          <mat-cell *matCellDef="let rt">
+            <div style="display:flex; align-items:center; gap:10px;">
+              @if (rt.imageUrl) {
+                <img [src]="rt.imageUrl" alt="Room" style="width:40px; height:30px; object-fit:cover; border-radius:4px;" />
+              }
+              <strong>{{ rt.name }}</strong>
             </div>
+          </mat-cell>
+        </ng-container>
 
-            @if (editingId() === rt.roomTypeId) {
-              <!-- Inline Edit Form -->
-              <form [formGroup]="editForm" class="inline-edit-panel">
-                <div class="form-row-3">
-                  <mat-form-field appearance="outline">
-                    <mat-label>Name</mat-label>
-                    <input matInput formControlName="name" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Max Occupancy</mat-label>
-                    <input matInput type="number" formControlName="maxOccupancy" />
-                  </mat-form-field>
-                  <mat-form-field appearance="outline">
-                    <mat-label>Amenities</mat-label>
-                    <input matInput formControlName="amenities" />
-                  </mat-form-field>
-                </div>
-                <mat-form-field appearance="outline" class="w-full" style="margin-bottom:12px;">
-                  <mat-label>Description</mat-label>
-                  <textarea matInput formControlName="description" rows="2"></textarea>
+        <ng-container matColumnDef="maxOccupancy">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Max Guests</mat-header-cell>
+          <mat-cell *matCellDef="let rt">{{ rt.maxOccupancy }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="amenities">
+          <mat-header-cell *matHeaderCellDef>Amenities</mat-header-cell>
+          <mat-cell *matCellDef="let rt">
+            <span class="amenities-preview">{{ rt.amenities || '—' }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="roomCount">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Rooms</mat-header-cell>
+          <mat-cell *matCellDef="let rt">{{ rt.roomCount }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="isActive">
+          <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+          <mat-cell *matCellDef="let rt">
+            <span class="badge" [class]="rt.isActive ? 'badge-success' : 'badge-muted'">
+              {{ rt.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let rt">
+            <button mat-icon-button (click)="startEdit(rt)" matTooltip="Edit">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button (click)="toggleStatus(rt)"
+                    [matTooltip]="rt.isActive ? 'Deactivate' : 'Activate'">
+              <mat-icon>{{ rt.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
+            </button>
+            <button mat-icon-button (click)="openRateForm(rt.roomTypeId)" matTooltip="Set Pricing">
+              <mat-icon>attach_money</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center; padding:32px;">
+            No room types found
+          </td>
+        </tr>
+      </mat-table>
+
+      <mat-paginator [pageSizeOptions]="[5, 10, 25]"
+                     showFirstLastButtons
+                     aria-label="Select page">
+      </mat-paginator>
+    </div>
+
+    <!-- Inline Edit Panel -->
+    @if (editingId()) {
+      @for (rt of dataSource.data; track rt.roomTypeId) {
+        @if (rt.roomTypeId === editingId()) {
+          <div class="form-card mt-4 animate-slide-in">
+            <h3 class="form-card-title">Edit: {{ rt.name }}</h3>
+            <form [formGroup]="editForm">
+              <div class="form-row-3">
+                <mat-form-field appearance="outline">
+                  <mat-label>Name</mat-label>
+                  <input matInput formControlName="name" />
                 </mat-form-field>
-                <div style="display:flex; gap:10px;">
-                  <button mat-flat-button color="primary" type="button"
-                          (click)="saveEdit()" [disabled]="isSaving()">Save</button>
-                  <button mat-stroked-button type="button" (click)="editingId.set(null)">Cancel</button>
-                </div>
-              </form>
-            } @else {
-              <!-- Display -->
-              <div class="rt-details">
-                <div class="rt-meta">
-                  <mat-icon>people</mat-icon> Up to {{ rt.maxOccupancy }} guests
-                </div>
-                @if (rt.description) {
-                  <p class="rt-desc">{{ rt.description }}</p>
-                }
-                @if (rt.amenities) {
-                  <div class="rt-amenities">
-                    @for (a of rt.amenities.split(','); track $index) {
-                      <span class="amenity-tag">{{ a.trim() }}</span>
-                    }
-                  </div>
+                <mat-form-field appearance="outline">
+                  <mat-label>Max Occupancy</mat-label>
+                  <input matInput type="number" formControlName="maxOccupancy" />
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Amenities</mat-label>
+                  <input matInput formControlName="amenities" />
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="w-full" style="margin-bottom:12px;">
+                <mat-label>Description</mat-label>
+                <textarea matInput formControlName="description" rows="2"></textarea>
+              </mat-form-field>
+
+              <!-- F10: imageUrl edit with preview -->
+              <div class="image-field-row">
+                <mat-form-field appearance="outline" style="flex:1;">
+                  <mat-label>Room Photo URL</mat-label>
+                  <mat-icon matPrefix>image</mat-icon>
+                  <input matInput formControlName="imageUrl" type="url" placeholder="https://…" />
+                  <mat-hint>Paste a direct image URL (https://…). Guests see this photo during booking.</mat-hint>
+                </mat-form-field>
+                @if (editForm.get('imageUrl')?.value) {
+                  <img [src]="editForm.get('imageUrl')?.value" alt="Preview"
+                       class="image-preview" />
                 }
               </div>
 
-              <!-- Rate Section -->
-              <div class="rt-rate-section">
-                @if (showRateForm() === rt.roomTypeId) {
-                  <form [formGroup]="rateForm" class="rate-form">
-                    <h4 class="rate-form-title">Set Pricing</h4>
-                    <div class="rate-row">
-                      <mat-form-field appearance="outline" class="rate-field">
-                        <mat-label>Start Date</mat-label>
-                        <input matInput [matDatepicker]="rateStartPicker"
-                               formControlName="startDate"
-                               [min]="today" readonly />
-                        <mat-datepicker-toggle matSuffix [for]="rateStartPicker" />
-                        <mat-datepicker #rateStartPicker />
-                        @if (rateForm.get('startDate')?.hasError('required') && rateForm.get('startDate')?.touched) {
-                          <mat-error>Required</mat-error>
-                        }
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline" class="rate-field">
-                        <mat-label>End Date</mat-label>
-                        <input matInput [matDatepicker]="rateEndPicker"
-                               formControlName="endDate"
-                               [min]="rateForm.get('startDate')?.value ?? today" readonly />
-                        <mat-datepicker-toggle matSuffix [for]="rateEndPicker" />
-                        <mat-datepicker #rateEndPicker />
-                        @if (rateForm.get('endDate')?.hasError('required') && rateForm.get('endDate')?.touched) {
-                          <mat-error>Required</mat-error>
-                        }
-                      </mat-form-field>
-
-                      <mat-form-field appearance="outline" class="rate-field">
-                        <mat-label>Rate (₹ / night)</mat-label>
-                        <input matInput type="number" formControlName="rate" min="1" />
-                        <mat-icon matPrefix>currency_rupee</mat-icon>
-                        @if (rateForm.get('rate')?.hasError('min') && rateForm.get('rate')?.touched) {
-                          <mat-error>Must be > 0</mat-error>
-                        }
-                      </mat-form-field>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                      <button mat-flat-button color="primary" type="button"
-                              (click)="addRate()" [disabled]="isSaving()">
-                        {{ isSaving() ? 'Saving…' : 'Save Rate' }}
-                      </button>
-                      <button mat-stroked-button type="button" (click)="showRateForm.set(null)">
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                } @else {
-                  <button mat-stroked-button (click)="openRateForm(rt.roomTypeId)">
-                    <mat-icon>attach_money</mat-icon> Set Pricing
-                  </button>
-                }
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <button mat-flat-button color="primary" type="button"
+                        (click)="saveEdit()" [disabled]="isSaving()">Save</button>
+                <button mat-stroked-button type="button" (click)="editingId.set(null)">Cancel</button>
               </div>
-            }
+            </form>
           </div>
         }
+      }
+    }
+
+    <!-- Rate Form -->
+    @if (showRateForm()) {
+      <div class="form-card mt-4 animate-slide-in">
+        <h3 class="form-card-title">Set Pricing</h3>
+        <form [formGroup]="rateForm">
+          <div class="form-row-3">
+            <mat-form-field appearance="outline">
+              <mat-label>Start Date</mat-label>
+              <input matInput [matDatepicker]="rateStartPicker"
+                     formControlName="startDate"
+                     [min]="today" readonly />
+              <mat-datepicker-toggle matSuffix [for]="rateStartPicker" />
+              <mat-datepicker #rateStartPicker />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>End Date</mat-label>
+              <input matInput [matDatepicker]="rateEndPicker"
+                     formControlName="endDate"
+                     [min]="rateForm.get('startDate')?.value ?? today" readonly />
+              <mat-datepicker-toggle matSuffix [for]="rateEndPicker" />
+              <mat-datepicker #rateEndPicker />
+            </mat-form-field>
+            <mat-form-field appearance="outline">
+              <mat-label>Rate (₹ / night)</mat-label>
+              <mat-icon matPrefix>currency_rupee</mat-icon>
+              <input matInput type="number" formControlName="rate" min="1" />
+            </mat-form-field>
+          </div>
+          <div style="display:flex; gap:10px;">
+            <button mat-flat-button color="primary" type="button"
+                    (click)="addRate()" [disabled]="isSaving()">
+              {{ isSaving() ? 'Saving…' : 'Save Rate' }}
+            </button>
+            <button mat-stroked-button type="button" (click)="showRateForm.set(null)">Cancel</button>
+          </div>
+        </form>
       </div>
     }
+
   </div>
 </div>

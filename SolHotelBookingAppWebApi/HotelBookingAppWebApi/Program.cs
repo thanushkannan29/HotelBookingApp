@@ -90,6 +90,7 @@ builder.Services.AddScoped<IReviewService, ReviewService>();
 builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
+builder.Services.AddScoped<IAmenityService, AmenityService>();
 
 // ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
 builder.Services.AddHostedService<ReservationCleanupService>();       // cancels expired pending reservations
@@ -123,6 +124,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseCors();
+app.UseIpRateLimiting();
 app.UseRouting();
 
 // Global exception handler must be BEFORE auth so it catches all exceptions
@@ -130,8 +132,6 @@ app.UseMiddleware<GlobalExceptionMiddleware>();
 
 app.UseAuthentication();
 app.UseAuthorization();
-
-app.UseIpRateLimiting();
 
 app.MapControllers();
 

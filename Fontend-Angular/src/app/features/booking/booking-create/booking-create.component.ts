@@ -11,6 +11,7 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatCardModule } from '@angular/material/card';
 import { DecimalPipe } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
 import { TransactionService } from '../../../core/services/api.services';
@@ -18,7 +19,7 @@ import { HotelService } from '../../../core/services/hotel.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   HotelDetailsDto, RoomAvailabilityDto, AvailableRoomDto,
-  ReservationResponseDto, PaymentMethod
+  ReservationResponseDto, PaymentMethod, PaymentIntentDto
 } from '../../../core/models/models';
 
 @Component({
@@ -29,7 +30,7 @@ import {
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatStepperModule,
     MatRadioModule, MatDatepickerModule, MatNativeDateModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule, MatCardModule,
   ],
   templateUrl: './booking-create.component.html',
   styleUrl: './booking-create.component.scss'
@@ -47,6 +48,7 @@ export class BookingCreateComponent implements OnInit {
   availability      = signal<RoomAvailabilityDto[]>([]);
   availableRooms    = signal<AvailableRoomDto[]>([]);
   createdReservation= signal<ReservationResponseDto | null>(null);
+  paymentIntent     = signal<PaymentIntentDto | null>(null);  // F4D
   isLoadingHotel    = signal(true);
   isBooking         = signal(false);
   isPaying          = signal(false);
@@ -71,11 +73,13 @@ export class BookingCreateComponent implements OnInit {
     return this.availability().find(a => a.roomTypeId === rtId);
   });
 
+  // F4B: Math.floor for whole numbers
   totalNights = computed(() => {
     const ci = this.bookingForm.get('checkInDate')?.value as Date | null;
     const co = this.bookingForm.get('checkOutDate')?.value as Date | null;
     if (!ci || !co) return 0;
-    return Math.max(0, (co.getTime() - ci.getTime()) / 86400000);
+    const diff = Math.floor((co.getTime() - ci.getTime()) / 86400000);
+    return Math.max(0, diff);
   });
 
   estimatedTotal = computed(() => {
@@ -83,12 +87,6 @@ export class BookingCreateComponent implements OnInit {
     const rooms = this.bookingForm.get('numberOfRooms')?.value ?? 1;
     return (rt?.pricePerNight ?? 0) * this.totalNights() * rooms;
   });
-
-  /** Date filter: disable dates that are fully booked */
-  checkInFilter = (d: Date | null): boolean => {
-    if (!d) return false;
-    return d >= this.today;
-  };
 
   ngOnInit() {
     const p = this.route.snapshot.queryParams;
@@ -116,9 +114,13 @@ export class BookingCreateComponent implements OnInit {
       this.isLoadingHotel.set(false);
     }
 
-    // Reload availability when dates change
     this.bookingForm.get('checkInDate')?.valueChanges.subscribe(() => this.onDateChange());
     this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(() => this.onDateChange());
+
+    // F4A: Fix roomTypeId valueChanges not triggering onRoomTypeChange
+    this.bookingForm.get('roomTypeId')?.valueChanges.subscribe(rtId => {
+      if (rtId) this.onRoomTypeChange(rtId);
+    });
   }
 
   private onDateChange() {
@@ -169,6 +171,11 @@ export class BookingCreateComponent implements OnInit {
         this.createdReservation.set(res);
         this.isBooking.set(false);
         this.toast.success('Reservation created! Pay within 10 minutes to confirm.');
+        // F4D: Load payment intent for UPI details
+        this.transactionService.getPaymentIntent(res.reservationId).subscribe({
+          next: intent => this.paymentIntent.set(intent),
+          error: () => {} // non-fatal
+        });
       },
       error: () => this.isBooking.set(false),
     });

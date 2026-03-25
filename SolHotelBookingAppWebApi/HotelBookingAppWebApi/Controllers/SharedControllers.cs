@@ -119,6 +119,22 @@ namespace HotelBookingAppWebApi.Controllers
             var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize);
             return Ok(new { success = true, data = result });
         }
+
+        /// <summary>
+        /// Correction 7D: Payment Intent endpoint.
+        /// Guest calls this before making a UPI payment — returns the hotel's UPI ID,
+        /// the amount owed, a payment reference (HTLPAY-{reservationCode}), and hotel name.
+        /// This is purely informational; the guest pays externally via UPI.
+        /// GET /api/transactions/payment-intent/{reservationId}
+        /// Auth: Guest
+        /// </summary>
+        [HttpGet("payment-intent/{reservationId}")]
+        [Authorize(Roles = "Guest")]
+        public async Task<IActionResult> GetPaymentIntent(Guid reservationId)
+        {
+            var result = await _service.GetPaymentIntentAsync(reservationId, GetUserId());
+            return Ok(new { success = true, data = result });
+        }
     }
 
     // ── REVIEWS ───────────────────────────────────────────────────────────────
@@ -167,6 +183,42 @@ namespace HotelBookingAppWebApi.Controllers
         public async Task<IActionResult> GetMyReviews()
         {
             var result = await _service.GetMyReviewsAsync(GetUserId());
+            return Ok(new { success = true, data = result });
+        }
+
+        /// <summary>
+        /// Correction 9A: My reviews paged — returns { totalCount, reviews }.
+        /// GET /api/reviews/my-reviews/paged?page=1&amp;pageSize=10
+        /// Auth: Guest
+        /// </summary>
+        [HttpGet("my-reviews/paged")]
+        [Authorize(Roles = "Guest")]
+        public async Task<IActionResult> GetMyReviewsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _service.GetMyReviewsPagedAsync(GetUserId(), page, pageSize);
+            return Ok(new { success = true, data = result });
+        }
+    }
+
+    // ── GUEST REFUND REQUESTS ─────────────────────────────────────────────────
+    [Route("api/guest/refund-requests")]
+    [ApiController]
+    [Authorize(Roles = "Guest")]
+    public class GuestRefundRequestController : ControllerBase
+    {
+        private readonly IRefundRequestService _service;
+        public GuestRefundRequestController(IRefundRequestService service) => _service = service;
+        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        /// <summary>
+        /// Correction 9A: Paged refund requests for the logged-in guest.
+        /// GET /api/guest/refund-requests?page=1&amp;pageSize=10
+        /// Returns { totalCount, refundRequests } for Angular Material paginator.
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetMyRefundRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        {
+            var result = await _service.GetGuestRefundRequestsPagedAsync(GetUserId(), page, pageSize);
             return Ok(new { success = true, data = result });
         }
     }

@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HotelBookingAppWebApi.Models
 {
@@ -22,5 +23,16 @@ namespace HotelBookingAppWebApi.Models
         public Reservation? Reservation { get; set; }
         public RoomType? RoomType { get; set; }
         public Room? Room { get; set; }
+
+        /// <summary>
+        /// Computed: true if this room has an active Confirmed reservation covering today.
+        /// Not mapped to DB — used for in-memory occupancy checks only.
+        /// </summary>
+        [NotMapped]
+        public bool IsCurrentlyOccupied =>
+            Reservation != null &&
+            Reservation.Status == ReservationStatus.Confirmed &&
+            Reservation.CheckInDate <= DateOnly.FromDateTime(DateTime.UtcNow) &&
+            Reservation.CheckOutDate > DateOnly.FromDateTime(DateTime.UtcNow);
     }
 }

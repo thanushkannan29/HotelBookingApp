@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import {
   ApiResponse, HotelListItemDto, HotelDetailsDto, SearchHotelRequestDto,
   SearchHotelResponseDto, RoomTypePublicDto, RoomAvailabilityDto,
-  UpdateHotelDto, SuperAdminHotelListDto
+  UpdateHotelDto, SuperAdminHotelListDto, PagedSuperAdminHotelResponseDto,
+  IndianCityDto, AmenityResponseDto,
 } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -55,6 +56,25 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
+  // F9A: City search API
+  searchCities(query: string): Observable<IndianCityDto[]> {
+    return this.http.get<ApiResponse<IndianCityDto[]>>(
+      `${this.base}/public/cities/search?query=${query}`
+    ).pipe(map(r => r.data ?? []));
+  }
+
+  // F9A: Amenities from API
+  getAmenities(): Observable<AmenityResponseDto[]> {
+    return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
+      .pipe(map(r => r.data ?? []));
+  }
+
+  searchAmenities(query: string): Observable<AmenityResponseDto[]> {
+    return this.http.get<ApiResponse<AmenityResponseDto[]>>(
+      `${this.base}/public/amenities/search`, { params: { query } }
+    ).pipe(map(r => r.data ?? []));
+  }
+
   // ── ADMIN ─────────────────────────────────────────────────────────────────
   updateHotel(dto: UpdateHotelDto): Observable<void> {
     return this.http.put<any>(`${this.base}/admin/hotels`, dto).pipe(map(() => undefined));
@@ -67,9 +87,11 @@ export class HotelService {
   }
 
   // ── SUPERADMIN ────────────────────────────────────────────────────────────
-  getAllHotelsForSuperAdmin(): Observable<SuperAdminHotelListDto[]> {
-    return this.http.get<ApiResponse<SuperAdminHotelListDto[]>>(`${this.base}/superadmin/hotels`)
-      .pipe(map(r => r.data!));
+  getAllHotelsForSuperAdmin(page = 1, pageSize = 10): Observable<PagedSuperAdminHotelResponseDto> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedSuperAdminHotelResponseDto>>(
+      `${this.base}/superadmin/hotels`, { params }
+    ).pipe(map(r => r.data!));
   }
 
   blockHotel(id: string): Observable<void> {

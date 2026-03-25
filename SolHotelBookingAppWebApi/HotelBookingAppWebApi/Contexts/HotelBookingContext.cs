@@ -25,6 +25,8 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<Log> Logs { get; set; }
         public DbSet<RefundRequest> RefundRequests { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        // Correction 2: Amenity master table
+        public DbSet<Amenity> Amenities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -202,6 +204,19 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Review>()
                 .HasIndex(r => r.HotelId);
 
+            // Correction 4: one review per reservation (not per hotel)
+            // Unique index on (UserId, ReservationId) — one review per completed stay
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.UserId, r.ReservationId })
+                .IsUnique();
+
+            // Correction 4: Review -> Reservation FK (Restrict so deleting reservation doesn't cascade-delete reviews)
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Reservation)
+                .WithMany()
+                .HasForeignKey(r => r.ReservationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             // ─── REFUND REQUEST ───────────────────────────────────────────────
             modelBuilder.Entity<RefundRequest>()
                 .Property(r => r.Status)
@@ -226,6 +241,46 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Log>()
                 .Property(l => l.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
+
+            // ─── AMENITY ──────────────────────────────────────────────────────
+            // Correction 2: Amenity master table configuration
+            modelBuilder.Entity<Amenity>()
+                .HasIndex(a => a.Name)
+                .IsUnique();
+
+            // Correction 2: Seed data — 30 common amenities
+            modelBuilder.Entity<Amenity>().HasData(
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000001"), Name = "WiFi",               Category = "Tech",      IconName = "wifi",               IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000002"), Name = "AC",                 Category = "Room",      IconName = "ac_unit",            IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000003"), Name = "TV",                 Category = "Room",      IconName = "tv",                 IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000004"), Name = "Pool",               Category = "Services",  IconName = "pool",               IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000005"), Name = "Parking",            Category = "Services",  IconName = "local_parking",      IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000006"), Name = "Gym",                Category = "Services",  IconName = "fitness_center",     IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000007"), Name = "Restaurant",         Category = "Food",      IconName = "restaurant",         IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000008"), Name = "Bar",                Category = "Food",      IconName = "local_bar",          IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000009"), Name = "Room Service",       Category = "Services",  IconName = "room_service",       IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000010"), Name = "Laundry",            Category = "Services",  IconName = "local_laundry_service", IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000011"), Name = "Spa",                Category = "Services",  IconName = "spa",                IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000012"), Name = "Breakfast Included", Category = "Food",      IconName = "free_breakfast",     IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000013"), Name = "Safe",               Category = "Room",      IconName = "lock",               IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000014"), Name = "Mini Bar",           Category = "Room",      IconName = "liquor",             IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000015"), Name = "Balcony",            Category = "Room",      IconName = "balcony",            IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000016"), Name = "Sea View",           Category = "Room",      IconName = "beach_access",       IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000017"), Name = "Mountain View",      Category = "Room",      IconName = "landscape",          IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000018"), Name = "Wheelchair Access",  Category = "Services",  IconName = "accessible",         IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000019"), Name = "Pet Friendly",       Category = "Services",  IconName = "pets",               IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000020"), Name = "Kids Area",          Category = "Services",  IconName = "child_friendly",     IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000021"), Name = "Conference Room",    Category = "Services",  IconName = "meeting_room",       IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000022"), Name = "Airport Shuttle",    Category = "Services",  IconName = "airport_shuttle",    IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000023"), Name = "CCTV",               Category = "Services",  IconName = "videocam",           IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000024"), Name = "24h Reception",      Category = "Services",  IconName = "support_agent",      IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000025"), Name = "Heating",            Category = "Room",      IconName = "whatshot",           IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000026"), Name = "Elevator",           Category = "Services",  IconName = "elevator",           IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000027"), Name = "Hair Dryer",         Category = "Bathroom",  IconName = "dry",                IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000028"), Name = "Iron",               Category = "Room",      IconName = "iron",               IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000029"), Name = "Coffee Maker",       Category = "Room",      IconName = "coffee",             IsActive = true },
+                new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000030"), Name = "Bathtub",            Category = "Bathroom",  IconName = "bathtub",            IsActive = true }
+            );
         }
     }
 }

@@ -43,6 +43,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public string Description { get; set; } = string.Empty;
         public int MaxOccupancy { get; set; }
         public IEnumerable<string> Amenities { get; set; } = new List<string>();
+
+        /// <summary>Optional room type photo URL</summary>
+        public string? ImageUrl { get; set; }
     }
 
     public class RoomAvailabilityDto
@@ -51,6 +54,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public string RoomTypeName { get; set; } = string.Empty;
         public decimal PricePerNight { get; set; }
         public int AvailableRooms { get; set; }
+
+        /// <summary>Optional room type photo URL</summary>
+        public string? ImageUrl { get; set; }
     }
 
     public class SearchHotelRequestDto

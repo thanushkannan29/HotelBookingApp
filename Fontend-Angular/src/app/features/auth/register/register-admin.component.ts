@@ -1,5 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,6 +8,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatStepperModule } from '@angular/material/stepper';
 import { AuthService } from '../../../core/services/auth.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
 
 @Component({
   selector: 'app-register-admin',
@@ -15,7 +16,8 @@ import { ToastService } from '../../../core/services/toast.service';
   imports: [
     ReactiveFormsModule, RouterLink,
     MatFormFieldModule, MatInputModule, MatButtonModule,
-    MatIconModule, MatStepperModule
+    MatIconModule, MatStepperModule,
+    CityAutocompleteComponent,
   ],
   templateUrl: './register-admin.component.html',
   styleUrl: './register-admin.component.scss'
@@ -29,6 +31,9 @@ export class RegisterAdminComponent {
   hidePassword = signal(true);
   isLoading = signal(false);
 
+  // F2D: separate FormControl for city autocomplete
+  cityControl = new FormControl('', [Validators.required]);
+
   adminForm = this.fb.group({
     name: ['', [Validators.required]],
     email: ['', [Validators.required, Validators.email]],
@@ -38,19 +43,23 @@ export class RegisterAdminComponent {
   hotelForm = this.fb.group({
     hotelName: ['', [Validators.required]],
     address: ['', [Validators.required]],
-    city: ['', [Validators.required]],
     description: [''],
     contactNumber: ['', [Validators.required, Validators.maxLength(15)]],
   });
 
   submit() {
-    if (this.adminForm.invalid || this.hotelForm.invalid) {
+    if (this.adminForm.invalid || this.hotelForm.invalid || this.cityControl.invalid) {
       this.adminForm.markAllAsTouched();
       this.hotelForm.markAllAsTouched();
+      this.cityControl.markAsTouched();
       return;
     }
     this.isLoading.set(true);
-    const payload = { ...this.adminForm.value, ...this.hotelForm.value } as any;
+    const payload = {
+      ...this.adminForm.value,
+      ...this.hotelForm.value,
+      city: this.cityControl.value,
+    } as any;
     this.auth.registerHotelAdmin(payload).subscribe({
       next: () => {
         this.toast.success('Hotel registered! Your dashboard is ready.');

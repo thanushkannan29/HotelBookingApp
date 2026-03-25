@@ -1,4 +1,5 @@
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
+using HotelBookingAppWebApi.Models.DTOs.Room;
 
 namespace HotelBookingAppWebApi.Interfaces
 {
@@ -12,5 +13,8 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<bool> CompleteReservationAsync(string reservationCode);
         Task<PagedReservationResponseDto> GetHotelReservationsAsync(Guid userId, int page, int pageSize);
         Task<IEnumerable<AvailableRoomDto>> GetAvailableRoomsAsync(Guid hotelId, Guid roomTypeId, DateOnly checkIn, DateOnly checkOut);
+
+        /// <summary>For a given hotel and date, return occupancy status for every physical room</summary>
+        Task<IEnumerable<RoomOccupancyDto>> GetRoomOccupancyAsync(Guid adminUserId, DateOnly date);
     }
 }

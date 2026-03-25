@@ -13,6 +13,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.RoomType
         public int MaxOccupancy { get; set; }
 
         public string Amenities { get; set; } = string.Empty;
+
+        /// <summary>Optional room type photo URL</summary>
+        public string? ImageUrl { get; set; }
     }
 
     public class UpdateRoomTypeDto
@@ -24,6 +27,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.RoomType
         public string Description { get; set; } = string.Empty;
         public int MaxOccupancy { get; set; }
         public string Amenities { get; set; } = string.Empty;
+
+        /// <summary>Optional room type photo URL</summary>
+        public string? ImageUrl { get; set; }
     }
 
     public class CreateRoomTypeRateDto
@@ -66,5 +72,14 @@ namespace HotelBookingAppWebApi.Models.DTOs.RoomType
         public string Amenities { get; set; } = string.Empty;
         public bool IsActive { get; set; }
         public int RoomCount { get; set; }
+
+        /// <summary>Optional room type photo URL</summary>
+        public string? ImageUrl { get; set; }
+    }
+
+    public class PagedRoomTypeResponseDto
+    {
+        public int TotalCount { get; set; }
+        public IEnumerable<RoomTypeListDto> RoomTypes { get; set; } = new List<RoomTypeListDto>();
     }
 }

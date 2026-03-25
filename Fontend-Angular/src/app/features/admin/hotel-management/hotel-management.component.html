@@ -29,14 +29,13 @@
               }
             </mat-form-field>
 
-            <mat-form-field appearance="outline">
-              <mat-label>City</mat-label>
-              <input matInput formControlName="city" />
-              <mat-icon matPrefix>location_city</mat-icon>
-              @if (form.get('city')?.hasError('required') && form.get('city')?.touched) {
-                <mat-error>City is required</mat-error>
+            <!-- F2D: City autocomplete replaces plain city input -->
+            <div class="col-span-1">
+              <app-city-autocomplete [control]="cityControl" />
+              @if (cityControl.hasError('required') && cityControl.touched) {
+                <mat-error style="font-size:12px; margin: -8px 0 8px 16px;">City is required</mat-error>
               }
-            </mat-form-field>
+            </div>
 
             <mat-form-field appearance="outline">
               <mat-label>Contact Number</mat-label>
@@ -66,6 +65,14 @@
               <mat-label>Image URL</mat-label>
               <input matInput formControlName="imageUrl" placeholder="https://…" />
               <mat-icon matPrefix>image</mat-icon>
+            </mat-form-field>
+
+            <!-- F7D: UPI ID field -->
+            <mat-form-field appearance="outline" class="col-span-2">
+              <mat-label>Hotel UPI ID (e.g. hotelname&#64;upi)</mat-label>
+              <input matInput formControlName="upiId" placeholder="yourhotel@upi" />
+              <mat-icon matPrefix>account_balance_wallet</mat-icon>
+              <mat-hint>Guests will see this to make payment</mat-hint>
             </mat-form-field>
           </div>
 

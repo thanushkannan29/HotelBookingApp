@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -7,34 +7,54 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
 import { RouterLink } from '@angular/router';
+import { DatePipe } from '@angular/common';
 import { RoomService, RoomTypeService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
-import { RoomListResponseDto, RoomTypeListDto } from '../../../core/models/models';
+import { RoomListResponseDto, RoomTypeListDto, RoomOccupancyDto } from '../../../core/models/models';
 
 @Component({
   selector: 'app-room-management',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink,
+    ReactiveFormsModule, RouterLink, DatePipe,
     MatFormFieldModule, MatInputModule, MatSelectModule,
-    MatButtonModule, MatIconModule, MatSlideToggleModule, MatTooltipModule
+    MatButtonModule, MatIconModule, MatSlideToggleModule, MatTooltipModule,
+    MatTableModule, MatSortModule, MatPaginatorModule,
+    MatTabsModule, MatDatepickerModule, MatNativeDateModule,
   ],
   templateUrl: './room-management.component.html',
   styleUrl: './room-management.component.scss'
 })
-export class RoomManagementComponent implements OnInit {
+export class RoomManagementComponent implements OnInit, AfterViewInit {
   private roomService = inject(RoomService);
   private roomTypeService = inject(RoomTypeService);
   private toast = inject(ToastService);
   private fb = inject(FormBuilder);
 
-  rooms = signal<RoomListResponseDto[]>([]);
   roomTypes = signal<RoomTypeListDto[]>([]);
   showAddForm = signal(false);
   editingRoom = signal<RoomListResponseDto | null>(null);
   isSaving = signal(false);
-  page = signal(1);
+
+  // F5: MatTableDataSource for rooms
+  dataSource = new MatTableDataSource<RoomListResponseDto>([]);
+  displayedColumns = ['roomNumber', 'floor', 'roomTypeName', 'isActive', 'actions'];
+
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  // F7E: Occupancy
+  occupancyDataSource = new MatTableDataSource<RoomOccupancyDto>([]);
+  occupancyColumns = ['roomNumber', 'floor', 'roomTypeName', 'status', 'reservationCode'];
+  occupancyDate = signal<Date | null>(null);
+  today = new Date();
 
   addForm = this.fb.group({
     roomNumber: ['', Validators.required],
@@ -54,8 +74,21 @@ export class RoomManagementComponent implements OnInit {
     this.roomTypeService.getRoomTypes().subscribe(rt => this.roomTypes.set(rt));
   }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+  }
+
   loadRooms() {
-    this.roomService.getRooms(this.page(), 20).subscribe(r => this.rooms.set(r));
+    this.roomService.getRooms(1, 200).subscribe(r => {
+      this.dataSource.data = r;
+    });
+  }
+
+  applyFilter(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = val.trim().toLowerCase();
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
   }
 
   addRoom() {
@@ -95,7 +128,24 @@ export class RoomManagementComponent implements OnInit {
   toggleStatus(room: RoomListResponseDto) {
     this.roomService.toggleRoomStatus(room.roomId, !room.isActive).subscribe(() => {
       this.toast.success(`Room ${!room.isActive ? 'activated' : 'deactivated'}.`);
-      this.rooms.update(r => r.map(x => x.roomId === room.roomId ? { ...x, isActive: !x.isActive } : x));
+      this.dataSource.data = this.dataSource.data.map(x =>
+        x.roomId === room.roomId ? { ...x, isActive: !x.isActive } : x
+      );
     });
+  }
+
+  // F7E: Load occupancy for a date
+  onOccupancyDateChange(date: Date | null) {
+    if (!date) return;
+    this.occupancyDate.set(date);
+    const dateStr = date.toISOString().split('T')[0];
+    this.roomService.getRoomOccupancy(dateStr).subscribe(data => {
+      this.occupancyDataSource.data = data;
+    });
+  }
+
+  applyOccupancyFilter(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.occupancyDataSource.filter = val.trim().toLowerCase();
   }
 }

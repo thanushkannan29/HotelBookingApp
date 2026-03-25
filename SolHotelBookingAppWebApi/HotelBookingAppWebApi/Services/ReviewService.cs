@@ -27,9 +27,7 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        // ── ADD REVIEW ────────────────────────────────────────────────────────
-        // Guest must have a Completed reservation at this hotel before reviewing.
-        // This ensures reviews are from real guests who actually stayed.
+        // ── ADD REVIEW (one review per completed reservation) ─────────────────
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
@@ -41,28 +39,31 @@ namespace HotelBookingAppWebApi.Services
                 if (!hotelExists)
                     throw new NotFoundException("Hotel not found.");
 
-                // Verify guest has a completed stay at this hotel
-                var hasCompletedStay = await _reservationRepo.GetQueryable()
-                    .AnyAsync(r =>
+                // Verify the reservation exists, belongs to this user, belongs to this hotel, and is Completed
+                var reservation = await _reservationRepo.GetQueryable()
+                    .FirstOrDefaultAsync(r =>
+                        r.ReservationId == dto.ReservationId &&
                         r.UserId == userId &&
                         r.HotelId == dto.HotelId &&
                         r.Status == ReservationStatus.Completed);
 
-                if (!hasCompletedStay)
+                if (reservation == null)
                     throw new ReviewException(
-                        "You can only review a hotel after completing a stay there.");
+                        "You can only review a completed reservation. Verify the reservation belongs to you and is completed.");
 
+                // One review per reservation
                 var alreadyReviewed = await _reviewRepo.GetQueryable()
-                    .AnyAsync(r => r.HotelId == dto.HotelId && r.UserId == userId);
+                    .AnyAsync(r => r.ReservationId == dto.ReservationId);
 
                 if (alreadyReviewed)
-                    throw new ReviewException("You have already reviewed this hotel.");
+                    throw new ReviewException("You have already submitted a review for this reservation.");
 
                 var review = new Review
                 {
                     ReviewId = Guid.NewGuid(),
                     HotelId = dto.HotelId,
                     UserId = userId,
+                    ReservationId = dto.ReservationId,
                     Rating = dto.Rating,
                     Comment = dto.Comment,
                     ImageUrl = dto.ImageUrl,
@@ -72,7 +73,7 @@ namespace HotelBookingAppWebApi.Services
                 await _reviewRepo.AddAsync(review);
                 await _unitOfWork.CommitAsync();
 
-                return MapToDto(review);
+                return MapToDto(review, reservation.ReservationCode);
             }
             catch
             {
@@ -87,7 +88,9 @@ namespace HotelBookingAppWebApi.Services
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var review = await _reviewRepo.GetAsync(reviewId)
+                var review = await _reviewRepo.GetQueryable()
+                    .Include(r => r.Reservation)
+                    .FirstOrDefaultAsync(r => r.ReviewId == reviewId)
                     ?? throw new NotFoundException("Review not found.");
 
                 if (review.UserId != userId)
@@ -100,7 +103,7 @@ namespace HotelBookingAppWebApi.Services
                 await _reviewRepo.UpdateAsync(reviewId, review);
                 await _unitOfWork.CommitAsync();
 
-                return MapToDto(review);
+                return MapToDto(review, review.Reservation?.ReservationCode ?? string.Empty);
             }
             catch
             {
@@ -137,41 +140,68 @@ namespace HotelBookingAppWebApi.Services
         public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize)
         {
             var query = _reviewRepo.GetQueryable()
+                .Include(r => r.Reservation)
                 .Where(r => r.HotelId == hotelId)
                 .OrderByDescending(r => r.CreatedDate);
 
             var total = await query.CountAsync();
             var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
-            return new PagedReviewResponseDto { TotalCount = total, Reviews = reviews.Select(MapToDto) };
+            return new PagedReviewResponseDto
+            {
+                TotalCount = total,
+                Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty))
+            };
         }
 
-        // ── GET MY REVIEWS ────────────────────────────────────────────────────
+        // ── GET MY REVIEWS (non-paged) ────────────────────────────────────────
         public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
         {
             var reviews = await _reviewRepo.GetQueryable()
                 .Include(r => r.Hotel)
+                .Include(r => r.Reservation)
                 .Where(r => r.UserId == userId)
                 .OrderByDescending(r => r.CreatedDate)
                 .ToListAsync();
 
-            return reviews.Select(r => new MyReviewsResponseDto
-            {
-                ReviewId = r.ReviewId,
-                HotelId = r.HotelId,
-                HotelName = r.Hotel!.Name,
-                Rating = r.Rating,
-                Comment = r.Comment,
-                ImageUrl = r.ImageUrl,
-                CreatedDate = r.CreatedDate
-            });
+            return reviews.Select(MapToMyDto);
         }
 
-        private static ReviewResponseDto MapToDto(Review r) => new()
+        // ── GET MY REVIEWS (paged) ────────────────────────────────────────────
+        public async Task<PagedMyReviewsResponseDto> GetMyReviewsPagedAsync(Guid userId, int page, int pageSize)
+        {
+            var query = _reviewRepo.GetQueryable()
+                .Include(r => r.Hotel)
+                .Include(r => r.Reservation)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedDate);
+
+            var total = await query.CountAsync();
+            var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedMyReviewsResponseDto { TotalCount = total, Reviews = reviews.Select(MapToMyDto) };
+        }
+
+        private static ReviewResponseDto MapToDto(Review r, string reservationCode) => new()
         {
             ReviewId = r.ReviewId,
             HotelId = r.HotelId,
             UserId = r.UserId,
+            ReservationId = r.ReservationId,
+            ReservationCode = reservationCode,
+            Rating = r.Rating,
+            Comment = r.Comment,
+            ImageUrl = r.ImageUrl,
+            CreatedDate = r.CreatedDate
+        };
+
+        private static MyReviewsResponseDto MapToMyDto(Review r) => new()
+        {
+            ReviewId = r.ReviewId,
+            HotelId = r.HotelId,
+            HotelName = r.Hotel?.Name ?? string.Empty,
+            ReservationId = r.ReservationId,
+            ReservationCode = r.Reservation?.ReservationCode ?? string.Empty,
             Rating = r.Rating,
             Comment = r.Comment,
             ImageUrl = r.ImageUrl,

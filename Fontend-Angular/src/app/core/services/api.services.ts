@@ -6,13 +6,15 @@ import {
   ApiResponse, CreatePaymentDto, RefundRequestDto, TransactionResponseDto,
   PagedTransactionResponseDto, CreateReviewDto, UpdateReviewDto,
   ReviewResponseDto, MyReviewsResponseDto, PagedReviewResponseDto,
-  GetHotelReviewsRequestDto, RefundRequestResponseDto, ProcessRefundDto,
+  PagedMyReviewsResponseDto, GetHotelReviewsRequestDto,
+  RefundRequestResponseDto, ProcessRefundDto, PagedRefundRequestResponseDto,
   UserProfileResponseDto, UpdateUserProfileDto, PagedBookingHistoryDto,
   PaginationDto, AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
   PagedAuditLogResponseDto, PagedLogResponseDto,
   CreateRoomTypeDto, UpdateRoomTypeDto, RoomTypeListDto, CreateRoomTypeRateDto,
   UpdateRoomTypeRateDto, GetRateByDateRequestDto, CreateRoomDto, UpdateRoomDto,
-  RoomListResponseDto, CreateInventoryDto, UpdateInventoryDto, InventoryResponseDto
+  RoomListResponseDto, CreateInventoryDto, UpdateInventoryDto, InventoryResponseDto,
+  PaymentIntentDto, RoomOccupancyDto, AmenityResponseDto,
 } from '../models/models';
 
 // ─── TRANSACTION SERVICE ──────────────────────────────────────────────────────
@@ -38,6 +40,20 @@ export class TransactionService {
     return this.http.get<ApiResponse<PagedTransactionResponseDto>>(
       `${this.base}/transactions`, { params }
     ).pipe(map(r => r.data!));
+  }
+
+  // F9B: Payment intent for UPI flow
+  getPaymentIntent(reservationId: string): Observable<PaymentIntentDto> {
+    return this.http.get<ApiResponse<PaymentIntentDto>>(
+      `${this.base}/transactions/payment-intent/${reservationId}`
+    ).pipe(map(r => r.data!));
+  }
+
+  // F7E via Admin: mark transaction as failed
+  markTransactionFailed(transactionId: string): Observable<void> {
+    return this.http.patch<any>(
+      `${this.base}/admin/transactions/${transactionId}/mark-failed`, {}
+    ).pipe(map(() => undefined));
   }
 }
 
@@ -73,6 +89,20 @@ export class ReviewService {
     return this.http.get<ApiResponse<MyReviewsResponseDto[]>>(`${this.base}/reviews/my-reviews`)
       .pipe(map(r => r.data!));
   }
+
+  getMyReviewsPaged(page: number, pageSize: number): Observable<PagedMyReviewsResponseDto> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedMyReviewsResponseDto>>(
+      `${this.base}/reviews/my-reviews/paged`, { params }
+    ).pipe(map(r => r.data!));
+  }
+
+  // F9D: Admin view of hotel reviews
+  getHotelReviewsAdmin(page: number, pageSize: number): Observable<PagedReviewResponseDto> {
+    return this.http.post<ApiResponse<PagedReviewResponseDto>>(
+      `${this.base}/admin/reviews`, { page, pageSize }
+    ).pipe(map(r => r.data!));
+  }
 }
 
 // ─── REFUND SERVICE ───────────────────────────────────────────────────────────
@@ -81,15 +111,17 @@ export class RefundService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getGuestRefundRequests(): Observable<RefundRequestResponseDto[]> {
-    return this.http.get<ApiResponse<RefundRequestResponseDto[]>>(
-      `${this.base}/guest/refund-requests`
+  getGuestRefundRequests(page = 1, pageSize = 10): Observable<PagedRefundRequestResponseDto> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedRefundRequestResponseDto>>(
+      `${this.base}/guest/refund-requests`, { params }
     ).pipe(map(r => r.data!));
   }
 
-  getHotelRefundRequests(): Observable<RefundRequestResponseDto[]> {
-    return this.http.get<ApiResponse<RefundRequestResponseDto[]>>(
-      `${this.base}/admin/refund-requests`
+  getHotelRefundRequests(page = 1, pageSize = 10): Observable<PagedRefundRequestResponseDto> {
+    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedRefundRequestResponseDto>>(
+      `${this.base}/admin/refund-requests`, { params }
     ).pipe(map(r => r.data!));
   }
 
@@ -259,6 +291,13 @@ export class RoomService {
       `${this.base}/admin/rooms/${id}/status`, {}, { params: { isActive: isActive.toString() } }
     ).pipe(map(() => undefined));
   }
+
+  // F9C: Room occupancy
+  getRoomOccupancy(date: string): Observable<RoomOccupancyDto[]> {
+    return this.http.get<ApiResponse<RoomOccupancyDto[]>>(
+      `${this.base}/admin/rooms/occupancy`, { params: { date } }
+    ).pipe(map(r => r.data!));
+  }
 }
 
 // ─── INVENTORY SERVICE ────────────────────────────────────────────────────────
@@ -280,5 +319,24 @@ export class InventoryService {
 
   updateInventory(dto: UpdateInventoryDto): Observable<void> {
     return this.http.put<any>(`${this.base}/admin/inventory`, dto).pipe(map(() => undefined));
+  }
+}
+
+// ─── AMENITY SERVICE ──────────────────────────────────────────────────────────
+// F9A (via hotel.service but added here to keep all API calls in one place)
+@Injectable({ providedIn: 'root' })
+export class AmenityService {
+  private http = inject(HttpClient);
+  private base = `${environment.apiUrl}`;
+
+  getAmenities(): Observable<AmenityResponseDto[]> {
+    return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
+      .pipe(map(r => r.data ?? []));
+  }
+
+  searchAmenities(query: string): Observable<AmenityResponseDto[]> {
+    return this.http.get<ApiResponse<AmenityResponseDto[]>>(
+      `${this.base}/public/amenities/search`, { params: { query } }
+    ).pipe(map(r => r.data ?? []));
   }
 }

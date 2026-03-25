@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,11 +8,15 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { DatePipe } from '@angular/common';
 import { ReviewService } from '../../../core/services/api.services';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MyReviewsResponseDto, ReservationDetailsDto } from '../../../core/models/models';
+import { SlicePipe } from '@angular/common';
 
 @Component({
   selector: 'app-guest-reviews',
@@ -20,16 +24,17 @@ import { MyReviewsResponseDto, ReservationDetailsDto } from '../../../core/model
   imports: [
     ReactiveFormsModule, RouterLink, DatePipe,
     MatButtonModule, MatIconModule, MatFormFieldModule,
-    MatInputModule, MatSelectModule, MatTooltipModule, MatDividerModule
+    MatInputModule, MatSelectModule, MatTooltipModule, MatDividerModule,
+    MatTableModule, MatSortModule, MatPaginatorModule,SlicePipe,
   ],
   templateUrl: './guest-reviews.component.html',
   styleUrl: './guest-reviews.component.scss'
 })
-export class GuestReviewsComponent implements OnInit {
-  private reviewService = inject(ReviewService);
-  private bookingService= inject(BookingService);  // not in BookingService — use directly
-  private toast         = inject(ToastService);
-  private fb            = inject(FormBuilder);
+export class GuestReviewsComponent implements OnInit, AfterViewInit {
+  private reviewService  = inject(ReviewService);
+  private bookingService = inject(BookingService);
+  private toast          = inject(ToastService);
+  private fb             = inject(FormBuilder);
 
   reviews        = signal<MyReviewsResponseDto[]>([]);
   completedStays = signal<ReservationDetailsDto[]>([]);
@@ -37,11 +42,19 @@ export class GuestReviewsComponent implements OnInit {
   showAddForm    = signal(false);
   isSaving       = signal(false);
 
+  // F5: MatTable for reviews list
+  dataSource = new MatTableDataSource<MyReviewsResponseDto>([]);
+  displayedColumns = ['hotel', 'stay', 'rating', 'comment', 'date', 'actions'];
+
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  // F6A: per-reservation form — uses reservationId instead of hotelId
   addForm = this.fb.group({
-    hotelId:  ['', Validators.required],
-    rating:   [5, [Validators.required, Validators.min(1), Validators.max(5)]],
-    comment:  ['', [Validators.required, Validators.minLength(10)]],
-    imageUrl: [''],
+    reservationId: ['', Validators.required],
+    rating:        [5, [Validators.required, Validators.min(1), Validators.max(5)]],
+    comment:       ['', [Validators.required, Validators.minLength(10)]],
+    imageUrl:      [''],
   });
 
   editForm = this.fb.group({
@@ -53,39 +66,55 @@ export class GuestReviewsComponent implements OnInit {
   stars = [1, 2, 3, 4, 5];
 
   ngOnInit() {
-    this.reviewService.getMyReviews().subscribe(r => this.reviews.set(r));
-    // Load completed reservations so user can pick which hotel to review
+    this.reviewService.getMyReviews().subscribe(r => {
+      this.reviews.set(r);
+      this.dataSource.data = r;
+    });
     this.bookingService.getMyReservations().subscribe((res: ReservationDetailsDto[]) => {
       this.completedStays.set(res.filter((r: ReservationDetailsDto) => r.status === 'Completed'));
     });
   }
 
-  // Unique hotels from completed stays that haven't been reviewed yet
-  get reviewableHotels() {
-    const reviewed = new Set(this.reviews().map(r => r.hotelId));
-    const seen     = new Set<string>();
-    return this.completedStays().filter(s => {
-      if (reviewed.has(s.hotelId) || seen.has(s.hotelId)) return false;
-      seen.add(s.hotelId);
-      return true;
-    });
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
   }
 
+  applyFilter(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = val.trim().toLowerCase();
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
+
+  // F6A: per-reservation logic — show ALL completed reservations without a review
+  get reviewableStays(): ReservationDetailsDto[] {
+    const reviewedResIds = new Set(this.reviews().map(r => r.reservationId));
+    return this.completedStays().filter(s => !reviewedResIds.has(s.reservationId));
+  }
+
+  // Label shown in the reservation picker
+  stayLabel(stay: ReservationDetailsDto): string {
+    return `${stay.hotelName} — ${stay.reservationCode}`;
+  }
+
+  // F6A + F6B: pass reservationId + derive hotelId from selected stay
   addReview() {
     if (this.addForm.invalid) { this.addForm.markAllAsTouched(); return; }
     this.isSaving.set(true);
     const v = this.addForm.value;
+    const stay = this.completedStays().find(s => s.reservationId === v.reservationId);
     this.reviewService.addReview({
-      hotelId:  v.hotelId!,
-      rating:   v.rating!,
-      comment:  v.comment!,
-      imageUrl: v.imageUrl || undefined,
+      hotelId:      stay?.hotelId ?? '',
+      reservationId: v.reservationId!,
+      rating:       v.rating!,
+      comment:      v.comment!,
+      imageUrl:     v.imageUrl || undefined,
     }).subscribe({
       next: () => {
         this.toast.success('Review posted!');
         this.addForm.reset({ rating: 5 });
         this.showAddForm.set(false);
-        this.reviewService.getMyReviews().subscribe(r => this.reviews.set(r));
+        this.refreshReviews();
         this.isSaving.set(false);
       },
       error: () => this.isSaving.set(false),
@@ -109,7 +138,7 @@ export class GuestReviewsComponent implements OnInit {
       next: () => {
         this.toast.success('Review updated.');
         this.editingId.set(null);
-        this.reviewService.getMyReviews().subscribe(r => this.reviews.set(r));
+        this.refreshReviews();
         this.isSaving.set(false);
       },
       error: () => this.isSaving.set(false),
@@ -120,7 +149,14 @@ export class GuestReviewsComponent implements OnInit {
     if (!confirm('Delete this review?')) return;
     this.reviewService.deleteReview(reviewId).subscribe(() => {
       this.toast.success('Review deleted.');
-      this.reviews.update(r => r.filter(x => x.reviewId !== reviewId));
+      this.refreshReviews();
+    });
+  }
+
+  private refreshReviews() {
+    this.reviewService.getMyReviews().subscribe(r => {
+      this.reviews.set(r);
+      this.dataSource.data = r;
     });
   }
 }

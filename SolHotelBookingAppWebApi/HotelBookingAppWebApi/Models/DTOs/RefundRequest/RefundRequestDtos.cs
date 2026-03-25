@@ -13,6 +13,13 @@ namespace HotelBookingAppWebApi.Models.DTOs.RefundRequest
         public string Status { get; set; } = string.Empty;
         public string? AdminResponse { get; set; }
         public decimal RefundAmount { get; set; }
+
+        /// <summary>How the refund was paid back e.g. 'UPI', 'Bank Transfer', 'Cash'</summary>
+        public string? RefundPaymentMethod { get; set; }
+
+        /// <summary>Admin-entered reference number for the refund payment</summary>
+        public string? RefundTransactionRef { get; set; }
+
         public DateTime CreatedAt { get; set; }
         public DateTime? ProcessedAt { get; set; }
     }
@@ -21,5 +28,17 @@ namespace HotelBookingAppWebApi.Models.DTOs.RefundRequest
     {
         [Required]
         public string AdminResponse { get; set; } = string.Empty;
+
+        /// <summary>How the refund was paid back e.g. 'UPI', 'Bank Transfer', 'Cash'</summary>
+        public string? RefundPaymentMethod { get; set; }
+
+        /// <summary>Admin-entered reference number for the refund payment</summary>
+        public string? RefundTransactionRef { get; set; }
+    }
+
+    public class PagedRefundRequestResponseDto
+    {
+        public int TotalCount { get; set; }
+        public IEnumerable<RefundRequestResponseDto> RefundRequests { get; set; } = new List<RefundRequestResponseDto>();
     }
 }

@@ -31,6 +31,12 @@ namespace HotelBookingAppWebApi.Models
 
         public DateTime? ProcessedAt { get; set; }
 
+        /// <summary>How the refund was paid back e.g. 'UPI', 'Bank Transfer', 'Cash'</summary>
+        public string? RefundPaymentMethod { get; set; }
+
+        /// <summary>Admin-entered reference number for the refund payment</summary>
+        public string? RefundTransactionRef { get; set; }
+
         public Reservation? Reservation { get; set; }
         public User? User { get; set; }
     }

@@ -45,22 +45,40 @@ namespace HotelBookingAppWebApi.Services
             return await _hotelRepo.GetQueryable()
                 .AsNoTracking()
                 .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin)
-                .Select(h => new HotelListItemDto
+                .Select(h => new
                 {
-                    HotelId = h.HotelId,
-                    Name = h.Name,
-                    City = h.City,
-                    ImageUrl = h.ImageUrl,
-                    AverageRating = h.Reviews!.Any()
-                        ? Math.Round(h.Reviews.Average(r => (decimal)r.Rating), 2) : 0m,
-                    ReviewCount = h.Reviews!.Count(),
+                    h.HotelId,
+                    h.Name,
+                    h.City,
+                    h.ImageUrl,
+
+                    AvgRating = h.Reviews
+                        .Select(r => (decimal?)r.Rating)
+                        .Average(),
+
+                    ReviewCount = h.Reviews.Count(),
+
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
-                        .Min(r => (decimal?)r.Rate) ?? 0
+                        .Select(r => (decimal?)r.Rate)
+                        .Min()
                 })
-                .OrderByDescending(h => h.AverageRating)
-                .ThenByDescending(h => h.ReviewCount)
+                .OrderByDescending(x => x.AvgRating ?? 0)
+                .ThenByDescending(x => x.ReviewCount)
                 .Take(10)
+                .Select(x => new HotelListItemDto
+                {
+                    HotelId = x.HotelId,
+                    Name = x.Name,
+                    City = x.City,
+                    ImageUrl = x.ImageUrl,
+
+                    AverageRating = Math.Round(x.AvgRating ?? 0m, 2), // ✅ AFTER SQL
+
+                    ReviewCount = x.ReviewCount,
+
+                    StartingPrice = x.StartingPrice ?? 0
+                })
                 .ToListAsync();
         }
 
@@ -86,8 +104,9 @@ namespace HotelBookingAppWebApi.Services
                     Name = h.Name,
                     City = h.City,
                     ImageUrl = h.ImageUrl,
-                    AverageRating = h.Reviews!.Any()
-                        ? Math.Round(h.Reviews.Average(r => (decimal)r.Rating), 2) : 0m,
+                    AverageRating = h.Reviews != null && h.Reviews.Any()
+    ? Math.Round((decimal)(h.Reviews.Average(r => (decimal?)r.Rating) ?? 0m), 2) : 0m,
+
                     ReviewCount = h.Reviews!.Count(),
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
@@ -118,26 +137,42 @@ namespace HotelBookingAppWebApi.Services
         // ── PUBLIC: HOTELS BY CITY ────────────────────────────────────────────
         public async Task<IEnumerable<HotelListItemDto>> GetHotelsByCityAsync(string city)
         {
-            return await _hotelRepo.GetQueryable()
+            var hotels = await _hotelRepo.GetQueryable()
                 .AsNoTracking()
-                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
+                .Where(h => h.IsActive &&
+                            !h.IsBlockedBySuperAdmin &&
                             h.City.ToLower() == city.ToLower())
-                .Select(h => new HotelListItemDto
+                .Select(h => new
                 {
-                    HotelId = h.HotelId,
-                    Name = h.Name,
-                    City = h.City,
-                    ImageUrl = h.ImageUrl,
-                    AverageRating = h.Reviews!.Any()
-                        ? Math.Round(h.Reviews.Average(r => (decimal)r.Rating), 2) : 0m,
-                    ReviewCount = h.Reviews!.Count(),
+                    h.HotelId,
+                    h.Name,
+                    h.City,
+                    h.ImageUrl,
+
+                    // ✅ SAFE: EF can translate this
+                    AvgRating = h.Reviews.Select(r => (decimal?)r.Rating).Average(),
+                    ReviewCount = h.Reviews.Count(),
+
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
-                        .Min(r => (decimal?)r.Rate) ?? 0
+                        .Select(r => (decimal?)r.Rate)
+                        .Min()
                 })
-                .OrderByDescending(h => h.AverageRating)
                 .ToListAsync();
+
+            // ✅ FINAL MAPPING (IN MEMORY)
+            return hotels.Select(h => new HotelListItemDto
+            {
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+                ImageUrl = h.ImageUrl,
+                AverageRating = Math.Round(h.AvgRating ?? 0m, 2),
+                ReviewCount = h.ReviewCount,
+                StartingPrice = h.StartingPrice ?? 0
+            });
         }
+
 
         // ── PUBLIC: HOTEL DETAILS (FULL) ──────────────────────────────────────
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
@@ -165,7 +200,8 @@ namespace HotelBookingAppWebApi.Services
                 Description = t.Description,
                 MaxOccupancy = t.MaxOccupancy,
                 Amenities = t.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                    .Select(a => a.Trim()) ?? Enumerable.Empty<string>()
+                    .Select(a => a.Trim()) ?? Enumerable.Empty<string>(),
+                ImageUrl = t.ImageUrl
             }) ?? Enumerable.Empty<RoomTypePublicDto>();
 
             return new HotelDetailsDto
@@ -235,7 +271,8 @@ namespace HotelBookingAppWebApi.Services
                         RoomTypeId = g.Key.RoomTypeId,
                         RoomTypeName = g.Key.Name,
                         PricePerNight = rate?.Rate ?? 0,
-                        AvailableRooms = g.Min(x => x.AvailableInventory)
+                        AvailableRooms = g.Min(x => x.AvailableInventory),
+                        ImageUrl = g.Key.ImageUrl
                     };
                 });
         }
@@ -257,8 +294,8 @@ namespace HotelBookingAppWebApi.Services
 
                 var changes = new
                 {
-                    Before = new { hotel.Name, hotel.Address, hotel.City, hotel.Description, hotel.ContactNumber },
-                    After = new { dto.Name, dto.Address, dto.City, dto.Description, dto.ContactNumber }
+                    Before = new { hotel.Name, hotel.Address, hotel.City, hotel.Description, hotel.ContactNumber, hotel.UpiId },
+                    After = new { dto.Name, dto.Address, dto.City, dto.Description, dto.ContactNumber, dto.UpiId }
                 };
 
                 hotel.Name = dto.Name;
@@ -267,6 +304,7 @@ namespace HotelBookingAppWebApi.Services
                 hotel.Description = dto.Description;
                 hotel.ContactNumber = dto.ContactNumber;
                 hotel.ImageUrl = dto.ImageUrl;
+                if (dto.UpiId != null) hotel.UpiId = dto.UpiId;
 
                 await _unitOfWork.CommitAsync();
 
@@ -377,6 +415,50 @@ namespace HotelBookingAppWebApi.Services
             await _unitOfWork.SaveChangesAsync();
             await _auditLogService.LogAsync(null, "HotelUnblocked", "Hotel", hotelId,
                 "Hotel unblocked by SuperAdmin.");
+        }
+
+        // ── SUPERADMIN: LIST ALL HOTELS (paged) ───────────────────────────────
+        public async Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(int page, int pageSize)
+        {
+            var totalCount = await _hotelRepo.GetQueryable().CountAsync();
+
+            var hotels = await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .OrderBy(h => h.Name)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var hotelIds = hotels.Select(h => h.HotelId).ToList();
+
+            var reservationCounts = await _reservationRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(r => hotelIds.Contains(r.HotelId))
+                .GroupBy(r => r.HotelId)
+                .Select(g => new { HotelId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Count);
+
+            var revenueByHotel = await _transactionRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(t => t.Status == PaymentStatus.Success && hotelIds.Contains(t.Reservation!.HotelId))
+                .GroupBy(t => t.Reservation!.HotelId)
+                .Select(g => new { HotelId = g.Key, Revenue = g.Sum(t => t.Amount) })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Revenue);
+
+            var dtos = hotels.Select(h => new SuperAdminHotelListDto
+            {
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+                ContactNumber = h.ContactNumber,
+                IsActive = h.IsActive,
+                IsBlockedBySuperAdmin = h.IsBlockedBySuperAdmin,
+                CreatedAt = h.CreatedAt,
+                TotalReservations = reservationCounts.TryGetValue(h.HotelId, out var rc) ? rc : 0,
+                TotalRevenue = revenueByHotel.TryGetValue(h.HotelId, out var rev) ? rev : 0
+            });
+
+            return new PagedSuperAdminHotelResponseDto { TotalCount = totalCount, Hotels = dtos };
         }
     }
 }

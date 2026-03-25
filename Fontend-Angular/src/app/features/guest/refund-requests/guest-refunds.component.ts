@@ -78,9 +78,13 @@ export class GuestRefundsComponent implements OnInit {
   private refundService = inject(RefundService);
   refunds = signal<RefundRequestResponseDto[]>([]);
 
-  ngOnInit() {
-    this.refundService.getGuestRefundRequests().subscribe(r => this.refunds.set(r));
-  }
+ngOnInit() {
+  this.refundService.getGuestRefundRequests().subscribe(res => {
+    this.refunds.set(res.refundRequests ?? []);
+  });
+}
+
+
 
   statusClass(status: string): string {
     const m: Record<string, string> = { Pending: 'badge-warning', Approved: 'badge-success', Rejected: 'badge-error' };

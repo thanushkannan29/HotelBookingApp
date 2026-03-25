@@ -1,0 +1,74 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a [routerLink]="backLink" class="back-link">
+          <mat-icon>arrow_back</mat-icon> Dashboard
+        </a>
+        <h1 class="section-title">Audit Logs</h1>
+        <p class="section-subtitle">{{ dataSource.data.length }} records</p>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <mat-form-field appearance="outline" class="w-full mb-4">
+      <mat-label>Search</mat-label>
+      <input matInput (keyup)="applyFilter($event)" placeholder="Filter by action, entity, changes…" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    @if (dataSource.data.length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">history</mat-icon>
+        <h3>No audit logs yet</h3>
+      </div>
+    } @else {
+      <div class="table-card">
+        <mat-table [dataSource]="dataSource" matSort>
+
+          <ng-container matColumnDef="action">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Action</mat-header-cell>
+            <mat-cell *matCellDef="let log">
+              <span class="action-chip badge {{ actionClass(log.action) }}">{{ log.action }}</span>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="entityName">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>Entity</mat-header-cell>
+            <mat-cell *matCellDef="let log">{{ log.entityName }}</mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="changes">
+            <mat-header-cell *matHeaderCellDef>Changes</mat-header-cell>
+            <mat-cell *matCellDef="let log" class="changes-cell">
+              <span class="changes-preview">
+                {{ log.changes | slice:0:100 }}{{ log.changes.length > 100 ? '…' : '' }}
+              </span>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="createdAt">
+            <mat-header-cell *matHeaderCellDef mat-sort-header>When</mat-header-cell>
+            <mat-cell *matCellDef="let log" class="date-cell">
+              {{ log.createdAt | date:'MMM d, y HH:mm' }}
+            </mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center; padding:32px;">
+              No logs found matching filter
+            </td>
+          </tr>
+        </mat-table>
+
+        <mat-paginator [pageSizeOptions]="[10, 25, 50]"
+                       showFirstLastButtons
+                       aria-label="Select page">
+        </mat-paginator>
+      </div>
+    }
+  </div>
+</div>

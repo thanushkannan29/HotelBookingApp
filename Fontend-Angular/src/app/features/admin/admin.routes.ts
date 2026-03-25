@@ -33,5 +33,15 @@ export const ADMIN_ROUTES: Routes = [
     path: 'audit-logs',
     loadComponent: () => import('./audit-logs/audit-logs.component').then(m => m.AuditLogsComponent),
   },
+  // F7A: Admin Reviews page
+  {
+    path: 'reviews',
+    loadComponent: () => import('./reviews/admin-reviews.component').then(m => m.AdminReviewsComponent),
+  },
+  // F7B: Admin Transactions page
+  {
+    path: 'transactions',
+    loadComponent: () => import('./transactions/admin-transactions.component').then(m => m.AdminTransactionsComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

@@ -11,5 +11,6 @@ namespace HotelBookingAppWebApi.Interfaces
         Task UpdateRateAsync(Guid userId, UpdateRoomTypeRateDto dto);
         Task<decimal> GetRateByDateAsync(Guid userId, GetRateByDateRequestDto dto);
         Task<IEnumerable<RoomTypeListDto>> GetRoomTypesByHotelAsync(Guid userId);
+        Task<PagedRoomTypeResponseDto> GetRoomTypesByHotelPagedAsync(Guid userId, int page, int pageSize);
     }
 }

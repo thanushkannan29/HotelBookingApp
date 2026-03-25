@@ -4,7 +4,7 @@
       <div>
         <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
         <h1 class="section-title">Room Management</h1>
-        <p class="section-subtitle">{{ rooms().length }} rooms configured</p>
+        <p class="section-subtitle">{{ dataSource.data.length }} rooms configured</p>
       </div>
       <button mat-flat-button color="primary" (click)="showAddForm.set(!showAddForm())">
         <mat-icon>{{ showAddForm() ? 'close' : 'add' }}</mat-icon>
@@ -48,37 +48,57 @@
       </div>
     }
 
-    <!-- Room Table -->
-    @if (rooms().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">meeting_room</mat-icon>
-        <h3>No rooms yet</h3>
-        <p>Add rooms to your hotel to start taking bookings</p>
-      </div>
-    } @else {
-      <div class="table-card">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Room No.</th><th>Floor</th><th>Type</th><th>Status</th><th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (room of rooms(); track room.roomId) {
-              <tr>
-                @if (editingRoom()?.roomId === room.roomId) {
-                  <td colspan="4">
-                    <form [formGroup]="editForm" class="inline-edit-form">
-                      <mat-form-field appearance="outline" class="inline-field">
-                        <mat-label>Room No.</mat-label>
+    <mat-tab-group>
+
+      <!-- Tab 1: Rooms Table -->
+      <mat-tab label="All Rooms">
+        <div style="margin-top: 20px;">
+          <!-- Search -->
+          <mat-form-field appearance="outline" class="w-full mb-4">
+            <mat-label>Search</mat-label>
+            <input matInput (keyup)="applyFilter($event)" placeholder="Filter by room number, type…" />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+
+          <div class="table-card">
+            <mat-table [dataSource]="dataSource" matSort>
+
+              <ng-container matColumnDef="roomNumber">
+                <mat-header-cell *matHeaderCellDef mat-sort-header>Room No.</mat-header-cell>
+                <mat-cell *matCellDef="let room">
+                  @if (editingRoom()?.roomId === room.roomId) {
+                    <form [formGroup]="editForm">
+                      <mat-form-field appearance="outline" style="width:100px;">
                         <input matInput formControlName="roomNumber" />
                       </mat-form-field>
-                      <mat-form-field appearance="outline" class="inline-field-sm">
-                        <mat-label>Floor</mat-label>
+                    </form>
+                  } @else {
+                    <strong>{{ room.roomNumber }}</strong>
+                  }
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="floor">
+                <mat-header-cell *matHeaderCellDef mat-sort-header>Floor</mat-header-cell>
+                <mat-cell *matCellDef="let room">
+                  @if (editingRoom()?.roomId === room.roomId) {
+                    <form [formGroup]="editForm">
+                      <mat-form-field appearance="outline" style="width:80px;">
                         <input matInput type="number" formControlName="floor" />
                       </mat-form-field>
-                      <mat-form-field appearance="outline" class="inline-field">
-                        <mat-label>Type</mat-label>
+                    </form>
+                  } @else {
+                    {{ room.floor }}
+                  }
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="roomTypeName">
+                <mat-header-cell *matHeaderCellDef mat-sort-header>Type</mat-header-cell>
+                <mat-cell *matCellDef="let room">
+                  @if (editingRoom()?.roomId === room.roomId) {
+                    <form [formGroup]="editForm">
+                      <mat-form-field appearance="outline" style="width:140px;">
                         <mat-select formControlName="roomTypeId">
                           @for (rt of roomTypes(); track rt.roomTypeId) {
                             <mat-option [value]="rt.roomTypeId">{{ rt.name }}</mat-option>
@@ -86,25 +106,32 @@
                         </mat-select>
                       </mat-form-field>
                     </form>
-                  </td>
-                  <td>
-                    <button mat-icon-button color="primary" (click)="saveEdit()" [disabled]="isSaving()">
+                  } @else {
+                    <span class="type-chip">{{ room.roomTypeName }}</span>
+                  }
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="isActive">
+                <mat-header-cell *matHeaderCellDef mat-sort-header>Status</mat-header-cell>
+                <mat-cell *matCellDef="let room">
+                  <span class="badge" [class]="room.isActive ? 'badge-success' : 'badge-muted'">
+                    {{ room.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="actions">
+                <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+                <mat-cell *matCellDef="let room">
+                  @if (editingRoom()?.roomId === room.roomId) {
+                    <button mat-icon-button color="primary" (click)="saveEdit()" [disabled]="isSaving()" matTooltip="Save">
                       <mat-icon>check</mat-icon>
                     </button>
-                    <button mat-icon-button (click)="editingRoom.set(null)">
+                    <button mat-icon-button (click)="editingRoom.set(null)" matTooltip="Cancel">
                       <mat-icon>close</mat-icon>
                     </button>
-                  </td>
-                } @else {
-                  <td><strong>{{ room.roomNumber }}</strong></td>
-                  <td>{{ room.floor }}</td>
-                  <td><span class="type-chip">{{ room.roomTypeName }}</span></td>
-                  <td>
-                    <span class="badge" [class]="room.isActive ? 'badge-success' : 'badge-muted'">
-                      {{ room.isActive ? 'Active' : 'Inactive' }}
-                    </span>
-                  </td>
-                  <td>
+                  } @else {
                     <button mat-icon-button (click)="startEdit(room)" matTooltip="Edit">
                       <mat-icon>edit</mat-icon>
                     </button>
@@ -112,13 +139,108 @@
                             [matTooltip]="room.isActive ? 'Deactivate' : 'Activate'">
                       <mat-icon>{{ room.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
                     </button>
-                  </td>
-                }
+                  }
+                </mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center; padding:32px;">
+                  No rooms found
+                </td>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    }
+            </mat-table>
+
+            <mat-paginator [pageSizeOptions]="[10, 25, 50]"
+                           showFirstLastButtons
+                           aria-label="Select page">
+            </mat-paginator>
+          </div>
+        </div>
+      </mat-tab>
+
+      <!-- Tab 2: Occupancy (F7E) -->
+      <mat-tab label="Occupancy">
+        <div style="margin-top: 20px;">
+          <mat-form-field appearance="outline">
+            <mat-label>Check occupancy for date</mat-label>
+            <mat-icon matPrefix>calendar_today</mat-icon>
+            <input matInput [matDatepicker]="occPicker"
+                   [min]="today"
+                   [value]="occupancyDate()"
+                   (dateChange)="onOccupancyDateChange($event.value)"
+                   readonly placeholder="Select a date" />
+            <mat-datepicker-toggle matSuffix [for]="occPicker" />
+            <mat-datepicker #occPicker />
+          </mat-form-field>
+
+          @if (occupancyDataSource.data.length > 0) {
+            <mat-form-field appearance="outline" class="w-full mb-4">
+              <mat-label>Search</mat-label>
+              <input matInput (keyup)="applyOccupancyFilter($event)" placeholder="Filter rooms…" />
+              <mat-icon matSuffix>search</mat-icon>
+            </mat-form-field>
+
+            <div class="table-card">
+              <mat-table [dataSource]="occupancyDataSource">
+
+                <ng-container matColumnDef="roomNumber">
+                  <mat-header-cell *matHeaderCellDef>Room No.</mat-header-cell>
+                  <mat-cell *matCellDef="let r"><strong>{{ r.roomNumber }}</strong></mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="floor">
+                  <mat-header-cell *matHeaderCellDef>Floor</mat-header-cell>
+                  <mat-cell *matCellDef="let r">{{ r.floor }}</mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="roomTypeName">
+                  <mat-header-cell *matHeaderCellDef>Room Type</mat-header-cell>
+                  <mat-cell *matCellDef="let r"><span class="type-chip">{{ r.roomTypeName }}</span></mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="status">
+                  <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+                  <mat-cell *matCellDef="let r">
+                    <span class="badge" [class]="r.isOccupied ? 'badge-error' : 'badge-success'">
+                      {{ r.isOccupied ? 'Occupied' : 'Available' }}
+                    </span>
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="reservationCode">
+                  <mat-header-cell *matHeaderCellDef>Reservation</mat-header-cell>
+                  <mat-cell *matCellDef="let r">
+                    @if (r.reservationCode) {
+                      <span class="code-tag">{{ r.reservationCode }}</span>
+                    } @else {
+                      <span style="color: var(--color-text-muted)">—</span>
+                    }
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="occupancyColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: occupancyColumns;"></mat-row>
+              </mat-table>
+            </div>
+          } @else if (occupancyDate()) {
+            <div class="empty-state" style="padding: 40px;">
+              <mat-icon class="empty-icon">meeting_room</mat-icon>
+              <h3>No occupancy data</h3>
+              <p>No room data found for this date</p>
+            </div>
+          } @else {
+            <div class="empty-state" style="padding: 40px;">
+              <mat-icon class="empty-icon">event</mat-icon>
+              <h3>Select a date</h3>
+              <p>Choose a date above to view room occupancy</p>
+            </div>
+          }
+        </div>
+      </mat-tab>
+
+    </mat-tab-group>
   </div>
 </div>

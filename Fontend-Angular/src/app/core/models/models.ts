@@ -42,6 +42,24 @@ export interface CurrentUser {
   hotelId?: string;
 }
 
+// ─── CITY ─────────────────────────────────────────────────────────────────────
+// F8A: New interface
+export interface IndianCityDto {
+  cityName: string;
+  stateName: string;
+  samplePin: string;
+}
+
+// ─── AMENITY ──────────────────────────────────────────────────────────────────
+// F8A: New interface
+export interface AmenityResponseDto {
+  amenityId: string;
+  name: string;
+  category: string;
+  iconName?: string;
+  isActive: boolean;
+}
+
 // ─── HOTEL PUBLIC ─────────────────────────────────────────────────────────────
 export interface HotelListItemDto {
   hotelId: string;
@@ -76,19 +94,23 @@ export interface ReviewDto {
   createdDate: string;
 }
 
+// F8B: Added imageUrl
 export interface RoomTypePublicDto {
   roomTypeId: string;
   name: string;
   description: string;
   maxOccupancy: number;
   amenities: string[];
+  imageUrl?: string;
 }
 
+// F8B: Added imageUrl
 export interface RoomAvailabilityDto {
   roomTypeId: string;
   roomTypeName: string;
   pricePerNight: number;
   availableRooms: number;
+  imageUrl?: string;
 }
 
 export interface SearchHotelRequestDto {
@@ -106,6 +128,7 @@ export interface SearchHotelResponseDto {
 }
 
 // ─── HOTEL ADMIN ──────────────────────────────────────────────────────────────
+// F8B: Added upiId
 export interface UpdateHotelDto {
   name: string;
   address: string;
@@ -113,6 +136,7 @@ export interface UpdateHotelDto {
   description: string;
   contactNumber: string;
   imageUrl: string;
+  upiId?: string;
 }
 
 // ─── HOTEL SUPERADMIN ─────────────────────────────────────────────────────────
@@ -128,22 +152,32 @@ export interface SuperAdminHotelListDto {
   totalRevenue: number;
 }
 
+export interface PagedSuperAdminHotelResponseDto {
+  totalCount: number;
+  hotels: SuperAdminHotelListDto[];
+}
+
 // ─── ROOM TYPE ────────────────────────────────────────────────────────────────
+// F8B: Added imageUrl
 export interface CreateRoomTypeDto {
   name: string;
   description: string;
   maxOccupancy: number;
   amenities: string;
+  imageUrl?: string;
 }
 
+// F8B: Added imageUrl
 export interface UpdateRoomTypeDto {
   roomTypeId: string;
   name: string;
   description: string;
   maxOccupancy: number;
   amenities: string;
+  imageUrl?: string;
 }
 
+// F8B: Added imageUrl
 export interface RoomTypeListDto {
   roomTypeId: string;
   name: string;
@@ -152,6 +186,7 @@ export interface RoomTypeListDto {
   amenities: string;
   isActive: boolean;
   roomCount: number;
+  imageUrl?: string;
 }
 
 export interface CreateRoomTypeRateDto {
@@ -194,6 +229,16 @@ export interface RoomListResponseDto {
   roomTypeId: string;
   roomTypeName: string;
   isActive: boolean;
+}
+
+// F8A: New interface
+export interface RoomOccupancyDto {
+  roomId: string;
+  roomNumber: string;
+  floor: number;
+  roomTypeName: string;
+  isOccupied: boolean;
+  reservationCode?: string;
 }
 
 // ─── INVENTORY ────────────────────────────────────────────────────────────────
@@ -299,6 +344,14 @@ export interface PagedTransactionResponseDto {
   transactions: TransactionResponseDto[];
 }
 
+// F8A: New interface
+export interface PaymentIntentDto {
+  upiId?: string;
+  amount: number;
+  paymentRef: string;
+  hotelName: string;
+}
+
 export const PaymentMethod: Record<number, string> = {
   1: 'Credit Card',
   2: 'Debit Card',
@@ -315,8 +368,10 @@ export const PaymentStatus: Record<number, string> = {
 };
 
 // ─── REVIEW ───────────────────────────────────────────────────────────────────
+// F8B: Added reservationId
 export interface CreateReviewDto {
   hotelId: string;
+  reservationId: string;
   rating: number;
   comment: string;
   imageUrl?: string;
@@ -332,16 +387,21 @@ export interface ReviewResponseDto {
   reviewId: string;
   hotelId: string;
   userId: string;
+  reservationId: string;
+  reservationCode: string;
   rating: number;
   comment: string;
   imageUrl?: string;
   createdDate: string;
 }
 
+// F8B: Added reservationId and reservationCode
 export interface MyReviewsResponseDto {
   reviewId: string;
   hotelId: string;
   hotelName: string;
+  reservationId: string;
+  reservationCode: string;
   rating: number;
   comment: string;
   imageUrl?: string;
@@ -353,6 +413,11 @@ export interface PagedReviewResponseDto {
   reviews: ReviewResponseDto[];
 }
 
+export interface PagedMyReviewsResponseDto {
+  totalCount: number;
+  reviews: MyReviewsResponseDto[];
+}
+
 export interface GetHotelReviewsRequestDto {
   hotelId: string;
   page: number;
@@ -360,6 +425,7 @@ export interface GetHotelReviewsRequestDto {
 }
 
 // ─── REFUND REQUEST ───────────────────────────────────────────────────────────
+// F8B: Added refundPaymentMethod, refundTransactionRef
 export interface RefundRequestResponseDto {
   refundRequestId: string;
   reservationId: string;
@@ -370,12 +436,22 @@ export interface RefundRequestResponseDto {
   status: string;
   adminResponse?: string;
   refundAmount: number;
+  refundPaymentMethod?: string;
+  refundTransactionRef?: string;
   createdAt: string;
   processedAt?: string;
 }
 
+// F8B: Added refundPaymentMethod, refundTransactionRef
 export interface ProcessRefundDto {
   adminResponse: string;
+  refundPaymentMethod?: string;
+  refundTransactionRef?: string;
+}
+
+export interface PagedRefundRequestResponseDto {
+  totalCount: number;
+  refundRequests: RefundRequestResponseDto[];
 }
 
 // ─── USER PROFILE ─────────────────────────────────────────────────────────────

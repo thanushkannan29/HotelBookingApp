@@ -61,7 +61,7 @@
                   </div>
                 }
 
-                <!-- Room Type Selection with Availability -->
+                <!-- F4C: Room Type Selection with photo -->
                 @if (availability().length > 0) {
                   <div class="avail-selector">
                     <label class="avail-label">Select Room Type</label>
@@ -72,7 +72,18 @@
                                 [class.selected]="bookingForm.get('roomTypeId')?.value === a.roomTypeId"
                                 [class.full]="a.availableRooms === 0"
                                 [disabled]="a.availableRooms === 0"
-                                (click)="bookingForm.patchValue({roomTypeId: a.roomTypeId}); onRoomTypeChange(a.roomTypeId)">
+                                (click)="bookingForm.patchValue({roomTypeId: a.roomTypeId})">
+
+                          <!-- F4C: Room photo or placeholder -->
+                          @if (a.imageUrl) {
+                            <img [src]="a.imageUrl" [alt]="a.roomTypeName"
+                                 class="avail-card-img" />
+                          } @else {
+                            <div class="avail-card-placeholder">
+                              <mat-icon>king_bed</mat-icon>
+                            </div>
+                          }
+
                           <div class="avail-card-top">
                             <span class="avail-card-name">{{ a.roomTypeName }}</span>
                             @if (a.availableRooms === 0) {
@@ -161,6 +172,34 @@
                       Complete payment within 10 minutes to confirm your booking
                     </div>
                   </div>
+
+                  <!-- F4D: UPI Payment Intent Info -->
+                  @if (paymentIntent(); as intent) {
+                    @if (intent.upiId) {
+                      <div class="upi-info-box">
+                        <div class="upi-header">
+                          <mat-icon>qr_code</mat-icon>
+                          <span>UPI Payment Details</span>
+                        </div>
+                        <div class="upi-row">
+                          <span class="upi-label">Pay to</span>
+                          <strong class="upi-value">{{ intent.upiId }}</strong>
+                        </div>
+                        <div class="upi-row">
+                          <span class="upi-label">Reference</span>
+                          <strong class="upi-value code-tag">{{ intent.paymentRef }}</strong>
+                        </div>
+                        <div class="upi-row">
+                          <span class="upi-label">Amount</span>
+                          <strong class="upi-amount">₹{{ intent.amount | number:'1.0-0' }}</strong>
+                        </div>
+                        <p class="upi-note">
+                          <mat-icon>info</mat-icon>
+                          After making payment, select your payment method below and click Confirm Payment
+                        </p>
+                      </div>
+                    }
+                  }
                 }
 
                 <form [formGroup]="paymentForm">

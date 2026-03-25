@@ -7,55 +7,84 @@
       <p class="hero-sub">Discover exceptional hotels across India. Real prices. Instant booking.</p>
 
       <div class="search-card">
-        <form [formGroup]="searchForm" (ngSubmit)="search()" class="search-form">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Destination city</mat-label>
-            <mat-icon matPrefix>search</mat-icon>
-            <mat-select formControlName="city">
-              @for (city of cities(); track city) {
-                <mat-option [value]="city">{{ city }}</mat-option>
-              }
-            </mat-select>
-          </mat-form-field>
+        <div class="search-form">
+          <!-- F2D: City autocomplete -->
+          <div class="search-field">
+            <app-city-autocomplete [control]="cityControl" />
+          </div>
 
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Check-in</mat-label>
-            <mat-icon matPrefix>calendar_today</mat-icon>
-            <input matInput [matDatepicker]="checkinPicker" formControlName="checkIn"
-                   [min]="today" readonly />
-            <mat-datepicker-toggle matSuffix [for]="checkinPicker" />
-            <mat-datepicker #checkinPicker />
-          </mat-form-field>
+          <form [formGroup]="searchForm" class="date-fields">
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Check-in</mat-label>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+              <input matInput [matDatepicker]="checkinPicker" formControlName="checkIn"
+                     [min]="today" readonly />
+              <mat-datepicker-toggle matSuffix [for]="checkinPicker" />
+              <mat-datepicker #checkinPicker />
+            </mat-form-field>
 
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Check-out</mat-label>
-            <mat-icon matPrefix>calendar_today</mat-icon>
-            <input matInput [matDatepicker]="checkoutPicker" formControlName="checkOut"
-                   [min]="searchForm.get('checkIn')?.value ?? today" readonly />
-            <mat-datepicker-toggle matSuffix [for]="checkoutPicker" />
-            <mat-datepicker #checkoutPicker />
-          </mat-form-field>
+            <mat-form-field appearance="outline" class="search-field">
+              <mat-label>Check-out</mat-label>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+              <input matInput [matDatepicker]="checkoutPicker" formControlName="checkOut"
+                     [min]="searchForm.get('checkIn')?.value ?? today" readonly />
+              <mat-datepicker-toggle matSuffix [for]="checkoutPicker" />
+              <mat-datepicker #checkoutPicker />
+            </mat-form-field>
+          </form>
 
-          <button mat-flat-button color="primary" type="submit" class="search-btn"
-                  [disabled]="isSearching()">
+          <button mat-flat-button color="primary" class="search-btn"
+                  (click)="search()" [disabled]="isSearching()">
             <mat-icon>search</mat-icon>
             {{ isSearching() ? 'Searching…' : 'Search' }}
           </button>
-        </form>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Results Section -->
-  <section class="results-section">
+  <!-- BROWSE / SEARCH MODE -->
+  <section class="content-section">
     <div class="container">
 
-      <!-- Search Results Header -->
-      @if (searchResults() !== null) {
+      @if (searchResults() === null) {
+        <!-- ── BROWSE MODE: Netflix rows ── -->
+
+        <!-- Top 10 Hotels Row -->
+        @if (topHotels().length > 0) {
+          <section class="netflix-row">
+            <h2 class="row-title">⭐ Top 10 Hotels</h2>
+            <div class="scroll-row">
+              @for (h of topHotels(); track h.hotelId) {
+                <div class="scroll-card-wrapper">
+                  <app-hotel-card [hotel]="h" />
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+        <!-- City Group Rows -->
+        @for (city of cityGroups(); track city.cityName) {
+          <section class="netflix-row">
+            <h2 class="row-title">Hotels in {{ city.cityName }}</h2>
+            <div class="scroll-row">
+              @for (h of city.hotels; track h.hotelId) {
+                <div class="scroll-card-wrapper">
+                  <app-hotel-card [hotel]="h" />
+                </div>
+              }
+            </div>
+          </section>
+        }
+
+      } @else {
+        <!-- ── SEARCH RESULTS MODE ── -->
         <div class="results-header">
           <div>
             <h2 class="section-title">
-              {{ totalResults() }} hotels in {{ searchForm.get('city')?.value }}
+              {{ filteredResults().length }} hotels found
+              @if (cityControl.value) { in {{ cityControl.value }} }
             </h2>
             <p class="section-subtitle">
               {{ searchForm.get('checkIn')?.value | date:'MMM d' }} –
@@ -66,37 +95,72 @@
             <mat-icon>close</mat-icon> Clear Search
           </button>
         </div>
-      } @else {
-        <div class="results-header">
-          <div>
-            <h2 class="section-title">Top Rated Hotels</h2>
-            <p class="section-subtitle">Our highest-rated properties across all destinations</p>
-          </div>
-        </div>
-      }
 
-      <!-- Hotel Grid -->
-      @if (displayHotels.length > 0) {
-        <div class="hotel-grid">
-          @for (hotel of displayHotels; track hotel.hotelId) {
-            <app-hotel-card [hotel]="hotel" />
-          }
-        </div>
+        <div class="search-layout">
+          <!-- LEFT: Filter Sidebar -->
+          <aside class="filter-sidebar">
+            <h3 class="filter-title">Filters</h3>
 
-        <!-- Load More -->
-        @if (hasMoreResults) {
-          <div class="load-more">
-            <button mat-stroked-button color="primary" (click)="loadMore()">
-              Load more hotels
-            </button>
+            <!-- Price Range -->
+            <div class="filter-group">
+              <label class="filter-label">Price Range</label>
+              <div class="price-inputs">
+                <mat-form-field appearance="outline" style="width:100px;">
+                  <mat-label>Min ₹</mat-label>
+                  <input matInput type="number" [value]="minPrice()"
+                         (change)="minPrice.set(+$any($event.target).value); applyFilters()" />
+                </mat-form-field>
+                <span>–</span>
+                <mat-form-field appearance="outline" style="width:110px;">
+                  <mat-label>Max ₹</mat-label>
+                  <input matInput type="number" [value]="maxPrice()"
+                         (change)="maxPrice.set(+$any($event.target).value); applyFilters()" />
+                </mat-form-field>
+              </div>
+            </div>
+
+            <!-- Min Rating -->
+            <div class="filter-group">
+              <label class="filter-label">Minimum Rating</label>
+              <mat-form-field appearance="outline" style="width:100%;">
+                <mat-select [value]="minRating()" (selectionChange)="minRating.set($event.value); applyFilters()">
+                  <mat-option [value]="0">Any</mat-option>
+                  <mat-option [value]="3">3+ ⭐</mat-option>
+                  <mat-option [value]="4">4+ ⭐</mat-option>
+                  <mat-option [value]="4.5">4.5+ ⭐</mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+          </aside>
+
+          <!-- RIGHT: Results Grid -->
+          <div class="results-area">
+            @if (filteredResults().length === 0) {
+              <div class="empty-state">
+                <mat-icon class="empty-icon">hotel</mat-icon>
+                <h3>No hotels match your filters</h3>
+                <button mat-stroked-button (click)="minPrice.set(0); maxPrice.set(50000); minRating.set(0); applyFilters()">
+                  Reset Filters
+                </button>
+              </div>
+            } @else {
+              <div class="hotel-grid">
+                @for (hotel of filteredResults().slice(0, pageSize); track hotel.hotelId) {
+                  <app-hotel-card [hotel]="hotel" />
+                }
+              </div>
+
+              @if (filteredResults().length > pageSize) {
+                <mat-paginator
+                  [length]="filteredResults().length"
+                  [pageSize]="pageSize"
+                  [pageSizeOptions]="[9, 18, 27]"
+                  showFirstLastButtons
+                  (page)="updatePaginatedResults()">
+                </mat-paginator>
+              }
+            }
           </div>
-        }
-      } @else if (!isSearching()) {
-        <div class="empty-state">
-          <mat-icon class="empty-icon">hotel</mat-icon>
-          <h3>No hotels found</h3>
-          <p>Try a different city or date range</p>
-          <button mat-flat-button color="primary" (click)="clearSearch()">Browse All Hotels</button>
         </div>
       }
 

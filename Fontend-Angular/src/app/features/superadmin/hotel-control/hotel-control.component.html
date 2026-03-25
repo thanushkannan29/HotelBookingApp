@@ -6,75 +6,112 @@
           <mat-icon>arrow_back</mat-icon> Dashboard
         </a>
         <h1 class="section-title">Hotel Control</h1>
-        <p class="section-subtitle">{{ hotels().length }} hotels registered on the platform</p>
+        <p class="section-subtitle">{{ allCount }} hotels registered on the platform</p>
       </div>
     </div>
 
-    <!-- Filter -->
-    <div class="filter-row">
-      <button class="filter-pill" [class.active]="filterMode() === 'all'"     (click)="filterMode.set('all')">All ({{ hotels().length }})</button>
-      <button class="filter-pill" [class.active]="filterMode() === 'active'"  (click)="filterMode.set('active')">Active</button>
-      <button class="filter-pill" [class.active]="filterMode() === 'blocked'" (click)="filterMode.set('blocked')">Blocked</button>
+    <!-- Toolbar: search + status filter chips -->
+    <div class="table-toolbar">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Search hotels</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput (keyup)="applyTextFilter($event)" placeholder="Name, city, contact…" />
+      </mat-form-field>
+
+      <div class="filter-chips">
+        <button class="filter-pill" [class.active]="filterMode() === 'all'"
+                (click)="setStatusFilter('all')">All ({{ allCount }})</button>
+        <button class="filter-pill" [class.active]="filterMode() === 'active'"
+                (click)="setStatusFilter('active')">Active ({{ activeCount }})</button>
+        <button class="filter-pill" [class.active]="filterMode() === 'blocked'"
+                (click)="setStatusFilter('blocked')">Blocked ({{ blockedCount }})</button>
+      </div>
     </div>
 
-    @if (filtered.length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">domain</mat-icon>
-        <h3>No hotels found</h3>
-      </div>
-    } @else {
-      <div class="hotels-grid">
-        @for (hotel of filtered; track hotel.hotelId) {
-          <div class="hotel-card" [class.blocked]="hotel.isBlockedBySuperAdmin">
-            <div class="hc-header">
-              <div>
-                <h3 class="hc-name">{{ hotel.name }}</h3>
-                <p class="hc-city"><mat-icon>place</mat-icon>{{ hotel.city }}</p>
-              </div>
-              <div class="hc-badges">
-                @if (hotel.isBlockedBySuperAdmin) {
-                  <span class="badge badge-error">🚫 Blocked</span>
-                } @else if (hotel.isActive) {
-                  <span class="badge badge-success">● Live</span>
-                } @else {
-                  <span class="badge badge-muted">○ Inactive</span>
-                }
-              </div>
-            </div>
+    <div class="mat-elevation-z1 table-card">
+      <table mat-table [dataSource]="dataSource" matSort>
 
-            <div class="hc-stats">
-              <div class="hc-stat">
-                <span class="label">Reservations</span>
-                <span class="value">{{ hotel.totalReservations }}</span>
-              </div>
-              <div class="hc-stat">
-                <span class="label">Revenue</span>
-                <span class="value">₹{{ hotel.totalRevenue | number:'1.0-0' }}</span>
-              </div>
-              <div class="hc-stat">
-                <span class="label">Contact</span>
-                <span class="value">{{ hotel.contactNumber }}</span>
-              </div>
-              <div class="hc-stat">
-                <span class="label">Joined</span>
-                <span class="value">{{ hotel.createdAt | date:'MMM y' }}</span>
-              </div>
-            </div>
+        <!-- Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Hotel Name</th>
+          <td mat-cell *matCellDef="let h"><strong>{{ h.name }}</strong></td>
+        </ng-container>
 
-            <div class="hc-actions">
-              @if (hotel.isBlockedBySuperAdmin) {
-                <button mat-flat-button color="primary" (click)="unblock(hotel)">
-                  <mat-icon>lock_open</mat-icon> Unblock Hotel
-                </button>
-              } @else {
-                <button mat-stroked-button color="warn" (click)="block(hotel)">
-                  <mat-icon>block</mat-icon> Block Hotel
-                </button>
-              }
+        <!-- City -->
+        <ng-container matColumnDef="city">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>City</th>
+          <td mat-cell *matCellDef="let h">{{ h.city }}</td>
+        </ng-container>
+
+        <!-- Status -->
+        <ng-container matColumnDef="status">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
+          <td mat-cell *matCellDef="let h">
+            @if (h.isBlockedBySuperAdmin) {
+              <span class="badge badge-error">🚫 Blocked</span>
+            } @else if (h.isActive) {
+              <span class="badge badge-success">● Live</span>
+            } @else {
+              <span class="badge badge-muted">○ Inactive</span>
+            }
+          </td>
+        </ng-container>
+
+        <!-- Reservations -->
+        <ng-container matColumnDef="reservations">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Reservations</th>
+          <td mat-cell *matCellDef="let h">{{ h.totalReservations }}</td>
+        </ng-container>
+
+        <!-- Revenue -->
+        <ng-container matColumnDef="revenue">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Revenue</th>
+          <td mat-cell *matCellDef="let h">₹{{ h.totalRevenue | number:'1.0-0' }}</td>
+        </ng-container>
+
+        <!-- Contact -->
+        <ng-container matColumnDef="contact">
+          <th mat-header-cell *matHeaderCellDef>Contact</th>
+          <td mat-cell *matCellDef="let h">{{ h.contactNumber }}</td>
+        </ng-container>
+
+        <!-- Joined -->
+        <ng-container matColumnDef="joined">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Joined</th>
+          <td mat-cell *matCellDef="let h">{{ h.createdAt | date:'MMM y' }}</td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef></th>
+          <td mat-cell *matCellDef="let h">
+            @if (h.isBlockedBySuperAdmin) {
+              <button mat-flat-button color="primary" size="small" (click)="unblock(h)">
+                <mat-icon>lock_open</mat-icon> Unblock
+              </button>
+            } @else {
+              <button mat-stroked-button color="warn" size="small" (click)="block(h)">
+                <mat-icon>block</mat-icon> Block
+              </button>
+            }
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
+            [class.blocked-row]="row.isBlockedBySuperAdmin"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <mat-icon class="empty-icon">domain</mat-icon>
+              <h3>No hotels found</h3>
             </div>
-          </div>
-        }
-      </div>
-    }
+          </td>
+        </tr>
+      </table>
+
+      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons />
+    </div>
   </div>
 </div>

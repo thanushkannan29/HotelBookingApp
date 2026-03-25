@@ -72,22 +72,8 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         }
     }
 
-    // ── GUEST REFUND REQUESTS ─────────────────────────────────────────────────
-    [Route("api/guest/refund-requests")]
-    [ApiController]
-    [Authorize(Roles = "Guest")]
-    public class GuestRefundRequestController : ControllerBase
-    {
-        private readonly IRefundRequestService _service;
-        public GuestRefundRequestController(IRefundRequestService service) => _service = service;
-        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        /// <summary>Get all refund requests for the logged-in guest</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMine()
-        {
-            var result = await _service.GetGuestRefundRequestsAsync(GetUserId());
-            return Ok(new { success = true, data = result });
-        }
-    }
+    // NOTE: GuestRefundRequestController removed from here.
+    // It lives exclusively in SharedControllers.cs with paging support.
+    // Having it in both files caused the Swagger conflict:
+    //   "Conflicting method/path combination GET api/guest/refund-requests"
 }

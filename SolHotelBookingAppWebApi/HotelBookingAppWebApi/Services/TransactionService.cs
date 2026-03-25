@@ -14,6 +14,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
         private readonly IRepository<Guid, User> _userRepo;
+        private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public TransactionService(
@@ -21,12 +22,14 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Reservation> reservationRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
             IRepository<Guid, User> userRepo,
+            IRepository<Guid, Hotel> hotelRepo,
             IUnitOfWork unitOfWork)
         {
             _transactionRepo = transactionRepo;
             _reservationRepo = reservationRepo;
             _inventoryRepo = inventoryRepo;
             _userRepo = userRepo;
+            _hotelRepo = hotelRepo;
             _unitOfWork = unitOfWork;
         }
 
@@ -151,6 +154,8 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── GET ALL TRANSACTIONS (Role-based) ─────────────────────────────────
+        // NOTE (Correction 10C): Admin branch has NO status filter — returns all statuses
+        // (Success, Refunded, Failed) for the hotel. This is intentional.
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
             Guid userId, string role, int page, int pageSize)
         {
@@ -170,9 +175,10 @@ namespace HotelBookingAppWebApi.Services
                 if (hotelId == null)
                     throw new NotFoundException("Admin hotel not found.");
 
+                // No status filter — Admin sees ALL transaction statuses for their hotel
                 query = query.Where(t => t.Reservation!.HotelId == hotelId);
             }
-            // SuperAdmin → no filter
+            // SuperAdmin → no filter — sees everything
 
             var total = await query.CountAsync();
 
@@ -187,6 +193,65 @@ namespace HotelBookingAppWebApi.Services
                 TotalCount = total,
                 Transactions = data.Select(MapToDto)
             };
+        }
+
+        // ── PAYMENT INTENT (Correction 7D) ────────────────────────────────────
+        // Guest calls this before paying — returns hotel UPI ID + payment reference.
+        // This is purely informational; the actual UPI payment happens outside the app.
+        public async Task<PaymentIntentDto> GetPaymentIntentAsync(Guid reservationId, Guid userId)
+        {
+            var reservation = await _reservationRepo.GetQueryable()
+                .Include(r => r.Hotel)
+                .FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.UserId == userId)
+                ?? throw new NotFoundException("Reservation not found.");
+
+            if (reservation.Status != ReservationStatus.Pending)
+                throw new ValidationException("Payment intent is only available for pending reservations.");
+
+            return new PaymentIntentDto
+            {
+                UpiId = reservation.Hotel?.UpiId,
+                Amount = reservation.TotalAmount,
+                PaymentRef = $"HTLPAY-{reservation.ReservationCode}",
+                HotelName = reservation.Hotel?.Name ?? string.Empty
+            };
+        }
+
+        // ── MARK TRANSACTION FAILED (Correction 7E) ───────────────────────────
+        // Admin marks a payment as Failed if they did not receive it.
+        // Resets reservation to Pending so the guest can attempt payment again.
+        public async Task MarkTransactionFailedAsync(Guid transactionId, Guid adminUserId)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var admin = await _userRepo.GetAsync(adminUserId)
+                    ?? throw new UnAuthorizedException("Unauthorized.");
+
+                if (admin.HotelId == null)
+                    throw new UnAuthorizedException("Unauthorized.");
+
+                var transaction = await _transactionRepo.GetQueryable()
+                    .Include(t => t.Reservation)
+                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
+                    ?? throw new NotFoundException("Transaction not found.");
+
+                if (transaction.Reservation!.HotelId != admin.HotelId)
+                    throw new UnAuthorizedException("You are not authorized to manage this transaction.");
+
+                if (transaction.Status != PaymentStatus.Success)
+                    throw new ValidationException("Only successful transactions can be marked as failed.");
+
+                transaction.Status = PaymentStatus.Failed;
+                transaction.Reservation.Status = ReservationStatus.Pending;
+
+                await _unitOfWork.CommitAsync();
+            }
+            catch
+            {
+                await _unitOfWork.RollbackAsync();
+                throw;
+            }
         }
 
         private static TransactionResponseDto MapToDto(Transaction t) => new()

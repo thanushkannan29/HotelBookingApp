@@ -1,12 +1,16 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatDialogModule } from '@angular/material/dialog';
-import { DatePipe, DecimalPipe, SlicePipe } from '@angular/common';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatSortModule, MatSort } from '@angular/material/sort';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { TransactionService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
 import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../core/models/models';
@@ -15,23 +19,26 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
   selector: 'app-guest-transactions',
   standalone: true,
   imports: [
-    RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe, SlicePipe,
-    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule, MatDialogModule
+    RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
+    MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
+    MatTableModule, MatSortModule, MatPaginatorModule,
+    MatChipsModule, MatTooltipModule,
   ],
   templateUrl: './guest-transactions.component.html',
   styleUrl:    './guest-transactions.component.scss'
 })
-export class GuestTransactionsComponent implements OnInit {
+export class GuestTransactionsComponent implements OnInit, AfterViewInit {
   private txService = inject(TransactionService);
   private toast     = inject(ToastService);
   private fb        = inject(FormBuilder);
 
-  transactions  = signal<TransactionResponseDto[]>([]);
-  total         = signal(0);
-  page          = signal(1);
-  readonly pageSize = 10;
-  refundingId   = signal<string | null>(null);
-  isSaving      = signal(false);
+  dataSource   = new MatTableDataSource<TransactionResponseDto>([]);
+  displayedColumns = ['method', 'date', 'transactionId', 'amount', 'status', 'actions'];
+  refundingId  = signal<string | null>(null);
+  isSaving     = signal(false);
+
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   refundForm = this.fb.group({
     reason: ['', [Validators.required, Validators.minLength(5)]]
@@ -41,23 +48,36 @@ export class GuestTransactionsComponent implements OnInit {
   paymentStatusLabel = (id: number) => PaymentStatus[id] ?? 'Unknown';
 
   statusClass(id: number): string {
-    const s: Record<number, string> = { 1:'badge-warning', 2:'badge-success', 3:'badge-error', 4:'badge-info' };
+    const s: Record<number, string> = {
+      1: 'badge-warning',
+      2: 'badge-success',
+      3: 'badge-error',
+      4: 'badge-info',
+    };
     return s[id] ?? 'badge-muted';
   }
 
-  get totalPages() { return Math.ceil(this.total() / this.pageSize); }
-
   ngOnInit() { this.load(); }
 
+  ngAfterViewInit() {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+  }
+
   load() {
-    this.txService.getTransactions(this.page(), this.pageSize).subscribe(r => {
-      this.transactions.set(r.transactions as TransactionResponseDto[]);
-      this.total.set(r.totalCount);
+    this.txService.getTransactions(1, 200).subscribe(r => {
+      this.dataSource.data = r.transactions as TransactionResponseDto[];
     });
   }
 
+  applyFilter(event: Event) {
+    const val = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = val.trim().toLowerCase();
+    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
+  }
+
   canDirectRefund(tx: TransactionResponseDto): boolean {
-    if (tx.status !== 2) return false; // must be Success
+    if (tx.status !== 2) return false;
     const mins = (Date.now() - new Date(tx.transactionDate).getTime()) / 60000;
     return mins <= 30;
   }
@@ -85,7 +105,4 @@ export class GuestTransactionsComponent implements OnInit {
       error: () => this.isSaving.set(false),
     });
   }
-
-  next() { if (this.page() < this.totalPages) { this.page.update(p => p + 1); this.load(); } }
-  prev() { if (this.page() > 1) { this.page.update(p => p - 1); this.load(); } }
 }
