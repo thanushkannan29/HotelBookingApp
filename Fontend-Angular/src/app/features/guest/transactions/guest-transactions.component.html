@@ -13,14 +13,15 @@
     <!-- Search Filter -->
     <div class="table-toolbar">
       <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Search transactions</mat-label>
+        <mat-label>🔍 Search transactions</mat-label>
         <mat-icon matPrefix>search</mat-icon>
-        <input matInput (keyup)="applyFilter($event)" placeholder="Amount, method, date…" />
+        <input matInput placeholder="Amount, method, date…" disabled />
+        <mat-hint>Use pagination to browse all transactions</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="mat-elevation-z1 table-card">
-      <table mat-table [dataSource]="dataSource" matSort>
+      <table mat-table [dataSource]="transactions()" matSort>
 
         <!-- Method Column -->
         <ng-container matColumnDef="method">
@@ -99,7 +100,13 @@
         </tr>
       </table>
 
-      <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons />
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 25, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
     </div>
 
     <!-- Inline Refund Form (shown below table when refunding) -->
