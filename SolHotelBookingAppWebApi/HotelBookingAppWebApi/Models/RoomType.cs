@@ -18,9 +18,13 @@ namespace HotelBookingAppWebApi.Models
         [Required]
         public int MaxOccupancy { get; set; }
 
+        // Legacy string field kept for backward compat; new amenities use RoomTypeAmenities join
         public string Amenities { get; set; } = string.Empty;
 
-        /// <summary>Optional photo URL for this room type — admin can add later</summary>
+        /// <summary>Many-to-many amenities via join table</summary>
+        public ICollection<RoomTypeAmenity>? RoomTypeAmenities { get; set; }
+
+        /// <summary>Optional photo URL for this room type â€” admin can add later</summary>
         public string? ImageUrl { get; set; }
 
         public bool IsActive { get; set; } = true;

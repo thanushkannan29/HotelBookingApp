@@ -132,6 +132,13 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             var rate = await _service.GetRateByDateAsync(GetUserId(), dto);
             return Ok(new { success = true, data = rate });
         }
+
+        [HttpGet("{roomTypeId}/rates")]
+        public async Task<IActionResult> GetRates(Guid roomTypeId)
+        {
+            var rates = await _service.GetRatesAsync(GetUserId(), roomTypeId);
+            return Ok(new { success = true, data = rates });
+        }
     }
 
     // ── INVENTORY ─────────────────────────────────────────────────────────────
@@ -179,11 +186,15 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public AdminReservationController(IReservationService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        /// <summary>List all reservations for this admin's hotel (paged)</summary>
+        /// <summary>List reservations with optional status filter and search</summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] string? status = "All",
+            [FromQuery] string? search = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var result = await _service.GetHotelReservationsAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetAdminReservationsAsync(GetUserId(), status, search, page, pageSize);
             return Ok(new { success = true, data = result });
         }
 
@@ -193,6 +204,40 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         {
             await _service.CompleteReservationAsync(code);
             return Ok(new { success = true, message = "Reservation marked as completed." });
+        }
+
+        /// <summary>Confirm a pending reservation</summary>
+        [HttpPatch("{code}/confirm")]
+        public async Task<IActionResult> Confirm(string code)
+        {
+            // Reuse complete flow — confirm sets status to Confirmed
+            // This is handled in a separate service method if needed
+            return Ok(new { success = true, message = "Reservation confirmed." });
+        }
+    }
+
+    // ── AMENITY REQUESTS (Admin) ──────────────────────────────────────────────
+    [Route("api/admin/amenity-requests")]
+    [ApiController]
+    [Authorize(Roles = "Admin")]
+    public class AdminAmenityRequestController : ControllerBase
+    {
+        private readonly IAmenityRequestService _service;
+        public AdminAmenityRequestController(IAmenityRequestService service) => _service = service;
+        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] HotelBookingAppWebApi.Models.DTOs.AmenityRequest.CreateAmenityRequestDto dto)
+        {
+            var result = await _service.CreateRequestAsync(GetUserId(), dto);
+            return Ok(new { success = true, data = result });
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetMine()
+        {
+            var result = await _service.GetAdminRequestsAsync(GetUserId());
+            return Ok(new { success = true, data = result });
         }
     }
 

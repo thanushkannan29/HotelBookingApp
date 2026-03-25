@@ -10,6 +10,7 @@ namespace HotelBookingAppWebApi.Interfaces
         Task AddRateAsync(Guid userId, CreateRoomTypeRateDto dto);
         Task UpdateRateAsync(Guid userId, UpdateRoomTypeRateDto dto);
         Task<decimal> GetRateByDateAsync(Guid userId, GetRateByDateRequestDto dto);
+        Task<IEnumerable<RoomTypeRateDto>> GetRatesAsync(Guid userId, Guid roomTypeId);
         Task<IEnumerable<RoomTypeListDto>> GetRoomTypesByHotelAsync(Guid userId);
         Task<PagedRoomTypeResponseDto> GetRoomTypesByHotelPagedAsync(Guid userId, int page, int pageSize);
     }

@@ -119,12 +119,18 @@ export interface SearchHotelRequestDto {
   checkOut: string;
   pageNumber: number;
   pageSize: number;
+  amenityIds?: string[];
+  minPrice?: number;
+  maxPrice?: number;
+  roomType?: string;
+  sortBy?: string; // 'price_asc' | 'price_desc' | 'rating'
 }
 
 export interface SearchHotelResponseDto {
   hotels: HotelListItemDto[];
   pageNumber: number;
   recordsCount: number;
+  totalCount?: number;
 }
 
 // ─── HOTEL ADMIN ──────────────────────────────────────────────────────────────
@@ -270,12 +276,20 @@ export interface CreateReservationDto {
   checkOutDate: string;
   numberOfRooms: number;
   selectedRoomIds?: string[];
+  promoCodeUsed?: string;
+  walletAmountToUse?: number;
 }
 
 export interface ReservationResponseDto {
   reservationCode: string;
   reservationId: string;
   totalAmount: number;
+  gstPercent: number;
+  gstAmount: number;
+  discountPercent: number;
+  discountAmount: number;
+  walletAmountUsed: number;
+  finalAmount: number;
   status: string;
   totalRooms: number;
   rooms: RoomSummaryDto[];
@@ -298,6 +312,13 @@ export interface ReservationDetailsDto {
   checkOutDate: string;
   numberOfRooms: number;
   totalAmount: number;
+  gstPercent: number;
+  gstAmount: number;
+  discountPercent: number;
+  discountAmount: number;
+  walletAmountUsed: number;
+  finalAmount: number;
+  promoCodeUsed?: string;
   status: string;
   isCheckedIn: boolean;
   createdDate: string;
@@ -584,4 +605,153 @@ export interface ApiResponse<T> {
   data?: T;
   message?: string;
   statusCode?: number;
+}
+
+// ─── WALLET ───────────────────────────────────────────────────────────────────
+export interface WalletResponseDto {
+  walletId: string;
+  balance: number;
+  updatedAt: string;
+}
+
+export interface WalletTransactionDto {
+  walletTransactionId: string;
+  amount: number;
+  type: 'Credit' | 'Debit';
+  description: string;
+  createdAt: string;
+}
+
+export interface PagedWalletTransactionDto {
+  totalCount: number;
+  wallet: WalletResponseDto;
+  transactions: WalletTransactionDto[];
+}
+
+export interface TopUpWalletDto {
+  amount: number;
+}
+
+// ─── PROMO CODE ───────────────────────────────────────────────────────────────
+export interface PromoCodeResponseDto {
+  promoCodeId: string;
+  code: string;
+  hotelName: string;
+  hotelId: string;
+  discountPercent: number;
+  expiryDate: string;
+  isUsed: boolean;
+  status: 'Active' | 'Used' | 'Expired';
+}
+
+export interface ValidatePromoCodeDto {
+  code: string;
+  hotelId: string;
+  totalAmount: number;
+}
+
+export interface PromoCodeValidationResultDto {
+  isValid: boolean;
+  discountPercent: number;
+  discountAmount: number;
+  message: string;
+}
+
+// ─── CITY ─────────────────────────────────────────────────────────────────────
+export interface CityDto {
+  cityId: string;
+  cityName: string;
+  stateName: string;
+  pinCode: string;
+  isActive: boolean;
+  createdAt: string;
+}
+
+export interface CreateCityDto {
+  cityName: string;
+  stateName: string;
+  pinCode: string;
+}
+
+export interface PagedCityResponseDto {
+  totalCount: number;
+  cities: CityDto[];
+}
+
+// ─── AMENITY REQUEST ──────────────────────────────────────────────────────────
+export interface CreateAmenityRequestDto {
+  amenityName: string;
+  category: string;
+  iconName?: string;
+}
+
+export interface AmenityRequestResponseDto {
+  amenityRequestId: string;
+  amenityName: string;
+  category: string;
+  iconName?: string;
+  status: 'Pending' | 'Approved' | 'Rejected';
+  superAdminNote?: string;
+  adminName: string;
+  hotelName: string;
+  createdAt: string;
+  processedAt?: string;
+}
+
+export interface PagedAmenityRequestResponseDto {
+  totalCount: number;
+  requests: AmenityRequestResponseDto[];
+}
+
+// ─── SUPER ADMIN REVENUE ──────────────────────────────────────────────────────
+export interface SuperAdminRevenueDto {
+  superAdminRevenueId: string;
+  reservationCode: string;
+  hotelName: string;
+  reservationAmount: number;
+  commissionAmount: number;
+  superAdminUpiId: string;
+  status: 'Pending' | 'Sent';
+  createdAt: string;
+}
+
+export interface PagedRevenueResponseDto {
+  totalCount: number;
+  items: SuperAdminRevenueDto[];
+}
+
+export interface RevenueSummaryDto {
+  totalCommissionEarned: number;
+  totalPending: number;
+  totalSent: number;
+  pendingCount: number;
+  sentCount: number;
+}
+
+// ─── QR PAYMENT ───────────────────────────────────────────────────────────────
+export interface QrPaymentResponseDto {
+  upiId: string;
+  amount: number;
+  qrCodeBase64: string;
+  hotelName: string;
+}
+
+// ─── RESERVATION (updated with GST/promo/wallet fields) ──────────────────────
+export interface ReservationPricingFields {
+  gstPercent: number;
+  gstAmount: number;
+  discountPercent: number;
+  discountAmount: number;
+  walletAmountUsed: number;
+  finalAmount: number;
+  promoCodeUsed?: string;
+}
+
+// ─── ROOM TYPE RATE ───────────────────────────────────────────────────────────
+export interface RoomTypeRateDto {
+  roomTypeRateId: string;
+  roomTypeId: string;
+  startDate: string;
+  endDate: string;
+  rate: number;
 }

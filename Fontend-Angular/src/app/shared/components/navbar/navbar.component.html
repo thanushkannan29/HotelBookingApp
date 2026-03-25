@@ -1,93 +1,148 @@
 <nav class="navbar">
   <div class="nav-container">
     <!-- Logo -->
-<a class="nav-brand" routerLink="/">
-  <img src="assets/logo.png" alt="ThanushStayHub Logo" class="brand-icon" />
-  <span class="brand-name">ThanushStayHub</span>
-</a>
+    <a class="nav-brand" routerLink="/">
+      <img src="assets/logo.png" alt="StayHub Logo" class="brand-icon" />
+      <span class="brand-name">🏨 StayHub</span>
+    </a>
 
     <!-- Desktop Nav Links -->
     <div class="nav-links">
-      <a routerLink="/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
+      <a routerLink="/hotels" routerLinkActive="active" class="nav-link">🔍 Hotels</a>
       <a routerLink="/contact" routerLinkActive="active" class="nav-link">Support</a>
 
       @if (!auth.isAuthenticated()) {
-        <a routerLink="/auth/login" class="nav-link">Sign In</a>
+        <a routerLink="/auth/login" class="nav-link">🔑 Sign In</a>
         <a routerLink="/auth/register" class="nav-cta">Get Started</a>
       }
 
       @if (auth.isGuest()) {
-        <a routerLink="/guest/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/guest/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
         <a routerLink="/guest/bookings" routerLinkActive="active" class="nav-link">My Bookings</a>
-        <a routerLink="/guest/transactions" routerLinkActive="active" class="nav-link">Payments</a>
+        <a routerLink="/guest/wallet" routerLinkActive="active" class="nav-link">💰 Wallet</a>
+        <a routerLink="/guest/promo-codes" routerLinkActive="active" class="nav-link">🎫 Promos</a>
       }
 
       @if (auth.isAdmin()) {
-        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
         <a routerLink="/admin/reservations" routerLinkActive="active" class="nav-link">Reservations</a>
         <a routerLink="/admin/rooms" routerLinkActive="active" class="nav-link">Rooms</a>
       }
 
       @if (auth.isSuperAdmin()) {
-        <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+        <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
         <a routerLink="/superadmin/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
-        <a routerLink="/superadmin/error-logs" routerLinkActive="active" class="nav-link">Error Logs</a>
+        <a routerLink="/superadmin/cities" routerLinkActive="active" class="nav-link">Cities</a>
+        <a routerLink="/superadmin/revenue" routerLinkActive="active" class="nav-link">Revenue</a>
       }
     </div>
 
-    <!-- User Menu -->
-    @if (auth.isAuthenticated()) {
-      <button class="user-btn" [matMenuTriggerFor]="userMenu">
-        <div class="avatar">{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</div>
-        <span class="user-name">{{ auth.currentUser()?.userName }}</span>
-        <mat-icon>expand_more</mat-icon>
+    <!-- Theme Toggle + User Menu -->
+    <div class="nav-actions">
+      <button mat-icon-button (click)="toggleTheme()" matTooltip="Toggle dark/light mode" class="theme-toggle">
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
 
-      <mat-menu #userMenu="matMenu" xPosition="before">
-        <div class="menu-header">
-          <span class="menu-user">{{ auth.currentUser()?.userName }}</span>
-          <span class="menu-role badge badge-primary">{{ auth.currentUser()?.role }}</span>
-        </div>
-        <mat-divider />
-        @if (auth.isGuest()) {
-          <button mat-menu-item routerLink="/guest/profile">
-            <mat-icon>person</mat-icon> Profile
-          </button>
-          <button mat-menu-item routerLink="/guest/bookings">
-            <mat-icon>book_online</mat-icon> My Bookings
-          </button>
-          <button mat-menu-item routerLink="/guest/transactions">
-            <mat-icon>receipt_long</mat-icon> Payments
-          </button>
-          <button mat-menu-item routerLink="/guest/reviews">
-            <mat-icon>star</mat-icon> My Reviews
-          </button>
-          <button mat-menu-item routerLink="/guest/refunds">
-            <mat-icon>replay</mat-icon> Refund Requests
-          </button>
-        }
-        @if (auth.isAdmin()) {
-          <button mat-menu-item routerLink="/admin/dashboard">
-            <mat-icon>dashboard</mat-icon> Dashboard
-          </button>
-          <button mat-menu-item routerLink="/admin/hotel">
-            <mat-icon>edit</mat-icon> Edit Hotel
-          </button>
-        }
-        @if (auth.isSuperAdmin()) {
-          <button mat-menu-item routerLink="/superadmin/dashboard">
-            <mat-icon>dashboard</mat-icon> Dashboard
-          </button>
-        }
-        <mat-divider />
-        <button mat-menu-item routerLink="/contact">
-          <mat-icon>support_agent</mat-icon> Support
+      @if (auth.isAuthenticated()) {
+        <button class="user-btn" [matMenuTriggerFor]="userMenu">
+          <div class="avatar">{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</div>
+          <span class="user-name">{{ auth.currentUser()?.userName }}</span>
+          <mat-icon>expand_more</mat-icon>
         </button>
-        <button mat-menu-item (click)="auth.logout()" class="logout-btn">
-          <mat-icon>logout</mat-icon> Sign Out
-        </button>
-      </mat-menu>
-    }
+
+        <mat-menu #userMenu="matMenu" xPosition="before">
+          <div class="menu-header">
+            <span class="menu-user">{{ auth.currentUser()?.userName }}</span>
+            <span class="menu-role badge badge-primary">{{ auth.currentUser()?.role }}</span>
+          </div>
+          <mat-divider />
+          @if (auth.isGuest()) {
+            <button mat-menu-item routerLink="/guest/profile">
+              <mat-icon>person</mat-icon> 👤 Profile
+            </button>
+            <button mat-menu-item routerLink="/guest/bookings">
+              <mat-icon>book_online</mat-icon> My Bookings
+            </button>
+            <button mat-menu-item routerLink="/guest/transactions">
+              <mat-icon>receipt_long</mat-icon> 🧾 Transactions
+            </button>
+            <button mat-menu-item routerLink="/guest/wallet">
+              <mat-icon>account_balance_wallet</mat-icon> 💰 Wallet
+            </button>
+            <button mat-menu-item routerLink="/guest/promo-codes">
+              <mat-icon>local_offer</mat-icon> 🎫 Promo Codes
+            </button>
+            <button mat-menu-item routerLink="/guest/reviews">
+              <mat-icon>star</mat-icon> My Reviews
+            </button>
+            <button mat-menu-item routerLink="/guest/refunds">
+              <mat-icon>replay</mat-icon> Refund Requests
+            </button>
+          }
+          @if (auth.isAdmin()) {
+            <button mat-menu-item routerLink="/admin/dashboard">
+              <mat-icon>dashboard</mat-icon> 📊 Dashboard
+            </button>
+            <button mat-menu-item routerLink="/admin/hotel">
+              <mat-icon>edit</mat-icon> Edit Hotel
+            </button>
+            <button mat-menu-item routerLink="/admin/rooms">
+              <mat-icon>bed</mat-icon> 🛏️ Rooms
+            </button>
+            <button mat-menu-item routerLink="/admin/roomtypes">
+              <mat-icon>category</mat-icon> Room Types
+            </button>
+            <button mat-menu-item routerLink="/admin/inventory">
+              <mat-icon>inventory</mat-icon> Inventory
+            </button>
+            <button mat-menu-item routerLink="/admin/reservations">
+              <mat-icon>event_available</mat-icon> Reservations
+            </button>
+            <button mat-menu-item routerLink="/admin/refunds">
+              <mat-icon>replay</mat-icon> Refunds
+            </button>
+            <button mat-menu-item routerLink="/admin/transactions">
+              <mat-icon>receipt_long</mat-icon> 🧾 Transactions
+            </button>
+            <button mat-menu-item routerLink="/admin/amenity-requests">
+              <mat-icon>add_circle</mat-icon> Amenity Requests
+            </button>
+            <button mat-menu-item routerLink="/admin/audit-logs">
+              <mat-icon>history</mat-icon> Audit Logs
+            </button>
+          }
+          @if (auth.isSuperAdmin()) {
+            <button mat-menu-item routerLink="/superadmin/dashboard">
+              <mat-icon>dashboard</mat-icon> 📊 Dashboard
+            </button>
+            <button mat-menu-item routerLink="/superadmin/hotels">
+              <mat-icon>hotel</mat-icon> 🏨 Hotels
+            </button>
+            <button mat-menu-item routerLink="/superadmin/cities">
+              <mat-icon>location_city</mat-icon> Cities
+            </button>
+            <button mat-menu-item routerLink="/superadmin/amenity-requests">
+              <mat-icon>add_circle</mat-icon> Amenity Requests
+            </button>
+            <button mat-menu-item routerLink="/superadmin/revenue">
+              <mat-icon>payments</mat-icon> Revenue
+            </button>
+            <button mat-menu-item routerLink="/superadmin/audit-logs">
+              <mat-icon>history</mat-icon> Audit Logs
+            </button>
+          }
+          <mat-divider />
+          <button mat-menu-item routerLink="/contact">
+            <mat-icon>support_agent</mat-icon> Support
+          </button>
+          <button mat-menu-item (click)="auth.logout()" class="logout-btn">
+            <mat-icon>logout</mat-icon> Sign Out
+          </button>
+        </mat-menu>
+      } @else {
+        <a routerLink="/auth/login" mat-button>🔑 Sign In</a>
+      }
+    </div>
 
     <!-- Mobile Toggle -->
     <button class="mobile-toggle" (click)="toggleMobile()">
@@ -98,26 +153,32 @@
   <!-- Mobile Menu -->
   @if (mobileOpen()) {
     <div class="mobile-menu" (click)="closeMobile()">
-      <a routerLink="/hotels" class="mobile-link">Hotels</a>
+      <a routerLink="/hotels" class="mobile-link">🔍 Hotels</a>
       <a routerLink="/contact" class="mobile-link">Support</a>
       @if (!auth.isAuthenticated()) {
-        <a routerLink="/auth/login" class="mobile-link">Sign In</a>
+        <a routerLink="/auth/login" class="mobile-link">🔑 Sign In</a>
         <a routerLink="/auth/register" class="mobile-link">Register</a>
       }
       @if (auth.isGuest()) {
-        <a routerLink="/guest/dashboard" class="mobile-link">Dashboard</a>
+        <a routerLink="/guest/dashboard" class="mobile-link">📊 Dashboard</a>
         <a routerLink="/guest/bookings" class="mobile-link">My Bookings</a>
-        <a routerLink="/guest/transactions" class="mobile-link">Payments</a>
+        <a routerLink="/guest/wallet" class="mobile-link">💰 Wallet</a>
+        <a routerLink="/guest/promo-codes" class="mobile-link">🎫 Promo Codes</a>
+        <a routerLink="/guest/transactions" class="mobile-link">🧾 Transactions</a>
         <a routerLink="/guest/reviews" class="mobile-link">My Reviews</a>
         <a routerLink="/guest/refunds" class="mobile-link">Refund Requests</a>
       }
       @if (auth.isAdmin()) {
-        <a routerLink="/admin/dashboard" class="mobile-link">Dashboard</a>
+        <a routerLink="/admin/dashboard" class="mobile-link">📊 Dashboard</a>
         <a routerLink="/admin/reservations" class="mobile-link">Reservations</a>
+        <a routerLink="/admin/rooms" class="mobile-link">🛏️ Rooms</a>
+        <a routerLink="/admin/amenity-requests" class="mobile-link">Amenity Requests</a>
       }
       @if (auth.isSuperAdmin()) {
-        <a routerLink="/superadmin/dashboard" class="mobile-link">Dashboard</a>
-        <a routerLink="/superadmin/hotels" class="mobile-link">Hotels</a>
+        <a routerLink="/superadmin/dashboard" class="mobile-link">📊 Dashboard</a>
+        <a routerLink="/superadmin/hotels" class="mobile-link">🏨 Hotels</a>
+        <a routerLink="/superadmin/cities" class="mobile-link">Cities</a>
+        <a routerLink="/superadmin/revenue" class="mobile-link">Revenue</a>
       }
       @if (auth.isAuthenticated()) {
         <button class="mobile-link logout" (click)="auth.logout()">Sign Out</button>

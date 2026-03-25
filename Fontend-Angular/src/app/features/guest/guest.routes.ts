@@ -25,5 +25,13 @@ export const GUEST_ROUTES: Routes = [
     path: 'transactions',
     loadComponent: () => import('./transactions/guest-transactions.component').then(m => m.GuestTransactionsComponent),
   },
+  {
+    path: 'wallet',
+    loadComponent: () => import('./wallet/guest-wallet.component').then(m => m.GuestWalletComponent),
+  },
+  {
+    path: 'promo-codes',
+    loadComponent: () => import('./promo-codes/guest-promo-codes.component').then(m => m.GuestPromoCodesComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

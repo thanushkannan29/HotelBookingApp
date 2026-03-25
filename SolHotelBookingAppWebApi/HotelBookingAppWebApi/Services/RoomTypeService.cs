@@ -238,5 +238,29 @@ namespace HotelBookingAppWebApi.Services
 
             return new PagedRoomTypeResponseDto { TotalCount = total, RoomTypes = roomTypes };
         }
+
+        // ── GET RATES FOR ROOM TYPE ───────────────────────────────────────────
+        public async Task<IEnumerable<RoomTypeRateDto>> GetRatesAsync(Guid userId, Guid roomTypeId)
+        {
+            var user = await _userRepo.GetAsync(userId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            if (user.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized.");
+
+            var rates = await _rateRepo.GetQueryable()
+                .Where(r => r.RoomTypeId == roomTypeId)
+                .OrderBy(r => r.StartDate)
+                .ToListAsync();
+
+            return rates.Select(r => new RoomTypeRateDto
+            {
+                RoomTypeRateId = r.RoomTypeRateId,
+                RoomTypeId = r.RoomTypeId,
+                StartDate = r.StartDate,
+                EndDate = r.EndDate,
+                Rate = r.Rate
+            });
+        }
     }
 }

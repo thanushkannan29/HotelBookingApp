@@ -66,6 +66,11 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public DateOnly CheckOut { get; set; }
         public int PageNumber { get; set; } = 1;
         public int PageSize { get; set; } = 10;
+        public List<Guid>? AmenityIds { get; set; }
+        public decimal? MinPrice { get; set; }
+        public decimal? MaxPrice { get; set; }
+        public string? RoomType { get; set; }
+        public string? SortBy { get; set; } // "price_asc" | "price_desc" | "rating"
     }
 
     public class SearchHotelResponseDto
@@ -73,5 +78,6 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
         public IEnumerable<HotelListItemDto> Hotels { get; set; } = new List<HotelListItemDto>();
         public int PageNumber { get; set; }
         public int RecordsCount { get; set; }
+        public int TotalCount { get; set; }
     }
 }

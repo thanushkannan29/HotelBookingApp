@@ -336,3 +336,24 @@ a {
 .mat-mdc-snack-bar-container .mat-mdc-button {
   color: rgba(255,255,255,0.8) !important;
 }
+
+// ─── DARK THEME ───────────────────────────────────────────────────────────────
+body.dark-theme {
+  --mat-app-background-color: #121212;
+  --mat-app-text-color: #ffffff;
+  --color-bg: #121212;
+  --color-surface: #1e1e1e;
+  --color-surface-alt: #2a2a2a;
+  --color-text-primary: #e0e0e0;
+  --color-text-secondary: #aaaaaa;
+  --color-border: #333333;
+  background-color: #121212;
+  color: #ffffff;
+
+  .mat-mdc-card { background-color: #1e1e1e; color: #e0e0e0; }
+  .mat-mdc-table { background-color: #1e1e1e; }
+  .mat-mdc-row { background-color: #1e1e1e; }
+  .mat-mdc-header-row { background-color: #2a2a2a; }
+  .mat-mdc-form-field { color: #e0e0e0; }
+  .navbar { background-color: #1a1a1a !important; }
+}

@@ -35,6 +35,15 @@ namespace HotelBookingAppWebApi.Models
         public string? CancellationReason { get; set; }
         public DateTime? ExpiryTime { get; set; }
 
+        // GST & Promo fields
+        public decimal GstPercent { get; set; } = 0;
+        public decimal GstAmount { get; set; } = 0;
+        public decimal DiscountPercent { get; set; } = 0;
+        public decimal DiscountAmount { get; set; } = 0;
+        public decimal WalletAmountUsed { get; set; } = 0;
+        public string? PromoCodeUsed { get; set; }
+        public decimal FinalAmount { get; set; } = 0;
+
         [Required]
         public DateTime CreatedDate { get; set; }
 

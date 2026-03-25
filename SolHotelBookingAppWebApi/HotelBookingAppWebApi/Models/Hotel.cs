@@ -33,6 +33,9 @@ namespace HotelBookingAppWebApi.Models
         [MaxLength(50)]
         public string? UpiId { get; set; }
 
+        /// <summary>GST percentage set by hotel admin (0–28)</summary>
+        public decimal GstPercent { get; set; } = 0;
+
         [Required]
         public DateTime CreatedAt { get; set; }
 

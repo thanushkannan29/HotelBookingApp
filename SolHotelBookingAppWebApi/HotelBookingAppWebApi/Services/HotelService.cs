@@ -90,12 +90,47 @@ namespace HotelBookingAppWebApi.Services
                 .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
                             h.City.ToLower() == request.City.ToLower());
 
+            // Amenity filter
+            if (request.AmenityIds != null && request.AmenityIds.Count > 0)
+            {
+                query = query.Where(h => h.RoomTypes!.Any(rt =>
+                    rt.RoomTypeAmenities!.Any(rta => request.AmenityIds.Contains(rta.AmenityId))));
+            }
+
+            // Room type filter
+            if (!string.IsNullOrWhiteSpace(request.RoomType))
+            {
+                query = query.Where(h => h.RoomTypes!.Any(rt =>
+                    rt.Name.ToLower().Contains(request.RoomType.ToLower())));
+            }
+
+            // Price filter
+            if (request.MinPrice.HasValue)
+            {
+                query = query.Where(h => h.RoomTypes!
+                    .SelectMany(rt => rt.Rates!)
+                    .Any(r => r.Rate >= request.MinPrice.Value));
+            }
+            if (request.MaxPrice.HasValue)
+            {
+                query = query.Where(h => h.RoomTypes!
+                    .SelectMany(rt => rt.Rates!)
+                    .Any(r => r.Rate <= request.MaxPrice.Value));
+            }
+
             var totalRecords = await query.CountAsync();
             if (totalRecords == 0)
-                throw new NotFoundException("No hotels found for the given city.");
+                throw new NotFoundException("No hotels found for the given criteria.");
 
-            var hotels = await query
-                .OrderBy(h => h.Name)
+            // Sort
+            IQueryable<Hotel> sorted = request.SortBy switch
+            {
+                "price_asc" => query.OrderBy(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
+                "price_desc" => query.OrderByDescending(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
+                _ => query.OrderBy(h => h.Name)
+            };
+
+            var hotels = await sorted
                 .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .Select(h => new HotelListItemDto
@@ -105,8 +140,7 @@ namespace HotelBookingAppWebApi.Services
                     City = h.City,
                     ImageUrl = h.ImageUrl,
                     AverageRating = h.Reviews != null && h.Reviews.Any()
-    ? Math.Round((decimal)(h.Reviews.Average(r => (decimal?)r.Rating) ?? 0m), 2) : 0m,
-
+                        ? Math.Round((decimal)(h.Reviews.Average(r => (decimal?)r.Rating) ?? 0m), 2) : 0m,
                     ReviewCount = h.Reviews!.Count(),
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
@@ -118,7 +152,8 @@ namespace HotelBookingAppWebApi.Services
             {
                 Hotels = hotels,
                 PageNumber = request.PageNumber,
-                RecordsCount = totalRecords
+                RecordsCount = totalRecords,
+                TotalCount = totalRecords
             };
         }
 
@@ -415,6 +450,25 @@ namespace HotelBookingAppWebApi.Services
             await _unitOfWork.SaveChangesAsync();
             await _auditLogService.LogAsync(null, "HotelUnblocked", "Hotel", hotelId,
                 "Hotel unblocked by SuperAdmin.");
+        }
+
+        // ── ADMIN: UPDATE GST ─────────────────────────────────────────────────
+        public async Task UpdateHotelGstAsync(Guid adminUserId, decimal gstPercent)
+        {
+            var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            if (user.HotelId == null)
+                throw new UnAuthorizedException("No hotel associated with this admin.");
+
+            var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
+                ?? throw new NotFoundException("Hotel not found.");
+
+            hotel.GstPercent = gstPercent;
+            await _unitOfWork.SaveChangesAsync();
+
+            await _auditLogService.LogAsync(adminUserId, "HotelGstUpdated", "Hotel",
+                hotel.HotelId, $"GST set to {gstPercent}%");
         }
 
         // ── SUPERADMIN: LIST ALL HOTELS (paged) ───────────────────────────────

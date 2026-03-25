@@ -1,4 +1,4 @@
-import { Component, inject, computed } from '@angular/core';
+import { Component, inject, computed, OnInit } from '@angular/core';
 import { RouterOutlet, Router, NavigationEnd } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -27,7 +27,7 @@ import { SpinnerComponent } from './shared/components/spinner/spinner.component'
     main.auth-main { min-height: 100vh; }
   `]
 })
-export class AppComponent {
+export class AppComponent implements OnInit {
   private router = inject(Router);
 
   private currentUrl = toSignal(
@@ -42,4 +42,12 @@ export class AppComponent {
     const url = this.currentUrl() ?? '';
     return !url.startsWith('/auth');
   });
+
+  ngOnInit() {
+    // Apply saved theme on app init
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark') {
+      document.body.classList.add('dark-theme');
+    }
+  }
 }

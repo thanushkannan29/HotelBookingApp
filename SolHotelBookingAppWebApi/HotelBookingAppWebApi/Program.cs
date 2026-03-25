@@ -91,11 +91,17 @@ builder.Services.AddScoped<ILogService, LogService>();
 builder.Services.AddScoped<IAuditLogService, AuditLogService>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAmenityService, AmenityService>();
+builder.Services.AddScoped<IWalletService, WalletService>();
+builder.Services.AddScoped<IPromoCodeService, PromoCodeService>();
+builder.Services.AddScoped<ICityService, CityService>();
+builder.Services.AddScoped<IAmenityRequestService, AmenityRequestService>();
+builder.Services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
 
 // ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
 builder.Services.AddHostedService<ReservationCleanupService>();       // cancels expired pending reservations
 builder.Services.AddHostedService<HotelDeactivationRefundService>();  // auto-refunds when hotel deactivated
 builder.Services.AddHostedService<NoShowAutoCancelService>();          // marks no-shows
+builder.Services.AddHostedService<SuperAdminRevenueBackgroundService>(); // 2% commission tracking
 
 // ── JWT AUTHENTICATION ─────────────────────────────────────────────────────────
 string jwtKey = builder.Configuration["Keys:Jwt"]

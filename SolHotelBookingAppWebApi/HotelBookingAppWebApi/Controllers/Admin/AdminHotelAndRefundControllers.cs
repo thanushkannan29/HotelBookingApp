@@ -30,6 +30,13 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             await _service.ToggleHotelStatusAsync(GetUserId(), isActive);
             return Ok(new { success = true, message = "Hotel status updated successfully." });
         }
+
+        [HttpPatch("gst")]
+        public async Task<IActionResult> UpdateGst([FromBody] UpdateHotelGstDto dto)
+        {
+            await _service.UpdateHotelGstAsync(GetUserId(), dto.GstPercent);
+            return Ok(new { success = true, message = "GST updated successfully." });
+        }
     }
 
     // ── REFUND REQUESTS ───────────────────────────────────────────────────────

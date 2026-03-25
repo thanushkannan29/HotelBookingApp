@@ -12,6 +12,13 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Admin
         /// <summary>UPI ID for simulated payment flow e.g. 'hotel@upi'</summary>
         public string? UpiId { get; set; }
     }
+
+    public class UpdateHotelGstDto
+    {
+        [System.ComponentModel.DataAnnotations.Required]
+        [System.ComponentModel.DataAnnotations.Range(0, 28, ErrorMessage = "GST must be between 0 and 28")]
+        public decimal GstPercent { get; set; }
+    }
 }
 
 namespace HotelBookingAppWebApi.Models.DTOs.Hotel.SuperAdmin

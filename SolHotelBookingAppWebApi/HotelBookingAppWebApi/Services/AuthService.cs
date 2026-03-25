@@ -15,6 +15,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository;
         private readonly IPasswordService _passwordService;
         private readonly ITokenService _tokenService;
+        private readonly IWalletService _walletService;
         private readonly IUnitOfWork _unitOfWork;
 
         public AuthService(
@@ -23,6 +24,7 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, UserProfileDetails> userProfileRepository,
             IPasswordService passwordService,
             ITokenService tokenService,
+            IWalletService walletService,
             IUnitOfWork unitOfWork)
         {
             _userRepository = userRepository;
@@ -30,6 +32,7 @@ namespace HotelBookingAppWebApi.Services
             _userProfileRepository = userProfileRepository;
             _passwordService = passwordService;
             _tokenService = tokenService;
+            _walletService = walletService;
             _unitOfWork = unitOfWork;
         }
 
@@ -77,6 +80,9 @@ namespace HotelBookingAppWebApi.Services
 
                 await _userProfileRepository.AddAsync(profile);
                 await _unitOfWork.CommitAsync();
+
+                // Create wallet for new guest
+                await _walletService.EnsureWalletExistsAsync(user.UserId);
 
                 return GenerateToken(user);
             }

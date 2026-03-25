@@ -22,6 +22,9 @@ namespace HotelBookingAppWebApi.Models
         [Required]
         public DateTime TransactionDate { get; set; }
 
+        public bool WalletUsed { get; set; } = false;
+        public decimal WalletAmountUsed { get; set; } = 0;
+
         public Reservation? Reservation { get; set; }
     }
 

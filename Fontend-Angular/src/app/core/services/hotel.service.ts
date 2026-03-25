@@ -37,6 +37,18 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
+  searchHotelsWithFilters(req: SearchHotelRequestDto & {
+    amenityIds?: string[];
+    minPrice?: number;
+    maxPrice?: number;
+    roomType?: string;
+    sortBy?: string;
+  }): Observable<SearchHotelResponseDto> {
+    return this.http.post<ApiResponse<SearchHotelResponseDto>>(
+      `${this.base}/public/hotels/search`, req
+    ).pipe(map(r => r.data!));
+  }
+
   getHotelDetails(hotelId: string): Observable<HotelDetailsDto> {
     return this.http.get<ApiResponse<HotelDetailsDto>>(
       `${this.base}/public/hotels/${hotelId}/full-details`

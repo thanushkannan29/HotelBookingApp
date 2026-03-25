@@ -1,16 +1,17 @@
 import { inject } from '@angular/core';
-import { Router, CanActivateFn } from '@angular/router';
+import { Router, CanActivateFn, ActivatedRouteSnapshot, RouterStateSnapshot } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAuthenticated()) return true;
+  localStorage.setItem('returnUrl', state.url);
   router.navigate(['/auth/login']);
   return false;
 };
 
-export const guestGuard: CanActivateFn = () => {
+export const guestGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAuthenticated() && auth.isGuest()) return true;
@@ -18,11 +19,12 @@ export const guestGuard: CanActivateFn = () => {
     router.navigate([auth.getRedirectUrl()]);
     return false;
   }
+  localStorage.setItem('returnUrl', state.url);
   router.navigate(['/auth/login']);
   return false;
 };
 
-export const adminGuard: CanActivateFn = () => {
+export const adminGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAuthenticated() && auth.isAdmin()) return true;
@@ -30,11 +32,12 @@ export const adminGuard: CanActivateFn = () => {
     router.navigate([auth.getRedirectUrl()]);
     return false;
   }
+  localStorage.setItem('returnUrl', state.url);
   router.navigate(['/auth/login']);
   return false;
 };
 
-export const superAdminGuard: CanActivateFn = () => {
+export const superAdminGuard: CanActivateFn = (route: ActivatedRouteSnapshot, state: RouterStateSnapshot) => {
   const auth = inject(AuthService);
   const router = inject(Router);
   if (auth.isAuthenticated() && auth.isSuperAdmin()) return true;
@@ -42,6 +45,7 @@ export const superAdminGuard: CanActivateFn = () => {
     router.navigate([auth.getRedirectUrl()]);
     return false;
   }
+  localStorage.setItem('returnUrl', state.url);
   router.navigate(['/auth/login']);
   return false;
 };

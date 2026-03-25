@@ -66,14 +66,32 @@ namespace HotelBookingAppWebApi.Services
             return new PagedAuditLogResponseDto { TotalCount = total, Logs = logs };
         }
 
-        // ── SUPERADMIN: ALL LOGS ──────────────────────────────────────────────
-        public async Task<PagedAuditLogResponseDto> GetAllAuditLogsAsync(int page, int pageSize)
+        // ── SUPERADMIN: ALL LOGS (with filters) ──────────────────────────────
+        public async Task<PagedAuditLogResponseDto> GetAllAuditLogsAsync(
+            int page, int pageSize,
+            Guid? hotelId = null, Guid? userId = null,
+            string? action = null, DateTime? dateFrom = null, DateTime? dateTo = null)
         {
-            var query = _auditRepo.GetQueryable()
-                .OrderByDescending(al => al.CreatedAt);
+            var query = _auditRepo.GetQueryable().AsQueryable();
+
+            if (userId.HasValue)
+                query = query.Where(al => al.UserId == userId.Value);
+
+            if (hotelId.HasValue)
+                query = query.Where(al => al.EntityId == hotelId.Value);
+
+            if (!string.IsNullOrWhiteSpace(action))
+                query = query.Where(al => al.Action.Contains(action));
+
+            if (dateFrom.HasValue)
+                query = query.Where(al => al.CreatedAt >= dateFrom.Value);
+
+            if (dateTo.HasValue)
+                query = query.Where(al => al.CreatedAt <= dateTo.Value);
+
+            query = query.OrderByDescending(al => al.CreatedAt);
 
             var total = await query.CountAsync();
-
             var logs = await query
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

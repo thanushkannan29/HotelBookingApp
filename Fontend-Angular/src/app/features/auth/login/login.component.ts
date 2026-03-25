@@ -40,7 +40,9 @@ export class LoginComponent {
     this.auth.login(this.form.value as any).subscribe({
       next: () => {
         this.toast.success('Welcome back!');
-        this.router.navigate([this.auth.getRedirectUrl()]);
+        const returnUrl = localStorage.getItem('returnUrl') || this.auth.getRedirectUrl();
+        localStorage.removeItem('returnUrl');
+        this.router.navigateByUrl(returnUrl);
       },
       error: () => this.isLoading.set(false),
       complete: () => this.isLoading.set(false),

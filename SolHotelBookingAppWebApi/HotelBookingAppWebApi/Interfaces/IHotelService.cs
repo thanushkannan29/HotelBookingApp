@@ -18,6 +18,7 @@ namespace HotelBookingAppWebApi.Interfaces
         // ── Admin ─────────────────────────────────────────────────────────────
         Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto);
         Task ToggleHotelStatusAsync(Guid userId, bool isActive);
+        Task UpdateHotelGstAsync(Guid adminUserId, decimal gstPercent);
 
         // ── SuperAdmin ────────────────────────────────────────────────────────
         Task<IEnumerable<SuperAdminHotelListDto>> GetAllHotelsForSuperAdminAsync();

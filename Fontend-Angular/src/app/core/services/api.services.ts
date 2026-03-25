@@ -263,6 +263,16 @@ export class RoomTypeService {
     return this.http.post<ApiResponse<number>>(`${this.base}/admin/roomtypes/rate-by-date`, dto)
       .pipe(map(r => r.data!));
   }
+
+  getRates(roomTypeId: string): Observable<any[]> {
+    return this.http.get<ApiResponse<any[]>>(`${this.base}/admin/roomtypes/${roomTypeId}/rates`)
+      .pipe(map(r => r.data!));
+  }
+
+  updateHotelGst(gstPercent: number): Observable<void> {
+    return this.http.patch<any>(`${this.base}/admin/hotels/gst`, { gstPercent })
+      .pipe(map(() => undefined));
+  }
 }
 
 // ─── ROOM SERVICE ─────────────────────────────────────────────────────────────

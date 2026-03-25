@@ -5,7 +5,8 @@ import { environment } from '../../../environments/environment';
 import {
   ApiResponse, CreateReservationDto, ReservationResponseDto,
   ReservationDetailsDto, PagedReservationResponseDto,
-  CancelReservationDto, AvailableRoomDto
+  CancelReservationDto, AvailableRoomDto, QrPaymentResponseDto,
+  ValidatePromoCodeDto, PromoCodeValidationResultDto
 } from '../models/models';
 
 @Injectable({ providedIn: 'root' })
@@ -55,9 +56,26 @@ export class BookingService {
     ).pipe(map(r => r.data!));
   }
 
+  getPaymentQr(reservationId: string): Observable<QrPaymentResponseDto> {
+    return this.http.get<ApiResponse<QrPaymentResponseDto>>(
+      `${this.base}/guest/payment/qr/${reservationId}`
+    ).pipe(map(r => r.data!));
+  }
+
+  validatePromoCode(dto: ValidatePromoCodeDto): Observable<PromoCodeValidationResultDto> {
+    return this.http.post<ApiResponse<PromoCodeValidationResultDto>>(
+      `${this.base}/guest/promo-codes/validate`, dto
+    ).pipe(map(r => r.data!));
+  }
+
   // ── ADMIN ─────────────────────────────────────────────────────────────────
-  getHotelReservations(page: number, pageSize: number): Observable<PagedReservationResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getHotelReservations(
+    page: number, pageSize: number,
+    status?: string, search?: string
+  ): Observable<PagedReservationResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (status) params = params.set('status', status);
+    if (search) params = params.set('search', search);
     return this.http.get<ApiResponse<PagedReservationResponseDto>>(
       `${this.base}/admin/reservations`, { params }
     ).pipe(map(r => r.data!));
@@ -66,6 +84,12 @@ export class BookingService {
   completeReservation(code: string): Observable<void> {
     return this.http.patch<any>(
       `${this.base}/admin/reservations/${code}/complete`, {}
+    ).pipe(map(() => undefined));
+  }
+
+  confirmReservation(code: string): Observable<void> {
+    return this.http.patch<any>(
+      `${this.base}/admin/reservations/${code}/confirm`, {}
     ).pipe(map(() => undefined));
   }
 }

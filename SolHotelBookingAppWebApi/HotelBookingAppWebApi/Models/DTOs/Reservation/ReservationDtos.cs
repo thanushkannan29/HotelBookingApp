@@ -21,6 +21,12 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
 
         /// <summary>Optional: guest can explicitly select room IDs; if empty, system auto-assigns</summary>
         public List<Guid>? SelectedRoomIds { get; set; }
+
+        /// <summary>Optional promo code to apply discount</summary>
+        public string? PromoCodeUsed { get; set; }
+
+        /// <summary>Amount from wallet to deduct (0 = no wallet payment)</summary>
+        public decimal WalletAmountToUse { get; set; } = 0;
     }
 
     public class ReservationResponseDto
@@ -28,6 +34,12 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public string ReservationCode { get; set; } = string.Empty;
         public Guid ReservationId { get; set; }
         public decimal TotalAmount { get; set; }
+        public decimal GstPercent { get; set; }
+        public decimal GstAmount { get; set; }
+        public decimal DiscountPercent { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal WalletAmountUsed { get; set; }
+        public decimal FinalAmount { get; set; }
         public string Status { get; set; } = string.Empty;
         public int TotalRooms { get; set; }
         public List<RoomSummaryDto> Rooms { get; set; } = new();
@@ -52,6 +64,13 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public DateOnly CheckOutDate { get; set; }
         public int NumberOfRooms { get; set; }
         public decimal TotalAmount { get; set; }
+        public decimal GstPercent { get; set; }
+        public decimal GstAmount { get; set; }
+        public decimal DiscountPercent { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal WalletAmountUsed { get; set; }
+        public decimal FinalAmount { get; set; }
+        public string? PromoCodeUsed { get; set; }
         public string Status { get; set; } = string.Empty;
         public bool IsCheckedIn { get; set; }
         public DateTime CreatedDate { get; set; }
@@ -76,5 +95,13 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public string RoomNumber { get; set; } = string.Empty;
         public int Floor { get; set; }
         public string RoomTypeName { get; set; } = string.Empty;
+    }
+
+    public class QrPaymentResponseDto
+    {
+        public string UpiId { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string QrCodeBase64 { get; set; } = string.Empty;
+        public string HotelName { get; set; } = string.Empty;
     }
 }

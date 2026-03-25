@@ -27,6 +27,14 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<AuditLog> AuditLogs { get; set; }
         // Correction 2: Amenity master table
         public DbSet<Amenity> Amenities { get; set; }
+        // New tables
+        public DbSet<City> Cities { get; set; }
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<PromoCode> PromoCodes { get; set; }
+        public DbSet<AmenityRequest> AmenityRequests { get; set; }
+        public DbSet<SuperAdminRevenue> SuperAdminRevenues { get; set; }
+        public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -247,6 +255,137 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Amenity>()
                 .HasIndex(a => a.Name)
                 .IsUnique();
+
+            // ─── ROOM TYPE AMENITY (many-to-many join) ────────────────────────
+            modelBuilder.Entity<RoomTypeAmenity>()
+                .HasKey(rta => new { rta.RoomTypeId, rta.AmenityId });
+
+            modelBuilder.Entity<RoomTypeAmenity>()
+                .HasOne(rta => rta.RoomType)
+                .WithMany(rt => rt.RoomTypeAmenities)
+                .HasForeignKey(rta => rta.RoomTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RoomTypeAmenity>()
+                .HasOne(rta => rta.Amenity)
+                .WithMany()
+                .HasForeignKey(rta => rta.AmenityId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ─── WALLET ───────────────────────────────────────────────────────
+            modelBuilder.Entity<Wallet>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Wallet>()
+                .Property(w => w.Balance)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .HasOne(wt => wt.Wallet)
+                .WithMany(w => w.WalletTransactions)
+                .HasForeignKey(wt => wt.WalletId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .Property(wt => wt.Amount)
+                .HasPrecision(18, 2);
+
+            // ─── PROMO CODE ───────────────────────────────────────────────────
+            modelBuilder.Entity<PromoCode>()
+                .HasIndex(p => p.Code)
+                .IsUnique();
+
+            modelBuilder.Entity<PromoCode>()
+                .Property(p => p.DiscountPercent)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<PromoCode>()
+                .HasOne(p => p.User)
+                .WithMany()
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PromoCode>()
+                .HasOne(p => p.Hotel)
+                .WithMany()
+                .HasForeignKey(p => p.HotelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<PromoCode>()
+                .HasOne(p => p.Reservation)
+                .WithMany()
+                .HasForeignKey(p => p.ReservationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // ─── AMENITY REQUEST ──────────────────────────────────────────────
+            modelBuilder.Entity<AmenityRequest>()
+                .HasOne(ar => ar.RequestedByAdmin)
+                .WithMany()
+                .HasForeignKey(ar => ar.RequestedByAdminId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<AmenityRequest>()
+                .Property(ar => ar.Status)
+                .HasConversion<int>();
+
+            // ─── SUPER ADMIN REVENUE ──────────────────────────────────────────
+            modelBuilder.Entity<SuperAdminRevenue>()
+                .HasOne(sr => sr.Reservation)
+                .WithMany()
+                .HasForeignKey(sr => sr.ReservationId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SuperAdminRevenue>()
+                .HasOne(sr => sr.Hotel)
+                .WithMany()
+                .HasForeignKey(sr => sr.HotelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SuperAdminRevenue>()
+                .Property(sr => sr.ReservationAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<SuperAdminRevenue>()
+                .Property(sr => sr.CommissionAmount)
+                .HasPrecision(18, 2);
+
+            // ─── RESERVATION — new decimal fields ────────────────────────────
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.GstAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.DiscountAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.WalletAmountUsed)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.FinalAmount)
+                .HasPrecision(18, 2);
+
+            // ─── HOTEL — GST ──────────────────────────────────────────────────
+            modelBuilder.Entity<Hotel>()
+                .Property(h => h.GstPercent)
+                .HasPrecision(5, 2);
+
+            // ─── TRANSACTION — wallet fields ──────────────────────────────────
+            modelBuilder.Entity<Transaction>()
+                .Property(t => t.WalletAmountUsed)
+                .HasPrecision(18, 2);
+
+            // ─── CITY ─────────────────────────────────────────────────────────
+            modelBuilder.Entity<City>()
+                .HasIndex(c => c.CityName);
+
+            modelBuilder.Entity<City>()
+                .Property(c => c.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
 
             // Correction 2: Seed data — 30 common amenities
             modelBuilder.Entity<Amenity>().HasData(
