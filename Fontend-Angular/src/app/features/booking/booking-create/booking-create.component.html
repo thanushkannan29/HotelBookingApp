@@ -114,7 +114,7 @@
 
             <!-- ═══ STEP 2: Promo & Wallet ═══ -->
             <mat-step label="🎫 Promo & 💰 Wallet">
-              <div class="step-form">
+              <div class="step-form" [formGroup]="bookingForm">
 
                 <!-- Promo Code -->
                 <mat-card class="mb-3">
@@ -125,7 +125,7 @@
                     <div class="d-flex gap-2 align-items-start mt-2">
                       <mat-form-field appearance="outline" class="flex-grow-1">
                         <mat-label>Enter promo code</mat-label>
-                        <input matInput [formControl]="bookingForm.get('promoCode')!" />
+                        <input matInput formControlName="promoCode" />
                         @if (promoValid() === true) {
                           <mat-icon matSuffix style="color:#2e7d32">check_circle</mat-icon>
                         }
@@ -183,7 +183,7 @@
                     @if (useWallet() && walletInfo() && walletInfo()!.balance > 0) {
                       <mat-form-field appearance="outline" class="w-100 mt-2">
                         <mat-label>Amount to use (₹)</mat-label>
-                        <input matInput type="number" [formControl]="bookingForm.get('walletAmount')!"
+                        <input matInput type="number" formControlName="walletAmount"
                                [max]="walletInfo()!.balance" min="0" />
                         <mat-hint>
                           Available: ₹{{ walletInfo()!.balance | number:'1.2-2' }} ·
