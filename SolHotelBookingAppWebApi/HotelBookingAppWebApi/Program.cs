@@ -98,10 +98,11 @@ builder.Services.AddScoped<IAmenityRequestService, AmenityRequestService>();
 builder.Services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
 
 // ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
-builder.Services.AddHostedService<ReservationCleanupService>();       // cancels expired pending reservations
-builder.Services.AddHostedService<HotelDeactivationRefundService>();  // auto-refunds when hotel deactivated
-builder.Services.AddHostedService<NoShowAutoCancelService>();          // marks no-shows
+builder.Services.AddHostedService<ReservationCleanupService>();          // cancels expired pending reservations
+builder.Services.AddHostedService<HotelDeactivationRefundService>();     // auto-refunds when hotel deactivated
+builder.Services.AddHostedService<NoShowAutoCancelService>();             // marks no-shows
 builder.Services.AddHostedService<SuperAdminRevenueBackgroundService>(); // 2% commission tracking
+builder.Services.AddHostedService<PromoCodeGenerationService>();          // generates promo codes for completed reservations
 
 // ── JWT AUTHENTICATION ─────────────────────────────────────────────────────────
 string jwtKey = builder.Configuration["Keys:Jwt"]

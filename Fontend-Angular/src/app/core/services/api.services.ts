@@ -126,13 +126,13 @@ export class RefundService {
   }
 
   approveRefund(id: string, dto: ProcessRefundDto): Observable<RefundRequestResponseDto> {
-    return this.http.post<ApiResponse<RefundRequestResponseDto>>(
+    return this.http.patch<ApiResponse<RefundRequestResponseDto>>(
       `${this.base}/admin/refund-requests/${id}/approve`, dto
     ).pipe(map(r => r.data!));
   }
 
   rejectRefund(id: string, dto: ProcessRefundDto): Observable<RefundRequestResponseDto> {
-    return this.http.post<ApiResponse<RefundRequestResponseDto>>(
+    return this.http.patch<ApiResponse<RefundRequestResponseDto>>(
       `${this.base}/admin/refund-requests/${id}/reject`, dto
     ).pipe(map(r => r.data!));
   }
@@ -291,9 +291,9 @@ export class RoomService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getRooms(pageNumber: number, pageSize: number): Observable<RoomListResponseDto[]> {
+  getRooms(pageNumber: number, pageSize: number): Observable<any> {
     const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<RoomListResponseDto[]>>(
+    return this.http.get<ApiResponse<any>>(
       `${this.base}/admin/rooms`, { params }
     ).pipe(map(r => r.data!));
   }

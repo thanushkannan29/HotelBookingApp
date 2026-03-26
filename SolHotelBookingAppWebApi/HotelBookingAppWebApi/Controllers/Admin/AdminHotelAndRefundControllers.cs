@@ -66,7 +66,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         /// Body: { adminResponse, refundPaymentMethod, refundTransactionRef }
         /// Correction 8: RefundPaymentMethod and RefundTransactionRef are now saved.
         /// </summary>
-        [HttpPost("{id}/approve")]
+        [HttpPatch("{id}/approve")]
         public async Task<IActionResult> Approve(Guid id, [FromBody] ProcessRefundDto dto)
         {
             var result = await _service.ApproveRefundAsync(id, GetUserId(), dto);
@@ -74,7 +74,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         /// <summary>Reject a refund request</summary>
-        [HttpPost("{id}/reject")]
+        [HttpPatch("{id}/reject")]
         public async Task<IActionResult> Reject(Guid id, [FromBody] ProcessRefundDto dto)
         {
             var result = await _service.RejectRefundAsync(id, GetUserId(), dto.AdminResponse);

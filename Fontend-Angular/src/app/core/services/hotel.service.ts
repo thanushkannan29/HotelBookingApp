@@ -105,12 +105,19 @@ export class HotelService {
       `${this.base}/superadmin/hotels`, { params }
     ).pipe(map(r => r.data!));
   }
+
+  blockHotel(id: string): Observable<void> {
     return this.http.patch<any>(`${this.base}/superadmin/hotels/${id}/block`, {})
       .pipe(map(() => undefined));
   }
 
   unblockHotel(id: string): Observable<void> {
     return this.http.patch<any>(`${this.base}/superadmin/hotels/${id}/unblock`, {})
+      .pipe(map(() => undefined));
+  }
+
+  setHotelGst(gstPercent: number): Observable<void> {
+    return this.http.patch<any>(`${this.base}/admin/hotels/gst`, { gstPercent })
       .pipe(map(() => undefined));
   }
 }

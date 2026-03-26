@@ -92,7 +92,7 @@ export class RoomTypeManagementComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.roomTypeService.getRoomTypes().subscribe((res: any) => {
+    this.roomTypeService.getRoomTypes(this.currentPage, this.pageSize).subscribe((res: any) => {
       if (Array.isArray(res)) {
         this.roomTypes.set(res);
         this.totalCount.set(res.length);

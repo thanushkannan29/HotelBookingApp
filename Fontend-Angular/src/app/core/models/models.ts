@@ -174,22 +174,22 @@ export interface PagedSuperAdminHotelResponseDto {
 }
 
 // ─── ROOM TYPE ────────────────────────────────────────────────────────────────
-// F8B: Added imageUrl
+// F8B: Added imageUrl, amenityIds replaces free-text amenities
 export interface CreateRoomTypeDto {
   name: string;
   description: string;
   maxOccupancy: number;
-  amenities: string;
+  amenityIds: string[];
   imageUrl?: string;
 }
 
-// F8B: Added imageUrl
+// F8B: Added imageUrl, amenityIds replaces free-text amenities
 export interface UpdateRoomTypeDto {
   roomTypeId: string;
   name: string;
   description: string;
   maxOccupancy: number;
-  amenities: string;
+  amenityIds: string[];
   imageUrl?: string;
 }
 
