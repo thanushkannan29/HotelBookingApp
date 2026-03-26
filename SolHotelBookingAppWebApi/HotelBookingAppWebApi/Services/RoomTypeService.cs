@@ -63,9 +63,8 @@ namespace HotelBookingAppWebApi.Services
                 };
 
                 await _roomTypeRepo.AddAsync(roomType);
-                await _unitOfWork.CommitAsync();
 
-                // Save amenity associations
+                // Save amenity associations in the SAME transaction
                 if (dto.AmenityIds != null && dto.AmenityIds.Count > 0)
                 {
                     foreach (var amenityId in dto.AmenityIds)
@@ -76,8 +75,9 @@ namespace HotelBookingAppWebApi.Services
                             AmenityId = amenityId
                         });
                     }
-                    await _unitOfWork.CommitAsync();
                 }
+
+                await _unitOfWork.CommitAsync();
 
                 await _auditLogService.LogAsync(userId, "RoomTypeAdded", "RoomType",
                     roomType.RoomTypeId, JsonSerializer.Serialize(dto));

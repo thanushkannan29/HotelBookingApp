@@ -16,6 +16,8 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task BeginTransactionAsync()
         {
+            // If a transaction is already active, don't start a new one
+            if (_transaction != null) return;
             _transaction = await _context.Database.BeginTransactionAsync();
         }
 
@@ -23,21 +25,41 @@ namespace HotelBookingAppWebApi.Services
         {
             if (_transaction == null)
                 throw new InvalidOperationException("No active transaction to commit.");
-            await _context.SaveChangesAsync();
-            await _transaction.CommitAsync();
+
+            try
+            {
+                await _context.SaveChangesAsync();
+                await _transaction.CommitAsync();
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
         }
 
         public async Task RollbackAsync()
         {
-            if (_transaction == null)
-                throw new InvalidOperationException("No active transaction to roll back.");
-            await _transaction.RollbackAsync();
+            if (_transaction == null) return; // nothing to roll back
+
+            try
+            {
+                await _transaction.RollbackAsync();
+            }
+            finally
+            {
+                await _transaction.DisposeAsync();
+                _transaction = null;
+            }
         }
 
         public async Task SaveChangesAsync()
             => await _context.SaveChangesAsync();
 
         public void Dispose()
-            => _transaction?.Dispose();
+        {
+            _transaction?.Dispose();
+            _transaction = null;
+        }
     }
 }

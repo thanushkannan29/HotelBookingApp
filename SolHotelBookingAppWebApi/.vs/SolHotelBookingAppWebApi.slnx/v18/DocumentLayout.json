@@ -771,7 +771,7 @@
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\AuthService.cs",
               "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\AuthService.cs",
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\AuthService.cs",
-              "ViewState": "AgIAAJwAAAAAAAAAAIAwwKcAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAKUAAAAAAAAAAAA3wLAAAAAQAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-23T09:42:48.29Z",
               "EditorCaption": ""
@@ -784,7 +784,7 @@
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\UnitOfWork.cs",
               "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\UnitOfWork.cs",
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\UnitOfWork.cs",
-              "ViewState": "AgIAAA4AAAAAAAAAAAAgwBgAAABYAAAAAAAAAA==",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAkwCUAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-03-17T10:38:35.403Z",
               "EditorCaption": ""
@@ -799,8 +799,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\SuperAdmin\\SuperAdminCityAndRevenueControllers.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA8AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-26T03:35:36.114Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-26T03:35:36.114Z"
             },
             {
               "$type": "Document",
@@ -812,8 +811,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Migrations\\20260326041230_FullHotelbookingUpgrade.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-26T04:12:30.241Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-26T04:12:30.241Z"
             },
             {
               "$type": "Document",
