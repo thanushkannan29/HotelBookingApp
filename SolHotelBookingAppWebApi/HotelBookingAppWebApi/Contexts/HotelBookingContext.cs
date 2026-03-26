@@ -354,8 +354,16 @@ namespace HotelBookingAppWebApi.Contexts
 
             // ─── RESERVATION — new decimal fields ────────────────────────────
             modelBuilder.Entity<Reservation>()
+                .Property(r => r.GstPercent)
+                .HasPrecision(5, 2);
+
+            modelBuilder.Entity<Reservation>()
                 .Property(r => r.GstAmount)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.DiscountPercent)
+                .HasPrecision(5, 2);
 
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.DiscountAmount)

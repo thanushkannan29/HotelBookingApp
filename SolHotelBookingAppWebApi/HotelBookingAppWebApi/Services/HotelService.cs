@@ -219,6 +219,7 @@ namespace HotelBookingAppWebApi.Services
                         .ThenInclude(rta => rta.Amenity)
                 .Include(h => h.Reviews!)
                     .ThenInclude(r => r.User)
+                .AsSplitQuery()
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
 

@@ -6,6 +6,47 @@
     "version": "v1"
   },
   "paths": {
+    "/api/admin/amenity-requests": {
+      "post": {
+        "tags": [
+          "AdminAmenityRequest"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAmenityRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAmenityRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateAmenityRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "AdminAmenityRequest"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/admin/audit-logs": {
       "get": {
         "tags": [
@@ -83,6 +124,37 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/hotels/gst": {
+      "patch": {
+        "tags": [
+          "AdminHotel"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHotelGstDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHotelGstDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateHotelGstDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Success"
@@ -219,7 +291,7 @@
       }
     },
     "/api/admin/refund-requests/{id}/approve": {
-      "post": {
+      "patch": {
         "tags": [
           "AdminRefundRequest"
         ],
@@ -261,7 +333,7 @@
       }
     },
     "/api/admin/refund-requests/{id}/reject": {
-      "post": {
+      "patch": {
         "tags": [
           "AdminRefundRequest"
         ],
@@ -309,6 +381,21 @@
         ],
         "parameters": [
           {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "All"
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "page",
             "in": "query",
             "schema": {
@@ -335,6 +422,28 @@
       }
     },
     "/api/admin/reservations/{code}/complete": {
+      "patch": {
+        "tags": [
+          "AdminReservation"
+        ],
+        "parameters": [
+          {
+            "name": "code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/reservations/{code}/confirm": {
       "patch": {
         "tags": [
           "AdminReservation"
@@ -740,6 +849,29 @@
         }
       }
     },
+    "/api/admin/roomtypes/{roomTypeId}/rates": {
+      "get": {
+        "tags": [
+          "AdminRoomType"
+        ],
+        "parameters": [
+          {
+            "name": "roomTypeId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/admin/transactions/{transactionId}/mark-failed": {
       "patch": {
         "tags": [
@@ -748,6 +880,29 @@
         "parameters": [
           {
             "name": "transactionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/admin/wallet/guest/{guestUserId}": {
+      "get": {
+        "tags": [
+          "AdminWallet"
+        ],
+        "parameters": [
+          {
+            "name": "guestUserId",
             "in": "path",
             "required": true,
             "schema": {
@@ -885,6 +1040,72 @@
         "tags": [
           "Dashboard"
         ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/payment/qr/{reservationId}": {
+      "get": {
+        "tags": [
+          "GuestPayment"
+        ],
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/promo-codes": {
+      "get": {
+        "tags": [
+          "GuestPromoCode"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/promo-codes/validate": {
+      "post": {
+        "tags": [
+          "GuestPromoCode"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidatePromoCodeDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidatePromoCodeDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidatePromoCodeDto"
+              }
+            }
+          }
+        },
         "responses": {
           "200": {
             "description": "Success"
@@ -1106,6 +1327,69 @@
         }
       }
     },
+    "/api/guest/wallet": {
+      "get": {
+        "tags": [
+          "GuestWallet"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/guest/wallet/topup": {
+      "post": {
+        "tags": [
+          "GuestWallet"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopUpWalletDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopUpWalletDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopUpWalletDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/logs/my-logs": {
       "get": {
         "tags": [
@@ -1203,19 +1487,31 @@
         }
       }
     },
-    "/api/public/cities/search": {
+    "/api/public/cities": {
       "get": {
         "tags": [
           "PublicCity"
         ],
         "parameters": [
           {
-            "name": "query",
+            "name": "search",
             "in": "query",
             "schema": {
               "type": "string"
             }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/cities/all": {
+      "get": {
+        "tags": [
+          "PublicCity"
         ],
         "responses": {
           "200": {
@@ -1637,6 +1933,111 @@
         }
       }
     },
+    "/api/superadmin/amenity-requests": {
+      "get": {
+        "tags": [
+          "SuperAdminAmenityRequest"
+        ],
+        "parameters": [
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "default": "All"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/amenity-requests/{id}/approve": {
+      "patch": {
+        "tags": [
+          "SuperAdminAmenityRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/amenity-requests/{id}/reject": {
+      "patch": {
+        "tags": [
+          "SuperAdminAmenityRequest"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAmenityRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAmenityRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/RejectAmenityRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/superadmin/audit-logs": {
       "get": {
         "tags": [
@@ -1659,6 +2060,199 @@
               "type": "integer",
               "format": "int32",
               "default": 20
+            }
+          },
+          {
+            "name": "hotelId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dateFrom",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "dateTo",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/cities": {
+      "get": {
+        "tags": [
+          "SuperAdminCity"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "SuperAdminCity"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCityDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCityDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateCityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/cities/{id}": {
+      "put": {
+        "tags": [
+          "SuperAdminCity"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCityDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCityDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCityDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "SuperAdminCity"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/cities/{id}/status": {
+      "patch": {
+        "tags": [
+          "SuperAdminCity"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
             }
           }
         ],
@@ -1728,6 +2322,73 @@
       "patch": {
         "tags": [
           "SuperAdminHotel"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/revenue": {
+      "get": {
+        "tags": [
+          "SuperAdminRevenue"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/revenue/summary": {
+      "get": {
+        "tags": [
+          "SuperAdminRevenue"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/revenue/{id}/mark-sent": {
+      "patch": {
+        "tags": [
+          "SuperAdminRevenue"
         ],
         "parameters": [
           {
@@ -1983,6 +2644,56 @@
         },
         "additionalProperties": false
       },
+      "CreateAmenityRequestDto": {
+        "required": [
+          "amenityName",
+          "category"
+        ],
+        "type": "object",
+        "properties": {
+          "amenityName": {
+            "maxLength": 200,
+            "minLength": 1,
+            "type": "string"
+          },
+          "category": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "iconName": {
+            "maxLength": 100,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "CreateCityDto": {
+        "required": [
+          "cityName",
+          "stateName"
+        ],
+        "type": "object",
+        "properties": {
+          "cityName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "stateName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "pinCode": {
+            "maxLength": 10,
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
       "CreateInventoryDto": {
         "required": [
           "endDate",
@@ -2067,6 +2778,14 @@
               "format": "uuid"
             },
             "nullable": true
+          },
+          "promoCodeUsed": {
+            "type": "string",
+            "nullable": true
+          },
+          "walletAmountToUse": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -2150,6 +2869,14 @@
           },
           "amenities": {
             "type": "string",
+            "nullable": true
+          },
+          "amenityIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
             "nullable": true
           },
           "imageUrl": {
@@ -2374,6 +3101,19 @@
         },
         "additionalProperties": false
       },
+      "RejectAmenityRequestDto": {
+        "required": [
+          "note"
+        ],
+        "type": "object",
+        "properties": {
+          "note": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
       "SearchHotelRequestDto": {
         "type": "object",
         "properties": {
@@ -2396,6 +3136,47 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "amenityIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
+          "minPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "maxPrice": {
+            "type": "number",
+            "format": "double",
+            "nullable": true
+          },
+          "roomType": {
+            "type": "string",
+            "nullable": true
+          },
+          "sortBy": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "TopUpWalletDto": {
+        "required": [
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "maximum": 100000,
+            "minimum": 1,
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -2424,6 +3205,31 @@
           },
           "isActive": {
             "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateCityDto": {
+        "required": [
+          "cityName",
+          "stateName"
+        ],
+        "type": "object",
+        "properties": {
+          "cityName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "stateName": {
+            "maxLength": 100,
+            "minLength": 1,
+            "type": "string"
+          },
+          "pinCode": {
+            "maxLength": 10,
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false
@@ -2458,6 +3264,21 @@
           "upiId": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateHotelGstDto": {
+        "required": [
+          "gstPercent"
+        ],
+        "type": "object",
+        "properties": {
+          "gstPercent": {
+            "maximum": 28,
+            "minimum": 0,
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false
@@ -2552,6 +3373,14 @@
             "type": "string",
             "nullable": true
           },
+          "amenityIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "nullable": true
+          },
           "imageUrl": {
             "type": "string",
             "nullable": true
@@ -2616,6 +3445,29 @@
           "profileImageUrl": {
             "type": "string",
             "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "ValidatePromoCodeDto": {
+        "required": [
+          "code",
+          "hotelId",
+          "totalAmount"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "hotelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "totalAmount": {
+            "type": "number",
+            "format": "double"
           }
         },
         "additionalProperties": false

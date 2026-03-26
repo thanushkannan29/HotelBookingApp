@@ -59,7 +59,14 @@ builder.Services.AddSwaggerGen(c =>
 
 // ── DATABASE ───────────────────────────────────────────────────────────────────
 builder.Services.AddDbContext<HotelBookingContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("Developer")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("Developer"),
+        sqlOptions => sqlOptions.EnableRetryOnFailure(
+            maxRetryCount: 3,
+            maxRetryDelay: TimeSpan.FromSeconds(5),
+            errorNumbersToAdd: null
+        )
+    ));
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
 builder.Services.AddCors(options =>
