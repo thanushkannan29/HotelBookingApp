@@ -6,6 +6,7 @@
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--color-border);
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  transition: background 0.3s, border-color 0.3s;
 }
 
 .nav-container {
@@ -22,7 +23,7 @@
   width: 36px;
   height: 36px;
   object-fit: contain;
-  border-radius: 8px;  // optional — softens square logo edges
+  border-radius: 8px;
 }
 
 .nav-brand {
@@ -65,7 +66,7 @@
   }
 
   &.active {
-    background: rgba(45, 58, 140, 0.08);
+    background: rgba(21, 101, 192, 0.1);
     color: var(--color-primary);
   }
 }
@@ -74,25 +75,40 @@
   margin-left: 8px;
   padding: 8px 18px;
   background: var(--color-primary);
-  color: white;
+  color: white !important;
   border-radius: 8px;
   font-size: 0.875rem;
   font-weight: 500;
   text-decoration: none;
   transition: background var(--transition);
 
-  &:hover { background: var(--color-primary-light); }
+  &:hover { background: var(--color-primary-light); color: white !important; }
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+
+  @media (max-width: 768px) { .user-name { display: none; } }
+}
+
+.theme-toggle {
+  color: var(--color-text-secondary) !important;
+  transition: color var(--transition);
+
+  &:hover { color: var(--color-primary) !important; }
 }
 
 .user-btn {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
   padding: 6px 10px 6px 6px;
   border: 1px solid var(--color-border);
   border-radius: 100px;
-  background: white;
+  background: var(--color-surface);
   cursor: pointer;
   transition: all var(--transition);
   font-family: var(--font-body);
@@ -101,7 +117,7 @@
 
   &:hover {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(45, 58, 140, 0.1);
+    box-shadow: 0 0 0 3px rgba(21, 101, 192, 0.1);
   }
 
   @media (max-width: 768px) { display: none; }
@@ -126,6 +142,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  color: var(--color-text-primary);
 }
 
 .menu-header {
@@ -162,7 +179,7 @@
 }
 
 .mobile-menu {
-  background: white;
+  background: var(--color-surface);
   border-top: 1px solid var(--color-border);
   padding: 12px 16px;
   display: flex;
@@ -191,4 +208,34 @@
       width: 100%;
     }
   }
+}
+
+// ─── DARK MODE ────────────────────────────────────────────────────────────────
+:host-context(body.dark-theme) {
+  .navbar {
+    background: rgba(18, 18, 18, 0.97);
+    border-bottom-color: #333;
+  }
+
+  .nav-link {
+    color: #aaa;
+    &:hover { background: #2a2a2a; color: #e0e0e0; }
+    &.active { background: rgba(144, 202, 249, 0.12); color: #90caf9; }
+  }
+
+  .user-btn {
+    background: #1e1e1e;
+    border-color: #444;
+    color: #e0e0e0;
+    &:hover { border-color: #90caf9; box-shadow: 0 0 0 3px rgba(144,202,249,0.1); }
+  }
+
+  .mobile-menu {
+    background: #1a1a1a;
+    border-top-color: #333;
+    .mobile-link { color: #e0e0e0; &:hover { background: #2a2a2a; } }
+  }
+
+  .brand-name { color: #90caf9; }
+  .theme-toggle { color: #aaa !important; }
 }

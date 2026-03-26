@@ -1,49 +1,50 @@
 <nav class="navbar">
   <div class="nav-container">
+
     <!-- Logo -->
     <a class="nav-brand" routerLink="/">
       <img src="assets/logo.png" alt="StayHub Logo" class="brand-icon" />
       <span class="brand-name">🏨 StayHub</span>
     </a>
 
-    <!-- Desktop Nav Links -->
+    <!-- Desktop Nav Links (role-based, no duplicate Sign In) -->
     <div class="nav-links">
       <a routerLink="/hotels" routerLinkActive="active" class="nav-link">🔍 Hotels</a>
       <a routerLink="/contact" routerLinkActive="active" class="nav-link">Support</a>
 
-      @if (!auth.isAuthenticated()) {
-        <a routerLink="/auth/login" class="nav-link">🔑 Sign In</a>
-        <a routerLink="/auth/register" class="nav-cta">Get Started</a>
-      }
-
       @if (auth.isGuest()) {
         <a routerLink="/guest/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
-        <a routerLink="/guest/bookings" routerLinkActive="active" class="nav-link">My Bookings</a>
-        <a routerLink="/guest/wallet" routerLinkActive="active" class="nav-link">💰 Wallet</a>
+        <a routerLink="/guest/bookings"  routerLinkActive="active" class="nav-link">My Bookings</a>
+        <a routerLink="/guest/wallet"    routerLinkActive="active" class="nav-link">💰 Wallet</a>
         <a routerLink="/guest/promo-codes" routerLinkActive="active" class="nav-link">🎫 Promos</a>
       }
 
       @if (auth.isAdmin()) {
-        <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
-        <a routerLink="/admin/reservations" routerLinkActive="active" class="nav-link">Reservations</a>
-        <a routerLink="/admin/rooms" routerLinkActive="active" class="nav-link">Rooms</a>
+        <a routerLink="/admin/dashboard"     routerLinkActive="active" class="nav-link">📊 Dashboard</a>
+        <a routerLink="/admin/reservations"  routerLinkActive="active" class="nav-link">Reservations</a>
+        <a routerLink="/admin/rooms"         routerLinkActive="active" class="nav-link">Rooms</a>
       }
 
       @if (auth.isSuperAdmin()) {
         <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">📊 Dashboard</a>
-        <a routerLink="/superadmin/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
-        <a routerLink="/superadmin/cities" routerLinkActive="active" class="nav-link">Cities</a>
-        <a routerLink="/superadmin/revenue" routerLinkActive="active" class="nav-link">Revenue</a>
+        <a routerLink="/superadmin/hotels"    routerLinkActive="active" class="nav-link">Hotels</a>
+        <a routerLink="/superadmin/cities"    routerLinkActive="active" class="nav-link">Cities</a>
+        <a routerLink="/superadmin/revenue"   routerLinkActive="active" class="nav-link">Revenue</a>
       }
     </div>
 
-    <!-- Theme Toggle + User Menu -->
+    <!-- Right: Theme Toggle + Auth -->
     <div class="nav-actions">
-      <button mat-icon-button (click)="toggleTheme()" matTooltip="Toggle dark/light mode" class="theme-toggle">
+
+      <!-- Dark/Light toggle -->
+      <button mat-icon-button (click)="toggleTheme()"
+              [matTooltip]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+              class="theme-toggle">
         <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
       </button>
 
       @if (auth.isAuthenticated()) {
+        <!-- User avatar menu -->
         <button class="user-btn" [matMenuTriggerFor]="userMenu">
           <div class="avatar">{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</div>
           <span class="user-name">{{ auth.currentUser()?.userName }}</span>
@@ -56,6 +57,7 @@
             <span class="menu-role badge badge-primary">{{ auth.currentUser()?.role }}</span>
           </div>
           <mat-divider />
+
           @if (auth.isGuest()) {
             <button mat-menu-item routerLink="/guest/profile">
               <mat-icon>person</mat-icon> 👤 Profile
@@ -79,6 +81,7 @@
               <mat-icon>replay</mat-icon> Refund Requests
             </button>
           }
+
           @if (auth.isAdmin()) {
             <button mat-menu-item routerLink="/admin/dashboard">
               <mat-icon>dashboard</mat-icon> 📊 Dashboard
@@ -111,6 +114,7 @@
               <mat-icon>history</mat-icon> Audit Logs
             </button>
           }
+
           @if (auth.isSuperAdmin()) {
             <button mat-menu-item routerLink="/superadmin/dashboard">
               <mat-icon>dashboard</mat-icon> 📊 Dashboard
@@ -130,7 +134,11 @@
             <button mat-menu-item routerLink="/superadmin/audit-logs">
               <mat-icon>history</mat-icon> Audit Logs
             </button>
+            <button mat-menu-item routerLink="/superadmin/error-logs">
+              <mat-icon>bug_report</mat-icon> Error Logs
+            </button>
           }
+
           <mat-divider />
           <button mat-menu-item routerLink="/contact">
             <mat-icon>support_agent</mat-icon> Support
@@ -139,8 +147,11 @@
             <mat-icon>logout</mat-icon> Sign Out
           </button>
         </mat-menu>
+
       } @else {
-        <a routerLink="/auth/login" mat-button>🔑 Sign In</a>
+        <!-- Not authenticated: single Sign In + Get Started -->
+        <a routerLink="/auth/login" class="nav-link">🔑 Sign In</a>
+        <a routerLink="/auth/register" mat-flat-button color="primary" class="nav-cta">Get Started</a>
       }
     </div>
 
@@ -155,31 +166,36 @@
     <div class="mobile-menu" (click)="closeMobile()">
       <a routerLink="/hotels" class="mobile-link">🔍 Hotels</a>
       <a routerLink="/contact" class="mobile-link">Support</a>
+
       @if (!auth.isAuthenticated()) {
-        <a routerLink="/auth/login" class="mobile-link">🔑 Sign In</a>
-        <a routerLink="/auth/register" class="mobile-link">Register</a>
+        <a routerLink="/auth/login"    class="mobile-link">🔑 Sign In</a>
+        <a routerLink="/auth/register" class="mobile-link">Get Started</a>
       }
+
       @if (auth.isGuest()) {
-        <a routerLink="/guest/dashboard" class="mobile-link">📊 Dashboard</a>
-        <a routerLink="/guest/bookings" class="mobile-link">My Bookings</a>
-        <a routerLink="/guest/wallet" class="mobile-link">💰 Wallet</a>
-        <a routerLink="/guest/promo-codes" class="mobile-link">🎫 Promo Codes</a>
+        <a routerLink="/guest/dashboard"    class="mobile-link">📊 Dashboard</a>
+        <a routerLink="/guest/bookings"     class="mobile-link">My Bookings</a>
+        <a routerLink="/guest/wallet"       class="mobile-link">💰 Wallet</a>
+        <a routerLink="/guest/promo-codes"  class="mobile-link">🎫 Promo Codes</a>
         <a routerLink="/guest/transactions" class="mobile-link">🧾 Transactions</a>
-        <a routerLink="/guest/reviews" class="mobile-link">My Reviews</a>
-        <a routerLink="/guest/refunds" class="mobile-link">Refund Requests</a>
+        <a routerLink="/guest/reviews"      class="mobile-link">My Reviews</a>
+        <a routerLink="/guest/refunds"      class="mobile-link">Refund Requests</a>
       }
+
       @if (auth.isAdmin()) {
-        <a routerLink="/admin/dashboard" class="mobile-link">📊 Dashboard</a>
-        <a routerLink="/admin/reservations" class="mobile-link">Reservations</a>
-        <a routerLink="/admin/rooms" class="mobile-link">🛏️ Rooms</a>
+        <a routerLink="/admin/dashboard"        class="mobile-link">📊 Dashboard</a>
+        <a routerLink="/admin/reservations"     class="mobile-link">Reservations</a>
+        <a routerLink="/admin/rooms"            class="mobile-link">🛏️ Rooms</a>
         <a routerLink="/admin/amenity-requests" class="mobile-link">Amenity Requests</a>
       }
+
       @if (auth.isSuperAdmin()) {
         <a routerLink="/superadmin/dashboard" class="mobile-link">📊 Dashboard</a>
-        <a routerLink="/superadmin/hotels" class="mobile-link">🏨 Hotels</a>
-        <a routerLink="/superadmin/cities" class="mobile-link">Cities</a>
-        <a routerLink="/superadmin/revenue" class="mobile-link">Revenue</a>
+        <a routerLink="/superadmin/hotels"    class="mobile-link">🏨 Hotels</a>
+        <a routerLink="/superadmin/cities"    class="mobile-link">Cities</a>
+        <a routerLink="/superadmin/revenue"   class="mobile-link">Revenue</a>
       }
+
       @if (auth.isAuthenticated()) {
         <button class="mobile-link logout" (click)="auth.logout()">Sign Out</button>
       }
