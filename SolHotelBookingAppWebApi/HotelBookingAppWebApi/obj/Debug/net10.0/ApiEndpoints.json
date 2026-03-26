@@ -1563,6 +1563,22 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
+    "Method": "RecordFailed",
+    "RelativePath": "api/transactions/{reservationId}/record-failed",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "reservationId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
     "Method": "GetPaymentIntent",
     "RelativePath": "api/transactions/payment-intent/{reservationId}",
     "HttpMethod": "GET",

@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -10,9 +10,14 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
+import { TransactionService } from '../../../core/services/api.services';
+import { ToastService } from '../../../core/services/toast.service';
 import { ReservationDetailsDto } from '../../../core/models/models';
+
+declare var Razorpay: any;
 
 @Component({
   selector: 'app-booking-list',
@@ -21,25 +26,49 @@ import { ReservationDetailsDto } from '../../../core/models/models';
     CommonModule, RouterLink, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatTableModule, MatPaginatorModule, MatTabsModule,
-    MatProgressSpinnerModule, MatChipsModule,
+    MatProgressSpinnerModule, MatChipsModule, MatTooltipModule,
   ],
   templateUrl: './booking-list.component.html',
   styleUrl: './booking-list.component.scss'
 })
-export class BookingListComponent implements OnInit {
-  private bookingService = inject(BookingService);
+export class BookingListComponent implements OnInit, OnDestroy {
+  private bookingService     = inject(BookingService);
+  private transactionService = inject(TransactionService);
+  private toast              = inject(ToastService);
 
   reservations = signal<ReservationDetailsDto[]>([]);
   totalCount   = signal(0);
   loading      = signal(false);
+  payingId     = signal<string | null>(null);
   pageSize     = 10;
   currentPage  = 1;
 
-  displayedColumns = ['reservationCode', 'hotelName', 'checkIn', 'checkOut', 'amount', 'status'];
+  // Countdown map: reservationId → timeLeft string
+  countdowns: Record<string, string> = {};
+  private timer: any;
+
+  displayedColumns = ['reservationCode', 'hotelName', 'checkIn', 'checkOut', 'amount', 'status', 'actions'];
   readonly statusTabs = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
   selectedStatus = 'All';
 
-  ngOnInit() { this.load(); }
+  ngOnInit() {
+    this.load();
+    this.loadRazorpay();
+    // Tick every second to update countdowns
+    this.timer = setInterval(() => this.updateCountdowns(), 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.timer) clearInterval(this.timer);
+  }
+
+  private loadRazorpay() {
+    if (typeof Razorpay !== 'undefined') return;
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
+  }
 
   load() {
     this.loading.set(true);
@@ -48,9 +77,94 @@ export class BookingListComponent implements OnInit {
         this.reservations.set(res.reservations as ReservationDetailsDto[]);
         this.totalCount.set(res.totalCount);
         this.loading.set(false);
+        this.updateCountdowns();
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  private updateCountdowns() {
+    const now = new Date().getTime();
+    const updated: Record<string, string> = {};
+    for (const r of this.reservations()) {
+      if (r.status === 'Pending' && r.expiryTime) {
+        const diff = new Date(r.expiryTime).getTime() - now;
+        if (diff > 0) {
+          const mins = Math.floor(diff / 60000);
+          const secs = Math.floor((diff % 60000) / 1000);
+          updated[r.reservationId] = `${mins}m ${secs}s`;
+        } else {
+          updated[r.reservationId] = 'Expired';
+          // Mark as cancelled locally
+          this.reservations.update(list =>
+            list.map(x => x.reservationId === r.reservationId ? { ...x, status: 'Cancelled' } : x)
+          );
+        }
+      }
+    }
+    this.countdowns = updated;
+  }
+
+  canPayNow(res: ReservationDetailsDto): boolean {
+    if (res.status !== 'Pending') return false;
+    if (!res.expiryTime) return false;
+    return new Date(res.expiryTime) > new Date();
+  }
+
+  getCountdown(res: ReservationDetailsDto): string {
+    return this.countdowns[res.reservationId] ?? '';
+  }
+
+  payWithRazorpay(res: ReservationDetailsDto) {
+    const amountPaise = Math.round((res.finalAmount > 0 ? res.finalAmount : res.totalAmount) * 100);
+    const upiId = res.upiId ?? '';
+
+    const options = {
+      key: 'rzp_test_SVtcM9b8whLPCh',
+      amount: amountPaise,
+      currency: 'INR',
+      name: '🏨 StayHub',
+      description: `Booking: ${res.reservationCode} — ${res.hotelName}`,
+      prefill: { method: 'upi', vpa: upiId || undefined },
+      notes: { reservationCode: res.reservationCode },
+      theme: { color: '#2d3a8c' },
+      handler: (response: any) => {
+        this.payingId.set(res.reservationId);
+        this.transactionService.createPayment({
+          reservationId: res.reservationId,
+          paymentMethod: 3,
+        }).subscribe({
+          next: () => {
+            this.payingId.set(null);
+            this.toast.success(`Payment successful! ${res.reservationCode} confirmed.`);
+            this.reservations.update(list =>
+              list.map(x => x.reservationId === res.reservationId ? { ...x, status: 'Confirmed' } : x)
+            );
+          },
+          error: () => {
+            this.payingId.set(null);
+            this.toast.error('Payment recorded but confirmation failed. Contact support.');
+          }
+        });
+      },
+      modal: {
+        ondismiss: () => {
+          this.bookingService.recordFailedPayment(res.reservationId).subscribe();
+          this.toast.error('Payment cancelled. You can retry before the reservation expires.');
+        }
+      }
+    };
+
+    try {
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        this.bookingService.recordFailedPayment(res.reservationId).subscribe();
+        this.toast.error(`Payment failed: ${response.error?.description ?? 'Unknown error'}`);
+      });
+      rzp.open();
+    } catch {
+      this.toast.error('Razorpay failed to load. Please open the booking to retry.');
+    }
   }
 
   onTabChange(index: number) {

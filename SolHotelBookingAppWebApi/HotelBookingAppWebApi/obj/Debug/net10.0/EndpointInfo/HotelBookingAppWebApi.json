@@ -2511,6 +2511,29 @@
         }
       }
     },
+    "/api/transactions/{reservationId}/record-failed": {
+      "post": {
+        "tags": [
+          "Transactions"
+        ],
+        "parameters": [
+          {
+            "name": "reservationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/transactions/payment-intent/{reservationId}": {
       "get": {
         "tags": [
