@@ -124,3 +124,7 @@ export class HotelDetailsComponent implements OnInit {
     const coMid = this.localMidnight(co);
     return Math.max(0, Math.round((coMid.getTime() - ciMid.getTime()) / 86400000));
   }
+
+  /** Array [1,2,3,4,5] used for star rating display in template */
+  readonly stars = [1, 2, 3, 4, 5];
+}

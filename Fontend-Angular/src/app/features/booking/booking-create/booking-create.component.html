@@ -329,29 +329,38 @@
                     }
                   }
 
-                  <!-- Payment Method -->
-                  <form [formGroup]="paymentForm">
-                    <h4 class="pay-method-label">Select Payment Method</h4>
-                    <mat-radio-group formControlName="paymentMethod" class="pay-methods">
-                      @for (pm of paymentMethods; track pm.id) {
-                        <label class="pay-option" [class.selected]="paymentForm.get('paymentMethod')?.value === pm.id">
-                          <mat-radio-button [value]="pm.id">{{ pm.label }}</mat-radio-button>
-                        </label>
+                  <!-- Payment Options -->
+                  <div class="payment-options mt-3">
+                    <h4 class="pay-method-label">Choose Payment</h4>
+
+                    <!-- Razorpay (primary) -->
+                    <button mat-raised-button color="primary" class="w-100 mb-2"
+                            (click)="payWithRazorpay()"
+                            [disabled]="!createdReservation() || isPaying()"
+                            style="height:48px;font-size:16px;">
+                      @if (isPaying()) {
+                        <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;" />
+                        Processing…
+                      } @else {
+                        💳 Pay ₹{{ createdReservation()?.finalAmount | number:'1.2-2' }} via Razorpay
                       }
-                    </mat-radio-group>
-                  </form>
+                    </button>
+                    <p style="font-size:12px;color:#888;text-align:center;margin:4px 0 12px;">
+                      Supports UPI, Cards, Net Banking, Wallets
+                    </p>
+
+                    <!-- Manual confirm (if already paid via QR) -->
+                    @if (qrPayment()) {
+                      <button mat-stroked-button class="w-100"
+                              (click)="payManual()"
+                              [disabled]="!createdReservation() || isPaying()">
+                        ✅ I've already paid via UPI — Confirm Booking
+                      </button>
+                    }
+                  </div>
 
                   <div class="step-actions mt-3">
                     <button mat-stroked-button matStepperPrevious type="button">Back</button>
-                    <button mat-flat-button color="primary" (click)="pay()"
-                            [disabled]="!createdReservation() || isPaying()">
-                      @if (isPaying()) {
-                        <mat-spinner diameter="18" style="display:inline-block;margin-right:8px;" />
-                        Processing…
-                      } @else {
-                        Pay ₹{{ createdReservation()?.finalAmount | number:'1.2-2' }}
-                      }
-                    </button>
                   </div>
                 }
               </div>

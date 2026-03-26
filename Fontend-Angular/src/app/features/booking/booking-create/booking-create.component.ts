@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit, computed, ViewChild, effect } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -25,9 +25,11 @@ import { WalletService } from '../../../core/services/wallet.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   HotelDetailsDto, RoomAvailabilityDto, AvailableRoomDto,
-  ReservationResponseDto, PaymentMethod, QrPaymentResponseDto,
-  WalletResponseDto
+  ReservationResponseDto, QrPaymentResponseDto, WalletResponseDto
 } from '../../../core/models/models';
+
+// Razorpay type declaration
+declare var Razorpay: any;
 
 @Component({
   selector: 'app-booking-create',
@@ -74,10 +76,11 @@ export class BookingCreateComponent implements OnInit {
   today              = new Date();
   tomorrow           = new Date(Date.now() + 86400000);
 
-  // Payment methods — filter out "Wallet" (id=5) since wallet is handled separately
-  paymentMethods = Object.entries(PaymentMethod)
-    .filter(([k]) => !isNaN(+k) && +k !== 5)
-    .map(([k, v]) => ({ id: +k, label: v as string }));
+  // Reactive signals for form values that drive computed totals
+  selectedRoomTypeId = signal<string>('');
+  numberOfRooms      = signal<number>(1);
+  checkInDate        = signal<Date | null>(null);
+  checkOutDate       = signal<Date | null>(null);
 
   bookingForm = this.fb.group({
     hotelId:       ['', Validators.required],
@@ -89,24 +92,19 @@ export class BookingCreateComponent implements OnInit {
     walletAmount:  [0, [Validators.min(0)]],
   });
 
-  paymentForm = this.fb.group({
-    paymentMethod: [3, Validators.required], // default UPI
-  });
-
   topUpForm = this.fb.group({
     amount: [500, [Validators.required, Validators.min(1), Validators.max(100000)]]
   });
 
   selectedRoomType = computed(() => {
-    const rtId = this.bookingForm.get('roomTypeId')?.value;
+    const rtId = this.selectedRoomTypeId();
     return this.availability().find(a => a.roomTypeId === rtId);
   });
 
   totalNights = computed(() => {
-    const ci = this.bookingForm.get('checkInDate')?.value as Date | null;
-    const co = this.bookingForm.get('checkOutDate')?.value as Date | null;
+    const ci = this.checkInDate();
+    const co = this.checkOutDate();
     if (!ci || !co) return 0;
-    // Use midnight-to-midnight to get whole nights (avoids fractional days from time components)
     const ciMid = new Date(ci); ciMid.setHours(0,0,0,0);
     const coMid = new Date(co); coMid.setHours(0,0,0,0);
     return Math.max(0, Math.round((coMid.getTime() - ciMid.getTime()) / 86400000));
@@ -114,14 +112,13 @@ export class BookingCreateComponent implements OnInit {
 
   baseTotal = computed(() => {
     const rt    = this.selectedRoomType();
-    const rooms = this.bookingForm.get('numberOfRooms')?.value ?? 1;
+    const rooms = this.numberOfRooms();
     return (rt?.pricePerNight ?? 0) * this.totalNights() * rooms;
   });
 
   gstPercent = computed(() => this.hotel()?.gstPercent ?? 0);
   gstAmount  = computed(() => Math.round(this.baseTotal() * this.gstPercent() / 100 * 100) / 100);
 
-  // Max rooms = available rooms for selected type (capped at 10)
   maxRooms = computed(() => {
     const rt = this.selectedRoomType();
     return rt ? Math.min(rt.availableRooms, 10) : 10;
@@ -139,39 +136,43 @@ export class BookingCreateComponent implements OnInit {
     Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - this.walletUsedAmount())
   );
 
-  // Step 1 is valid when room type + dates are selected
   step1Valid = computed(() =>
-    !!this.bookingForm.get('roomTypeId')?.value &&
-    !!this.bookingForm.get('checkInDate')?.value &&
-    !!this.bookingForm.get('checkOutDate')?.value
+    !!this.selectedRoomTypeId() &&
+    !!this.checkInDate() &&
+    !!this.checkOutDate()
   );
 
   ngOnInit() {
     const p = this.route.snapshot.queryParams;
-    // Parse date strings as local dates (not UTC) to avoid timezone shift
     let checkIn  = p['checkIn']  ? this.parseLocalDate(p['checkIn'])  : null;
     let checkOut = p['checkOut'] ? this.parseLocalDate(p['checkOut']) : null;
 
-    // If checkIn is today or in the past, auto-advance to tomorrow
+    // Auto-advance past dates to tomorrow
     const todayLocal = new Date(); todayLocal.setHours(0,0,0,0);
     if (checkIn) {
       const ci = new Date(checkIn); ci.setHours(0,0,0,0);
       if (ci <= todayLocal) {
+        const origCheckIn = new Date(checkIn);
         checkIn = new Date(todayLocal); checkIn.setDate(checkIn.getDate() + 1);
-        // Also push checkout forward by same offset
         if (checkOut) {
-          const diff = checkOut.getTime() - (p['checkIn'] ? this.parseLocalDate(p['checkIn']).getTime() : 0);
-          checkOut = new Date(checkIn.getTime() + diff);
+          const nights = Math.round((checkOut.getTime() - origCheckIn.getTime()) / 86400000);
+          checkOut = new Date(checkIn); checkOut.setDate(checkOut.getDate() + Math.max(1, nights));
         }
       }
     }
 
+    const roomTypeId = p['roomTypeId'] ?? '';
     this.bookingForm.patchValue({
-      hotelId:      p['hotelId']    ?? '',
-      roomTypeId:   p['roomTypeId'] ?? '',
+      hotelId:      p['hotelId'] ?? '',
+      roomTypeId,
       checkInDate:  checkIn,
       checkOutDate: checkOut,
     });
+
+    // Sync signals
+    this.selectedRoomTypeId.set(roomTypeId);
+    this.checkInDate.set(checkIn);
+    this.checkOutDate.set(checkOut);
 
     if (p['hotelId']) {
       this.hotelService.getHotelDetails(p['hotelId']).subscribe(h => {
@@ -185,21 +186,42 @@ export class BookingCreateComponent implements OnInit {
     }
 
     this.loadWallet();
+    this.loadRazorpay();
 
-    this.bookingForm.get('checkInDate')?.valueChanges.subscribe(() => this.onDateChange());
-    this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(() => this.onDateChange());
+    // Sync form → signals for reactive computed
+    this.bookingForm.get('checkInDate')?.valueChanges.subscribe(v => {
+      this.checkInDate.set(v as Date | null);
+      this.onDateChange();
+    });
+    this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(v => {
+      this.checkOutDate.set(v as Date | null);
+      this.onDateChange();
+    });
+    this.bookingForm.get('numberOfRooms')?.valueChanges.subscribe(v => {
+      this.numberOfRooms.set(v ?? 1);
+    });
+    this.bookingForm.get('walletAmount')?.valueChanges.subscribe(() => {
+      // trigger walletUsedAmount recompute — signal already reactive
+    });
 
-    // Room type change: reload available rooms
     this.bookingForm.get('roomTypeId')?.valueChanges
       .pipe(distinctUntilChanged())
       .subscribe(rtId => {
+        this.selectedRoomTypeId.set(rtId ?? '');
         this.availableRooms.set([]);
-        // Reset promo when room type changes (price changes)
         this.promoValid.set(null);
         this.promoMessage.set('');
         this.promoDiscount.set(0);
         if (rtId) this.onRoomTypeChange(rtId);
       });
+  }
+
+  private loadRazorpay() {
+    if (typeof Razorpay !== 'undefined') return;
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
   }
 
   loadWallet() {
@@ -211,8 +233,11 @@ export class BookingCreateComponent implements OnInit {
 
   private onDateChange() {
     const { hotelId, checkInDate, checkOutDate } = this.bookingForm.value;
-    if (hotelId && checkInDate && checkOutDate)
+    if (hotelId && checkInDate && checkOutDate) {
       this.loadAvailability(hotelId, checkInDate as Date, checkOutDate as Date);
+      // Update URL with new dates
+      this.updateUrl();
+    }
   }
 
   private loadAvailability(hotelId: string, ci: Date, co: Date) {
@@ -227,40 +252,43 @@ export class BookingCreateComponent implements OnInit {
     });
   }
 
-  selectRoomType(rtId: string) {
-    this.bookingForm.patchValue({ roomTypeId: rtId });
-    this.availableRooms.set([]);
-    this.promoValid.set(null);
-    this.promoMessage.set('');
-    this.promoDiscount.set(0);
-    this.onRoomTypeChange(rtId);
-
-    // Update URL query param so browser reflects the selection
-    const { hotelId, checkInDate, checkOutDate } = this.bookingForm.value;
+  private updateUrl() {
+    const { hotelId, roomTypeId, checkInDate, checkOutDate } = this.bookingForm.value;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
         hotelId,
-        roomTypeId: rtId,
+        roomTypeId: roomTypeId || null,
         checkIn:  checkInDate ? this.fmtLocal(checkInDate as Date) : null,
         checkOut: checkOutDate ? this.fmtLocal(checkOutDate as Date) : null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true
     });
+  }
 
-    // Cap numberOfRooms to available rooms for this type and update validator
+  selectRoomType(rtId: string) {
+    this.bookingForm.patchValue({ roomTypeId: rtId });
+    this.selectedRoomTypeId.set(rtId);
+    this.availableRooms.set([]);
+    this.promoValid.set(null);
+    this.promoMessage.set('');
+    this.promoDiscount.set(0);
+    this.onRoomTypeChange(rtId);
+    this.updateUrl();
+
+    // Cap numberOfRooms to available
     const rt = this.availability().find(a => a.roomTypeId === rtId);
     if (rt) {
       const maxAvail = Math.min(rt.availableRooms, 10);
       const current = this.bookingForm.get('numberOfRooms')?.value ?? 1;
-      // Update validator dynamically
       this.bookingForm.get('numberOfRooms')?.setValidators([
         Validators.required, Validators.min(1), Validators.max(maxAvail)
       ]);
       this.bookingForm.get('numberOfRooms')?.updateValueAndValidity();
       if (current > maxAvail) {
         this.bookingForm.patchValue({ numberOfRooms: maxAvail });
+        this.numberOfRooms.set(maxAvail);
       }
     }
   }
@@ -316,18 +344,15 @@ export class BookingCreateComponent implements OnInit {
     });
   }
 
-  // Called when clicking "Confirm & Proceed to Payment" on Step 2
   createReservation() {
     const v = this.bookingForm.value;
     const checkIn = v.checkInDate as Date;
 
-    // Basic client-side validation
     if (!checkIn || !v.checkOutDate || !v.roomTypeId) {
       this.toast.error('Please complete all required fields.');
       return;
     }
 
-    // Validate rooms don't exceed available
     const rt = this.selectedRoomType();
     if (rt && (v.numberOfRooms ?? 0) > rt.availableRooms) {
       this.toast.error(`Only ${rt.availableRooms} room(s) available for this type.`);
@@ -358,33 +383,91 @@ export class BookingCreateComponent implements OnInit {
     });
   }
 
-  pay() {
+  // ── RAZORPAY PAYMENT ──────────────────────────────────────────────────────
+  payWithRazorpay() {
     const res = this.createdReservation();
-    if (!res || this.paymentForm.invalid) return;
+    if (!res) return;
+
+    const amountPaise = Math.round(res.finalAmount * 100); // Razorpay uses paise
+    const hotelName = this.hotel()?.name ?? 'StayHub';
+    const upiId = this.qrPayment()?.upiId ?? '';
+
+    const options = {
+      key: 'rzp_test_SVtcM9b8whLPCh',
+      amount: amountPaise,
+      currency: 'INR',
+      name: '🏨 StayHub',
+      description: `Booking: ${res.reservationCode} — ${hotelName}`,
+      image: 'https://i.imgur.com/n5tjHFD.png',
+      prefill: {
+        name: '',
+        email: '',
+        contact: '',
+        method: 'upi',
+        vpa: upiId || undefined,
+      },
+      notes: {
+        reservationCode: res.reservationCode,
+        hotelName,
+      },
+      theme: { color: '#2d3a8c' },
+      handler: (response: any) => {
+        // Payment successful — record in backend
+        this.isPaying.set(true);
+        this.transactionService.createPayment({
+          reservationId: res.reservationId,
+          paymentMethod: 3, // UPI
+        }).subscribe({
+          next: () => {
+            this.isPaying.set(false);
+            this.toast.success('Payment successful! Booking confirmed.');
+            this.router.navigate(['/booking', res.reservationCode]);
+          },
+          error: () => {
+            this.isPaying.set(false);
+            this.toast.error('Payment recorded but confirmation failed. Contact support.');
+          }
+        });
+      },
+      modal: {
+        ondismiss: () => {
+          this.toast.error('Payment cancelled. Your reservation is still pending.');
+        }
+      }
+    };
+
+    try {
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch {
+      this.toast.error('Razorpay failed to load. Please use manual payment below.');
+    }
+  }
+
+  // Manual payment (non-Razorpay)
+  payManual() {
+    const res = this.createdReservation();
+    if (!res) return;
     this.isPaying.set(true);
     this.transactionService.createPayment({
       reservationId: res.reservationId,
-      paymentMethod: this.paymentForm.get('paymentMethod')!.value!,
+      paymentMethod: 3, // UPI
     }).subscribe({
       next: () => {
         this.isPaying.set(false);
-        this.toast.success('Payment successful! Booking confirmed.');
+        this.toast.success('Payment confirmed! Booking complete.');
         this.router.navigate(['/booking', res.reservationCode]);
       },
       error: () => this.isPaying.set(false),
     });
   }
 
-  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
-
-  /** Parse a YYYY-MM-DD string as a LOCAL date (avoids UTC midnight timezone shift) */
   private parseLocalDate(s: string): Date {
     const [y, m, d] = s.split('-').map(Number);
     return new Date(y, m - 1, d);
   }
 
-  /** Format a Date as YYYY-MM-DD using LOCAL date parts (avoids UTC shift) */
-  private fmtLocal(d: Date): string {
+  fmtLocal(d: Date): string {
     const y = d.getFullYear();
     const m = String(d.getMonth() + 1).padStart(2, '0');
     const day = String(d.getDate()).padStart(2, '0');
@@ -392,7 +475,7 @@ export class BookingCreateComponent implements OnInit {
   }
 
   get checkOutMin(): Date {
-    const ci = this.bookingForm.get('checkInDate')?.value as Date | null;
+    const ci = this.checkInDate();
     if (!ci) return this.tomorrow;
     const d = new Date(ci); d.setDate(d.getDate() + 1);
     return d;
