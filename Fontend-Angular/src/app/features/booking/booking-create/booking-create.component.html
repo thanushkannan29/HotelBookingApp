@@ -93,12 +93,19 @@
 
                 <!-- Number of rooms -->
                 @if (selectedRoomType()) {
-                  <mat-form-field appearance="outline" style="max-width:200px">
+                  <mat-form-field appearance="outline" style="max-width:220px">
                     <mat-label>Number of Rooms</mat-label>
-                    <input matInput type="number" formControlName="numberOfRooms" min="1" max="10" />
-                    <mat-hint>Max 10 rooms</mat-hint>
+                    <input matInput type="number" formControlName="numberOfRooms"
+                           min="1" [max]="maxRooms()" />
+                    <mat-hint>
+                      Max {{ maxRooms() }} room{{ maxRooms() > 1 ? 's' : '' }} available
+                    </mat-hint>
                     @if (bookingForm.get('numberOfRooms')?.hasError('min')) {
                       <mat-error>At least 1 room required</mat-error>
+                    }
+                    @if (bookingForm.get('numberOfRooms')?.hasError('max') ||
+                         (bookingForm.get('numberOfRooms')?.value ?? 0) > maxRooms()) {
+                      <mat-error>Only {{ maxRooms() }} room{{ maxRooms() > 1 ? 's' : '' }} available</mat-error>
                     }
                   </mat-form-field>
                 }
@@ -368,10 +375,11 @@
 
               @if (selectedRoomType(); as rt) {
                 <div class="summary-breakdown">
-                  <div class="sb-row"><span>🛏️ Room Type</span><span>{{ rt.roomTypeName }}</span></div>
+                  <div class="sb-row"><span>🛏️ Room Type</span><span><strong>{{ rt.roomTypeName }}</strong></span></div>
                   <div class="sb-row"><span>Rate/Night</span><span>₹{{ rt.pricePerNight | number:'1.0-0' }}</span></div>
                   <div class="sb-row"><span>📅 Nights</span><span>{{ totalNights() }}</span></div>
                   <div class="sb-row"><span>Rooms</span><span>{{ bookingForm.get('numberOfRooms')?.value }}</span></div>
+                  <div class="sb-row"><span>Available</span><span>{{ rt.availableRooms }} left</span></div>
                   @if (gstPercent() > 0) {
                     <div class="sb-row"><span>GST ({{ gstPercent() }}%)</span><span>₹{{ gstAmount() | number:'1.2-2' }}</span></div>
                   }

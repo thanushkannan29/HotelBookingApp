@@ -83,15 +83,20 @@ namespace HotelBookingAppWebApi.Services
         // ── VALIDATE DATES ────────────────────────────────────────────────────
         private static Task ValidateDatesAsync(CreateReservationDto dto)
         {
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
-            if (dto.CheckInDate == today)
-                throw new ValidationException("Same-day booking is not allowed.");
-            if (dto.CheckInDate < today)
+            // Use local date (not UTC) to avoid timezone issues with IST clients
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            var yesterday = today.AddDays(-1);
+
+            // Block only past dates — allow today and future
+            if (dto.CheckInDate <= yesterday)
                 throw new ValidationException("Check-in date cannot be in the past.");
+
             if (dto.CheckInDate >= dto.CheckOutDate)
                 throw new ValidationException("Check-out must be after check-in.");
+
             if (dto.NumberOfRooms <= 0)
                 throw new ValidationException("Number of rooms must be at least 1.");
+
             return Task.CompletedTask;
         }
 

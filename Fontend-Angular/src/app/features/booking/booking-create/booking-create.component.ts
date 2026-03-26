@@ -118,6 +118,12 @@ export class BookingCreateComponent implements OnInit {
   gstPercent = computed(() => this.hotel()?.gstPercent ?? 0);
   gstAmount  = computed(() => Math.round(this.baseTotal() * this.gstPercent() / 100 * 100) / 100);
 
+  // Max rooms = available rooms for selected type (capped at 10)
+  maxRooms = computed(() => {
+    const rt = this.selectedRoomType();
+    return rt ? Math.min(rt.availableRooms, 10) : 10;
+  });
+
   walletUsedAmount = computed(() => {
     if (!this.useWallet()) return 0;
     const entered = this.bookingForm.get('walletAmount')?.value ?? 0;
@@ -139,8 +145,23 @@ export class BookingCreateComponent implements OnInit {
 
   ngOnInit() {
     const p = this.route.snapshot.queryParams;
-    const checkIn  = p['checkIn']  ? new Date(p['checkIn'])  : null;
-    const checkOut = p['checkOut'] ? new Date(p['checkOut']) : null;
+    // Parse date strings as local dates (not UTC) to avoid timezone shift
+    let checkIn  = p['checkIn']  ? this.parseLocalDate(p['checkIn'])  : null;
+    let checkOut = p['checkOut'] ? this.parseLocalDate(p['checkOut']) : null;
+
+    // If checkIn is today or in the past, auto-advance to tomorrow
+    const todayLocal = new Date(); todayLocal.setHours(0,0,0,0);
+    if (checkIn) {
+      const ci = new Date(checkIn); ci.setHours(0,0,0,0);
+      if (ci <= todayLocal) {
+        checkIn = new Date(todayLocal); checkIn.setDate(checkIn.getDate() + 1);
+        // Also push checkout forward by same offset
+        if (checkOut) {
+          const diff = checkOut.getTime() - (p['checkIn'] ? this.parseLocalDate(p['checkIn']).getTime() : 0);
+          checkOut = new Date(checkIn.getTime() + diff);
+        }
+      }
+    }
 
     this.bookingForm.patchValue({
       hotelId:      p['hotelId']    ?? '',
@@ -192,7 +213,7 @@ export class BookingCreateComponent implements OnInit {
   }
 
   private loadAvailability(hotelId: string, ci: Date, co: Date) {
-    const ciStr = this.fmt(ci), coStr = this.fmt(co);
+    const ciStr = this.fmtLocal(ci), coStr = this.fmtLocal(co);
     this.hotelService.getAvailability(hotelId, ciStr, coStr).subscribe(a => {
       const map = new Map<string, RoomAvailabilityDto>();
       for (const item of a) {
@@ -205,18 +226,46 @@ export class BookingCreateComponent implements OnInit {
 
   selectRoomType(rtId: string) {
     this.bookingForm.patchValue({ roomTypeId: rtId });
-    // Trigger room type change manually since patchValue may not fire valueChanges
     this.availableRooms.set([]);
     this.promoValid.set(null);
     this.promoMessage.set('');
     this.promoDiscount.set(0);
     this.onRoomTypeChange(rtId);
+
+    // Update URL query param so browser reflects the selection
+    const { hotelId, checkInDate, checkOutDate } = this.bookingForm.value;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        hotelId,
+        roomTypeId: rtId,
+        checkIn:  checkInDate ? this.fmtLocal(checkInDate as Date) : null,
+        checkOut: checkOutDate ? this.fmtLocal(checkOutDate as Date) : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true
+    });
+
+    // Cap numberOfRooms to available rooms for this type and update validator
+    const rt = this.availability().find(a => a.roomTypeId === rtId);
+    if (rt) {
+      const maxAvail = Math.min(rt.availableRooms, 10);
+      const current = this.bookingForm.get('numberOfRooms')?.value ?? 1;
+      // Update validator dynamically
+      this.bookingForm.get('numberOfRooms')?.setValidators([
+        Validators.required, Validators.min(1), Validators.max(maxAvail)
+      ]);
+      this.bookingForm.get('numberOfRooms')?.updateValueAndValidity();
+      if (current > maxAvail) {
+        this.bookingForm.patchValue({ numberOfRooms: maxAvail });
+      }
+    }
   }
 
   onRoomTypeChange(rtId: string) {
     const { hotelId, checkInDate, checkOutDate } = this.bookingForm.value;
     if (hotelId && checkInDate && checkOutDate) {
-      const ci = this.fmt(checkInDate as Date), co = this.fmt(checkOutDate as Date);
+      const ci = this.fmtLocal(checkInDate as Date), co = this.fmtLocal(checkOutDate as Date);
       this.bookingService.getAvailableRooms(hotelId!, rtId, ci, co)
         .subscribe(rooms => this.availableRooms.set(rooms));
     }
@@ -267,13 +316,18 @@ export class BookingCreateComponent implements OnInit {
   // Called when clicking "Confirm & Proceed to Payment" on Step 2
   createReservation() {
     const v = this.bookingForm.value;
-
-    // Validate dates
     const checkIn = v.checkInDate as Date;
-    const todayDate = new Date(); todayDate.setHours(0,0,0,0);
-    const checkInDate = new Date(checkIn); checkInDate.setHours(0,0,0,0);
-    if (checkInDate <= todayDate) {
-      this.toast.error('Same-day booking is not allowed.');
+
+    // Basic client-side validation
+    if (!checkIn || !v.checkOutDate || !v.roomTypeId) {
+      this.toast.error('Please complete all required fields.');
+      return;
+    }
+
+    // Validate rooms don't exceed available
+    const rt = this.selectedRoomType();
+    if (rt && (v.numberOfRooms ?? 0) > rt.availableRooms) {
+      this.toast.error(`Only ${rt.availableRooms} room(s) available for this type.`);
       return;
     }
 
@@ -281,8 +335,8 @@ export class BookingCreateComponent implements OnInit {
     this.bookingService.createReservation({
       hotelId:           v.hotelId!,
       roomTypeId:        v.roomTypeId!,
-      checkInDate:       this.fmt(checkIn),
-      checkOutDate:      this.fmt(v.checkOutDate as Date),
+      checkInDate:       this.fmtLocal(checkIn),
+      checkOutDate:      this.fmtLocal(v.checkOutDate as Date),
       numberOfRooms:     v.numberOfRooms!,
       promoCodeUsed:     this.promoValid() ? v.promoCode ?? undefined : undefined,
       walletAmountToUse: this.walletUsedAmount(),
@@ -291,9 +345,7 @@ export class BookingCreateComponent implements OnInit {
         this.createdReservation.set(res);
         this.isBooking.set(false);
         this.toast.success('Reservation created! Complete payment within 10 minutes.');
-        // Advance stepper to payment step
         setTimeout(() => this.stepper?.next(), 100);
-        // Load QR code
         this.bookingService.getPaymentQr(res.reservationId).subscribe({
           next: qr => this.qrPayment.set(qr),
           error: () => {}
@@ -321,6 +373,20 @@ export class BookingCreateComponent implements OnInit {
   }
 
   private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
+
+  /** Parse a YYYY-MM-DD string as a LOCAL date (avoids UTC midnight timezone shift) */
+  private parseLocalDate(s: string): Date {
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  }
+
+  /** Format a Date as YYYY-MM-DD using LOCAL date parts (avoids UTC shift) */
+  private fmtLocal(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
   get checkOutMin(): Date {
     const ci = this.bookingForm.get('checkInDate')?.value as Date | null;
