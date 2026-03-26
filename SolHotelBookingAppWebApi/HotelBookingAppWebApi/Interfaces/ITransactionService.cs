@@ -19,5 +19,8 @@ namespace HotelBookingAppWebApi.Interfaces
 
         /// <summary>Admin marks a transaction as Failed and resets reservation to Pending so guest can retry</summary>
         Task MarkTransactionFailedAsync(Guid transactionId, Guid adminUserId);
+
+        /// <summary>Records a failed payment attempt (e.g. Razorpay failure) as a Failed transaction</summary>
+        Task RecordFailedPaymentAsync(Guid reservationId, Guid userId);
     }
 }

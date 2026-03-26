@@ -618,6 +618,8 @@ namespace HotelBookingAppWebApi.Services
                 Status = r.Status.ToString(),
                 IsCheckedIn = r.IsCheckedIn,
                 CreatedDate = r.CreatedDate,
+                ExpiryTime = r.ExpiryTime,
+                UpiId = r.Hotel?.UpiId,
                 Rooms = r.ReservationRooms?.Select(rr => new RoomSummaryDto
                 {
                     RoomId = rr.RoomId,

@@ -109,6 +109,15 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result });
         }
 
+        /// <summary>Record a failed Razorpay payment attempt</summary>
+        [HttpPost("{reservationId}/record-failed")]
+        [Authorize(Roles = "Guest")]
+        public async Task<IActionResult> RecordFailed(Guid reservationId)
+        {
+            await _service.RecordFailedPaymentAsync(reservationId, GetUserId());
+            return Ok(new { success = true, message = "Failed payment recorded." });
+        }
+
         /// <summary>Get transactions — Guest sees own, Admin sees hotel's, SuperAdmin sees all</summary>
         [HttpGet]
         [Authorize(Roles = "Admin,Guest,SuperAdmin")]

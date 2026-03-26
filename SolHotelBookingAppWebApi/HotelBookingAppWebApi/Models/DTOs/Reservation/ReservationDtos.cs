@@ -74,6 +74,8 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public string Status { get; set; } = string.Empty;
         public bool IsCheckedIn { get; set; }
         public DateTime CreatedDate { get; set; }
+        public DateTime? ExpiryTime { get; set; }
+        public string? UpiId { get; set; }
         public List<RoomSummaryDto> Rooms { get; set; } = new();
     }
 
