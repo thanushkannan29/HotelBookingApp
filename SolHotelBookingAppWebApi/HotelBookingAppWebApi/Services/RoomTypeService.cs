@@ -57,7 +57,7 @@ namespace HotelBookingAppWebApi.Services
                     Name = dto.Name,
                     Description = dto.Description,
                     MaxOccupancy = dto.MaxOccupancy,
-                    Amenities = dto.Amenities,
+                    Amenities = string.Empty,
                     ImageUrl = dto.ImageUrl,
                     IsActive = true
                 };
@@ -104,7 +104,6 @@ namespace HotelBookingAppWebApi.Services
             roomType.Name = dto.Name;
             roomType.Description = dto.Description;
             roomType.MaxOccupancy = dto.MaxOccupancy;
-            roomType.Amenities = dto.Amenities;
             roomType.ImageUrl = dto.ImageUrl;
 
             // Update amenity associations
