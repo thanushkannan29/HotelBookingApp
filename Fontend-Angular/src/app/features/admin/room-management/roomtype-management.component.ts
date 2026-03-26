@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -14,11 +14,12 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatExpansionModule } from '@angular/material/expansion';
 import { RouterLink } from '@angular/router';
 import { RoomTypeService, AmenityService } from '../../../core/services/api.services';
 import { AmenityRequestService } from '../../../core/services/amenity-request.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { RoomTypeListDto, AmenityResponseDto } from '../../../core/models/models';
+import { RoomTypeListDto, AmenityResponseDto, RoomTypeRateDto } from '../../../core/models/models';
 
 @Component({
   selector: 'app-roomtype-management',
@@ -29,17 +30,17 @@ import { RoomTypeListDto, AmenityResponseDto } from '../../../core/models/models
     MatIconModule, MatTooltipModule, MatSelectModule,
     MatDatepickerModule, MatNativeDateModule,
     MatTableModule, MatSortModule, MatPaginatorModule,
-    MatProgressSpinnerModule, MatChipsModule,
+    MatProgressSpinnerModule, MatChipsModule, MatExpansionModule,
   ],
   templateUrl: './roomtype-management.component.html',
   styleUrl: './roomtype-management.component.scss'
 })
 export class RoomTypeManagementComponent implements OnInit {
-  private roomTypeService    = inject(RoomTypeService);
-  private amenityService     = inject(AmenityService);
-  private amenityReqService  = inject(AmenityRequestService);
-  private toast              = inject(ToastService);
-  private fb                 = inject(FormBuilder);
+  private roomTypeService   = inject(RoomTypeService);
+  private amenityService    = inject(AmenityService);
+  private amenityReqService = inject(AmenityRequestService);
+  private toast             = inject(ToastService);
+  private fb                = inject(FormBuilder);
 
   roomTypes    = signal<RoomTypeListDto[]>([]);
   amenities    = signal<AmenityResponseDto[]>([]);
@@ -48,12 +49,35 @@ export class RoomTypeManagementComponent implements OnInit {
   showAddForm  = signal(false);
   editingId    = signal<string | null>(null);
   isSaving     = signal(false);
-  showRateForm = signal<string | null>(null);
   showAmenityReqForm = signal(false);
   today        = new Date();
   pageSize     = 10;
   currentPage  = 1;
   displayedColumns = ['name', 'maxOccupancy', 'amenities', 'roomCount', 'isActive', 'actions'];
+  rateColumns  = ['dateRange', 'rate', 'actions'];
+
+  // Rate management per room type
+  ratesMap     = signal<Record<string, RoomTypeRateDto[]>>({});
+  loadingRates = signal<Record<string, boolean>>({});
+  expandedRateId = signal<string | null>(null);
+
+  // Add rate form
+  showAddRateFor = signal<string | null>(null);
+  addRateForm = this.fb.group({
+    roomTypeId: ['', Validators.required],
+    startDate:  [null as Date | null, Validators.required],
+    endDate:    [null as Date | null, Validators.required],
+    rate:       [0, [Validators.required, Validators.min(1), Validators.max(99999)]],
+  });
+
+  // Edit rate form
+  editingRateId = signal<string | null>(null);
+  editRateForm = this.fb.group({
+    roomTypeRateId: [''],
+    startDate:  [null as Date | null, Validators.required],
+    endDate:    [null as Date | null, Validators.required],
+    rate:       [0, [Validators.required, Validators.min(1), Validators.max(99999)]],
+  });
 
   addForm = this.fb.group({
     name:         ['', Validators.required],
@@ -72,13 +96,6 @@ export class RoomTypeManagementComponent implements OnInit {
     imageUrl:     [''],
   });
 
-  rateForm = this.fb.group({
-    roomTypeId: ['', Validators.required],
-    startDate:  [null as Date | null, Validators.required],
-    endDate:    [null as Date | null, Validators.required],
-    rate:       [0, [Validators.required, Validators.min(1), Validators.max(99999)]],
-  });
-
   amenityReqForm = this.fb.group({
     amenityName: ['', Validators.required],
     category:    ['', Validators.required],
@@ -93,21 +110,106 @@ export class RoomTypeManagementComponent implements OnInit {
   load() {
     this.loading.set(true);
     this.roomTypeService.getRoomTypes(this.currentPage, this.pageSize).subscribe((res: any) => {
-      if (Array.isArray(res)) {
-        this.roomTypes.set(res);
-        this.totalCount.set(res.length);
-      } else {
-        this.roomTypes.set(res.roomTypes ?? []);
-        this.totalCount.set(res.totalCount ?? 0);
-      }
+      const types = Array.isArray(res) ? res : res.roomTypes ?? [];
+      this.roomTypes.set(types);
+      this.totalCount.set(Array.isArray(res) ? res.length : res.totalCount ?? 0);
       this.loading.set(false);
     });
   }
 
   onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 
-  private formatDate(d: Date): string { return d.toISOString().split('T')[0]; }
+  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
 
+  // ── RATES ─────────────────────────────────────────────────────────────────
+  toggleRates(rtId: string) {
+    if (this.expandedRateId() === rtId) {
+      this.expandedRateId.set(null);
+      return;
+    }
+    this.expandedRateId.set(rtId);
+    this.loadRates(rtId);
+  }
+
+  loadRates(rtId: string) {
+    this.loadingRates.update(m => ({ ...m, [rtId]: true }));
+    this.roomTypeService.getRates(rtId).subscribe({
+      next: (rates: any) => {
+        this.ratesMap.update(m => ({ ...m, [rtId]: rates }));
+        this.loadingRates.update(m => ({ ...m, [rtId]: false }));
+      },
+      error: () => this.loadingRates.update(m => ({ ...m, [rtId]: false }))
+    });
+  }
+
+  openAddRate(rtId: string) {
+    this.showAddRateFor.set(rtId);
+    this.editingRateId.set(null);
+    this.addRateForm.reset({ roomTypeId: rtId, rate: 0 });
+  }
+
+  saveAddRate() {
+    if (this.addRateForm.invalid) { this.addRateForm.markAllAsTouched(); return; }
+    const { roomTypeId, startDate, endDate, rate } = this.addRateForm.value;
+    this.isSaving.set(true);
+    this.roomTypeService.addRate({
+      roomTypeId: roomTypeId!,
+      startDate:  this.fmt(startDate!),
+      endDate:    this.fmt(endDate!),
+      rate:       rate!,
+    }).subscribe({
+      next: () => {
+        this.toast.success('Rate added.');
+        this.showAddRateFor.set(null);
+        this.isSaving.set(false);
+        this.loadRates(roomTypeId!);
+      },
+      error: () => this.isSaving.set(false),
+    });
+  }
+
+  startEditRate(rate: RoomTypeRateDto) {
+    this.editingRateId.set(rate.roomTypeRateId);
+    this.showAddRateFor.set(null);
+    this.editRateForm.patchValue({
+      roomTypeRateId: rate.roomTypeRateId,
+      startDate: new Date(rate.startDate),
+      endDate:   new Date(rate.endDate),
+      rate:      rate.rate,
+    });
+  }
+
+  saveEditRate(rtId: string) {
+    if (this.editRateForm.invalid) return;
+    const { roomTypeRateId, startDate, endDate, rate } = this.editRateForm.value;
+    this.isSaving.set(true);
+    this.roomTypeService.updateRate({
+      roomTypeRateId: roomTypeRateId!,
+      startDate: this.fmt(startDate!),
+      endDate:   this.fmt(endDate!),
+      rate:      rate!,
+    }).subscribe({
+      next: () => {
+        this.toast.success('Rate updated.');
+        this.editingRateId.set(null);
+        this.isSaving.set(false);
+        this.loadRates(rtId);
+      },
+      error: () => this.isSaving.set(false),
+    });
+  }
+
+  cancelEditRate() { this.editingRateId.set(null); }
+
+  getRatesFor(rtId: string): RoomTypeRateDto[] {
+    return this.ratesMap()[rtId] ?? [];
+  }
+
+  isLoadingRates(rtId: string): boolean {
+    return this.loadingRates()[rtId] ?? false;
+  }
+
+  // ── ROOM TYPE CRUD ────────────────────────────────────────────────────────
   add() {
     if (this.addForm.invalid) { this.addForm.markAllAsTouched(); return; }
     this.isSaving.set(true);
@@ -150,31 +252,6 @@ export class RoomTypeManagementComponent implements OnInit {
     this.roomTypeService.toggleRoomTypeStatus(rt.roomTypeId, !rt.isActive).subscribe(() => {
       this.toast.success(`Room type ${!rt.isActive ? 'activated' : 'deactivated'}.`);
       this.load();
-    });
-  }
-
-  openRateForm(rtId: string) {
-    this.showRateForm.set(rtId);
-    this.rateForm.patchValue({ roomTypeId: rtId });
-  }
-
-  addRate() {
-    if (this.rateForm.invalid) { this.rateForm.markAllAsTouched(); return; }
-    const { roomTypeId, startDate, endDate, rate } = this.rateForm.value;
-    this.isSaving.set(true);
-    this.roomTypeService.addRate({
-      roomTypeId: roomTypeId!,
-      startDate:  this.formatDate(startDate!),
-      endDate:    this.formatDate(endDate!),
-      rate:       rate!,
-    }).subscribe({
-      next: () => {
-        this.toast.success('Rate added.');
-        this.showRateForm.set(null);
-        this.rateForm.patchValue({ startDate: null, endDate: null, rate: 0 });
-        this.isSaving.set(false);
-      },
-      error: () => this.isSaving.set(false),
     });
   }
 

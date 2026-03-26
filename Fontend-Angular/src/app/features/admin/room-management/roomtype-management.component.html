@@ -49,7 +49,7 @@
       </div>
     }
 
-    <!-- Add Form -->
+    <!-- Add Room Type Form -->
     @if (showAddForm()) {
       <div class="form-card mb-4">
         <h3 class="form-card-title">New Room Type</h3>
@@ -72,15 +72,13 @@
             </div>
             <div class="col-md-6">
               <mat-form-field appearance="outline" class="w-100">
-                <mat-label>🏷️ Amenities (multi-select)</mat-label>
+                <mat-label>🏷️ Amenities</mat-label>
                 <mat-select formControlName="amenityIds" multiple>
                   @for (a of amenities(); track a.amenityId) {
-                    <mat-option [value]="a.amenityId">
-                      {{ a.name }} ({{ a.category }})
-                    </mat-option>
+                    <mat-option [value]="a.amenityId">{{ a.name }} ({{ a.category }})</mat-option>
                   }
                 </mat-select>
-                <mat-hint>Select from master list. Can't find one? Request above.</mat-hint>
+                <mat-hint>Can't find one? Request above.</mat-hint>
               </mat-form-field>
             </div>
             <div class="col-12">
@@ -158,12 +156,15 @@
           <ng-container matColumnDef="actions">
             <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
             <mat-cell *matCellDef="let rt">
-              <button mat-icon-button (click)="startEdit(rt)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+              <button mat-icon-button (click)="startEdit(rt)" matTooltip="Edit room type">
+                <mat-icon>edit</mat-icon>
+              </button>
               <button mat-icon-button (click)="toggleStatus(rt)" [matTooltip]="rt.isActive ? 'Deactivate' : 'Activate'">
                 <mat-icon>{{ rt.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
               </button>
-              <button mat-icon-button (click)="openRateForm(rt.roomTypeId)" matTooltip="Set Pricing">
-                <mat-icon>attach_money</mat-icon>
+              <button mat-icon-button color="primary" (click)="toggleRates(rt.roomTypeId)"
+                      [matTooltip]="expandedRateId() === rt.roomTypeId ? 'Hide rates' : 'View / manage rates'">
+                <mat-icon>{{ expandedRateId() === rt.roomTypeId ? 'expand_less' : 'currency_rupee' }}</mat-icon>
               </button>
             </mat-cell>
           </ng-container>
@@ -186,9 +187,153 @@
           (page)="onPage($event)"
         />
       </div>
+
+      <!-- ── INLINE RATE PANEL (expands below table per room type) ── -->
+      @for (rt of roomTypes(); track rt.roomTypeId) {
+        @if (expandedRateId() === rt.roomTypeId) {
+          <div class="form-card mt-3 rate-panel">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h3 class="form-card-title mb-0">
+                💰 Rates for <strong>{{ rt.name }}</strong>
+              </h3>
+              <button mat-raised-button color="primary" (click)="openAddRate(rt.roomTypeId)"
+                      [disabled]="showAddRateFor() === rt.roomTypeId">
+                <mat-icon>add</mat-icon> Add Rate
+              </button>
+            </div>
+
+            <!-- Add Rate Form -->
+            @if (showAddRateFor() === rt.roomTypeId) {
+              <div class="add-rate-form mb-3 p-3" style="background:#f5f5f5;border-radius:8px;">
+                <h4 class="mb-2" style="font-size:14px;font-weight:600;">New Rate</h4>
+                <form [formGroup]="addRateForm" class="row g-2 align-items-end">
+                  <div class="col-md-3">
+                    <mat-form-field appearance="outline" class="w-100">
+                      <mat-label>📅 Start Date</mat-label>
+                      <input matInput [matDatepicker]="addStartPicker" formControlName="startDate" readonly />
+                      <mat-datepicker-toggle matSuffix [for]="addStartPicker" />
+                      <mat-datepicker #addStartPicker />
+                      @if (addRateForm.get('startDate')?.hasError('required') && addRateForm.get('startDate')?.touched) {
+                        <mat-error>Required</mat-error>
+                      }
+                    </mat-form-field>
+                  </div>
+                  <div class="col-md-3">
+                    <mat-form-field appearance="outline" class="w-100">
+                      <mat-label>📅 End Date</mat-label>
+                      <input matInput [matDatepicker]="addEndPicker" formControlName="endDate"
+                             [min]="addRateForm.get('startDate')?.value ?? today" readonly />
+                      <mat-datepicker-toggle matSuffix [for]="addEndPicker" />
+                      <mat-datepicker #addEndPicker />
+                      @if (addRateForm.get('endDate')?.hasError('required') && addRateForm.get('endDate')?.touched) {
+                        <mat-error>Required</mat-error>
+                      }
+                    </mat-form-field>
+                  </div>
+                  <div class="col-md-3">
+                    <mat-form-field appearance="outline" class="w-100">
+                      <mat-label>💰 Rate (₹/night)</mat-label>
+                      <mat-icon matPrefix>currency_rupee</mat-icon>
+                      <input matInput type="number" formControlName="rate" min="1" max="99999" />
+                      @if (addRateForm.get('rate')?.hasError('min')) {
+                        <mat-error>Min ₹1</mat-error>
+                      }
+                    </mat-form-field>
+                  </div>
+                  <div class="col-md-3 d-flex gap-2">
+                    <button mat-raised-button color="primary" type="button"
+                            (click)="saveAddRate()" [disabled]="isSaving()">
+                      {{ isSaving() ? 'Saving…' : 'Save' }}
+                    </button>
+                    <button mat-stroked-button type="button" (click)="showAddRateFor.set(null)">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            }
+
+            <!-- Rates Table -->
+            @if (isLoadingRates(rt.roomTypeId)) {
+              <div class="text-center py-3"><mat-spinner diameter="32" /></div>
+            } @else if (getRatesFor(rt.roomTypeId).length === 0) {
+              <div class="text-center py-3 text-muted">
+                <mat-icon style="font-size:32px;color:#ccc">currency_rupee</mat-icon>
+                <p class="mt-1">No rates configured yet. Click "Add Rate" to set pricing.</p>
+              </div>
+            } @else {
+              <mat-table [dataSource]="getRatesFor(rt.roomTypeId)" class="w-100">
+
+                <ng-container matColumnDef="dateRange">
+                  <mat-header-cell *matHeaderCellDef>📅 Date Range</mat-header-cell>
+                  <mat-cell *matCellDef="let r">
+                    @if (editingRateId() === r.roomTypeRateId) {
+                      <form [formGroup]="editRateForm" class="d-flex gap-2 align-items-center">
+                        <mat-form-field appearance="outline" style="width:140px;">
+                          <mat-label>Start</mat-label>
+                          <input matInput [matDatepicker]="editStartPicker" formControlName="startDate" readonly />
+                          <mat-datepicker-toggle matSuffix [for]="editStartPicker" />
+                          <mat-datepicker #editStartPicker />
+                        </mat-form-field>
+                        <span>→</span>
+                        <mat-form-field appearance="outline" style="width:140px;">
+                          <mat-label>End</mat-label>
+                          <input matInput [matDatepicker]="editEndPicker" formControlName="endDate"
+                                 [min]="editRateForm.get('startDate')?.value" readonly />
+                          <mat-datepicker-toggle matSuffix [for]="editEndPicker" />
+                          <mat-datepicker #editEndPicker />
+                        </mat-form-field>
+                      </form>
+                    } @else {
+                      <span>{{ r.startDate | date:'MMM d, y' }} → {{ r.endDate | date:'MMM d, y' }}</span>
+                    }
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="rate">
+                  <mat-header-cell *matHeaderCellDef>💰 Rate/Night</mat-header-cell>
+                  <mat-cell *matCellDef="let r">
+                    @if (editingRateId() === r.roomTypeRateId) {
+                      <form [formGroup]="editRateForm">
+                        <mat-form-field appearance="outline" style="width:130px;">
+                          <mat-label>₹/night</mat-label>
+                          <mat-icon matPrefix>currency_rupee</mat-icon>
+                          <input matInput type="number" formControlName="rate" min="1" max="99999" />
+                        </mat-form-field>
+                      </form>
+                    } @else {
+                      <strong style="color:#2e7d32;font-size:15px;">₹{{ r.rate | number:'1.0-0' }}</strong>
+                    }
+                  </mat-cell>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+                  <mat-cell *matCellDef="let r">
+                    @if (editingRateId() === r.roomTypeRateId) {
+                      <button mat-icon-button color="primary" (click)="saveEditRate(rt.roomTypeId)"
+                              [disabled]="isSaving()" matTooltip="Save changes">
+                        <mat-icon>check</mat-icon>
+                      </button>
+                      <button mat-icon-button (click)="cancelEditRate()" matTooltip="Cancel">
+                        <mat-icon>close</mat-icon>
+                      </button>
+                    } @else {
+                      <button mat-icon-button (click)="startEditRate(r)" matTooltip="Edit this rate">
+                        <mat-icon>edit</mat-icon>
+                      </button>
+                    }
+                  </mat-cell>
+                </ng-container>
+
+                <mat-header-row *matHeaderRowDef="rateColumns"></mat-header-row>
+                <mat-row *matRowDef="let row; columns: rateColumns;"></mat-row>
+              </mat-table>
+            }
+          </div>
+        }
+      }
     }
 
-    <!-- Inline Edit Panel -->
+    <!-- Inline Edit Room Type Panel -->
     @if (editingId()) {
       @for (rt of roomTypes(); track rt.roomTypeId) {
         @if (rt.roomTypeId === editingId()) {
@@ -239,59 +384,6 @@
           </div>
         }
       }
-    }
-
-    <!-- Rate Form -->
-    @if (showRateForm()) {
-      <div class="form-card mt-4">
-        <h3 class="form-card-title">💰 Set Pricing</h3>
-        <form [formGroup]="rateForm">
-          <div class="row g-3">
-            <div class="col-md-4">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>📅 Start Date</mat-label>
-                <input matInput [matDatepicker]="rateStartPicker" formControlName="startDate" [min]="today" readonly />
-                <mat-datepicker-toggle matSuffix [for]="rateStartPicker" />
-                <mat-datepicker #rateStartPicker />
-                @if (rateForm.get('startDate')?.hasError('required') && rateForm.get('startDate')?.touched) {
-                  <mat-error>Required</mat-error>
-                }
-              </mat-form-field>
-            </div>
-            <div class="col-md-4">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>📅 End Date</mat-label>
-                <input matInput [matDatepicker]="rateEndPicker" formControlName="endDate"
-                       [min]="rateForm.get('startDate')?.value ?? today" readonly />
-                <mat-datepicker-toggle matSuffix [for]="rateEndPicker" />
-                <mat-datepicker #rateEndPicker />
-                @if (rateForm.get('endDate')?.hasError('required') && rateForm.get('endDate')?.touched) {
-                  <mat-error>Required</mat-error>
-                }
-              </mat-form-field>
-            </div>
-            <div class="col-md-4">
-              <mat-form-field appearance="outline" class="w-100">
-                <mat-label>💰 Rate (₹/night)</mat-label>
-                <mat-icon matPrefix>currency_rupee</mat-icon>
-                <input matInput type="number" formControlName="rate" min="1" max="99999" />
-                @if (rateForm.get('rate')?.hasError('min')) {
-                  <mat-error>Min ₹1</mat-error>
-                }
-                @if (rateForm.get('rate')?.hasError('max')) {
-                  <mat-error>Max ₹99,999</mat-error>
-                }
-              </mat-form-field>
-            </div>
-          </div>
-          <div class="d-flex gap-2 mt-2">
-            <button mat-flat-button color="primary" type="button" (click)="addRate()" [disabled]="isSaving()">
-              {{ isSaving() ? 'Saving…' : 'Save Rate' }}
-            </button>
-            <button mat-stroked-button type="button" (click)="showRateForm.set(null)">Cancel</button>
-          </div>
-        </form>
-      </div>
     }
 
   </div>
