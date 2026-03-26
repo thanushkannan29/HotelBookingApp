@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class ametityadded : Migration
+    public partial class FullHotelbookingUpgrade : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,6 +29,22 @@ namespace HotelBookingAppWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Cities",
+                columns: table => new
+                {
+                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CityName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    StateName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    PinCode = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Cities", x => x.CityId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Hotels",
                 columns: table => new
                 {
@@ -42,6 +58,7 @@ namespace HotelBookingAppWebApi.Migrations
                     IsActive = table.Column<bool>(type: "bit", nullable: false),
                     IsBlockedBySuperAdmin = table.Column<bool>(type: "bit", nullable: false),
                     UpiId = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
+                    GstPercent = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
@@ -127,6 +144,30 @@ namespace HotelBookingAppWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "RoomTypeAmenities",
+                columns: table => new
+                {
+                    RoomTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AmenityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RoomTypeAmenities", x => new { x.RoomTypeId, x.AmenityId });
+                    table.ForeignKey(
+                        name: "FK_RoomTypeAmenities_Amenities_AmenityId",
+                        column: x => x.AmenityId,
+                        principalTable: "Amenities",
+                        principalColumn: "AmenityId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_RoomTypeAmenities_RoomTypes_RoomTypeId",
+                        column: x => x.RoomTypeId,
+                        principalTable: "RoomTypes",
+                        principalColumn: "RoomTypeId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "RoomTypeInventories",
                 columns: table => new
                 {
@@ -166,6 +207,32 @@ namespace HotelBookingAppWebApi.Migrations
                         principalTable: "RoomTypes",
                         principalColumn: "RoomTypeId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AmenityRequests",
+                columns: table => new
+                {
+                    AmenityRequestId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    RequestedByAdminId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AdminHotelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    AmenityName = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
+                    Category = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    IconName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    SuperAdminNote = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AmenityRequests", x => x.AmenityRequestId);
+                    table.ForeignKey(
+                        name: "FK_AmenityRequests_Users_RequestedByAdminId",
+                        column: x => x.RequestedByAdminId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -236,6 +303,13 @@ namespace HotelBookingAppWebApi.Migrations
                     CancelledDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     CancellationReason = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     ExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    GstPercent = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
+                    GstAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    DiscountPercent = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    WalletAmountUsed = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    PromoCodeUsed = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    FinalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
                 },
                 constraints: table =>
@@ -280,6 +354,63 @@ namespace HotelBookingAppWebApi.Migrations
                         principalTable: "Users",
                         principalColumn: "UserId",
                         onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Wallets",
+                columns: table => new
+                {
+                    WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Balance = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Wallets", x => x.WalletId);
+                    table.ForeignKey(
+                        name: "FK_Wallets_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PromoCodes",
+                columns: table => new
+                {
+                    PromoCodeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReservationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DiscountPercent = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: false),
+                    ExpiryDate = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsUsed = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PromoCodes", x => x.PromoCodeId);
+                    table.ForeignKey(
+                        name: "FK_PromoCodes_Hotels_HotelId",
+                        column: x => x.HotelId,
+                        principalTable: "Hotels",
+                        principalColumn: "HotelId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PromoCodes_Reservations_ReservationId",
+                        column: x => x.ReservationId,
+                        principalTable: "Reservations",
+                        principalColumn: "ReservationId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PromoCodes_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "UserId",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -384,6 +515,36 @@ namespace HotelBookingAppWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "SuperAdminRevenues",
+                columns: table => new
+                {
+                    SuperAdminRevenueId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReservationId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    HotelId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReservationAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    CommissionAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    SuperAdminUpiId = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SuperAdminRevenues", x => x.SuperAdminRevenueId);
+                    table.ForeignKey(
+                        name: "FK_SuperAdminRevenues_Hotels_HotelId",
+                        column: x => x.HotelId,
+                        principalTable: "Hotels",
+                        principalColumn: "HotelId",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_SuperAdminRevenues_Reservations_ReservationId",
+                        column: x => x.ReservationId,
+                        principalTable: "Reservations",
+                        principalColumn: "ReservationId",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Transactions",
                 columns: table => new
                 {
@@ -392,7 +553,9 @@ namespace HotelBookingAppWebApi.Migrations
                     Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PaymentMethod = table.Column<int>(type: "int", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
-                    TransactionDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    TransactionDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    WalletUsed = table.Column<bool>(type: "bit", nullable: false),
+                    WalletAmountUsed = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -402,6 +565,28 @@ namespace HotelBookingAppWebApi.Migrations
                         column: x => x.ReservationId,
                         principalTable: "Reservations",
                         principalColumn: "ReservationId",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "WalletTransactions",
+                columns: table => new
+                {
+                    WalletTransactionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    WalletId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Amount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    Type = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_WalletTransactions", x => x.WalletTransactionId);
+                    table.ForeignKey(
+                        name: "FK_WalletTransactions_Wallets_WalletId",
+                        column: x => x.WalletId,
+                        principalTable: "Wallets",
+                        principalColumn: "WalletId",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -449,9 +634,19 @@ namespace HotelBookingAppWebApi.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_AmenityRequests_RequestedByAdminId",
+                table: "AmenityRequests",
+                column: "RequestedByAdminId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_UserId",
                 table: "AuditLogs",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Cities_CityName",
+                table: "Cities",
+                column: "CityName");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Hotels_City",
@@ -461,6 +656,27 @@ namespace HotelBookingAppWebApi.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Logs_UserId",
                 table: "Logs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PromoCodes_Code",
+                table: "PromoCodes",
+                column: "Code",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PromoCodes_HotelId",
+                table: "PromoCodes",
+                column: "HotelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PromoCodes_ReservationId",
+                table: "PromoCodes",
+                column: "ReservationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PromoCodes_UserId",
+                table: "PromoCodes",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
@@ -532,6 +748,11 @@ namespace HotelBookingAppWebApi.Migrations
                 column: "RoomTypeId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RoomTypeAmenities_AmenityId",
+                table: "RoomTypeAmenities",
+                column: "AmenityId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_RoomTypeInventories_RoomTypeId_Date",
                 table: "RoomTypeInventories",
                 columns: new[] { "RoomTypeId", "Date" },
@@ -546,6 +767,16 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "IX_RoomTypes_HotelId",
                 table: "RoomTypes",
                 column: "HotelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SuperAdminRevenues_HotelId",
+                table: "SuperAdminRevenues",
+                column: "HotelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SuperAdminRevenues_ReservationId",
+                table: "SuperAdminRevenues",
+                column: "ReservationId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Transactions_ReservationId",
@@ -568,19 +799,35 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "IX_Users_HotelId",
                 table: "Users",
                 column: "HotelId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Wallets_UserId",
+                table: "Wallets",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_WalletTransactions_WalletId",
+                table: "WalletTransactions",
+                column: "WalletId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "Amenities");
+                name: "AmenityRequests");
 
             migrationBuilder.DropTable(
                 name: "AuditLogs");
 
             migrationBuilder.DropTable(
+                name: "Cities");
+
+            migrationBuilder.DropTable(
                 name: "Logs");
+
+            migrationBuilder.DropTable(
+                name: "PromoCodes");
 
             migrationBuilder.DropTable(
                 name: "RefundRequests");
@@ -592,10 +839,16 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "Reviews");
 
             migrationBuilder.DropTable(
+                name: "RoomTypeAmenities");
+
+            migrationBuilder.DropTable(
                 name: "RoomTypeInventories");
 
             migrationBuilder.DropTable(
                 name: "RoomTypeRates");
+
+            migrationBuilder.DropTable(
+                name: "SuperAdminRevenues");
 
             migrationBuilder.DropTable(
                 name: "Transactions");
@@ -604,10 +857,19 @@ namespace HotelBookingAppWebApi.Migrations
                 name: "UserProfileDetails");
 
             migrationBuilder.DropTable(
+                name: "WalletTransactions");
+
+            migrationBuilder.DropTable(
                 name: "Rooms");
 
             migrationBuilder.DropTable(
+                name: "Amenities");
+
+            migrationBuilder.DropTable(
                 name: "Reservations");
+
+            migrationBuilder.DropTable(
+                name: "Wallets");
 
             migrationBuilder.DropTable(
                 name: "RoomTypes");

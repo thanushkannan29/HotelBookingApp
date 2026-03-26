@@ -61,11 +61,15 @@ builder.Services.AddSwaggerGen(c =>
 builder.Services.AddDbContext<HotelBookingContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("Developer"),
-        sqlOptions => sqlOptions.EnableRetryOnFailure(
-            maxRetryCount: 3,
-            maxRetryDelay: TimeSpan.FromSeconds(5),
-            errorNumbersToAdd: null
-        )
+        sqlOptions =>
+        {
+            sqlOptions.EnableRetryOnFailure(
+                maxRetryCount: 3,
+                maxRetryDelay: TimeSpan.FromSeconds(5),
+                errorNumbersToAdd: null
+            );
+            sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery);
+        }
     ));
 
 // ── CORS ───────────────────────────────────────────────────────────────────────
