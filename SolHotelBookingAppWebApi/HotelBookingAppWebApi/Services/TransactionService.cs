@@ -36,121 +36,91 @@ namespace HotelBookingAppWebApi.Services
         // ── CREATE PAYMENT ────────────────────────────────────────────────────
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
+            var reservation = await _reservationRepo.GetQueryable()
+                .Include(r => r.Transactions)
+                .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId)
+                ?? throw new NotFoundException("Reservation not found.");
+
+            if (reservation.Status == ReservationStatus.Cancelled)
+                throw new PaymentException("Cannot pay for a cancelled reservation.");
+
+            if (reservation.Status == ReservationStatus.Completed)
+                throw new PaymentException("Cannot pay for a completed reservation.");
+
+            if (reservation.ExpiryTime.HasValue && reservation.ExpiryTime < DateTime.UtcNow
+                && reservation.Status == ReservationStatus.Pending)
+                throw new PaymentException("Reservation has expired. Please create a new booking.");
+
+            if (reservation.Transactions!.Any(t => t.Status == PaymentStatus.Success))
+                throw new PaymentException("This reservation has already been paid.");
+
+            var transaction = new Transaction
             {
-                var reservation = await _reservationRepo.GetQueryable()
-                    .Include(r => r.Transactions)
-                    .FirstOrDefaultAsync(r => r.ReservationId == dto.ReservationId)
-                    ?? throw new NotFoundException("Reservation not found.");
+                TransactionId   = Guid.NewGuid(),
+                ReservationId   = reservation.ReservationId,
+                Amount          = reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount,
+                PaymentMethod   = dto.PaymentMethod,
+                Status          = PaymentStatus.Success,
+                TransactionDate = DateTime.UtcNow
+            };
 
-                if (reservation.Status == ReservationStatus.Cancelled)
-                    throw new PaymentException("Cannot pay for a cancelled reservation.");
+            // Promote reservation to Confirmed on successful payment
+            reservation.Status = ReservationStatus.Confirmed;
 
-                if (reservation.Status == ReservationStatus.Completed)
-                    throw new PaymentException("Cannot pay for a completed reservation.");
+            await _transactionRepo.AddAsync(transaction);
+            await _unitOfWork.SaveChangesAsync();   // no transaction needed — simple insert + update
 
-                if (reservation.ExpiryTime.HasValue && reservation.ExpiryTime < DateTime.UtcNow
-                    && reservation.Status == ReservationStatus.Pending)
-                    throw new PaymentException("Reservation has expired. Please create a new booking.");
-
-                if (reservation.Transactions!.Any(t => t.Status == PaymentStatus.Success))
-                    throw new PaymentException("This reservation has already been paid.");
-
-                var transaction = new Transaction
-                {
-                    TransactionId = Guid.NewGuid(),
-                    ReservationId = reservation.ReservationId,
-                    Amount = reservation.TotalAmount,
-                    PaymentMethod = dto.PaymentMethod,
-                    Status = PaymentStatus.Success,
-                    TransactionDate = DateTime.UtcNow
-                };
-
-                // Promote reservation to Confirmed on successful payment
-                reservation.Status = ReservationStatus.Confirmed;
-
-                await _transactionRepo.AddAsync(transaction);
-                await _unitOfWork.CommitAsync();
-
-                return MapToDto(transaction);
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
+            return MapToDto(transaction);
         }
 
         // ── DIRECT REFUND (Guest only — within 30 minutes of payment) ─────────
-        // The UI hides this button after 30 min. The backend also enforces the window.
-        // Admin refunds must go through the RefundRequest approve/reject flow.
         public async Task<TransactionResponseDto> DirectGuestRefundAsync(
             Guid transactionId, Guid userId, RefundRequestDto dto)
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
-            {
-                var transaction = await _transactionRepo.GetQueryable()
-                    .Include(t => t.Reservation)
-                        .ThenInclude(r => r!.ReservationRooms)
-                    .Include(t => t.Reservation!.Transactions)
-                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
-                    ?? throw new NotFoundException("Transaction not found.");
+            var transaction = await _transactionRepo.GetQueryable()
+                .Include(t => t.Reservation)
+                    .ThenInclude(r => r!.ReservationRooms)
+                .Include(t => t.Reservation!.Transactions)
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
+                ?? throw new NotFoundException("Transaction not found.");
 
-                // Ensure the reservation belongs to this guest
-                if (transaction.Reservation!.UserId != userId)
-                    throw new UnAuthorizedException("You are not authorized to refund this transaction.");
+            if (transaction.Reservation!.UserId != userId)
+                throw new UnAuthorizedException("You are not authorized to refund this transaction.");
 
-                if (transaction.Status != PaymentStatus.Success)
-                    throw new PaymentException("Only successful transactions can be refunded.");
+            if (transaction.Status != PaymentStatus.Success)
+                throw new PaymentException("Only successful transactions can be refunded.");
 
-                var reservation = transaction.Reservation!;
+            var reservation = transaction.Reservation!;
 
-                if (reservation.Status == ReservationStatus.Completed)
-                    throw new PaymentException("Completed reservations cannot be refunded.");
+            if (reservation.Status == ReservationStatus.Completed)
+                throw new PaymentException("Completed reservations cannot be refunded.");
 
-                if (reservation.Status == ReservationStatus.Cancelled)
-                    throw new PaymentException("This reservation is already cancelled.");
+            if (reservation.Status == ReservationStatus.Cancelled)
+                throw new PaymentException("This reservation is already cancelled.");
 
-                // ── 30-minute guest window enforcement ────────────────────────
-                var minutesSincePayment = (DateTime.UtcNow - transaction.TransactionDate).TotalMinutes;
-                if (minutesSincePayment > 30)
-                    throw new PaymentException(
-                        "Direct refund window has expired. Please submit a refund request instead.");
+            var minutesSincePayment = (DateTime.UtcNow - transaction.TransactionDate).TotalMinutes;
+            if (minutesSincePayment > 30)
+                throw new PaymentException("Direct refund window has expired. Please submit a refund request instead.");
 
-                // Mark transaction refunded
-                transaction.Status = PaymentStatus.Refunded;
+            transaction.Status = PaymentStatus.Refunded;
+            reservation.Status = ReservationStatus.Cancelled;
+            reservation.CancelledDate = DateTime.UtcNow;
+            reservation.CancellationReason = dto.Reason;
 
-                // Cancel reservation
-                reservation.Status = ReservationStatus.Cancelled;
-                reservation.CancelledDate = DateTime.UtcNow;
-                reservation.CancellationReason = dto.Reason;
+            var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
+            var roomCount = reservation.ReservationRooms.Count;
+            var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+            var dates = Enumerable.Range(0, totalDays).Select(d => reservation.CheckInDate.AddDays(d)).ToList();
 
-                // Restore inventory
-                var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
-                var roomCount = reservation.ReservationRooms.Count;
-                var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+            var inventories = await _inventoryRepo.GetQueryable()
+                .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
+                .ToListAsync();
 
-                var dates = Enumerable.Range(0, totalDays)
-                    .Select(d => reservation.CheckInDate.AddDays(d))
-                    .ToList();
+            foreach (var inv in inventories)
+                inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
 
-                var inventories = await _inventoryRepo.GetQueryable()
-                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
-                    .ToListAsync();
-
-                foreach (var inv in inventories)
-                    inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
-
-                await _unitOfWork.CommitAsync();
-                return MapToDto(transaction);
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
+            await _unitOfWork.SaveChangesAsync();
+            return MapToDto(transaction);
         }
 
         // ── GET ALL TRANSACTIONS (Role-based) ─────────────────────────────────
@@ -222,36 +192,27 @@ namespace HotelBookingAppWebApi.Services
         // Resets reservation to Pending so the guest can attempt payment again.
         public async Task MarkTransactionFailedAsync(Guid transactionId, Guid adminUserId)
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
-            {
-                var admin = await _userRepo.GetAsync(adminUserId)
-                    ?? throw new UnAuthorizedException("Unauthorized.");
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
 
-                if (admin.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized.");
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("Unauthorized.");
 
-                var transaction = await _transactionRepo.GetQueryable()
-                    .Include(t => t.Reservation)
-                    .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
-                    ?? throw new NotFoundException("Transaction not found.");
+            var transaction = await _transactionRepo.GetQueryable()
+                .Include(t => t.Reservation)
+                .FirstOrDefaultAsync(t => t.TransactionId == transactionId)
+                ?? throw new NotFoundException("Transaction not found.");
 
-                if (transaction.Reservation!.HotelId != admin.HotelId)
-                    throw new UnAuthorizedException("You are not authorized to manage this transaction.");
+            if (transaction.Reservation!.HotelId != admin.HotelId)
+                throw new UnAuthorizedException("You are not authorized to manage this transaction.");
 
-                if (transaction.Status != PaymentStatus.Success)
-                    throw new ValidationException("Only successful transactions can be marked as failed.");
+            if (transaction.Status != PaymentStatus.Success)
+                throw new ValidationException("Only successful transactions can be marked as failed.");
 
-                transaction.Status = PaymentStatus.Failed;
-                transaction.Reservation.Status = ReservationStatus.Pending;
+            transaction.Status = PaymentStatus.Failed;
+            transaction.Reservation.Status = ReservationStatus.Pending;
 
-                await _unitOfWork.CommitAsync();
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
+            await _unitOfWork.SaveChangesAsync();
         }
 
         private static TransactionResponseDto MapToDto(Transaction t) => new()

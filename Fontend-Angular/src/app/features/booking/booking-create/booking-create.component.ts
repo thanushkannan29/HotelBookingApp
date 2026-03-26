@@ -73,6 +73,21 @@ export class BookingCreateComponent implements OnInit {
   promoDiscount      = signal(0);
   useWallet          = signal(false);
   showTopUp          = signal(false);
+
+  toggleWallet(checked: boolean) {
+    this.useWallet.set(checked);
+    if (checked) {
+      // Auto-fill wallet amount with max usable
+      const balance = this.walletInfo()?.balance ?? 0;
+      const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount());
+      const autoAmount = Math.min(balance, maxUsable);
+      this.bookingForm.patchValue({ walletAmount: autoAmount });
+      this.walletAmountSignal.set(autoAmount);
+    } else {
+      this.bookingForm.patchValue({ walletAmount: 0 });
+      this.walletAmountSignal.set(0);
+    }
+  }
   today              = new Date();
   tomorrow           = new Date(Date.now() + 86400000);
 
@@ -81,6 +96,7 @@ export class BookingCreateComponent implements OnInit {
   numberOfRooms      = signal<number>(1);
   checkInDate        = signal<Date | null>(null);
   checkOutDate       = signal<Date | null>(null);
+  walletAmountSignal = signal<number>(0);
 
   bookingForm = this.fb.group({
     hotelId:       ['', Validators.required],
@@ -126,7 +142,7 @@ export class BookingCreateComponent implements OnInit {
 
   walletUsedAmount = computed(() => {
     if (!this.useWallet()) return 0;
-    const entered = this.bookingForm.get('walletAmount')?.value ?? 0;
+    const entered = this.walletAmountSignal();
     const balance = this.walletInfo()?.balance ?? 0;
     const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount());
     return Math.min(entered, balance, maxUsable);
@@ -134,6 +150,11 @@ export class BookingCreateComponent implements OnInit {
 
   finalTotal = computed(() =>
     Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - this.walletUsedAmount())
+  );
+
+  // True when wallet covers the full remaining amount
+  walletCoversAll = computed(() =>
+    this.useWallet() && this.finalTotal() === 0 && this.baseTotal() > 0
   );
 
   step1Valid = computed(() =>
@@ -200,8 +221,8 @@ export class BookingCreateComponent implements OnInit {
     this.bookingForm.get('numberOfRooms')?.valueChanges.subscribe(v => {
       this.numberOfRooms.set(v ?? 1);
     });
-    this.bookingForm.get('walletAmount')?.valueChanges.subscribe(() => {
-      // trigger walletUsedAmount recompute — signal already reactive
+    this.bookingForm.get('walletAmount')?.valueChanges.subscribe(v => {
+      this.walletAmountSignal.set(v ?? 0);
     });
 
     this.bookingForm.get('roomTypeId')?.valueChanges
@@ -384,36 +405,43 @@ export class BookingCreateComponent implements OnInit {
   }
 
   // ── RAZORPAY PAYMENT ──────────────────────────────────────────────────────
-  payWithRazorpay() {
+  payWithRazorpay(paymentMethodId: number = 3) {
     const res = this.createdReservation();
     if (!res) return;
+
+    // If wallet covers everything, skip Razorpay entirely
+    if (this.walletCoversAll() || paymentMethodId === 5) {
+      this.confirmWalletOnlyPayment(res);
+      return;
+    }
 
     const amountPaise = Math.round(res.finalAmount * 100);
     const hotelName = this.hotel()?.name ?? 'StayHub';
     const upiId = this.qrPayment()?.upiId ?? '';
 
-    const options = {
+    // Map payment method to Razorpay method string
+    const rzpMethodMap: Record<number, string> = {
+      1: 'card',      // CreditCard
+      2: 'card',      // DebitCard
+      3: 'upi',       // UPI
+      4: 'netbanking' // NetBanking
+    };
+
+    const options: any = {
       key: 'rzp_test_SVtcM9b8whLPCh',
       amount: amountPaise,
       currency: 'INR',
       name: '🏨 StayHub',
       description: `Booking: ${res.reservationCode} — ${hotelName}`,
       image: 'https://i.imgur.com/n5tjHFD.png',
-      prefill: {
-        name: '',
-        email: '',
-        contact: '',
-        method: 'upi',
-        vpa: upiId || undefined,
-      },
+      prefill: { name: '', email: '', contact: '' },
       notes: { reservationCode: res.reservationCode, hotelName },
       theme: { color: '#2d3a8c' },
       handler: (response: any) => {
-        // Payment successful — record in backend
         this.isPaying.set(true);
         this.transactionService.createPayment({
           reservationId: res.reservationId,
-          paymentMethod: 3, // UPI
+          paymentMethod: paymentMethodId,
         }).subscribe({
           next: () => {
             this.isPaying.set(false);
@@ -428,34 +456,60 @@ export class BookingCreateComponent implements OnInit {
       },
       modal: {
         ondismiss: () => {
-          // Record failed/cancelled payment
           this.bookingService.recordFailedPayment(res.reservationId).subscribe();
-          this.toast.error('Payment cancelled. Your reservation is still pending — you can retry from My Bookings.');
+          this.toast.error('Payment cancelled. Retry from My Bookings.');
         }
       }
     };
 
+    // Pre-select payment method in Razorpay
+    if (paymentMethodId === 3 && upiId) {
+      options.prefill.method = 'upi';
+      options.prefill.vpa = upiId;
+    } else if (paymentMethodId === 4) {
+      options.prefill.method = 'netbanking';
+    }
+
     try {
       const rzp = new Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
-        // Record failed payment in backend
         this.bookingService.recordFailedPayment(res.reservationId).subscribe();
-        this.toast.error(`Payment failed: ${response.error?.description ?? 'Unknown error'}. You can retry from My Bookings.`);
+        this.toast.error(`Payment failed: ${response.error?.description ?? 'Unknown error'}. Retry from My Bookings.`);
       });
       rzp.open();
     } catch {
-      this.toast.error('Razorpay failed to load. Please use manual payment below.');
+      this.toast.error('Razorpay failed to load. Please try again.');
     }
   }
 
-  // Manual payment (non-Razorpay)
+  private confirmWalletOnlyPayment(res: ReservationResponseDto) {
+    this.isPaying.set(true);
+    // Wallet already deducted at reservation creation — just record as success
+    this.transactionService.createPayment({
+      reservationId: res.reservationId,
+      paymentMethod: 5, // Wallet
+    }).subscribe({
+      next: () => {
+        this.isPaying.set(false);
+        this.toast.success('Paid fully from wallet! Booking confirmed.');
+        this.router.navigate(['/booking', res.reservationCode]);
+      },
+      error: () => this.isPaying.set(false)
+    });
+  }
+
+  // Manual UPI confirm (after scanning QR)
   payManual() {
+    this.payManualWith(3);
+  }
+
+  payManualWith(paymentMethodId: number) {
     const res = this.createdReservation();
     if (!res) return;
     this.isPaying.set(true);
     this.transactionService.createPayment({
       reservationId: res.reservationId,
-      paymentMethod: 3, // UPI
+      paymentMethod: paymentMethodId,
     }).subscribe({
       next: () => {
         this.isPaying.set(false);

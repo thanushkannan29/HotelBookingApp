@@ -91,53 +91,45 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task CreditAsync(Guid userId, decimal amount, string description)
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
+            var wallet = await GetOrCreateWalletAsync(userId);
+            wallet.Balance += amount;
+            wallet.UpdatedAt = DateTime.UtcNow;
+
+            await _txRepo.AddAsync(new WalletTransaction
             {
-                var wallet = await GetOrCreateWalletAsync(userId);
-                wallet.Balance += amount;
-                wallet.UpdatedAt = DateTime.UtcNow;
+                WalletTransactionId = Guid.NewGuid(),
+                WalletId = wallet.WalletId,
+                Amount = amount,
+                Type = "Credit",
+                Description = description,
+                CreatedAt = DateTime.UtcNow
+            });
 
-                await _txRepo.AddAsync(new WalletTransaction
-                {
-                    WalletTransactionId = Guid.NewGuid(),
-                    WalletId = wallet.WalletId,
-                    Amount = amount,
-                    Type = "Credit",
-                    Description = description,
-                    CreatedAt = DateTime.UtcNow
-                });
-
-                await _unitOfWork.CommitAsync();
-            }
-            catch { await _unitOfWork.RollbackAsync(); throw; }
+            // Use SaveChangesAsync — caller manages the transaction
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<bool> DeductAsync(Guid userId, decimal amount, string description)
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
+            var wallet = await GetOrCreateWalletAsync(userId);
+            if (wallet.Balance < amount) return false;
+
+            wallet.Balance -= amount;
+            wallet.UpdatedAt = DateTime.UtcNow;
+
+            await _txRepo.AddAsync(new WalletTransaction
             {
-                var wallet = await GetOrCreateWalletAsync(userId);
-                if (wallet.Balance < amount) return false;
+                WalletTransactionId = Guid.NewGuid(),
+                WalletId = wallet.WalletId,
+                Amount = amount,
+                Type = "Debit",
+                Description = description,
+                CreatedAt = DateTime.UtcNow
+            });
 
-                wallet.Balance -= amount;
-                wallet.UpdatedAt = DateTime.UtcNow;
-
-                await _txRepo.AddAsync(new WalletTransaction
-                {
-                    WalletTransactionId = Guid.NewGuid(),
-                    WalletId = wallet.WalletId,
-                    Amount = amount,
-                    Type = "Debit",
-                    Description = description,
-                    CreatedAt = DateTime.UtcNow
-                });
-
-                await _unitOfWork.CommitAsync();
-                return true;
-            }
-            catch { await _unitOfWork.RollbackAsync(); throw; }
+            // Use SaveChangesAsync — caller manages the transaction
+            await _unitOfWork.SaveChangesAsync();
+            return true;
         }
 
         public async Task<WalletResponseDto> GetGuestWalletByAdminAsync(Guid adminUserId, Guid guestUserId)

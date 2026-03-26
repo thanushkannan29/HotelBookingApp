@@ -177,7 +177,7 @@
                   <mat-card-content>
                     <mat-slide-toggle
                       [checked]="useWallet()"
-                      (change)="useWallet.set($event.checked)"
+                      (change)="toggleWallet($event.checked)"
                       [disabled]="!walletInfo() || walletInfo()!.balance <= 0"
                       class="mb-2">
                       Use Wallet Balance
@@ -188,15 +188,31 @@
                     }
 
                     @if (useWallet() && walletInfo() && walletInfo()!.balance > 0) {
-                      <mat-form-field appearance="outline" class="w-100 mt-2">
-                        <mat-label>Amount to use (₹)</mat-label>
-                        <input matInput type="number" formControlName="walletAmount"
-                               [max]="walletInfo()!.balance" min="0" />
-                        <mat-hint>
-                          Available: ₹{{ walletInfo()!.balance | number:'1.2-2' }} ·
-                          Max usable: ₹{{ (baseTotal() + gstAmount() - promoDiscount()) | number:'1.2-2' }}
-                        </mat-hint>
-                      </mat-form-field>
+                      <div class="d-flex gap-2 align-items-start mt-2">
+                        <mat-form-field appearance="outline" class="flex-grow-1">
+                          <mat-label>Amount to use (₹)</mat-label>
+                          <input matInput type="number" formControlName="walletAmount"
+                                 [max]="walletInfo()!.balance" min="0" />
+                          <mat-hint>
+                            Available: ₹{{ walletInfo()!.balance | number:'1.2-2' }} ·
+                            Max usable: ₹{{ (baseTotal() + gstAmount() - promoDiscount()) | number:'1.2-2' }}
+                          </mat-hint>
+                        </mat-form-field>
+                        <button mat-stroked-button type="button" style="margin-top:4px;"
+                                (click)="toggleWallet(true)">
+                          Use Max
+                        </button>
+                      </div>
+                      @if (walletUsedAmount() > 0) {
+                        <p style="font-size:13px;color:#2e7d32;margin:4px 0 0;">
+                          ✅ ₹{{ walletUsedAmount() | number:'1.2-2' }} will be deducted from wallet.
+                          @if (finalTotal() > 0) {
+                            Remaining ₹{{ finalTotal() | number:'1.2-2' }} via payment.
+                          } @else {
+                            <strong>Wallet covers full amount — no payment needed!</strong>
+                          }
+                        </p>
+                      }
                     }
 
                     <!-- Top-up section -->
@@ -288,13 +304,11 @@
                     <button mat-stroked-button matStepperPrevious>Go Back</button>
                   </div>
                 } @else {
-                  <!-- Reservation Summary -->
                   @if (createdReservation(); as res) {
+
+                    <!-- Reservation Summary -->
                     <div class="reservation-summary mb-3">
-                      <div class="rs-row">
-                        <span>Reservation Code</span>
-                        <strong class="code-tag">{{ res.reservationCode }}</strong>
-                      </div>
+                      <div class="rs-row"><span>Reservation Code</span><strong class="code-tag">{{ res.reservationCode }}</strong></div>
                       <div class="rs-row"><span>Base Amount</span><span>₹{{ res.totalAmount | number:'1.2-2' }}</span></div>
                       @if (res.gstAmount > 0) {
                         <div class="rs-row"><span>GST ({{ res.gstPercent }}%)</span><span>₹{{ res.gstAmount | number:'1.2-2' }}</span></div>
@@ -312,56 +326,98 @@
                       <div class="expiry-notice"><mat-icon>timer</mat-icon> Complete payment within 10 minutes</div>
                     </div>
 
-                    <!-- UPI QR Code -->
-                    @if (qrPayment(); as qr) {
-                      <div class="upi-info-box mb-3">
-                        <div class="upi-header"><mat-icon>qr_code</mat-icon><span>Scan to Pay via UPI</span></div>
-                        <div class="text-center my-3">
-                          <img [src]="'data:image/png;base64,' + qr.qrCodeBase64"
-                               alt="UPI QR Code" style="width:180px;height:180px;border:1px solid #eee;border-radius:8px;" />
+                    <!-- ── WALLET COVERS FULL AMOUNT ── -->
+                    @if (walletCoversAll()) {
+                      <div class="wallet-full-pay mb-3">
+                        <mat-icon style="color:#2e7d32;font-size:28px;">account_balance_wallet</mat-icon>
+                        <div>
+                          <strong>Wallet covers full amount!</strong>
+                          <p style="margin:0;font-size:13px;color:#555">
+                            ₹{{ walletUsedAmount() | number:'1.2-2' }} will be deducted from your wallet. No additional payment needed.
+                          </p>
                         </div>
-                        <div class="upi-row"><span>UPI ID</span><strong>{{ qr.upiId }}</strong></div>
-                        <div class="upi-row"><span>Amount</span><strong>₹{{ qr.amount | number:'1.2-2' }}</strong></div>
-                        <p class="upi-note" style="font-size:12px;color:#888;margin-top:8px;">
-                          After paying via UPI, select "UPI" below and click Pay to confirm.
-                        </p>
+                      </div>
+                      <button mat-raised-button color="primary" class="w-100"
+                              (click)="payWithRazorpay(5)"
+                              [disabled]="isPaying()"
+                              style="height:48px;font-size:16px;">
+                        @if (isPaying()) {
+                          <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;" />
+                          Processing…
+                        } @else {
+                          💰 Confirm — Pay from Wallet
+                        }
+                      </button>
+
+                    } @else {
+                      <!-- ── PARTIAL WALLET INFO ── -->
+                      @if (walletUsedAmount() > 0) {
+                        <div class="wallet-partial-info mb-3">
+                          <mat-icon style="color:#1565c0">account_balance_wallet</mat-icon>
+                          <span>
+                            💰 ₹{{ walletUsedAmount() | number:'1.2-2' }} deducted from wallet.
+                            Pay remaining <strong>₹{{ res.finalAmount | number:'1.2-2' }}</strong> below.
+                          </span>
+                        </div>
+                      }
+
+                      <!-- ── SECTION 1: Hotel UPI QR ── -->
+                      @if (qrPayment(); as qr) {
+                        <div class="upi-info-box mb-3">
+                          <div class="upi-header"><mat-icon>qr_code</mat-icon><span>Option 1 — Scan Hotel UPI QR</span></div>
+                          <div class="text-center my-2">
+                            <img [src]="'data:image/png;base64,' + qr.qrCodeBase64"
+                                 alt="UPI QR" style="width:160px;height:160px;border:1px solid #eee;border-radius:8px;" />
+                          </div>
+                          <div class="upi-row"><span>UPI ID</span><strong>{{ qr.upiId }}</strong></div>
+                          <div class="upi-row"><span>Amount</span><strong>₹{{ qr.amount | number:'1.2-2' }}</strong></div>
+                          <p style="font-size:12px;color:#888;margin:6px 0 8px;">
+                            Scan the QR with any UPI app and pay, then click below.
+                          </p>
+                          <button mat-raised-button color="primary" class="w-100"
+                                  (click)="payManual()" [disabled]="isPaying()">
+                            @if (isPaying()) {
+                              <mat-spinner diameter="18" style="display:inline-block;margin-right:8px;" />
+                              Confirming…
+                            } @else {
+                              ✅ I've Scanned & Paid — Confirm Booking
+                            }
+                          </button>
+                        </div>
+                      }
+
+                      <!-- ── SECTION 2: Razorpay ── -->
+                      <div class="razorpay-section">
+                        <div class="razorpay-header">
+                          <mat-icon>payment</mat-icon>
+                          <span>Option 2 — Pay via Razorpay</span>
+                          <span style="font-size:11px;color:#888;margin-left:8px;">UPI · Cards · Net Banking</span>
+                        </div>
+                        <div class="payment-method-grid mt-2">
+                          <button mat-raised-button (click)="payWithRazorpay(3)"
+                                  [disabled]="isPaying()" class="pay-method-btn upi">
+                            @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 📱 UPI }
+                          </button>
+                          <button mat-raised-button (click)="payWithRazorpay(1)"
+                                  [disabled]="isPaying()" class="pay-method-btn card">
+                            @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 💳 Credit Card }
+                          </button>
+                          <button mat-raised-button (click)="payWithRazorpay(2)"
+                                  [disabled]="isPaying()" class="pay-method-btn card">
+                            @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 💳 Debit Card }
+                          </button>
+                          <button mat-raised-button (click)="payWithRazorpay(4)"
+                                  [disabled]="isPaying()" class="pay-method-btn netbanking">
+                            @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 🏦 Net Banking }
+                          </button>
+                        </div>
                       </div>
                     }
+
+                    <div class="step-actions mt-3">
+                      <button mat-stroked-button matStepperPrevious type="button">Back</button>
+                    </div>
                   }
-
-                  <!-- Payment Options -->
-                  <div class="payment-options mt-3">
-                    <h4 class="pay-method-label">Choose Payment</h4>
-
-                    <!-- Razorpay (primary) -->
-                    <button mat-raised-button color="primary" class="w-100 mb-2"
-                            (click)="payWithRazorpay()"
-                            [disabled]="!createdReservation() || isPaying()"
-                            style="height:48px;font-size:16px;">
-                      @if (isPaying()) {
-                        <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;" />
-                        Processing…
-                      } @else {
-                        💳 Pay ₹{{ createdReservation()?.finalAmount | number:'1.2-2' }} via Razorpay
-                      }
-                    </button>
-                    <p style="font-size:12px;color:#888;text-align:center;margin:4px 0 12px;">
-                      Supports UPI, Cards, Net Banking, Wallets
-                    </p>
-
-                    <!-- Manual confirm (if already paid via QR) -->
-                    @if (qrPayment()) {
-                      <button mat-stroked-button class="w-100"
-                              (click)="payManual()"
-                              [disabled]="!createdReservation() || isPaying()">
-                        ✅ I've already paid via UPI — Confirm Booking
-                      </button>
-                    }
-                  </div>
-
-                  <div class="step-actions mt-3">
-                    <button mat-stroked-button matStepperPrevious type="button">Back</button>
-                  </div>
                 }
               </div>
             </mat-step>

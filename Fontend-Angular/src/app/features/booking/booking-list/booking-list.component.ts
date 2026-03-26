@@ -72,15 +72,34 @@ export class BookingListComponent implements OnInit, OnDestroy {
 
   load() {
     this.loading.set(true);
-    this.bookingService.getMyReservationsHistory(this.currentPage, this.pageSize).subscribe({
-      next: res => {
-        this.reservations.set(res.reservations as ReservationDetailsDto[]);
-        this.totalCount.set(res.totalCount);
+    // Use non-paged endpoint to get ALL reservations including pending ones
+    this.bookingService.getMyReservations().subscribe({
+      next: (list: ReservationDetailsDto[]) => {
+        // Sort: Pending first, then by date desc
+        const sorted = [...list].sort((a, b) => {
+          if (a.status === 'Pending' && b.status !== 'Pending') return -1;
+          if (b.status === 'Pending' && a.status !== 'Pending') return 1;
+          return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
+        });
+        this.allReservations = sorted;
+        this.applyFilter();
         this.loading.set(false);
         this.updateCountdowns();
       },
       error: () => this.loading.set(false)
     });
+  }
+
+  private allReservations: ReservationDetailsDto[] = [];
+
+  private applyFilter() {
+    const filtered = this.selectedStatus === 'All'
+      ? this.allReservations
+      : this.allReservations.filter(r => r.status === this.selectedStatus);
+    this.totalCount.set(filtered.length);
+    // Client-side pagination
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.reservations.set(filtered.slice(start, start + this.pageSize));
   }
 
   private updateCountdowns() {
@@ -170,13 +189,14 @@ export class BookingListComponent implements OnInit, OnDestroy {
   onTabChange(index: number) {
     this.selectedStatus = this.statusTabs[index];
     this.currentPage = 1;
-    this.load();
+    this.applyFilter();
+    this.updateCountdowns();
   }
 
   onPage(e: PageEvent) {
     this.currentPage = e.pageIndex + 1;
     this.pageSize = e.pageSize;
-    this.load();
+    this.applyFilter();
   }
 
   statusClass(status: string): string {

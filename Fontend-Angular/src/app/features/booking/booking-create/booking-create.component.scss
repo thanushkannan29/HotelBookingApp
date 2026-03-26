@@ -261,3 +261,63 @@
     strong { font-family: var(--font-display); font-size: 1.3rem; color: var(--color-primary); }
   }
 }
+
+// ── PAYMENT METHOD GRID ───────────────────────────────────────────────────────
+.payment-method-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 16px;
+
+  .pay-method-btn {
+    height: 52px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+
+    &.upi { background: #e3f2fd; color: #1565c0; border: 2px solid #1565c0; }
+    &.card { background: #f3e5f5; color: #6a1b9a; border: 2px solid #6a1b9a; }
+    &.netbanking { background: #e8f5e9; color: #2e7d32; border: 2px solid #2e7d32; }
+
+    &:hover { filter: brightness(0.95); }
+    &:disabled { opacity: 0.5; }
+  }
+}
+
+.wallet-full-pay {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #e8f5e9;
+  border: 2px solid #2e7d32;
+  border-radius: 10px;
+  padding: 14px 16px;
+}
+
+.wallet-partial-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e3f2fd;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+// ── RAZORPAY SECTION ─────────────────────────────────────────────────────────
+.razorpay-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 14px 16px;
+  background: #fafafa;
+
+  .razorpay-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 4px;
+    color: #333;
+  }
+}

@@ -16,7 +16,7 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task BeginTransactionAsync()
         {
-            // If a transaction is already active, don't start a new one
+            // Guard: don't start a nested transaction
             if (_transaction != null) return;
             _transaction = await _context.Database.BeginTransactionAsync();
         }
@@ -24,7 +24,11 @@ namespace HotelBookingAppWebApi.Services
         public async Task CommitAsync()
         {
             if (_transaction == null)
-                throw new InvalidOperationException("No active transaction to commit.");
+            {
+                // No explicit transaction — just save changes (safe fallback)
+                await _context.SaveChangesAsync();
+                return;
+            }
 
             try
             {
@@ -40,7 +44,7 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task RollbackAsync()
         {
-            if (_transaction == null) return; // nothing to roll back
+            if (_transaction == null) return;
 
             try
             {
