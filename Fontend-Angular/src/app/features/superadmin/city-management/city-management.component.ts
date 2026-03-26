@@ -12,6 +12,7 @@ import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { CityService } from '../../../core/services/city.service';
 import { ToastService } from '../../../core/services/toast.service';
@@ -24,7 +25,7 @@ import { CityDto } from '../../../core/models/models';
     CommonModule, ReactiveFormsModule,
     MatCardModule, MatTableModule, MatButtonModule, MatFormFieldModule,
     MatInputModule, MatPaginatorModule, MatIconModule, MatDialogModule,
-    MatChipsModule, MatProgressSpinnerModule, MatSlideToggleModule
+    MatChipsModule, MatProgressSpinnerModule, MatSlideToggleModule, MatTooltipModule
   ],
   template: `
     <div class="container py-4">

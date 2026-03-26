@@ -14,6 +14,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatChipsModule } from '@angular/material/chips';
 import { RouterLink } from '@angular/router';
 import { DatePipe, CommonModule } from '@angular/common';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
@@ -30,6 +31,7 @@ import { RoomListResponseDto, RoomTypeListDto, RoomOccupancyDto } from '../../..
     MatButtonModule, MatIconModule, MatSlideToggleModule, MatTooltipModule,
     MatTableModule, MatSortModule, MatPaginatorModule,
     MatTabsModule, MatDatepickerModule, MatNativeDateModule, MatProgressSpinnerModule,
+    MatChipsModule,
   ],
   templateUrl: './room-management.component.html',
   styleUrl: './room-management.component.scss'

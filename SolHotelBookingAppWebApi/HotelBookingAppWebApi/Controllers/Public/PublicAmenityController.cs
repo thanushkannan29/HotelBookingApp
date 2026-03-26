@@ -1,6 +1,5 @@
 ﻿using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Amenity;
-using HotelBookingAppWebApi.Models.StaticData;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -28,23 +27,6 @@ namespace HotelBookingAppWebApi.Controllers.Public
         public async Task<IActionResult> Search([FromQuery] string query)
         {
             var result = await _service.SearchAsync(query);
-            return Ok(new { success = true, data = result });
-        }
-    }
-
-    // ── PUBLIC CITY ───────────────────────────────────────────────────────────
-    [Route("api/public/cities")]
-    [ApiController]
-    public class PublicCityController : ControllerBase
-    {
-        /// <summary>Search Indian cities by name (no auth) — min 2 chars</summary>
-        [HttpGet("search")]
-        public IActionResult Search([FromQuery] string query)
-        {
-            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
-                return Ok(new { success = true, data = Array.Empty<object>() });
-
-            var result = IndianCities.Search(query);
             return Ok(new { success = true, data = result });
         }
     }
