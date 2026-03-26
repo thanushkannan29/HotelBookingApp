@@ -141,3 +141,42 @@
 .cancel-form { display: flex; flex-direction: column; gap: 12px; }
 
 .cancel-actions { display: flex; gap: 12px; }
+
+// ── PAY NOW BANNER ────────────────────────────────────────────────────────────
+.pay-now-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+  border: 2px solid #e65100;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin: 16px 24px;
+
+  .pay-now-info {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    mat-icon { font-size: 28px; width: 28px; height: 28px; }
+  }
+
+  @media (max-width: 600px) {
+    flex-direction: column;
+    align-items: flex-start;
+    button { width: 100%; }
+  }
+}
+
+.expired-notice {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fce4ec;
+  border: 1px solid #e91e63;
+  border-radius: 8px;
+  padding: 12px 20px;
+  margin: 8px 24px;
+  color: #880e4f;
+  font-size: 14px;
+}

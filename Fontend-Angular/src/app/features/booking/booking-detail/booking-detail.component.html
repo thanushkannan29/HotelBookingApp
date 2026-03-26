@@ -85,6 +85,38 @@
             </button>
           </div>
 
+          <!-- PAY NOW — shown for Pending reservations within expiry window -->
+          @if (canPayNow(res)) {
+            <div class="pay-now-banner">
+              <div class="pay-now-info">
+                <mat-icon style="color:#e65100">timer</mat-icon>
+                <div>
+                  <strong>Payment Pending</strong>
+                  <p style="margin:0;font-size:13px;color:#666">
+                    Complete payment to confirm your booking.
+                    Expires in <strong style="color:#e65100">{{ timeLeft() }}</strong>
+                  </p>
+                </div>
+              </div>
+              <button mat-raised-button color="primary" (click)="payWithRazorpay()"
+                      [disabled]="isPaying()" style="min-width:160px;">
+                @if (isPaying()) {
+                  <mat-spinner diameter="18" style="display:inline-block;margin-right:6px;" />
+                  Processing…
+                } @else {
+                  💳 Pay ₹{{ (res.finalAmount || res.totalAmount) | number:'1.2-2' }}
+                }
+              </button>
+            </div>
+          }
+
+          @if (isExpired() && res.status === 'Cancelled') {
+            <div class="expired-notice">
+              <mat-icon>event_busy</mat-icon>
+              This reservation expired and was automatically cancelled.
+            </div>
+          }
+
           <!-- Assigned Rooms -->
           @if (res.rooms.length > 0) {
             <div class="assigned-rooms">

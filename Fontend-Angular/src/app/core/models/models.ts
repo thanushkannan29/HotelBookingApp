@@ -333,6 +333,8 @@ export interface ReservationDetailsDto {
   status: string;
   isCheckedIn: boolean;
   createdDate: string;
+  expiryTime?: string;
+  upiId?: string;
   rooms: RoomSummaryDto[];
 }
 

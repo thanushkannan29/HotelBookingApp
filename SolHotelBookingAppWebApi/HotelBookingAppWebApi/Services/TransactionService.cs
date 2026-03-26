@@ -263,5 +263,27 @@ namespace HotelBookingAppWebApi.Services
             Status = t.Status,
             TransactionDate = t.TransactionDate
         };
+
+        // ── RECORD FAILED PAYMENT (Razorpay failure) ──────────────────────────
+        public async Task RecordFailedPaymentAsync(Guid reservationId, Guid userId)
+        {
+            var reservation = await _reservationRepo.GetQueryable()
+                .FirstOrDefaultAsync(r => r.ReservationId == reservationId && r.UserId == userId)
+                ?? throw new NotFoundException("Reservation not found.");
+
+            // Record a Failed transaction so there's an audit trail
+            var transaction = new Transaction
+            {
+                TransactionId   = Guid.NewGuid(),
+                ReservationId   = reservationId,
+                Amount          = reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount,
+                PaymentMethod   = PaymentMethod.UPI,
+                Status          = PaymentStatus.Failed,
+                TransactionDate = DateTime.UtcNow
+            };
+
+            await _transactionRepo.AddAsync(transaction);
+            await _unitOfWork.SaveChangesAsync();
+        }
     }
 }

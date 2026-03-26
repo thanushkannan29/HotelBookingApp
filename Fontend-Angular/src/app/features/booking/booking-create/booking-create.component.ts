@@ -388,7 +388,7 @@ export class BookingCreateComponent implements OnInit {
     const res = this.createdReservation();
     if (!res) return;
 
-    const amountPaise = Math.round(res.finalAmount * 100); // Razorpay uses paise
+    const amountPaise = Math.round(res.finalAmount * 100);
     const hotelName = this.hotel()?.name ?? 'StayHub';
     const upiId = this.qrPayment()?.upiId ?? '';
 
@@ -406,10 +406,7 @@ export class BookingCreateComponent implements OnInit {
         method: 'upi',
         vpa: upiId || undefined,
       },
-      notes: {
-        reservationCode: res.reservationCode,
-        hotelName,
-      },
+      notes: { reservationCode: res.reservationCode, hotelName },
       theme: { color: '#2d3a8c' },
       handler: (response: any) => {
         // Payment successful — record in backend
@@ -431,13 +428,20 @@ export class BookingCreateComponent implements OnInit {
       },
       modal: {
         ondismiss: () => {
-          this.toast.error('Payment cancelled. Your reservation is still pending.');
+          // Record failed/cancelled payment
+          this.bookingService.recordFailedPayment(res.reservationId).subscribe();
+          this.toast.error('Payment cancelled. Your reservation is still pending — you can retry from My Bookings.');
         }
       }
     };
 
     try {
       const rzp = new Razorpay(options);
+      rzp.on('payment.failed', (response: any) => {
+        // Record failed payment in backend
+        this.bookingService.recordFailedPayment(res.reservationId).subscribe();
+        this.toast.error(`Payment failed: ${response.error?.description ?? 'Unknown error'}. You can retry from My Bookings.`);
+      });
       rzp.open();
     } catch {
       this.toast.error('Razorpay failed to load. Please use manual payment below.');

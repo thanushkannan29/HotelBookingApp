@@ -92,4 +92,10 @@ export class BookingService {
       `${this.base}/admin/reservations/${code}/confirm`, {}
     ).pipe(map(() => undefined));
   }
+
+  recordFailedPayment(reservationId: string): Observable<void> {
+    return this.http.post<any>(
+      `${this.base}/transactions/${reservationId}/record-failed`, {}
+    ).pipe(map(() => undefined));
+  }
 }
