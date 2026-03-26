@@ -419,6 +419,7 @@ export interface ReviewResponseDto {
   reviewId: string;
   hotelId: string;
   userId: string;
+  userName: string;
   reservationId: string;
   reservationCode: string;
   rating: number;

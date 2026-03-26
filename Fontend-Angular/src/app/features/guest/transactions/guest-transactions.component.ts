@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
+import { MatSortModule } from '@angular/material/sort';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -22,7 +23,7 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
   imports: [
     CommonModule, RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatTableModule, MatPaginatorModule, MatChipsModule, MatTooltipModule,
+    MatTableModule, MatSortModule, MatPaginatorModule, MatChipsModule, MatTooltipModule,
     MatProgressSpinnerModule,
   ],
   templateUrl: './guest-transactions.component.html',

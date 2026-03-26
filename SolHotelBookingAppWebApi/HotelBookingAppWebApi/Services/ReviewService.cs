@@ -90,6 +90,7 @@ namespace HotelBookingAppWebApi.Services
             {
                 var review = await _reviewRepo.GetQueryable()
                     .Include(r => r.Reservation)
+                    .Include(r => r.User)
                     .FirstOrDefaultAsync(r => r.ReviewId == reviewId)
                     ?? throw new NotFoundException("Review not found.");
 
@@ -141,6 +142,7 @@ namespace HotelBookingAppWebApi.Services
         {
             var query = _reviewRepo.GetQueryable()
                 .Include(r => r.Reservation)
+                .Include(r => r.User)
                 .Where(r => r.HotelId == hotelId)
                 .OrderByDescending(r => r.CreatedDate);
 
@@ -187,6 +189,7 @@ namespace HotelBookingAppWebApi.Services
             ReviewId = r.ReviewId,
             HotelId = r.HotelId,
             UserId = r.UserId,
+            UserName = r.User?.Name ?? string.Empty,
             ReservationId = r.ReservationId,
             ReservationCode = reservationCode,
             Rating = r.Rating,

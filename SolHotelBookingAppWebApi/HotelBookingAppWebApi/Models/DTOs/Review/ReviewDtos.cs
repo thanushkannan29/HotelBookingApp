@@ -7,7 +7,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.Review
         [Required]
         public Guid HotelId { get; set; }
 
-        /// <summary>One review per completed reservation — required</summary>
+        /// <summary>One review per completed reservation ï¿½ required</summary>
         [Required]
         public Guid ReservationId { get; set; }
 
@@ -36,6 +36,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.Review
         public Guid ReviewId { get; set; }
         public Guid HotelId { get; set; }
         public Guid UserId { get; set; }
+        public string UserName { get; set; } = string.Empty;
 
         /// <summary>Which reservation this review is for</summary>
         public Guid ReservationId { get; set; }
