@@ -106,7 +106,10 @@ export class BookingCreateComponent implements OnInit {
     const ci = this.bookingForm.get('checkInDate')?.value as Date | null;
     const co = this.bookingForm.get('checkOutDate')?.value as Date | null;
     if (!ci || !co) return 0;
-    return Math.max(0, Math.floor((co.getTime() - ci.getTime()) / 86400000));
+    // Use midnight-to-midnight to get whole nights (avoids fractional days from time components)
+    const ciMid = new Date(ci); ciMid.setHours(0,0,0,0);
+    const coMid = new Date(co); coMid.setHours(0,0,0,0);
+    return Math.max(0, Math.round((coMid.getTime() - ciMid.getTime()) / 86400000));
   });
 
   baseTotal = computed(() => {
