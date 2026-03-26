@@ -90,6 +90,7 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
               [length]="totalCount()"
               [pageSize]="pageSize"
               [pageSizeOptions]="[10, 20]"
+              showFirstLastButtons
               (page)="onPage($event)"
             />
           </mat-card-content>

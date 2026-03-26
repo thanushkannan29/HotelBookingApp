@@ -366,18 +366,23 @@ namespace HotelBookingAppWebApi.Services
             return list.Select(MapToDetailsDto);
         }
 
-        // ── GET MY RESERVATIONS (PAGED) ───────────────────────────────────────
-        public async Task<PagedReservationResponseDto> GetMyReservationsPagedAsync(Guid userId, int page, int pageSize)
+        // ── GET MY RESERVATIONS (PAGED + STATUS FILTER) ───────────────────────
+        public async Task<PagedReservationResponseDto> GetMyReservationsPagedAsync(Guid userId, int page, int pageSize, string? status = null)
         {
             var query = _reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
                 .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.RoomType)
                 .Include(r => r.Hotel)
                 .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.CreatedDate);
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All" &&
+                Enum.TryParse<ReservationStatus>(status, out var statusEnum))
+                query = query.Where(r => r.Status == statusEnum);
 
             var total = await query.CountAsync();
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+            var items = await query.OrderByDescending(r => r.CreatedDate)
+                .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
             return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
         }
 

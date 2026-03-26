@@ -11,6 +11,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSortModule } from '@angular/material/sort';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
 import { TransactionService } from '../../../core/services/api.services';
@@ -25,7 +26,7 @@ declare var Razorpay: any;
   imports: [
     CommonModule, RouterLink, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatTableModule, MatPaginatorModule, MatTabsModule,
+    MatTableModule, MatPaginatorModule, MatTabsModule, MatSortModule,
     MatProgressSpinnerModule, MatChipsModule, MatTooltipModule,
   ],
   templateUrl: './booking-list.component.html',
@@ -43,7 +44,6 @@ export class BookingListComponent implements OnInit, OnDestroy {
   pageSize     = 10;
   currentPage  = 1;
 
-  // Countdown map: reservationId → timeLeft string
   countdowns: Record<string, string> = {};
   private timer: any;
 
@@ -54,7 +54,6 @@ export class BookingListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.load();
     this.loadRazorpay();
-    // Tick every second to update countdowns
     this.timer = setInterval(() => this.updateCountdowns(), 1000);
   }
 
@@ -72,34 +71,17 @@ export class BookingListComponent implements OnInit, OnDestroy {
 
   load() {
     this.loading.set(true);
-    // Use non-paged endpoint to get ALL reservations including pending ones
-    this.bookingService.getMyReservations().subscribe({
-      next: (list: ReservationDetailsDto[]) => {
-        // Sort: Pending first, then by date desc
-        const sorted = [...list].sort((a, b) => {
-          if (a.status === 'Pending' && b.status !== 'Pending') return -1;
-          if (b.status === 'Pending' && a.status !== 'Pending') return 1;
-          return new Date(b.createdDate).getTime() - new Date(a.createdDate).getTime();
-        });
-        this.allReservations = sorted;
-        this.applyFilter();
+    this.bookingService.getMyReservationsHistory(
+      this.currentPage, this.pageSize, this.selectedStatus
+    ).subscribe({
+      next: (res) => {
+        this.reservations.set(res.reservations as ReservationDetailsDto[]);
+        this.totalCount.set(res.totalCount);
         this.loading.set(false);
         this.updateCountdowns();
       },
       error: () => this.loading.set(false)
     });
-  }
-
-  private allReservations: ReservationDetailsDto[] = [];
-
-  private applyFilter() {
-    const filtered = this.selectedStatus === 'All'
-      ? this.allReservations
-      : this.allReservations.filter(r => r.status === this.selectedStatus);
-    this.totalCount.set(filtered.length);
-    // Client-side pagination
-    const start = (this.currentPage - 1) * this.pageSize;
-    this.reservations.set(filtered.slice(start, start + this.pageSize));
   }
 
   private updateCountdowns() {
@@ -111,13 +93,9 @@ export class BookingListComponent implements OnInit, OnDestroy {
         if (diff > 0) {
           const mins = Math.floor(diff / 60000);
           const secs = Math.floor((diff % 60000) / 1000);
-          updated[r.reservationId] = `${mins}m ${secs}s`;
+          updated[r.reservationId] = mins + 'm ' + secs + 's';
         } else {
           updated[r.reservationId] = 'Expired';
-          // Mark as cancelled locally
-          this.reservations.update(list =>
-            list.map(x => x.reservationId === r.reservationId ? { ...x, status: 'Cancelled' } : x)
-          );
         }
       }
     }
@@ -137,17 +115,16 @@ export class BookingListComponent implements OnInit, OnDestroy {
   payWithRazorpay(res: ReservationDetailsDto) {
     const amountPaise = Math.round((res.finalAmount > 0 ? res.finalAmount : res.totalAmount) * 100);
     const upiId = res.upiId ?? '';
-
     const options = {
       key: 'rzp_test_SVtcM9b8whLPCh',
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
-      description: `Booking: ${res.reservationCode} — ${res.hotelName}`,
+      name: 'StayHub',
+      description: 'Booking: ' + res.reservationCode,
       prefill: { method: 'upi', vpa: upiId || undefined },
       notes: { reservationCode: res.reservationCode },
       theme: { color: '#2d3a8c' },
-      handler: (response: any) => {
+      handler: (_response: any) => {
         this.payingId.set(res.reservationId);
         this.transactionService.createPayment({
           reservationId: res.reservationId,
@@ -155,10 +132,8 @@ export class BookingListComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: () => {
             this.payingId.set(null);
-            this.toast.success(`Payment successful! ${res.reservationCode} confirmed.`);
-            this.reservations.update(list =>
-              list.map(x => x.reservationId === res.reservationId ? { ...x, status: 'Confirmed' } : x)
-            );
+            this.toast.success('Payment successful! ' + res.reservationCode + ' confirmed.');
+            this.load();
           },
           error: () => {
             this.payingId.set(null);
@@ -173,12 +148,11 @@ export class BookingListComponent implements OnInit, OnDestroy {
         }
       }
     };
-
     try {
       const rzp = new Razorpay(options);
       rzp.on('payment.failed', (response: any) => {
         this.bookingService.recordFailedPayment(res.reservationId).subscribe();
-        this.toast.error(`Payment failed: ${response.error?.description ?? 'Unknown error'}`);
+        this.toast.error('Payment failed: ' + (response.error?.description ?? 'Unknown error'));
       });
       rzp.open();
     } catch {
@@ -189,14 +163,13 @@ export class BookingListComponent implements OnInit, OnDestroy {
   onTabChange(index: number) {
     this.selectedStatus = this.statusTabs[index];
     this.currentPage = 1;
-    this.applyFilter();
-    this.updateCountdowns();
+    this.load();
   }
 
   onPage(e: PageEvent) {
     this.currentPage = e.pageIndex + 1;
     this.pageSize = e.pageSize;
-    this.applyFilter();
+    this.load();
   }
 
   statusClass(status: string): string {
@@ -209,8 +182,9 @@ export class BookingListComponent implements OnInit, OnDestroy {
 
   statusEmoji(s: string): string {
     const m: Record<string, string> = {
-      Pending: '⏳', Confirmed: '✅', Completed: '🏆', Cancelled: '❌', NoShow: '👻'
+      All: 'list', Pending: 'schedule', Confirmed: 'check_circle',
+      Completed: 'emoji_events', Cancelled: 'cancel', NoShow: 'person_off'
     };
-    return m[s] ?? '';
+    return m[s] ?? 'info';
   }
 }

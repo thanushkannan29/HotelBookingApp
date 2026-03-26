@@ -101,6 +101,7 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
               [length]="totalCount()"
               [pageSize]="pageSize"
               [pageSizeOptions]="[10, 20, 50]"
+              showFirstLastButtons
               (page)="onPage($event)"
             />
           </mat-card-content>

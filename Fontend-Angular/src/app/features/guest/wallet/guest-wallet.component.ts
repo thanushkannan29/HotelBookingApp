@@ -101,6 +101,7 @@ import { WalletResponseDto, WalletTransactionDto } from '../../../core/models/mo
                 [length]="totalCount()"
                 [pageSize]="pageSize"
                 [pageSizeOptions]="[5, 10, 20]"
+                showFirstLastButtons
                 (page)="onPage($event)"
               />
             }

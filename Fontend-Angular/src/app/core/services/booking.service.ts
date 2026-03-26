@@ -26,8 +26,9 @@ export class BookingService {
       .pipe(map(r => r.data!));
   }
 
-  getMyReservationsHistory(page: number, pageSize: number): Observable<PagedReservationResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getMyReservationsHistory(page: number, pageSize: number, status?: string): Observable<PagedReservationResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (status && status !== 'All') params = params.set('status', status);
     return this.http.get<ApiResponse<PagedReservationResponseDto>>(
       `${this.base}/guest/reservations/history`, { params }
     ).pipe(map(r => r.data!));

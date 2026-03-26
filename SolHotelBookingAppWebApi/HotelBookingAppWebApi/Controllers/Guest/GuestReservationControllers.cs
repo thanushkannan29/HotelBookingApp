@@ -43,11 +43,11 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             return Ok(new { success = true, data = result });
         }
 
-        /// <summary>Get reservation history with pagination</summary>
+        /// <summary>Get reservation history with pagination and optional status filter</summary>
         [HttpGet("history")]
-        public async Task<IActionResult> GetHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? status = null)
         {
-            var result = await _service.GetMyReservationsPagedAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetMyReservationsPagedAsync(GetUserId(), page, pageSize, status);
             return Ok(new { success = true, data = result });
         }
 

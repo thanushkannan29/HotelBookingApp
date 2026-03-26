@@ -127,6 +127,7 @@ import { CityDto } from '../../../core/models/models';
               [length]="totalCount()"
               [pageSize]="pageSize"
               [pageSizeOptions]="[10, 20, 50]"
+              showFirstLastButtons
               (page)="onPage($event)"
             />
           </mat-card-content>
