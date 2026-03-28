@@ -5,13 +5,13 @@
       <div class="welcome-block">
         <div class="welcome-avatar">
           @if (profile()?.profileImageUrl) {
-            <img [src]="profile()!.profileImageUrl!" [alt]="auth.currentUser()?.userName" />
+            <img [src]="profile()!.profileImageUrl!" [alt]="profile()?.name" />
           } @else {
-            <span>{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</span>
+            <span>{{ profile()?.name?.charAt(0)?.toUpperCase() }}</span>
           }
         </div>
         <div>
-          <h1 class="section-title">Welcome back, {{ auth.currentUser()?.userName }}!</h1>
+          <h1 class="section-title">Welcome back, {{ profile()?.name }}!</h1>
           <p class="section-subtitle">Here's a summary of your travel activity.</p>
         </div>
       </div>

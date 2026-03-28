@@ -23,6 +23,10 @@ export class GuestDashboardComponent implements OnInit {
 
   ngOnInit() {
     this.dashboardService.getGuestDashboard().subscribe(d => this.data.set(d));
-    this.userService.getProfile().subscribe(p => this.profile.set(p));
+    this.userService.getProfile().subscribe(p => {
+      this.profile.set(p);
+      // Keep navbar in sync with the latest name from the server
+      if (p.name) this.auth.updateUserName(p.name);
+    });
   }
 }
