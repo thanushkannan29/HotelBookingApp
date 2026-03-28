@@ -8,6 +8,7 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<ReviewResponseDto> UpdateReviewAsync(Guid userId, Guid reviewId, UpdateReviewDto dto);
         Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId);
         Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize);
+        Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(Guid adminUserId, int page, int pageSize);
         Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId);
         Task<PagedMyReviewsResponseDto> GetMyReviewsPagedAsync(Guid userId, int page, int pageSize);
     }

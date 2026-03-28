@@ -271,16 +271,12 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public AdminReviewsController(IReviewService reviewService) => _reviewService = reviewService;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        /// <summary>
-        /// Correction 10D: Admin view of all reviews for their hotel, newest first, paged.
-        /// POST /api/admin/reviews  body: { hotelId, page, pageSize }
-        /// Returns PagedReviewResponseDto — reuses ReviewService.GetReviewsByHotelAsync.
-        /// The frontend must pass the admin's HotelId in the request body.
-        /// </summary>
+        /// <summary>Admin view of all reviews for their hotel, newest first, paged.</summary>
         [HttpPost]
         public async Task<IActionResult> GetHotelReviews([FromBody] GetHotelReviewsRequestDto dto)
         {
-            var result = await _reviewService.GetReviewsByHotelAsync(dto.HotelId, dto.Page, dto.PageSize);
+            // Use admin's own hotel from token — ignore hotelId in body
+            var result = await _reviewService.GetAdminHotelReviewsAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
     }

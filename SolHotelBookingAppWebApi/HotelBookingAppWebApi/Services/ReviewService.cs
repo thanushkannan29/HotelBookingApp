@@ -13,6 +13,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IRepository<Guid, User> _userRepo;
         private readonly IWalletService _walletService;
         private readonly IUnitOfWork _unitOfWork;
 
@@ -20,12 +21,14 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Review> reviewRepo,
             IRepository<Guid, Hotel> hotelRepo,
             IRepository<Guid, Reservation> reservationRepo,
+            IRepository<Guid, User> userRepo,
             IWalletService walletService,
             IUnitOfWork unitOfWork)
         {
             _reviewRepo = reviewRepo;
             _hotelRepo = hotelRepo;
             _reservationRepo = reservationRepo;
+            _userRepo = userRepo;
             _walletService = walletService;
             _unitOfWork = unitOfWork;
         }
@@ -159,6 +162,16 @@ namespace HotelBookingAppWebApi.Services
                 TotalCount = total,
                 Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty))
             };
+        }
+
+        // ── GET HOTEL REVIEWS FOR ADMIN (looks up hotel from admin's userId) ──
+        public async Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(Guid adminUserId, int page, int pageSize)
+        {
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("No hotel associated with this admin.");
+            return await GetReviewsByHotelAsync(admin.HotelId.Value, page, pageSize);
         }
 
         // ── GET MY REVIEWS (non-paged) ────────────────────────────────────────
