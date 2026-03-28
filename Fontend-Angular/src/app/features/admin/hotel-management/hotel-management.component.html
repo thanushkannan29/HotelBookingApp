@@ -34,11 +34,16 @@
             </mat-form-field>
 
             <div class="col-span-1">
-              <app-city-autocomplete [control]="cityControl" />
+              <app-city-autocomplete [control]="cityControl" [stateControl]="stateControl" />
               @if (cityControl.hasError('required') && cityControl.touched) {
                 <mat-error style="font-size:12px;margin:-8px 0 8px 16px;">City is required</mat-error>
               }
             </div>
+
+            <mat-form-field appearance="outline">
+              <mat-label>🗺️ State</mat-label>
+              <input matInput [formControl]="stateControl" placeholder="Auto-filled from city" />
+            </mat-form-field>
 
             <mat-form-field appearance="outline">
               <mat-label>Contact Number</mat-label>

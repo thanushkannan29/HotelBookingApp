@@ -79,7 +79,7 @@ export class HotelManagementComponent implements OnInit {
       return;
     }
     this.isSaving.set(true);
-    const payload = { ...this.form.value, city: this.cityControl.value };
+    const payload = { ...this.form.value, city: this.cityControl.value, state: this.stateControl.value };
     this.hotelService.updateHotel(payload as any).subscribe({
       next: () => { this.toast.success('Hotel updated successfully.'); this.isSaving.set(false); },
       error: () => this.isSaving.set(false),

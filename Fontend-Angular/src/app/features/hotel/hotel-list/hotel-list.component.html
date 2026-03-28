@@ -93,6 +93,7 @@
             <h2 class="section-title">
               {{ filteredResults().length }} hotels found
               @if (cityControl.value) { in {{ cityControl.value }} }
+              @else if (stateControl.value) { in {{ stateControl.value }} }
             </h2>
             <p class="section-subtitle">
               {{ searchForm.get('checkIn')?.value | date:'MMM d' }} –

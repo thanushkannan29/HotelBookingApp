@@ -140,15 +140,17 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   }
 
   search() {
-    const city = this.cityControl.value;
+    const city = this.cityControl.value?.trim();
+    const state = this.stateControl.value?.trim();
     const { checkIn, checkOut } = this.searchForm.value;
-    if (!city || !checkIn || !checkOut) return;
+    if ((!city && !state) || !checkIn || !checkOut) return;
 
     this.isSearching.set(true);
     this.currentPage.set(1);
 
     this.hotelService.searchHotelsWithFilters({
-      city,
+      city: city || undefined,
+      state: state || undefined,
       checkIn: this.formatDate(checkIn!),
       checkOut: this.formatDate(checkOut!),
       pageNumber: 1,

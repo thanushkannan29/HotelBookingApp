@@ -136,7 +136,8 @@ export interface RoomAvailabilityDto {
 }
 
 export interface SearchHotelRequestDto {
-  city: string;
+  city?: string;
+  state?: string;
   checkIn: string;
   checkOut: string;
   pageNumber: number;
