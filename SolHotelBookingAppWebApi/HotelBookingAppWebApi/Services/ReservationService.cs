@@ -19,7 +19,6 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IRepository<Guid, User> _userRepo;
-        private readonly IRefundRequestService _refundRequestService;
         private readonly IWalletService _walletService;
         private readonly IPromoCodeService _promoCodeService;
         private readonly IUnitOfWork _unitOfWork;
@@ -33,7 +32,6 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, ReservationRoom> reservationRoomRepo,
             IRepository<Guid, Hotel> hotelRepo,
             IRepository<Guid, User> userRepo,
-            IRefundRequestService refundRequestService,
             IWalletService walletService,
             IPromoCodeService promoCodeService,
             IUnitOfWork unitOfWork)
@@ -46,7 +44,6 @@ namespace HotelBookingAppWebApi.Services
             _reservationRoomRepo = reservationRoomRepo;
             _hotelRepo = hotelRepo;
             _userRepo = userRepo;
-            _refundRequestService = refundRequestService;
             _walletService = walletService;
             _promoCodeService = promoCodeService;
             _unitOfWork = unitOfWork;
@@ -181,16 +178,16 @@ namespace HotelBookingAppWebApi.Services
                 }
             }
 
+            var cancellationFeeAmount = dto.PayCancellationFee
+                ? Math.Round(totalAmount * 0.10m, 2)
+                : 0m;
+
             var walletUsed = 0m;
             if (dto.WalletAmountToUse > 0)
             {
-                var maxWallet = Math.Max(0, totalAmount + gstAmount - discountAmount);
+                var maxWallet = Math.Max(0, totalAmount + gstAmount - discountAmount + cancellationFeeAmount);
                 walletUsed = Math.Min(dto.WalletAmountToUse, maxWallet);
             }
-
-            var cancellationFeeAmount = 0m;
-            if (dto.PayCancellationFee)
-                cancellationFeeAmount = Math.Round(totalAmount * 0.10m, 2);
 
             var finalAmount = Math.Max(0, totalAmount + gstAmount - discountAmount - walletUsed + cancellationFeeAmount);
 
@@ -507,8 +504,9 @@ namespace HotelBookingAppWebApi.Services
                     if (refundPercent > 0)
                     {
                         var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);
-                        await _refundRequestService.CreateRefundRequestAsync(
-                            res.ReservationId, userId, reason, refundAmount, refundNote);
+                        // Auto-credit wallet directly — no manual admin approval needed
+                        await _walletService.CreditAsync(userId, refundAmount,
+                            $"Auto-refund ({refundNote}) for {res.ReservationCode}");
                     }
                 }
 

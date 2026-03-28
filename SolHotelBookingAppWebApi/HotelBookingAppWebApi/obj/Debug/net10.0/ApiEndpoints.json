@@ -921,32 +921,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicCityController",
-    "Method": "Search",
-    "RelativePath": "api/public/cities",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicCityController",
-    "Method": "GetAll",
-    "RelativePath": "api/public/cities/all",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
     "Method": "GetDetails",
     "RelativePath": "api/public/hotels/{hotelId}",
@@ -1398,101 +1372,6 @@
         "Name": "dateTo",
         "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
         "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminCityController",
-    "Method": "GetAll",
-    "RelativePath": "api/superadmin/cities",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminCityController",
-    "Method": "Add",
-    "RelativePath": "api/superadmin/cities",
-    "HttpMethod": "POST",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.City.CreateCityDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminCityController",
-    "Method": "Update",
-    "RelativePath": "api/superadmin/cities/{id}",
-    "HttpMethod": "PUT",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.City.UpdateCityDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminCityController",
-    "Method": "Delete",
-    "RelativePath": "api/superadmin/cities/{id}",
-    "HttpMethod": "DELETE",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminCityController",
-    "Method": "ToggleStatus",
-    "RelativePath": "api/superadmin/cities/{id}/status",
-    "HttpMethod": "PATCH",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
       }
     ],
     "ReturnTypes": []

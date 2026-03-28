@@ -48,7 +48,7 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
       padding: 4px 0 12px;
       &::-webkit-scrollbar { display: none; }
     }
-    .carousel-item { flex: 0 0 280px; }
+    .carousel-item { flex: 0 0 280px; min-height: 380px; display: flex; flex-direction: column; }
     .carousel-btn {
       flex-shrink: 0;
       background: var(--color-surface) !important;

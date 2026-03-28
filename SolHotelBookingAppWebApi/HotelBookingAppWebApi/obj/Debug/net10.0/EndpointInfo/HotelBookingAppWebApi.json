@@ -1494,39 +1494,6 @@
         }
       }
     },
-    "/api/public/cities": {
-      "get": {
-        "tags": [
-          "PublicCity"
-        ],
-        "parameters": [
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/public/cities/all": {
-      "get": {
-        "tags": [
-          "PublicCity"
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/public/hotels/top": {
       "get": {
         "tags": [
@@ -2240,160 +2207,6 @@
         }
       }
     },
-    "/api/superadmin/cities": {
-      "get": {
-        "tags": [
-          "SuperAdminCity"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
-            }
-          },
-          {
-            "name": "search",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
-      "post": {
-        "tags": [
-          "SuperAdminCity"
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCityDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCityDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateCityDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/superadmin/cities/{id}": {
-      "put": {
-        "tags": [
-          "SuperAdminCity"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCityDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCityDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateCityDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      },
-      "delete": {
-        "tags": [
-          "SuperAdminCity"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/superadmin/cities/{id}/status": {
-      "patch": {
-        "tags": [
-          "SuperAdminCity"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/superadmin/hotels": {
       "get": {
         "tags": [
@@ -2823,31 +2636,6 @@
         },
         "additionalProperties": false
       },
-      "CreateCityDto": {
-        "required": [
-          "cityName",
-          "stateName"
-        ],
-        "type": "object",
-        "properties": {
-          "cityName": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "stateName": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "pinCode": {
-            "maxLength": 10,
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
-      },
       "CreateInventoryDto": {
         "required": [
           "endDate",
@@ -2940,6 +2728,9 @@
           "walletAmountToUse": {
             "type": "number",
             "format": "double"
+          },
+          "payCancellationFee": {
+            "type": "boolean"
           }
         },
         "additionalProperties": false
@@ -3355,31 +3146,6 @@
           },
           "isActive": {
             "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
-      "UpdateCityDto": {
-        "required": [
-          "cityName",
-          "stateName"
-        ],
-        "type": "object",
-        "properties": {
-          "cityName": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "stateName": {
-            "maxLength": 100,
-            "minLength": 1,
-            "type": "string"
-          },
-          "pinCode": {
-            "maxLength": 10,
-            "type": "string",
-            "nullable": true
           }
         },
         "additionalProperties": false
