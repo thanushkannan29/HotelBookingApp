@@ -13,7 +13,7 @@ namespace HotelBookingAppWebApi.Models
         [Required]
         public Guid HotelId { get; set; }
 
-        /// <summary>FK to Reservations — one review per completed reservation</summary>
+        /// <summary>FK to Reservations ï¿½ one review per completed reservation</summary>
         [Required]
         public Guid ReservationId { get; set; }
 
@@ -25,6 +25,9 @@ namespace HotelBookingAppWebApi.Models
 
         /// <summary>Optional review image URL</summary>
         public string? ImageUrl { get; set; }
+
+        /// <summary>Hotel admin reply to this review</summary>
+        public string? AdminReply { get; set; }
 
         [Required]
         public DateTime CreatedDate { get; set; }

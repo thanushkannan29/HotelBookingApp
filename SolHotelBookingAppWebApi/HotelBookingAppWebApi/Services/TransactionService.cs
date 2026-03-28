@@ -156,6 +156,10 @@ namespace HotelBookingAppWebApi.Services
             var total = await query.CountAsync();
 
             var data = await query
+                .Include(t => t.Reservation)
+                    .ThenInclude(r => r!.Hotel)
+                .Include(t => t.Reservation)
+                    .ThenInclude(r => r!.User)
                 .OrderByDescending(t => t.TransactionDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -241,6 +245,9 @@ namespace HotelBookingAppWebApi.Services
         {
             TransactionId = t.TransactionId,
             ReservationId = t.ReservationId,
+            ReservationCode = t.Reservation?.ReservationCode ?? string.Empty,
+            HotelName = t.Reservation?.Hotel?.Name ?? string.Empty,
+            GuestName = t.Reservation?.User?.Name ?? string.Empty,
             Amount = t.Amount,
             PaymentMethod = t.PaymentMethod,
             Status = t.Status,

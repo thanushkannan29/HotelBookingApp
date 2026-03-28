@@ -202,17 +202,35 @@ namespace HotelBookingAppWebApi.Services
             return new PagedMyReviewsResponseDto { TotalCount = total, Reviews = reviews.Select(MapToMyDto) };
         }
 
+        // ── ADMIN: REPLY TO REVIEW ────────────────────────────────────────────
+        public async Task ReplyToReviewAsync(Guid adminUserId, Guid reviewId, string reply)
+        {
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("No hotel associated with this admin.");
+
+            var review = await _reviewRepo.GetQueryable()
+                .FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.HotelId == admin.HotelId)
+                ?? throw new NotFoundException("Review not found or does not belong to your hotel.");
+
+            review.AdminReply = reply;
+            await _unitOfWork.SaveChangesAsync();
+        }
+
         private static ReviewResponseDto MapToDto(Review r, string reservationCode) => new()
         {
             ReviewId = r.ReviewId,
             HotelId = r.HotelId,
             UserId = r.UserId,
             UserName = r.User?.Name ?? string.Empty,
+            UserProfileImageUrl = r.User?.ProfileImageUrl,
             ReservationId = r.ReservationId,
             ReservationCode = reservationCode,
             Rating = r.Rating,
             Comment = r.Comment,
             ImageUrl = r.ImageUrl,
+            AdminReply = r.AdminReply,
             CreatedDate = r.CreatedDate,
             ContributionPoints = 100
         };
