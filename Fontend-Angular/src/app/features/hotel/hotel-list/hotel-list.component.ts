@@ -16,6 +16,7 @@ import { AmenityResponseDto, HotelListItemDto } from '../../../core/models/model
 import { HotelService } from '../../../core/services/hotel.service';
 import { HotelCardComponent } from '../hotel-card/hotel-card.component';
 import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
+import { InfiniteCarouselComponent } from '../../../shared/components/infinite-carousel/infinite-carousel.component';
 
 @Component({
   selector: 'app-hotel-list',
@@ -26,6 +27,7 @@ import { CityAutocompleteComponent } from '../../../shared/components/city-autoc
     MatButtonModule, MatIconModule, MatDatepickerModule, MatNativeDateModule,
     MatSliderModule, MatCheckboxModule, MatPaginatorModule,
     HotelCardComponent, CityAutocompleteComponent, DatePipe,
+    InfiniteCarouselComponent,
   ],
   templateUrl: './hotel-list.component.html',
   styleUrl: './hotel-list.component.scss'

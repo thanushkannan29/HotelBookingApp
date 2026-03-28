@@ -54,13 +54,7 @@
         @if (topHotels().length > 0) {
           <section class="netflix-row">
             <h2 class="row-title">⭐ Top 10 Hotels</h2>
-            <div class="scroll-row">
-              @for (h of topHotels(); track h.hotelId) {
-                <div class="scroll-card-wrapper">
-                  <app-hotel-card [hotel]="h" />
-                </div>
-              }
-            </div>
+            <app-infinite-carousel [hotels]="topHotels()" />
           </section>
         }
 
@@ -71,13 +65,7 @@
               <mat-icon style="vertical-align:middle;font-size:20px">location_on</mat-icon>
               Hotels in {{ group.stateName }}
             </h2>
-            <div class="scroll-row">
-              @for (h of group.hotels; track h.hotelId) {
-                <div class="scroll-card-wrapper">
-                  <app-hotel-card [hotel]="h" />
-                </div>
-              }
-            </div>
+            <app-infinite-carousel [hotels]="group.hotels" />
           </section>
         }
 

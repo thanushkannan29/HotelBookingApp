@@ -207,6 +207,20 @@
       font-family: var(--font-body);
       width: 100%;
     }
+
+    &.mobile-cta {
+      background: var(--color-primary);
+      color: white;
+      text-align: center;
+      margin-top: 4px;
+      &:hover { background: var(--color-primary-light); }
+    }
+  }
+
+  .mobile-divider {
+    height: 1px;
+    background: var(--color-border);
+    margin: 6px 0;
   }
 }
 
