@@ -78,9 +78,8 @@ export class BookingCreateComponent implements OnInit {
   toggleWallet(checked: boolean) {
     this.useWallet.set(checked);
     if (checked) {
-      // Auto-fill wallet amount with max usable
       const balance = this.walletInfo()?.balance ?? 0;
-      const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount());
+      const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() + this.cancellationFeeAmount() - this.promoDiscount());
       const autoAmount = Math.min(balance, maxUsable);
       this.bookingForm.patchValue({ walletAmount: autoAmount });
       this.walletAmountSignal.set(autoAmount);
@@ -145,7 +144,7 @@ export class BookingCreateComponent implements OnInit {
     if (!this.useWallet()) return 0;
     const entered = this.walletAmountSignal();
     const balance = this.walletInfo()?.balance ?? 0;
-    const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount());
+    const maxUsable = Math.max(0, this.baseTotal() + this.gstAmount() + this.cancellationFeeAmount() - this.promoDiscount());
     return Math.min(entered, balance, maxUsable);
   });
 

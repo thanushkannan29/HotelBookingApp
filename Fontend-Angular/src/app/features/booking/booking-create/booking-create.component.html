@@ -195,7 +195,7 @@
                                  [max]="walletInfo()!.balance" min="0" />
                           <mat-hint>
                             Available: ₹{{ walletInfo()!.balance | number:'1.2-2' }} ·
-                            Max usable: ₹{{ (baseTotal() + gstAmount() - promoDiscount()) | number:'1.2-2' }}
+                            Max usable: ₹{{ (baseTotal() + gstAmount() + cancellationFeeAmount() - promoDiscount()) | number:'1.2-2' }}
                           </mat-hint>
                         </mat-form-field>
                         <button mat-stroked-button type="button" style="margin-top:4px;"
@@ -489,6 +489,9 @@
                   }
                   @if (walletUsedAmount() > 0) {
                     <div class="sb-row" style="color:#2e7d32"><span>💰 Wallet</span><span>-₹{{ walletUsedAmount() | number:'1.2-2' }}</span></div>
+                  }
+                  @if (cancellationFeeAmount() > 0) {
+                    <div class="sb-row" style="color:#1565c0"><span>🛡️ Cancel Protection</span><span>+₹{{ cancellationFeeAmount() | number:'1.2-2' }}</span></div>
                   }
                   <div class="sb-row sb-total">
                     <span>Final Total</span>
