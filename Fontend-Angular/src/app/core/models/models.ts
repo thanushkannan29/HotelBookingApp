@@ -103,11 +103,11 @@ export interface HotelDetailsDto {
 
 export interface ReviewDto {
   userName: string;
-  userProfileImageUrl?: string;
+  userProfileImageUrl?: string; // guest profile pic
   rating: number;
   comment: string;
   imageUrl?: string;
-  adminReply?: string;
+  adminReply?: string; // hotel admin reply
   createdDate: string;
 }
 
