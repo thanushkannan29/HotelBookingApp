@@ -91,8 +91,12 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
       this.walletAmountSignal.set(0);
     }
   }
-  today              = new Date();
-  tomorrow           = new Date(Date.now() + 86400000);
+  get today(): Date {
+    const d = new Date(); d.setHours(0, 0, 0, 0); return d;
+  }
+  get tomorrow(): Date {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1); return d;
+  }
 
   // Reactive signals for form values that drive computed totals
   selectedRoomTypeId = signal<string>('');
@@ -226,7 +230,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
     let checkIn  = p['checkIn']  ? this.parseLocalDate(p['checkIn'])  : null;
     let checkOut = p['checkOut'] ? this.parseLocalDate(p['checkOut']) : null;
 
-    // Auto-advance past dates to tomorrow
+    // Auto-advance past/today dates to tomorrow
     const todayLocal = new Date(); todayLocal.setHours(0,0,0,0);
     if (checkIn) {
       const ci = new Date(checkIn); ci.setHours(0,0,0,0);
@@ -237,6 +241,15 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
           const nights = Math.round((checkOut.getTime() - origCheckIn.getTime()) / 86400000);
           checkOut = new Date(checkIn); checkOut.setDate(checkOut.getDate() + Math.max(1, nights));
         }
+      }
+    }
+    // Also ensure checkout is after checkin and not in the past
+    if (checkOut) {
+      const co = new Date(checkOut); co.setHours(0,0,0,0);
+      const minCo = checkIn ? new Date(checkIn) : new Date(todayLocal);
+      minCo.setDate(minCo.getDate() + 1);
+      if (co <= minCo) {
+        checkOut = new Date(minCo);
       }
     }
 
@@ -618,8 +631,10 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
 
   get checkOutMin(): Date {
     const ci = this.checkInDate();
-    if (!ci) return this.tomorrow;
+    const minDate = new Date(this.tomorrow);
+    if (!ci) return minDate;
     const d = new Date(ci); d.setDate(d.getDate() + 1);
-    return d;
+    // Return whichever is later — day after check-in or tomorrow
+    return d > minDate ? d : minDate;
   }
 }
