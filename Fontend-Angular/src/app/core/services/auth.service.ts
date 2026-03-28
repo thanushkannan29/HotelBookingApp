@@ -85,6 +85,12 @@ export class AuthService {
     this.router.navigate(['/auth/login']);
   }
 
+  /** Call after a profile update so the navbar/dashboard reflect the new name immediately */
+  updateUserName(newName: string): void {
+    const user = this._currentUser();
+    if (user) this._currentUser.set({ ...user, userName: newName });
+  }
+
   private clearStorage(): void {
     localStorage.removeItem(this.TOKEN_KEY);
     this._token.set(null);

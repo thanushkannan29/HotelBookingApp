@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { UserService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
+import { AuthService } from '../../../core/services/auth.service';
 import { UserProfileResponseDto } from '../../../core/models/models';
 import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
 
@@ -23,6 +24,7 @@ import { CityAutocompleteComponent } from '../../../shared/components/city-autoc
 export class GuestProfileComponent implements OnInit {
   private userService = inject(UserService);
   private toast = inject(ToastService);
+  private auth = inject(AuthService);
   private fb = inject(FormBuilder);
 
   profile = signal<UserProfileResponseDto | null>(null);
@@ -69,6 +71,8 @@ export class GuestProfileComponent implements OnInit {
         this.isEditing.set(false);
         this.isSaving.set(false);
         this.toast.success('Profile updated successfully.');
+        // Sync the new name into the auth signal so navbar/dashboard update immediately
+        if (updated.name) this.auth.updateUserName(updated.name);
       },
       error: () => this.isSaving.set(false),
     });
