@@ -344,6 +344,16 @@
 
                     <!-- Reservation Summary -->
                     <div class="reservation-summary mb-3">
+                      @if (resumeTimeLeft()) {
+                        <div class="expiry-notice" [class.expiry-urgent]="resumeExpired()">
+                          <mat-icon>{{ resumeExpired() ? 'event_busy' : 'timer' }}</mat-icon>
+                          @if (resumeExpired()) {
+                            Reservation expired — payment window closed.
+                          } @else {
+                            Time remaining to pay: <strong style="color:#e65100">{{ resumeTimeLeft() }}</strong>
+                          }
+                        </div>
+                      }
                       <div class="rs-row"><span>Reservation Code</span><strong class="code-tag">{{ res.reservationCode }}</strong></div>
                       <div class="rs-row"><span>Base Amount</span><span>₹{{ res.totalAmount | number:'1.2-2' }}</span></div>
                       @if (res.gstAmount > 0) {
@@ -375,7 +385,7 @@
                       </div>
                       <button mat-raised-button color="primary" class="w-100"
                               (click)="payWithRazorpay(5)"
-                              [disabled]="isPaying()"
+                              [disabled]="isPaying() || resumeExpired()"
                               style="height:48px;font-size:16px;">
                         @if (isPaying()) {
                           <mat-spinner diameter="20" style="display:inline-block;margin-right:8px;" />
@@ -411,7 +421,7 @@
                             Scan the QR with any UPI app and pay, then click below.
                           </p>
                           <button mat-raised-button color="primary" class="w-100"
-                                  (click)="payManual()" [disabled]="isPaying()">
+                                  (click)="payManual()" [disabled]="isPaying() || resumeExpired()">
                             @if (isPaying()) {
                               <mat-spinner diameter="18" style="display:inline-block;margin-right:8px;" />
                               Confirming…
@@ -431,19 +441,19 @@
                         </div>
                         <div class="payment-method-grid mt-2">
                           <button mat-raised-button (click)="payWithRazorpay(3)"
-                                  [disabled]="isPaying()" class="pay-method-btn upi">
+                                  [disabled]="isPaying() || resumeExpired()" class="pay-method-btn upi">
                             @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 📱 UPI }
                           </button>
                           <button mat-raised-button (click)="payWithRazorpay(1)"
-                                  [disabled]="isPaying()" class="pay-method-btn card">
+                                  [disabled]="isPaying() || resumeExpired()" class="pay-method-btn card">
                             @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 💳 Credit Card }
                           </button>
                           <button mat-raised-button (click)="payWithRazorpay(2)"
-                                  [disabled]="isPaying()" class="pay-method-btn card">
+                                  [disabled]="isPaying() || resumeExpired()" class="pay-method-btn card">
                             @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 💳 Debit Card }
                           </button>
                           <button mat-raised-button (click)="payWithRazorpay(4)"
-                                  [disabled]="isPaying()" class="pay-method-btn netbanking">
+                                  [disabled]="isPaying() || resumeExpired()" class="pay-method-btn netbanking">
                             @if (isPaying()) { <mat-spinner diameter="14" /> } @else { 🏦 Net Banking }
                           </button>
                         </div>

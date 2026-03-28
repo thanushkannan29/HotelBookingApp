@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, computed, ViewChild, effect } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, computed, ViewChild, effect } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
@@ -25,7 +25,7 @@ import { WalletService } from '../../../core/services/wallet.service';
 import { ToastService } from '../../../core/services/toast.service';
 import {
   HotelDetailsDto, RoomAvailabilityDto, AvailableRoomDto,
-  ReservationResponseDto, QrPaymentResponseDto, WalletResponseDto
+  ReservationResponseDto, ReservationDetailsDto, QrPaymentResponseDto, WalletResponseDto
 } from '../../../core/models/models';
 
 // Razorpay type declaration
@@ -45,7 +45,7 @@ declare var Razorpay: any;
   templateUrl: './booking-create.component.html',
   styleUrl: './booking-create.component.scss'
 })
-export class BookingCreateComponent implements OnInit {
+export class BookingCreateComponent implements OnInit, OnDestroy {
   @ViewChild('stepper') stepper!: MatStepper;
 
   private fb                 = inject(FormBuilder);
@@ -74,6 +74,9 @@ export class BookingCreateComponent implements OnInit {
   useWallet          = signal(false);
   showTopUp          = signal(false);
   payCancellationFee = signal(false);
+  resumeTimeLeft     = signal('');
+  resumeExpired      = signal(false);
+  private resumeTimer: any;
 
   toggleWallet(checked: boolean) {
     this.useWallet.set(checked);
@@ -169,6 +172,57 @@ export class BookingCreateComponent implements OnInit {
 
   ngOnInit() {
     const p = this.route.snapshot.queryParams;
+
+    // ── RESUME MODE: returning from booking-detail to complete payment ──
+    const resumeCode = p['resume'];
+    if (resumeCode) {
+      this.isLoadingHotel.set(true);
+      this.bookingService.getReservationByCode(resumeCode).subscribe({
+        next: details => {
+          // Populate hotel info
+          this.hotelService.getHotelDetails(details.hotelId).subscribe(h => {
+            this.hotel.set(h);
+            this.isLoadingHotel.set(false);
+          });
+          // Map ReservationDetailsDto → ReservationResponseDto shape
+          const res: ReservationResponseDto = {
+            reservationCode: details.reservationCode,
+            reservationId:   details.reservationId,
+            totalAmount:     details.totalAmount,
+            gstPercent:      details.gstPercent,
+            gstAmount:       details.gstAmount,
+            discountPercent: details.discountPercent,
+            discountAmount:  details.discountAmount,
+            walletAmountUsed: details.walletAmountUsed,
+            finalAmount:     details.finalAmount,
+            status:          details.status,
+            totalRooms:      details.numberOfRooms,
+            rooms:           details.rooms,
+          };
+          this.createdReservation.set(res);
+          // Restore signals so the countdown and expiry work
+          if (details.expiryTime) {
+            this.startResumeCountdown(new Date(details.expiryTime));
+          }
+          // Load QR for payment
+          this.bookingService.getPaymentQr(details.reservationId).subscribe({
+            next: qr => this.qrPayment.set(qr),
+            error: () => {}
+          });
+          // Jump to step 3 after view init
+          setTimeout(() => {
+            this.stepper?.steps.forEach((_, i) => {
+              if (i < 2) this.stepper.steps.get(i)!.completed = true;
+            });
+            this.stepper?.selectedIndex !== 2 && (this.stepper.selectedIndex = 2);
+          }, 200);
+        },
+        error: () => this.isLoadingHotel.set(false)
+      });
+      this.loadWallet();
+      this.loadRazorpay();
+      return;
+    }
     let checkIn  = p['checkIn']  ? this.parseLocalDate(p['checkIn'])  : null;
     let checkOut = p['checkOut'] ? this.parseLocalDate(p['checkOut']) : null;
 
@@ -527,6 +581,27 @@ export class BookingCreateComponent implements OnInit {
       },
       error: () => this.isPaying.set(false),
     });
+  }
+
+  private startResumeCountdown(expiry: Date) {
+    const tick = () => {
+      const diff = expiry.getTime() - Date.now();
+      if (diff <= 0) {
+        this.resumeTimeLeft.set('Expired');
+        this.resumeExpired.set(true);
+        clearInterval(this.resumeTimer);
+        return;
+      }
+      const mins = Math.floor(diff / 60000);
+      const secs = Math.floor((diff % 60000) / 1000);
+      this.resumeTimeLeft.set(`${mins}m ${secs}s`);
+    };
+    tick();
+    this.resumeTimer = setInterval(tick, 1000);
+  }
+
+  ngOnDestroy() {
+    if (this.resumeTimer) clearInterval(this.resumeTimer);
   }
 
   private parseLocalDate(s: string): Date {
