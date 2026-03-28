@@ -1,5 +1,5 @@
 ﻿import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
@@ -10,11 +10,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { BookingService } from '../../../core/services/booking.service';
-import { TransactionService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
 import { ReservationDetailsDto } from '../../../core/models/models';
-
-declare var Razorpay: any;
 
 @Component({
   selector: 'app-booking-list',
@@ -29,14 +26,13 @@ declare var Razorpay: any;
   styleUrl: './booking-list.component.scss'
 })
 export class BookingListComponent implements OnInit, OnDestroy {
-  private bookingService     = inject(BookingService);
-  private transactionService = inject(TransactionService);
-  private toast              = inject(ToastService);
+  private bookingService = inject(BookingService);
+  private toast          = inject(ToastService);
+  private router         = inject(Router);
 
   reservations = signal<ReservationDetailsDto[]>([]);
   totalCount   = signal(0);
   loading      = signal(false);
-  payingId     = signal<string | null>(null);
   pageSize     = 10;
   currentPage  = 1;
 
@@ -49,20 +45,11 @@ export class BookingListComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.load();
-    this.loadRazorpay();
     this.timer = setInterval(() => this.updateCountdowns(), 1000);
   }
 
   ngOnDestroy() {
     if (this.timer) clearInterval(this.timer);
-  }
-
-  private loadRazorpay() {
-    if (typeof Razorpay !== 'undefined') return;
-    const script = document.createElement('script');
-    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
-    script.async = true;
-    document.head.appendChild(script);
   }
 
   load() {
@@ -106,50 +93,8 @@ export class BookingListComponent implements OnInit, OnDestroy {
     return this.countdowns[res.reservationId] ?? '';
   }
 
-  payWithRazorpay(res: ReservationDetailsDto) {
-    const amountPaise = Math.round((res.finalAmount > 0 ? res.finalAmount : res.totalAmount) * 100);
-    const options = {
-      key: 'rzp_test_SVtcM9b8whLPCh',
-      amount: amountPaise,
-      currency: 'INR',
-      name: 'StayHub',
-      description: 'Booking: ' + res.reservationCode,
-      notes: { reservationCode: res.reservationCode },
-      theme: { color: '#2d3a8c' },
-      handler: (_response: any) => {
-        this.payingId.set(res.reservationId);
-        this.transactionService.createPayment({
-          reservationId: res.reservationId,
-          paymentMethod: 3,
-        }).subscribe({
-          next: () => {
-            this.payingId.set(null);
-            this.toast.success('Payment successful! ' + res.reservationCode + ' confirmed.');
-            this.load();
-          },
-          error: () => {
-            this.payingId.set(null);
-            this.toast.error('Payment recorded but confirmation failed. Contact support.');
-          }
-        });
-      },
-      modal: {
-        ondismiss: () => {
-          this.bookingService.recordFailedPayment(res.reservationId).subscribe();
-          this.toast.error('Payment cancelled. You can retry before the reservation expires.');
-        }
-      }
-    };
-    try {
-      const rzp = new Razorpay(options);
-      rzp.on('payment.failed', (response: any) => {
-        this.bookingService.recordFailedPayment(res.reservationId).subscribe();
-        this.toast.error('Payment failed: ' + (response.error?.description ?? 'Unknown error'));
-      });
-      rzp.open();
-    } catch {
-      this.toast.error('Razorpay failed to load. Please open the booking to retry.');
-    }
+  goToPayment(res: ReservationDetailsDto) {
+    this.router.navigate(['/booking/create'], { queryParams: { resume: res.reservationCode } });
   }
 
   onTabChange(index: number) {
