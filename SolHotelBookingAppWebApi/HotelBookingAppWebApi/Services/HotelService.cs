@@ -257,9 +257,11 @@ namespace HotelBookingAppWebApi.Services
                 Name = hotel.Name,
                 Address = hotel.Address,
                 City = hotel.City,
+                State = hotel.State,
                 Description = hotel.Description,
                 ImageUrl = hotel.ImageUrl,
                 ContactNumber = hotel.ContactNumber,
+                UpiId = hotel.UpiId,
                 GstPercent = hotel.GstPercent,
                 AverageRating = reviews.Any()
                     ? Math.Round(reviews.Average(r => (decimal)r.Rating), 2) : 0m,

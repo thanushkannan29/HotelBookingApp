@@ -769,8 +769,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\SuperAdminRevenueService.cs",
               "ViewState": "AgIAAEEAAAAAAAAAAAAtwFIAAABJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-27T07:01:56.993Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-27T07:01:56.993Z"
             },
             {
               "$type": "Document",
@@ -782,8 +781,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Models\\SuperAdminRevenue.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAApAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-27T09:52:15.191Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-27T09:52:15.191Z"
             },
             {
               "$type": "Document",
@@ -795,8 +793,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\BackgroundServices\\PromoCodeGenerationService.cs",
               "ViewState": "AgIAAB4AAAAAAAAAAAAYwCoAAAAVAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-27T07:01:09.647Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-27T07:01:09.647Z"
             },
             {
               "$type": "Document",
@@ -808,8 +805,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\RefundRequestService.cs",
               "ViewState": "AgIAACIAAAAAAAAAAAAQwPMAAAANAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-19T16:51:55.94Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-19T16:51:55.94Z"
             },
             {
               "$type": "Document",
@@ -819,7 +815,7 @@
               "RelativeDocumentMoniker": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
               "ToolTip": "C:\\Users\\Thanush.K\\OneDrive - New American Funding\\Desktop\\My_Naf_Final_Project\\HotelBookingApp\\SolHotelBookingAppWebApi\\HotelBookingAppWebApi\\Services\\ReservationService.cs",
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\ReservationService.cs",
-              "ViewState": "AgIAAKcCAAAAAAAAAAAowLACAAAjAAAAAAAAAA==",
+              "ViewState": "AgIAAKcCAAAAAAAAAAAowLQCAAAyAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-25T16:33:46.368Z",
               "EditorCaption": ""
@@ -834,8 +830,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\BackgroundServices\\SuperAdminRevenueBackgroundService.cs",
               "ViewState": "AgIAAAoAAAAAAAAAAAAQwBgAAABkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-25T14:35:04.813Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-25T14:35:04.813Z"
             },
             {
               "$type": "Document",
@@ -847,8 +842,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Controllers\\SuperAdmin\\SuperAdminCityAndRevenueControllers.cs",
               "ViewState": "AgIAACQAAAAAAAAAAAAhwEIAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-26T03:35:36.114Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-26T03:35:36.114Z"
             },
             {
               "$type": "Document",
@@ -860,8 +854,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\PromoCodeService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-28T13:04:48.644Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-28T13:04:48.644Z"
             },
             {
               "$type": "Document",
@@ -873,8 +866,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\AmenityRequestService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAGIAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-27T07:03:14.839Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-27T07:03:14.839Z"
             },
             {
               "$type": "Document",
@@ -886,8 +878,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\DashboardService.cs",
               "ViewState": "AgIAACIAAAAAAAAAAAArwC0AAAAvAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-15T06:04:25.176Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-15T06:04:25.176Z"
             },
             {
               "$type": "Document",
@@ -923,8 +914,7 @@
               "RelativeToolTip": "HotelBookingAppWebApi\\Services\\AmenityService.cs",
               "ViewState": "AgIAABgAAAAAAAAAAAAYwDQAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-03-24T08:42:09.203Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-03-24T08:42:09.203Z"
             },
             {
               "$type": "Document",

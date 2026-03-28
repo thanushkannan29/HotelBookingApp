@@ -3006,6 +3006,10 @@
             "minLength": 1,
             "type": "string"
           },
+          "state": {
+            "type": "string",
+            "nullable": true
+          },
           "description": {
             "type": "string",
             "nullable": true
@@ -3162,6 +3166,10 @@
             "nullable": true
           },
           "city": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
             "type": "string",
             "nullable": true
           },

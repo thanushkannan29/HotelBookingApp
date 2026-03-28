@@ -62,11 +62,11 @@ export class HotelManagementComponent implements OnInit {
           description:   hotel.description,
           contactNumber: hotel.contactNumber,
           imageUrl:      hotel.imageUrl,
-          upiId:         (hotel as any).upiId ?? '',
+          upiId:         hotel.upiId ?? '',
         });
-        this.gstForm.patchValue({ gstPercent: (hotel as any).gstPercent ?? 0 });
+        this.gstForm.patchValue({ gstPercent: hotel.gstPercent ?? 0 });
         this.cityControl.setValue(hotel.city);
-        this.stateControl.setValue((hotel as any).state ?? '');
+        this.stateControl.setValue(hotel.state ?? '');
         this.isLoading.set(false);
       });
     });

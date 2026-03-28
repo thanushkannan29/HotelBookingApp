@@ -88,13 +88,14 @@ export interface HotelDetailsDto {
   name: string;
   address: string;
   city: string;
+  state: string;
   description: string;
   imageUrl: string;
   contactNumber: string;
+  upiId?: string;
   averageRating: number;
   reviewCount: number;
   gstPercent: number;
-  upiId?: string;
   amenities: string[];
   reviews: ReviewDto[];
   roomTypes: RoomTypePublicDto[];
