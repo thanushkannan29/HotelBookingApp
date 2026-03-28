@@ -28,10 +28,6 @@ namespace HotelBookingAppWebApi.Contexts
         // Correction 2: Amenity master table
         public DbSet<Amenity> Amenities { get; set; }
         // New tables
-        public DbSet<City> Cities { get; set; }
-        public DbSet<Wallet> Wallets { get; set; }
-        public DbSet<WalletTransaction> WalletTransactions { get; set; }
-        public DbSet<PromoCode> PromoCodes { get; set; }
         public DbSet<AmenityRequest> AmenityRequests { get; set; }
         public DbSet<SuperAdminRevenue> SuperAdminRevenues { get; set; }
         public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
@@ -397,14 +393,6 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.WalletAmountUsed)
                 .HasPrecision(18, 2);
-
-            // ─── CITY ─────────────────────────────────────────────────────────
-            modelBuilder.Entity<City>()
-                .HasIndex(c => c.CityName);
-
-            modelBuilder.Entity<City>()
-                .Property(c => c.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
 
             // Correction 2: Seed data — 30 common amenities
             modelBuilder.Entity<Amenity>().HasData(

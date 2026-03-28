@@ -96,7 +96,6 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IAmenityService, AmenityService>();
 builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPromoCodeService, PromoCodeService>();
-builder.Services.AddScoped<ICityService, CityService>();
 builder.Services.AddScoped<IAmenityRequestService, AmenityRequestService>();
 builder.Services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
 

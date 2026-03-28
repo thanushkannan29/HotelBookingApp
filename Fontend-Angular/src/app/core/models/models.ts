@@ -42,14 +42,6 @@ export interface CurrentUser {
   hotelId?: string;
 }
 
-// ─── CITY ─────────────────────────────────────────────────────────────────────
-// F8A: New interface
-export interface IndianCityDto {
-  cityName: string;
-  stateName: string;
-  samplePin: string;
-}
-
 // ─── AMENITY ──────────────────────────────────────────────────────────────────
 // F8A: New interface
 export interface AmenityResponseDto {
@@ -695,27 +687,6 @@ export interface PromoCodeValidationResultDto {
   discountPercent: number;
   discountAmount: number;
   message: string;
-}
-
-// ─── CITY ─────────────────────────────────────────────────────────────────────
-export interface CityDto {
-  cityId: string;
-  cityName: string;
-  stateName: string;
-  pinCode: string;
-  isActive: boolean;
-  createdAt: string;
-}
-
-export interface CreateCityDto {
-  cityName: string;
-  stateName: string;
-  pinCode: string;
-}
-
-export interface PagedCityResponseDto {
-  totalCount: number;
-  cities: CityDto[];
 }
 
 // ─── AMENITY REQUEST ──────────────────────────────────────────────────────────
