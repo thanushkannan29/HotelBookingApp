@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace HotelBookingAppWebApi.Migrations
 {
     /// <inheritdoc />
-    public partial class FullHotelbookingUpgrade : Migration
+    public partial class Newdb : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -29,22 +29,6 @@ namespace HotelBookingAppWebApi.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Cities",
-                columns: table => new
-                {
-                    CityId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CityName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    StateName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    PinCode = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Cities", x => x.CityId);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "Hotels",
                 columns: table => new
                 {
@@ -52,6 +36,7 @@ namespace HotelBookingAppWebApi.Migrations
                     Name = table.Column<string>(type: "nvarchar(200)", maxLength: 200, nullable: false),
                     Address = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     City = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    State = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ContactNumber = table.Column<string>(type: "nvarchar(15)", maxLength: 15, nullable: false),
@@ -75,7 +60,6 @@ namespace HotelBookingAppWebApi.Migrations
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     MaxOccupancy = table.Column<int>(type: "int", nullable: false),
-                    Amenities = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsActive = table.Column<bool>(type: "bit", nullable: false)
                 },
@@ -310,7 +294,9 @@ namespace HotelBookingAppWebApi.Migrations
                     WalletAmountUsed = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PromoCodeUsed = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     FinalAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                    CreatedDate = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    CancellationFeePaid = table.Column<bool>(type: "bit", nullable: false),
+                    CancellationFeeAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -423,6 +409,8 @@ namespace HotelBookingAppWebApi.Migrations
                     Reason = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<int>(type: "int", nullable: false),
                     AdminResponse = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    RefundAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    RefundNote = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
                     ProcessedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     RefundPaymentMethod = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -644,14 +632,14 @@ namespace HotelBookingAppWebApi.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_Cities_CityName",
-                table: "Cities",
-                column: "CityName");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_Hotels_City",
                 table: "Hotels",
                 column: "City");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Hotels_State",
+                table: "Hotels",
+                column: "State");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Logs_UserId",
@@ -819,9 +807,6 @@ namespace HotelBookingAppWebApi.Migrations
 
             migrationBuilder.DropTable(
                 name: "AuditLogs");
-
-            migrationBuilder.DropTable(
-                name: "Cities");
 
             migrationBuilder.DropTable(
                 name: "Logs");

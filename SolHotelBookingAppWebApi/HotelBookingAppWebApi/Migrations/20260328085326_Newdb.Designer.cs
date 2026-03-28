@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace HotelBookingAppWebApi.Migrations
 {
     [DbContext(typeof(HotelBookingContext))]
-    [Migration("20260328071454_AddCancellationFeeAndRefundFields")]
-    partial class AddCancellationFeeAndRefundFields
+    [Migration("20260328085326_Newdb")]
+    partial class Newdb
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -378,42 +378,6 @@ namespace HotelBookingAppWebApi.Migrations
                     b.HasIndex("UserId");
 
                     b.ToTable("AuditLogs");
-                });
-
-            modelBuilder.Entity("HotelBookingAppWebApi.Models.City", b =>
-                {
-                    b.Property<Guid>("CityId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("CityName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("PinCode")
-                        .IsRequired()
-                        .HasMaxLength(10)
-                        .HasColumnType("nvarchar(10)");
-
-                    b.Property<string>("StateName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("CityId");
-
-                    b.HasIndex("CityName");
-
-                    b.ToTable("Cities");
                 });
 
             modelBuilder.Entity("HotelBookingAppWebApi.Models.Hotel", b =>
