@@ -99,17 +99,12 @@
             <mat-cell *matCellDef="let r">
               @if (canPayNow(r)) {
                 <button mat-flat-button color="primary"
-                        (click)="payWithRazorpay(r); $event.stopPropagation()"
+                        (click)="togglePayment(r); $event.stopPropagation()"
                         [disabled]="payingId() === r.reservationId"
                         class="pay-btn"
                         matTooltip="Pay now to confirm booking">
-                  @if (payingId() === r.reservationId) {
-                    <mat-spinner diameter="16" style="display:inline-block;" />
-                  } @else {
-                    <ng-container>
-                      <mat-icon>payment</mat-icon> Pay Now
-                    </ng-container>
-                  }
+                  <mat-icon>payment</mat-icon>
+                  {{ expandedPayId() === r.reservationId ? 'Hide' : 'Pay Now' }}
                 </button>
               }
             </mat-cell>
@@ -117,8 +112,36 @@
 
           <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
           <mat-row *matRowDef="let row; columns: displayedColumns;"
-                   [routerLink]="['/booking', row.reservationCode]"
-                   class="clickable-row"></mat-row>
+                   [routerLink]="expandedPayId() === row.reservationId ? null : ['/booking', row.reservationCode]"
+                   [class.clickable-row]="expandedPayId() !== row.reservationId"></mat-row>
+
+          <!-- Inline payment expansion row -->
+          <ng-container matColumnDef="expandedDetail">
+            <td mat-cell *matCellDef="let r" [attr.colspan]="displayedColumns.length">
+              @if (expandedPayId() === r.reservationId && canPayNow(r)) {
+                <div class="inline-payment-panel" (click)="$event.stopPropagation()">
+                  <div class="inline-pay-header">
+                    <mat-icon style="color:#e65100">timer</mat-icon>
+                    <span>Complete payment for <strong>{{ r.reservationCode }}</strong> — expires in <strong style="color:#e65100">{{ getCountdown(r) }}</strong></span>
+                    <span class="inline-pay-amount">₹{{ (r.finalAmount || r.totalAmount) | number:'1.2-2' }}</span>
+                  </div>
+                  <div class="inline-pay-methods">
+                    <button mat-raised-button color="primary" (click)="payWithRazorpay(r)" [disabled]="payingId() === r.reservationId">
+                      @if (payingId() === r.reservationId) {
+                        <mat-spinner diameter="16" style="display:inline-block;" />
+                      } @else {
+                        <ng-container><mat-icon>payment</mat-icon> Pay via Razorpay</ng-container>
+                      }
+                    </button>
+                    <a mat-stroked-button [routerLink]="['/booking', r.reservationCode]">
+                      <mat-icon>open_in_new</mat-icon> Full Payment Page
+                    </a>
+                  </div>
+                </div>
+              }
+            </td>
+          </ng-container>
+          <tr mat-row *matRowDef="let row; columns: ['expandedDetail'];" class="expansion-row"></tr>
 
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell" [attr.colspan]="displayedColumns.length">

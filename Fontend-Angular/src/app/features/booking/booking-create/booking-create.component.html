@@ -241,6 +241,36 @@
                   </mat-card-content>
                 </mat-card>
 
+                <!-- Cancellation Protection -->
+                @if (baseTotal() > 0) {
+                  <mat-card class="mb-3">
+                    <mat-card-header>
+                      <mat-card-title>🛡️ Cancellation Protection <span style="font-size:12px;font-weight:400;color:#888">(optional)</span></mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                      <mat-slide-toggle [checked]="payCancellationFee()" (change)="payCancellationFee.set($event.checked)" class="mb-2">
+                        Add Cancellation Protection (+10% = ₹{{ cancellationFeeAmount() | number:'1.2-2' }})
+                      </mat-slide-toggle>
+                      <div class="policy-grid mt-2">
+                        <div class="policy-box" [class.policy-active]="!payCancellationFee()">
+                          <strong>Without Protection</strong>
+                          <ul style="margin:6px 0 0;padding-left:16px;font-size:13px;">
+                            <li>5+ days before: 50% refund</li>
+                            <li>3–4 days before: 25% refund</li>
+                            <li>Within 2 days: No refund</li>
+                          </ul>
+                        </div>
+                        <div class="policy-box" [class.policy-active]="payCancellationFee()">
+                          <strong style="color:#2e7d32">✅ With Protection (₹{{ cancellationFeeAmount() | number:'1.2-2' }} extra)</strong>
+                          <ul style="margin:6px 0 0;padding-left:16px;font-size:13px;color:#2e7d32">
+                            <li>Cancel anytime — full refund</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </mat-card-content>
+                  </mat-card>
+                }
+
                 <!-- Price Breakdown -->
                 @if (baseTotal() > 0) {
                   <mat-card class="price-breakdown-card mb-3">
@@ -266,6 +296,12 @@
                         <div class="pb-row" style="color:#2e7d32">
                           <span>💰 Wallet Used</span>
                           <span>-₹{{ walletUsedAmount() | number:'1.2-2' }}</span>
+                        </div>
+                      }
+                      @if (cancellationFeeAmount() > 0) {
+                        <div class="pb-row" style="color:#1565c0">
+                          <span>🛡️ Cancellation Protection</span>
+                          <span>+₹{{ cancellationFeeAmount() | number:'1.2-2' }}</span>
                         </div>
                       }
                       <mat-divider class="my-2" />

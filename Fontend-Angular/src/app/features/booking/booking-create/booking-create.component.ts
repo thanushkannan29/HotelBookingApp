@@ -73,6 +73,7 @@ export class BookingCreateComponent implements OnInit {
   promoDiscount      = signal(0);
   useWallet          = signal(false);
   showTopUp          = signal(false);
+  payCancellationFee = signal(false);
 
   toggleWallet(checked: boolean) {
     this.useWallet.set(checked);
@@ -148,8 +149,12 @@ export class BookingCreateComponent implements OnInit {
     return Math.min(entered, balance, maxUsable);
   });
 
+  cancellationFeeAmount = computed(() =>
+    this.payCancellationFee() ? Math.round(this.baseTotal() * 0.10 * 100) / 100 : 0
+  );
+
   finalTotal = computed(() =>
-    Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - this.walletUsedAmount())
+    Math.max(0, this.baseTotal() + this.gstAmount() - this.promoDiscount() - this.walletUsedAmount() + this.cancellationFeeAmount())
   );
 
   // True when wallet covers the full remaining amount
@@ -209,14 +214,18 @@ export class BookingCreateComponent implements OnInit {
     this.loadWallet();
     this.loadRazorpay();
 
+    // Track whether initial patch has been applied to avoid double API call on init
+    let initDone = false;
+    setTimeout(() => { initDone = true; }, 0);
+
     // Sync form → signals for reactive computed
     this.bookingForm.get('checkInDate')?.valueChanges.subscribe(v => {
       this.checkInDate.set(v as Date | null);
-      this.onDateChange();
+      if (initDone) this.onDateChange();
     });
     this.bookingForm.get('checkOutDate')?.valueChanges.subscribe(v => {
       this.checkOutDate.set(v as Date | null);
-      this.onDateChange();
+      if (initDone) this.onDateChange();
     });
     this.bookingForm.get('numberOfRooms')?.valueChanges.subscribe(v => {
       this.numberOfRooms.set(v ?? 1);
@@ -382,13 +391,14 @@ export class BookingCreateComponent implements OnInit {
 
     this.isBooking.set(true);
     this.bookingService.createReservation({
-      hotelId:           v.hotelId!,
-      roomTypeId:        v.roomTypeId!,
-      checkInDate:       this.fmtLocal(checkIn),
-      checkOutDate:      this.fmtLocal(v.checkOutDate as Date),
-      numberOfRooms:     v.numberOfRooms!,
-      promoCodeUsed:     this.promoValid() ? v.promoCode ?? undefined : undefined,
-      walletAmountToUse: this.walletUsedAmount(),
+      hotelId:              v.hotelId!,
+      roomTypeId:           v.roomTypeId!,
+      checkInDate:          this.fmtLocal(checkIn),
+      checkOutDate:         this.fmtLocal(v.checkOutDate as Date),
+      numberOfRooms:        v.numberOfRooms!,
+      promoCodeUsed:        this.promoValid() ? v.promoCode ?? undefined : undefined,
+      walletAmountToUse:    this.walletUsedAmount(),
+      payCancellationFee:   this.payCancellationFee(),
     }).subscribe({
       next: res => {
         this.createdReservation.set(res);

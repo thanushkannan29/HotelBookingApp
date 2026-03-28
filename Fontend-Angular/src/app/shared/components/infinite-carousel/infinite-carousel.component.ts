@@ -1,5 +1,5 @@
 import {
-  Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit
+  Component, Input, OnChanges, OnDestroy, ElementRef, ViewChild, AfterViewInit, SimpleChanges
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -63,23 +63,29 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
     }
   `]
 })
-export class InfiniteCarouselComponent implements OnInit, AfterViewInit, OnDestroy {
+export class InfiniteCarouselComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input({ required: true }) hotels: HotelListItemDto[] = [];
   @ViewChild('track') trackRef!: ElementRef<HTMLDivElement>;
 
   displayItems: HotelListItemDto[] = [];
   private readonly CARD_WIDTH = 296; // 280 + 16 gap
   private autoTimer: any;
+  private viewInitialized = false;
 
-  ngOnInit() {
-    if (this.hotels.length > 0) {
-      // Triple for seamless infinite loop
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['hotels'] && this.hotels.length > 0) {
       this.displayItems = [...this.hotels, ...this.hotels, ...this.hotels];
+      if (this.viewInitialized) {
+        setTimeout(() => this.jumpToMiddle(), 50);
+      }
     }
   }
 
   ngAfterViewInit() {
-    setTimeout(() => this.jumpToMiddle(), 100);
+    this.viewInitialized = true;
+    if (this.hotels.length > 0) {
+      setTimeout(() => this.jumpToMiddle(), 100);
+    }
     this.autoTimer = setInterval(() => this.tick(), 3500);
   }
 

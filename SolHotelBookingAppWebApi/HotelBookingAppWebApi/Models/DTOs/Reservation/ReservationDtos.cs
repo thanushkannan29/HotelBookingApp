@@ -27,6 +27,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
 
         /// <summary>Amount from wallet to deduct (0 = no wallet payment)</summary>
         public decimal WalletAmountToUse { get; set; } = 0;
+
+        /// <summary>Guest opts in to pay 10% cancellation protection fee</summary>
+        public bool PayCancellationFee { get; set; } = false;
     }
 
     public class ReservationResponseDto
@@ -77,6 +80,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Reservation
         public DateTime? ExpiryTime { get; set; }
         public string? UpiId { get; set; }
         public List<RoomSummaryDto> Rooms { get; set; } = new();
+        public bool CancellationFeePaid { get; set; }
+        public decimal CancellationFeeAmount { get; set; }
+        public string CancellationPolicyText { get; set; } = string.Empty;
     }
 
     public class PagedReservationResponseDto

@@ -180,3 +180,26 @@
   color: #880e4f;
   font-size: 14px;
 }
+
+.refund-preview {
+  border-radius: var(--radius-md);
+  padding: 12px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+}
+
+.refund-preview-ok {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #2e7d32;
+  font-size: 14px;
+}
+
+.refund-preview-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+}

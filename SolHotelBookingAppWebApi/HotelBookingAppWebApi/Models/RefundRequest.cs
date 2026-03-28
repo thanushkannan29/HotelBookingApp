@@ -26,6 +26,12 @@ namespace HotelBookingAppWebApi.Models
         /// <summary>Admin's response/note when approving or rejecting</summary>
         public string? AdminResponse { get; set; }
 
+        /// <summary>Pre-calculated refund amount based on tiered policy</summary>
+        public decimal RefundAmount { get; set; } = 0;
+
+        /// <summary>Explanation of why this refund percentage was applied</summary>
+        public string? RefundNote { get; set; }
+
         [Required]
         public DateTime CreatedAt { get; set; }
 

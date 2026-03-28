@@ -13,6 +13,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.RefundRequest
         public string Status { get; set; } = string.Empty;
         public string? AdminResponse { get; set; }
         public decimal RefundAmount { get; set; }
+        public string? RefundNote { get; set; }
 
         /// <summary>How the refund was paid back e.g. 'UPI', 'Bank Transfer', 'Cash'</summary>
         public string? RefundPaymentMethod { get; set; }

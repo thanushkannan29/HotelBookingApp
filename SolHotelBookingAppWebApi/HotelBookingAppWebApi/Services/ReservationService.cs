@@ -188,7 +188,11 @@ namespace HotelBookingAppWebApi.Services
                 walletUsed = Math.Min(dto.WalletAmountToUse, maxWallet);
             }
 
-            var finalAmount = Math.Max(0, totalAmount + gstAmount - discountAmount - walletUsed);
+            var cancellationFeeAmount = 0m;
+            if (dto.PayCancellationFee)
+                cancellationFeeAmount = Math.Round(totalAmount * 0.10m, 2);
+
+            var finalAmount = Math.Max(0, totalAmount + gstAmount - discountAmount - walletUsed + cancellationFeeAmount);
 
             return new PricingResult
             {
@@ -198,7 +202,9 @@ namespace HotelBookingAppWebApi.Services
                 DiscountPercent = discountPercent,
                 DiscountAmount = discountAmount,
                 WalletAmountUsed = walletUsed,
-                FinalAmount = finalAmount
+                FinalAmount = finalAmount,
+                CancellationFeePaid = dto.PayCancellationFee,
+                CancellationFeeAmount = cancellationFeeAmount
             };
         }
 
@@ -278,6 +284,8 @@ namespace HotelBookingAppWebApi.Services
                 WalletAmountUsed = pricing.WalletAmountUsed,
                 PromoCodeUsed = dto.PromoCodeUsed,
                 FinalAmount = pricing.FinalAmount,
+                CancellationFeePaid = pricing.CancellationFeePaid,
+                CancellationFeeAmount = pricing.CancellationFeeAmount,
                 Status = ReservationStatus.Pending,
                 IsCheckedIn = false,
                 CreatedDate = DateTime.UtcNow,
@@ -468,7 +476,41 @@ namespace HotelBookingAppWebApi.Services
 
                 var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
                 if (hasPaid)
-                    await _refundRequestService.CreateRefundRequestAsync(res.ReservationId, userId, reason);
+                {
+                    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                    var daysUntilCheckIn = res.CheckInDate.DayNumber - today.DayNumber;
+
+                    decimal refundPercent;
+                    string refundNote;
+
+                    if (res.CancellationFeePaid)
+                    {
+                        refundPercent = 100;
+                        refundNote = "Full refund — cancellation protection fee was paid.";
+                    }
+                    else if (daysUntilCheckIn >= 5)
+                    {
+                        refundPercent = 50;
+                        refundNote = "50% refund — cancelled 5+ days before check-in.";
+                    }
+                    else if (daysUntilCheckIn >= 3)
+                    {
+                        refundPercent = 25;
+                        refundNote = "25% refund — cancelled 3–4 days before check-in.";
+                    }
+                    else
+                    {
+                        refundPercent = 0;
+                        refundNote = "No refund — cancelled within 2 days of check-in.";
+                    }
+
+                    if (refundPercent > 0)
+                    {
+                        var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);
+                        await _refundRequestService.CreateRefundRequestAsync(
+                            res.ReservationId, userId, reason, refundAmount, refundNote);
+                    }
+                }
 
                 return true;
             }
@@ -601,6 +643,12 @@ namespace HotelBookingAppWebApi.Services
         private static ReservationDetailsDto MapToDetailsDto(Reservation r)
         {
             var firstRoomType = r.ReservationRooms?.FirstOrDefault()?.RoomType;
+            string policyText;
+            if (r.CancellationFeePaid)
+                policyText = "Full refund anytime (protection fee paid)";
+            else
+                policyText = "50% refund if 5+ days before check-in, 25% if 3–4 days, no refund within 2 days";
+
             return new ReservationDetailsDto
             {
                 ReservationCode = r.ReservationCode,
@@ -625,6 +673,9 @@ namespace HotelBookingAppWebApi.Services
                 CreatedDate = r.CreatedDate,
                 ExpiryTime = r.ExpiryTime,
                 UpiId = r.Hotel?.UpiId,
+                CancellationFeePaid = r.CancellationFeePaid,
+                CancellationFeeAmount = r.CancellationFeeAmount,
+                CancellationPolicyText = policyText,
                 Rooms = r.ReservationRooms?.Select(rr => new RoomSummaryDto
                 {
                     RoomId = rr.RoomId,
@@ -646,6 +697,8 @@ namespace HotelBookingAppWebApi.Services
             public decimal DiscountAmount { get; set; }
             public decimal WalletAmountUsed { get; set; }
             public decimal FinalAmount { get; set; }
+            public bool CancellationFeePaid { get; set; }
+            public decimal CancellationFeeAmount { get; set; }
         }
     }
 }

@@ -5,7 +5,6 @@ import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
-import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RevenueService } from '../../../core/services/revenue.service';
 import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/models';
@@ -15,7 +14,7 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
   standalone: true,
   imports: [
     CommonModule, MatCardModule, MatTableModule, MatButtonModule,
-    MatPaginatorModule, MatIconModule, MatChipsModule, MatProgressSpinnerModule
+    MatPaginatorModule, MatIconModule, MatProgressSpinnerModule
   ],
   template: `
     <div class="container py-4">
@@ -29,22 +28,6 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
               <mat-card-content class="text-center py-3">
                 <div class="summary-label">Total Earned</div>
                 <div class="summary-value">₹{{ summary()!.totalCommissionEarned | number:'1.2-2' }}</div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-          <div class="col-sm-6 col-lg-4">
-            <mat-card class="summary-card pending">
-              <mat-card-content class="text-center py-3">
-                <div class="summary-label">⏳ Pending ({{ summary()!.pendingCount }})</div>
-                <div class="summary-value">₹{{ summary()!.totalPending | number:'1.2-2' }}</div>
-              </mat-card-content>
-            </mat-card>
-          </div>
-          <div class="col-sm-6 col-lg-4">
-            <mat-card class="summary-card sent">
-              <mat-card-content class="text-center py-3">
-                <div class="summary-label">✅ Sent ({{ summary()!.sentCount }})</div>
-                <div class="summary-value">₹{{ summary()!.totalSent | number:'1.2-2' }}</div>
               </mat-card-content>
             </mat-card>
           </div>
@@ -72,12 +55,6 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
               <ng-container matColumnDef="commissionAmount">
                 <th mat-header-cell *matHeaderCellDef>Commission (2%)</th>
                 <td mat-cell *matCellDef="let r"><strong>₹{{ r.commissionAmount | number:'1.2-2' }}</strong></td>
-              </ng-container>
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let r">
-                  <mat-chip [color]="r.status === 'Sent' ? 'primary' : 'accent'" highlighted>{{ r.status }}</mat-chip>
-                </td>
               </ng-container>
               <ng-container matColumnDef="date">
                 <th mat-header-cell *matHeaderCellDef>Date</th>
@@ -115,7 +92,7 @@ export class SuperadminRevenueComponent implements OnInit {
   summary = signal<RevenueSummaryDto | null>(null);
   pageSize = 20;
   currentPage = 1;
-  displayedColumns = ['reservationCode', 'hotelName', 'reservationAmount', 'commissionAmount', 'status', 'date'];
+  displayedColumns = ['reservationCode', 'hotelName', 'reservationAmount', 'commissionAmount', 'date'];
 
   ngOnInit() {
     this.loadSummary();

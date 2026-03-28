@@ -47,6 +47,12 @@ namespace HotelBookingAppWebApi.Models
         [Required]
         public DateTime CreatedDate { get; set; }
 
+        /// <summary>Whether the guest paid the 10% cancellation protection fee at booking time</summary>
+        public bool CancellationFeePaid { get; set; } = false;
+
+        /// <summary>Actual cancellation protection fee amount paid (10% of TotalAmount)</summary>
+        public decimal CancellationFeeAmount { get; set; } = 0;
+
         public User? User { get; set; }
         public Hotel? Hotel { get; set; }
 

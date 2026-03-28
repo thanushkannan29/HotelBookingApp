@@ -75,6 +75,12 @@
               <span class="label">Booked On</span>
               <span class="value">{{ res.createdDate | date:'MMM d, y' }}</span>
             </div>
+            @if (res.cancellationFeePaid) {
+              <div class="detail-item">
+                <span class="label">Cancellation</span>
+                <span class="value" style="color:#2e7d32"><mat-icon style="font-size:14px;vertical-align:middle">shield</mat-icon> Protection Active</span>
+              </div>
+            }
           </div>
 
           <!-- PDF Download -->
@@ -143,8 +149,25 @@
               } @else {
                 <div class="cancel-form-card">
                   <h4>Cancel Reservation</h4>
+
+                  <!-- Refund preview -->
+                  <div class="refund-preview mb-3">
+                    @if (res.cancellationFeePaid) {
+                      <div class="refund-preview-ok">
+                        <mat-icon style="color:#2e7d32">shield</mat-icon>
+                        <span>Cancellation protection active — you will receive a <strong>full refund of ₹{{ res.totalAmount | number:'1.2-2' }}</strong></span>
+                      </div>
+                    } @else {
+                      <div class="refund-preview-info">
+                        <mat-icon>info</mat-icon>
+                        <span>{{ getRefundPreview(res) }}</span>
+                      </div>
+                    }
+                    <p style="font-size:12px;color:#888;margin-top:4px;">Policy: {{ res.cancellationPolicyText }}</p>
+                  </div>
+
                   <p class="cancel-warning">
-                    If you've already paid, a refund request will be created automatically.
+                    If you've already paid, the refund will be credited to your wallet automatically.
                   </p>
                   <form [formGroup]="cancelForm" (ngSubmit)="cancel()" class="cancel-form">
                     <mat-form-field appearance="outline" class="w-full">

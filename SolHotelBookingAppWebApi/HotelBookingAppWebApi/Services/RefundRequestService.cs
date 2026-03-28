@@ -37,14 +37,13 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── CREATE REFUND REQUEST (called internally on cancellation) ─────────
-        public async Task CreateRefundRequestAsync(Guid reservationId, Guid userId, string reason)
+        public async Task CreateRefundRequestAsync(Guid reservationId, Guid userId, string reason, decimal refundAmount, string refundNote)
         {
-            // Avoid duplicate pending requests for the same reservation
             var exists = await _refundRepo.GetQueryable()
                 .AnyAsync(r => r.ReservationId == reservationId &&
                                r.Status == RefundRequestStatus.Pending);
 
-            if (exists) return; // already has a pending request
+            if (exists) return;
 
             var refundRequest = new RefundRequest
             {
@@ -53,10 +52,21 @@ namespace HotelBookingAppWebApi.Services
                 UserId = userId,
                 Reason = reason,
                 Status = RefundRequestStatus.Pending,
+                RefundAmount = refundAmount,
+                RefundNote = refundNote,
                 CreatedAt = DateTime.UtcNow
             };
 
             await _refundRepo.AddAsync(refundRequest);
+            await _unitOfWork.SaveChangesAsync();
+
+            // Auto-approve: credit refund to wallet immediately
+            await _walletService.CreditAsync(userId, refundAmount,
+                $"Auto-refund: {refundNote}");
+
+            refundRequest.Status = RefundRequestStatus.Approved;
+            refundRequest.AdminResponse = "Auto-approved by system";
+            refundRequest.ProcessedAt = DateTime.UtcNow;
             await _unitOfWork.SaveChangesAsync();
         }
 
@@ -103,10 +113,14 @@ namespace HotelBookingAppWebApi.Services
 
                 await _unitOfWork.CommitAsync();
 
-                // Credit refund amount to guest's wallet
+                // Credit pre-calculated refund amount to guest's wallet
+                var refundAmount = refundRequest.RefundAmount > 0
+                    ? refundRequest.RefundAmount
+                    : transaction.Amount;
+
                 await _walletService.CreditAsync(
                     refundRequest.UserId,
-                    transaction.Amount,
+                    refundAmount,
                     $"Refund for reservation {refundRequest.Reservation.ReservationCode}");
 
                 await _auditLogService.LogAsync(adminId, "RefundApproved", "RefundRequest",
@@ -298,7 +312,8 @@ namespace HotelBookingAppWebApi.Services
             Reason = r.Reason,
             Status = r.Status.ToString(),
             AdminResponse = r.AdminResponse,
-            RefundAmount = amount,
+            RefundAmount = r.RefundAmount > 0 ? r.RefundAmount : amount,
+            RefundNote = r.RefundNote,
             RefundPaymentMethod = r.RefundPaymentMethod,
             RefundTransactionRef = r.RefundTransactionRef,
             CreatedAt = r.CreatedAt,

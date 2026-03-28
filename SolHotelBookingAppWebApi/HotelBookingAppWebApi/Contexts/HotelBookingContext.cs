@@ -238,6 +238,10 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasDefaultValueSql("GETUTCDATE()");
 
             modelBuilder.Entity<RefundRequest>()
+                .Property(r => r.RefundAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<RefundRequest>()
                 .HasOne(r => r.User)
                 .WithMany()
                 .HasForeignKey(r => r.UserId)
@@ -378,6 +382,10 @@ namespace HotelBookingAppWebApi.Contexts
 
             modelBuilder.Entity<Reservation>()
                 .Property(r => r.FinalAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(r => r.CancellationFeeAmount)
                 .HasPrecision(18, 2);
 
             // ─── HOTEL — GST ──────────────────────────────────────────────────

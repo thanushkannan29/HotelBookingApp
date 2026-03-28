@@ -307,6 +307,7 @@ export interface CreateReservationDto {
   selectedRoomIds?: string[];
   promoCodeUsed?: string;
   walletAmountToUse?: number;
+  payCancellationFee?: boolean;
 }
 
 export interface ReservationResponseDto {
@@ -354,6 +355,9 @@ export interface ReservationDetailsDto {
   expiryTime?: string;
   upiId?: string;
   rooms: RoomSummaryDto[];
+  cancellationFeePaid: boolean;
+  cancellationFeeAmount: number;
+  cancellationPolicyText: string;
 }
 
 export interface PagedReservationResponseDto {
@@ -491,6 +495,7 @@ export interface RefundRequestResponseDto {
   status: string;
   adminResponse?: string;
   refundAmount: number;
+  refundNote?: string;
   refundPaymentMethod?: string;
   refundTransactionRef?: string;
   createdAt: string;
