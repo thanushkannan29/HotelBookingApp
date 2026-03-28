@@ -91,32 +91,97 @@
             </button>
           </div>
 
-          <!-- PAY NOW — shown for Pending reservations within expiry window -->
+          <!-- PAY NOW — shown for all Pending reservations -->
           @if (canPayNow(res)) {
-            <div class="pay-now-banner">
+            <div class="pay-now-banner" [class.pay-now-expired]="isExpired()">
               <div class="pay-now-info">
-                <mat-icon style="color:#e65100">timer</mat-icon>
+                <mat-icon [style.color]="isExpired() ? '#c62828' : '#e65100'">timer</mat-icon>
                 <div>
-                  <strong>Payment Pending</strong>
+                  <strong>{{ isExpired() ? 'Payment Window Closing' : 'Payment Pending' }}</strong>
                   <p style="margin:0;font-size:13px;color:#666">
-                    Complete payment to confirm your booking.
-                    Expires in <strong style="color:#e65100">{{ timeLeft() }}</strong>
+                    @if (isExpired()) {
+                      Timer expired — complete payment now before the system cancels this reservation.
+                    } @else {
+                      Complete payment to confirm your booking.
+                      Expires in <strong style="color:#e65100">{{ timeLeft() }}</strong>
+                    }
                   </p>
                 </div>
               </div>
-              <a mat-raised-button color="primary"
-                 [routerLink]="['/booking/create']"
-                 [queryParams]="{ resume: res.reservationCode }"
-                 style="min-width:180px; text-decoration:none;">
-                💳 Complete Payment
-              </a>
+              @if (!showPayPanel()) {
+                <button mat-raised-button color="primary" (click)="openPayPanel()" style="min-width:160px;">
+                  💳 Pay Now
+                </button>
+              }
             </div>
+
+            <!-- Inline Payment Panel -->
+            @if (showPayPanel()) {
+              <div class="inline-pay-panel">
+                <div class="inline-pay-header">
+                  <strong>Complete Payment — ₹{{ res.finalAmount | number:'1.2-2' }}</strong>
+                  <button mat-icon-button (click)="showPayPanel.set(false)"><mat-icon>close</mat-icon></button>
+                </div>
+
+                <!-- Wallet-only case -->
+                @if (res.finalAmount <= 0) {
+                  <div class="wallet-full-msg">
+                    <mat-icon style="color:#2e7d32">account_balance_wallet</mat-icon>
+                    <span>Wallet covers the full amount. Click below to confirm.</span>
+                  </div>
+                  <button mat-raised-button color="primary" class="w-100 mt-2"
+                          (click)="payWithRazorpay(5)" [disabled]="isPaying()">
+                    @if (isPaying()) { <mat-spinner diameter="18" style="display:inline-block;margin-right:6px;" /> Processing… }
+                    @else { 💰 Confirm — Paid from Wallet }
+                  </button>
+                } @else {
+                  <!-- QR Section -->
+                  @if (qrPayment(); as qr) {
+                    <div class="qr-section">
+                      <p class="pay-option-label">Option 1 — Scan Hotel UPI QR</p>
+                      <div style="text-align:center;margin:8px 0;">
+                        <img [src]="'data:image/png;base64,' + qr.qrCodeBase64"
+                             alt="UPI QR" style="width:140px;height:140px;border:1px solid #eee;border-radius:8px;" />
+                      </div>
+                      <div style="font-size:13px;color:#555;margin-bottom:4px;">UPI ID: <strong>{{ qr.upiId }}</strong></div>
+                      <div style="font-size:13px;color:#555;margin-bottom:8px;">Amount: <strong>₹{{ qr.amount | number:'1.2-2' }}</strong></div>
+                      <button mat-raised-button color="primary" class="w-100"
+                              (click)="payManualUpi()" [disabled]="isPaying()">
+                        @if (isPaying()) { <mat-spinner diameter="18" style="display:inline-block;margin-right:6px;" /> Confirming… }
+                        @else { ✅ I've Paid via UPI — Confirm Booking }
+                      </button>
+                    </div>
+                    <mat-divider style="margin:16px 0;" />
+                  }
+
+                  <!-- Razorpay Options -->
+                  <p class="pay-option-label">Option 2 — Pay via Razorpay</p>
+                  <div class="pay-method-grid">
+                    <button mat-raised-button (click)="payWithRazorpay(3)" [disabled]="isPaying()" class="pay-method-btn">
+                      📱 UPI
+                    </button>
+                    <button mat-raised-button (click)="payWithRazorpay(1)" [disabled]="isPaying()" class="pay-method-btn">
+                      💳 Credit Card
+                    </button>
+                    <button mat-raised-button (click)="payWithRazorpay(2)" [disabled]="isPaying()" class="pay-method-btn">
+                      💳 Debit Card
+                    </button>
+                    <button mat-raised-button (click)="payWithRazorpay(4)" [disabled]="isPaying()" class="pay-method-btn">
+                      🏦 Net Banking
+                    </button>
+                  </div>
+                }
+              </div>
+            }
           }
 
-          @if (isExpired() && res.status === 'Cancelled') {
+          @if (res.status === 'Cancelled' && !canPayNow(res)) {
             <div class="expired-notice">
               <mat-icon>event_busy</mat-icon>
-              This reservation expired and was automatically cancelled.
+              This reservation was cancelled.
+              @if (res.walletAmountUsed > 0) {
+                Wallet amount of ₹{{ res.walletAmountUsed | number:'1.2-2' }} has been refunded.
+              }
             </div>
           }
 

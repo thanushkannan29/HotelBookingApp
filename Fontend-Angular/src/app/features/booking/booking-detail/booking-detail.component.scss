@@ -154,6 +154,11 @@
   padding: 16px 20px;
   margin: 16px 24px;
 
+  &.pay-now-expired {
+    background: linear-gradient(135deg, #fce4ec, #ffcdd2);
+    border-color: #c62828;
+  }
+
   .pay-now-info {
     display: flex;
     align-items: center;
@@ -202,4 +207,63 @@
   gap: 8px;
   color: var(--color-text-secondary);
   font-size: 14px;
+}
+
+.inline-pay-panel {
+  margin: 0 24px 16px;
+  border: 2px solid var(--color-primary);
+  border-radius: 12px;
+  padding: 20px;
+  background: var(--color-surface);
+
+  .inline-pay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    font-size: 1rem;
+  }
+
+  .pay-option-label {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 10px;
+  }
+
+  .qr-section {
+    background: var(--color-bg);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 4px;
+  }
+
+  .wallet-full-msg {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+    color: #2e7d32;
+    margin-bottom: 8px;
+  }
+
+  .pay-method-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .pay-method-btn {
+    height: 44px;
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  .w-100 { width: 100%; }
+  .mt-2 { margin-top: 8px; }
 }
