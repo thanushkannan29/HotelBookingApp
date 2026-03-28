@@ -1,0 +1,38 @@
+.review-list { display: flex; flex-direction: column; gap: 16px; }
+
+.review-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 20px 24px;
+}
+
+.review-header {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+}
+
+.reviewer-avatar {
+  width: 40px; height: 40px; border-radius: 50%;
+  background: var(--color-primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 600; font-size: 1rem; flex-shrink: 0; overflow: hidden;
+  img { width: 100%; height: 100%; object-fit: cover; }
+}
+
+.reviewer-info { flex: 1; strong { display: block; font-size: 0.95rem; } }
+.stars { display: flex; gap: 1px; margin-top: 2px; }
+.review-date { font-size: 0.78rem; color: var(--color-text-muted); margin-left: auto; }
+.review-comment { font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 12px; }
+
+.hotel-reply {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(45,58,140,0.05); border-left: 3px solid var(--color-primary);
+  border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 10px;
+  mat-icon { color: var(--color-primary); font-size: 16px; width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
+  .reply-label { font-size: 0.72rem; font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
+  .reply-text { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+}
+
+.reply-form { margin-top: 8px; }
+.reply-actions { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; }
+.review-actions { display: flex; justify-content: flex-end; margin-top: 4px; }

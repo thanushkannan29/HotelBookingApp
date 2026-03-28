@@ -100,7 +100,13 @@
                 @for (review of h.reviews; track review.createdDate) {
                   <div class="review-card">
                     <div class="review-header">
-                      <div class="reviewer-avatar">{{ review.userName.charAt(0).toUpperCase() }}</div>
+                      <div class="reviewer-avatar">
+                        @if (review.userProfileImageUrl) {
+                          <img [src]="review.userProfileImageUrl" [alt]="review.userName" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+                        } @else {
+                          {{ review.userName.charAt(0).toUpperCase() }}
+                        }
+                      </div>
                       <div>
                         <strong>{{ review.userName }}</strong>
                         <div class="review-stars">
@@ -114,6 +120,15 @@
                     <p class="review-text">{{ review.comment }}</p>
                     @if (review.imageUrl) {
                       <img [src]="review.imageUrl" alt="Review photo" class="review-photo" />
+                    }
+                    @if (review.adminReply) {
+                      <div class="admin-reply">
+                        <mat-icon style="font-size:14px;width:14px;height:14px;">hotel</mat-icon>
+                        <div>
+                          <span class="admin-reply-label">Hotel Response</span>
+                          <p class="admin-reply-text">{{ review.adminReply }}</p>
+                        </div>
+                      </div>
                     }
                   </div>
                 }

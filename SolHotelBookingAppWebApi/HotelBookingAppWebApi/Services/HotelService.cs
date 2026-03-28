@@ -271,9 +271,11 @@ namespace HotelBookingAppWebApi.Services
                 Reviews = reviews.OrderByDescending(r => r.CreatedDate).Take(10).Select(r => new ReviewDto
                 {
                     UserName = r.User?.Name ?? "Anonymous",
+                    UserProfileImageUrl = r.User?.ProfileImageUrl,
                     Rating = r.Rating,
                     Comment = r.Comment,
                     ImageUrl = r.ImageUrl,
+                    AdminReply = r.AdminReply,
                     CreatedDate = r.CreatedDate
                 })
             };

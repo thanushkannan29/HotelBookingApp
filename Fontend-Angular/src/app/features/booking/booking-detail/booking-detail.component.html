@@ -63,7 +63,13 @@
             }
             <div class="detail-item">
               <span class="label"><strong>Final Amount</strong></span>
-              <span class="value amount"><strong>₹{{ res.finalAmount | number:'1.2-2' }}</strong></span>
+              <span class="value amount">
+                @if (res.finalAmount === 0 && res.walletAmountUsed > 0) {
+                  <strong style="color:#2e7d32">₹0.00 — Full payment via wallet</strong>
+                } @else {
+                  <strong>₹{{ res.finalAmount | number:'1.2-2' }}</strong>
+                }
+              </span>
             </div>
             <div class="detail-item">
               <span class="label">Check-in Status</span>
@@ -180,7 +186,11 @@
               <mat-icon>event_busy</mat-icon>
               This reservation was cancelled.
               @if (res.walletAmountUsed > 0) {
-                Wallet amount of ₹{{ res.walletAmountUsed | number:'1.2-2' }} has been refunded.
+                @if (res.finalAmount === 0) {
+                  Full wallet payment of ₹{{ res.walletAmountUsed | number:'1.2-2' }} has been refunded to your wallet.
+                } @else {
+                  Wallet amount of ₹{{ res.walletAmountUsed | number:'1.2-2' }} has been refunded.
+                }
               }
             </div>
           }

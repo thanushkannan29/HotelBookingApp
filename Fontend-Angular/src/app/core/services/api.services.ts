@@ -103,6 +103,12 @@ export class ReviewService {
       `${this.base}/admin/reviews`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
+
+  replyToReview(reviewId: string, adminReply: string): Observable<void> {
+    return this.http.patch<any>(
+      `${this.base}/admin/reviews/${reviewId}/reply`, { adminReply }
+    ).pipe(map(() => undefined));
+  }
 }
 
 // ─── REFUND SERVICE ───────────────────────────────────────────────────────────

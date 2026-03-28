@@ -128,3 +128,12 @@
   mat-icon { font-size: 32px; opacity: 0.4; }
   p { font-size: 0.85rem; }
 }
+
+.admin-reply {
+  display: flex; align-items: flex-start; gap: 8px;
+  background: rgba(45,58,140,0.05); border-left: 3px solid var(--color-primary);
+  border-radius: 0 8px 8px 0; padding: 10px 14px; margin-top: 10px;
+  mat-icon { color: var(--color-primary); margin-top: 2px; flex-shrink: 0; }
+  .admin-reply-label { font-size: 0.75rem; font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 2px; }
+  .admin-reply-text { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+}

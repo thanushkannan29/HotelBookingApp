@@ -1,12 +1,9 @@
 import { Component, inject, signal, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatChipsModule } from '@angular/material/chips';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TransactionService } from '../../../core/services/api.services';
 import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../core/models/models';
@@ -16,9 +13,8 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
   standalone: true,
   imports: [
     CommonModule, DatePipe, DecimalPipe,
-    MatFormFieldModule, MatInputModule, MatIconModule,
-    MatTableModule, MatPaginatorModule,
-    MatProgressSpinnerModule, MatChipsModule,
+    MatButtonModule, MatIconModule,
+    MatPaginatorModule, MatProgressSpinnerModule,
   ],
   templateUrl: './admin-transactions.component.html',
   styleUrl: './admin-transactions.component.scss',
