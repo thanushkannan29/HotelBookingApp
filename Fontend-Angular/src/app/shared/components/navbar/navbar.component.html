@@ -1,0 +1,83 @@
+﻿<nav class="navbar">
+  <div class="nav-container">
+    <a routerLink="/hotels" class="nav-brand" (click)="closeMobile()">
+      <img src="/logo.png" alt="StayHub" class="brand-icon" />
+      <span class="brand-name">StayHub</span>
+    </a>
+
+    <div class="nav-links">
+      <a routerLink="/hotels" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">Hotels</a>
+      @if (auth.isAuthenticated()) {
+        @if (auth.isGuest()) {
+          <a routerLink="/booking/list" routerLinkActive="active" class="nav-link">My Bookings</a>
+          <a routerLink="/guest/wallet" routerLinkActive="active" class="nav-link">Wallet</a>
+          <a routerLink="/guest/profile" routerLinkActive="active" class="nav-link">Profile</a>
+        }
+        @if (auth.isAdmin()) {
+          <a routerLink="/admin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+          <a routerLink="/admin/reservations" routerLinkActive="active" class="nav-link">Reservations</a>
+          <a routerLink="/admin/rooms" routerLinkActive="active" class="nav-link">Rooms</a>
+        }
+        @if (auth.isSuperAdmin()) {
+          <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
+          <a routerLink="/superadmin/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
+          <a routerLink="/superadmin/revenue" routerLinkActive="active" class="nav-link">Revenue</a>
+        }
+      }
+    </div>
+
+    <div class="nav-actions">
+      <button class="theme-toggle" mat-icon-button (click)="toggleTheme()" [matTooltip]="isDarkMode() ? 'Light mode' : 'Dark mode'">
+        <mat-icon>{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
+      </button>
+      @if (auth.isAuthenticated()) {
+        <button class="user-btn" [matMenuTriggerFor]="userMenu">
+          <div class="avatar">{{ (auth.currentUser()?.userName ?? 'U')[0].toUpperCase() }}</div>
+          <span class="user-name">{{ auth.currentUser()?.userName }}</span>
+          <mat-icon>expand_more</mat-icon>
+        </button>
+        <mat-menu #userMenu="matMenu">
+          <div class="menu-header">
+            <span class="menu-user">{{ auth.currentUser()?.userName }}</span>
+            <span style="font-size:12px;color:#888">{{ auth.currentUser()?.role }}</span>
+          </div>
+          <mat-divider />
+          <button mat-menu-item class="logout-btn" (click)="auth.logout()">
+            <mat-icon>logout</mat-icon> Sign Out
+          </button>
+        </mat-menu>
+      } @else {
+        <a routerLink="/auth/login" class="nav-cta">Sign In</a>
+      }
+      <button class="mobile-toggle" (click)="toggleMobile()" aria-label="Toggle menu">
+        <mat-icon>{{ mobileOpen() ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  @if (mobileOpen()) {
+    <div class="mobile-menu">
+      <a routerLink="/hotels" class="mobile-link" (click)="closeMobile()">Hotels</a>
+      @if (auth.isAuthenticated()) {
+        <div class="mobile-divider"></div>
+        @if (auth.isGuest()) {
+          <a routerLink="/booking/list" class="mobile-link" (click)="closeMobile()">My Bookings</a>
+          <a routerLink="/guest/wallet" class="mobile-link" (click)="closeMobile()">Wallet</a>
+          <a routerLink="/guest/profile" class="mobile-link" (click)="closeMobile()">Profile</a>
+        }
+        @if (auth.isAdmin()) {
+          <a routerLink="/admin/dashboard" class="mobile-link" (click)="closeMobile()">Dashboard</a>
+          <a routerLink="/admin/reservations" class="mobile-link" (click)="closeMobile()">Reservations</a>
+        }
+        @if (auth.isSuperAdmin()) {
+          <a routerLink="/superadmin/dashboard" class="mobile-link" (click)="closeMobile()">Dashboard</a>
+          <a routerLink="/superadmin/revenue" class="mobile-link" (click)="closeMobile()">Revenue</a>
+        }
+        <div class="mobile-divider"></div>
+        <button class="mobile-link logout" (click)="auth.logout(); closeMobile()">Sign Out</button>
+      } @else {
+        <a routerLink="/auth/login" class="mobile-link mobile-cta" (click)="closeMobile()">Sign In</a>
+      }
+    </div>
+  }
+</nav>

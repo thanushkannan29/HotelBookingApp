@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -37,12 +37,13 @@ export class BookingListComponent implements OnInit, OnDestroy {
   private transactionService = inject(TransactionService);
   private toast              = inject(ToastService);
 
-  reservations = signal<ReservationDetailsDto[]>([]);
-  totalCount   = signal(0);
-  loading      = signal(false);
-  payingId     = signal<string | null>(null);
-  pageSize     = 10;
-  currentPage  = 1;
+  reservations  = signal<ReservationDetailsDto[]>([]);
+  totalCount    = signal(0);
+  loading       = signal(false);
+  payingId      = signal<string | null>(null);
+  expandedPayId = signal<string | null>(null);
+  pageSize      = 10;
+  currentPage   = 1;
 
   countdowns: Record<string, string> = {};
   private timer: any;
@@ -112,6 +113,10 @@ export class BookingListComponent implements OnInit, OnDestroy {
     return this.countdowns[res.reservationId] ?? '';
   }
 
+  togglePayment(res: ReservationDetailsDto) {
+    this.expandedPayId.update(id => id === res.reservationId ? null : res.reservationId);
+  }
+
   payWithRazorpay(res: ReservationDetailsDto) {
     const amountPaise = Math.round((res.finalAmount > 0 ? res.finalAmount : res.totalAmount) * 100);
     const upiId = res.upiId ?? '';
@@ -132,6 +137,7 @@ export class BookingListComponent implements OnInit, OnDestroy {
         }).subscribe({
           next: () => {
             this.payingId.set(null);
+            this.expandedPayId.set(null);
             this.toast.success('Payment successful! ' + res.reservationCode + ' confirmed.');
             this.load();
           },
