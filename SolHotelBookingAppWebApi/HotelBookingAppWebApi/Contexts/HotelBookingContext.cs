@@ -28,6 +28,9 @@ namespace HotelBookingAppWebApi.Contexts
         // Correction 2: Amenity master table
         public DbSet<Amenity> Amenities { get; set; }
         // New tables
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<PromoCode> PromoCodes { get; set; }
         public DbSet<AmenityRequest> AmenityRequests { get; set; }
         public DbSet<SuperAdminRevenue> SuperAdminRevenues { get; set; }
         public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
