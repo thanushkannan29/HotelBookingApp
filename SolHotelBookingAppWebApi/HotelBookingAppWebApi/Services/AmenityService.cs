@@ -4,6 +4,7 @@ using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Amenity;
+using HotelBookingAppWebApi.Contexts;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
@@ -11,11 +12,13 @@ namespace HotelBookingAppWebApi.Services
     public class AmenityService : IAmenityService
     {
         private readonly IRepository<Guid, Amenity> _amenityRepo;
+        private readonly HotelBookingContext _context;
         private readonly IUnitOfWork _unitOfWork;
 
-        public AmenityService(IRepository<Guid, Amenity> amenityRepo, IUnitOfWork unitOfWork)
+        public AmenityService(IRepository<Guid, Amenity> amenityRepo, HotelBookingContext context, IUnitOfWork unitOfWork)
         {
             _amenityRepo = amenityRepo;
+            _context = context;
             _unitOfWork = unitOfWork;
         }
 
@@ -154,9 +157,8 @@ namespace HotelBookingAppWebApi.Services
             var amenity = await _amenityRepo.GetAsync(amenityId)
                 ?? throw new NotFoundException("Amenity not found.");
 
-            var inUse = await _amenityRepo.GetQueryable()
-                .AnyAsync(a => a.AmenityId == amenityId &&
-                               a.RoomTypeAmenities != null && a.RoomTypeAmenities.Any());
+            var inUse = await _context.RoomTypeAmenities
+                .AnyAsync(rta => rta.AmenityId == amenityId);
 
             if (inUse)
                 throw new ConflictException("Amenity is in use by one or more room types.");
