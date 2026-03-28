@@ -9,7 +9,6 @@ namespace HotelBookingAppWebApi.Models.DTOs.Dashboard
         public int TotalReservations { get; set; }
         public decimal TotalRevenue { get; set; }
         public int TotalReviews { get; set; }
-        public int PendingRefundRequests { get; set; }
     }
 
     public class AdminDashboardDto
@@ -29,7 +28,6 @@ namespace HotelBookingAppWebApi.Models.DTOs.Dashboard
         public decimal TotalRevenue { get; set; }
         public int TotalReviews { get; set; }
         public decimal AverageRating { get; set; }
-        public int PendingRefundRequests { get; set; }
     }
 
     public class GuestDashboardDto
@@ -39,6 +37,5 @@ namespace HotelBookingAppWebApi.Models.DTOs.Dashboard
         public int CompletedBookings { get; set; }
         public int CancelledBookings { get; set; }
         public decimal TotalSpent { get; set; }
-        public int PendingRefunds { get; set; }
     }
 }

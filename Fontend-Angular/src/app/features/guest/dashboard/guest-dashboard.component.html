@@ -49,10 +49,10 @@
 
         <div class="stat-card">
           <div class="stat-icon" style="background: rgba(198,40,40,0.1)">
-            <mat-icon style="color: var(--color-error)">replay</mat-icon>
+            <mat-icon style="color: var(--color-error)">cancel</mat-icon>
           </div>
-          <div class="stat-label">Pending Refunds</div>
-          <div class="stat-value">{{ d.pendingRefunds }}</div>
+          <div class="stat-label">Cancelled</div>
+          <div class="stat-value">{{ d.cancelledBookings }}</div>
         </div>
       </div>
 
@@ -70,10 +70,10 @@
             <span>My Reviews</span>
             <small>Write & manage</small>
           </a>
-          <a class="action-card" routerLink="/guest/refunds">
+          <a class="action-card" routerLink="/guest/wallet">
             <mat-icon>account_balance_wallet</mat-icon>
-            <span>Refund Requests</span>
-            <small>{{ d.pendingRefunds }} pending</small>
+            <span>My Wallet</span>
+            <small>Balance & history</small>
           </a>
           <a class="action-card" routerLink="/guest/profile">
             <mat-icon>manage_accounts</mat-icon>

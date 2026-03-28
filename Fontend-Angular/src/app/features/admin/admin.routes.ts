@@ -26,10 +26,6 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./reservation-management/reservation-management.component').then(m => m.ReservationManagementComponent),
   },
   {
-    path: 'refunds',
-    loadComponent: () => import('./refund-management/refund-management.component').then(m => m.RefundManagementComponent),
-  },
-  {
     path: 'audit-logs',
     loadComponent: () => import('./audit-logs/audit-logs.component').then(m => m.AuditLogsComponent),
   },

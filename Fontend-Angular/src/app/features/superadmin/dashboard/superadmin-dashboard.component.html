@@ -64,18 +64,6 @@
           </div>
         </div>
 
-        <div class="sa-kpi" [class.alert-kpi]="d.pendingRefundRequests > 0">
-          <div class="sa-kpi-icon refunds"><mat-icon>replay</mat-icon></div>
-          <div class="sa-kpi-data">
-            <div class="sa-kpi-val">{{ d.pendingRefundRequests }}</div>
-            <div class="sa-kpi-label">Pending Refunds</div>
-            @if (d.pendingRefundRequests > 0) {
-              <div class="sa-kpi-sub">
-                <span class="badge badge-warning">Requires attention</span>
-              </div>
-            }
-          </div>
-        </div>
       </div>
 
       <!-- Quick Links -->

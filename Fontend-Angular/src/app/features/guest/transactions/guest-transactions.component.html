@@ -1,140 +1,57 @@
 <div class="page-wrapper">
-  <div class="container" style="max-width:960px;">
+  <div class="container" style="max-width:900px;">
     <div class="page-header-row">
       <div>
         <h1 class="section-title">My Transactions</h1>
         <p class="section-subtitle">Your full payment history</p>
       </div>
-      <button mat-stroked-button (click)="load()">
-        <mat-icon>refresh</mat-icon> Refresh
-      </button>
+      <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Refresh</button>
     </div>
 
-    <!-- Search Filter -->
-    <div class="table-toolbar">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>🔍 Search transactions</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput placeholder="Amount, method, date…" disabled />
-        <mat-hint>Use pagination to browse all transactions</mat-hint>
-      </mat-form-field>
-    </div>
-
-    <div class="mat-elevation-z1 table-card">
-      <table mat-table [dataSource]="transactions()" matSort>
-
-        <!-- Method Column -->
-        <ng-container matColumnDef="method">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Payment Method</th>
-          <td mat-cell *matCellDef="let tx">
-            <div class="tx-method-cell">
-              <mat-icon class="method-icon">{{ tx.status === 4 ? 'replay' : tx.status === 2 ? 'check_circle' : tx.status === 3 ? 'cancel' : 'schedule' }}</mat-icon>
-              {{ paymentMethodLabel(tx.paymentMethod) }}
-            </div>
-          </td>
-        </ng-container>
-
-        <!-- Date Column -->
-        <ng-container matColumnDef="date">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-          <td mat-cell *matCellDef="let tx">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</td>
-        </ng-container>
-
-        <!-- Transaction ID Column -->
-        <ng-container matColumnDef="transactionId">
-          <th mat-header-cell *matHeaderCellDef>Transaction ID</th>
-          <td mat-cell *matCellDef="let tx">
-            <span class="tx-id" [matTooltip]="tx.transactionId">
-              {{ tx.transactionId.substring(0, 16) }}…
-            </span>
-          </td>
-        </ng-container>
-
-        <!-- Amount Column -->
-        <ng-container matColumnDef="amount">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Amount</th>
-          <td mat-cell *matCellDef="let tx">
-            <strong>₹{{ tx.amount | number:'1.0-0' }}</strong>
-          </td>
-        </ng-container>
-
-        <!-- Status Column -->
-        <ng-container matColumnDef="status">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Status</th>
-          <td mat-cell *matCellDef="let tx">
-            <span class="badge {{ statusClass(tx.status) }}">{{ paymentStatusLabel(tx.status) }}</span>
-            @if (canDirectRefund(tx)) {
-              <div class="refund-timer">
-                <mat-icon style="font-size:14px; height:14px; width:14px;">timer</mat-icon>
-                {{ 30 - minutesSince(tx) }}m left
+    @if (loading()) {
+      <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
+    } @else if (transactions().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">receipt_long</mat-icon>
+        <h3>No transactions yet</h3>
+      </div>
+    } @else {
+      <div class="tx-list">
+        @for (tx of transactions(); track tx.transactionId) {
+          <div class="tx-card">
+            <div class="tx-main">
+              <div class="tx-icon" [class]="statusClass(tx.status)">
+                <mat-icon>{{ tx.status === 4 ? 'replay' : tx.status === 2 ? 'check_circle' : tx.status === 3 ? 'cancel' : 'schedule' }}</mat-icon>
               </div>
-            }
-          </td>
-        </ng-container>
-
-        <!-- Actions Column -->
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let tx">
-            @if (canDirectRefund(tx) && refundingId() !== tx.transactionId) {
-              <button mat-stroked-button color="warn" size="small"
-                      (click)="startRefund(tx.transactionId)">
-                <mat-icon>undo</mat-icon> Refund
-              </button>
-            }
-          </td>
-        </ng-container>
-
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"
-            [class.refunding-row]="refundingId() === row.transactionId"></tr>
-
-        <!-- No data row -->
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">
-            <div class="empty-state">
-              <mat-icon class="empty-icon">receipt_long</mat-icon>
-              <h3>No transactions found</h3>
+              <div class="tx-info">
+                <div class="tx-method">{{ paymentMethodLabel(tx.paymentMethod) }}</div>
+                @if (tx.hotelName) {
+                  <div class="tx-hotel">🏨 {{ tx.hotelName }}</div>
+                }
+                @if (tx.reservationCode) {
+                  <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
+                }
+                <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
+              </div>
+              <div class="tx-right">
+                <div class="tx-amount" [style.color]="tx.status === 4 ? 'var(--color-success)' : tx.status === 3 ? 'var(--color-error)' : 'var(--color-text-primary)'">
+                  {{ tx.status === 4 ? '+' : '' }}₹{{ tx.amount | number:'1.0-0' }}
+                </div>
+                <span class="badge" [class]="statusClass(tx.status)">{{ paymentStatusLabel(tx.status) }}</span>
+              </div>
             </div>
-          </td>
-        </tr>
-      </table>
+          </div>
+        }
+      </div>
 
-      <mat-paginator
-        [length]="totalCount()"
-        [pageSize]="pageSize"
-        [pageSizeOptions]="[10, 25, 50]"
-        showFirstLastButtons
-        (page)="onPage($event)"
-      />
-    </div>
-
-    <!-- Inline Refund Form (shown below table when refunding) -->
-    @if (refundingId(); as txId) {
-      <div class="refund-form-panel animate-slide-in">
-        <div class="refund-form-header">
-          <mat-icon>undo</mat-icon>
-          <strong>Confirm Refund</strong>
-          <span class="refund-sub">Instant refund · reservation will be cancelled</span>
-        </div>
-        <form [formGroup]="refundForm">
-          <mat-form-field appearance="outline" class="w-full">
-            <mat-label>Reason for refund</mat-label>
-            <textarea matInput formControlName="reason" rows="2"></textarea>
-            @if (refundForm.get('reason')?.hasError('required') && refundForm.get('reason')?.touched) {
-              <mat-error>Reason is required</mat-error>
-            }
-            @if (refundForm.get('reason')?.hasError('minlength') && refundForm.get('reason')?.touched) {
-              <mat-error>At least 5 characters</mat-error>
-            }
-          </mat-form-field>
-        </form>
-        <div class="refund-actions">
-          <button mat-stroked-button (click)="refundingId.set(null)">Cancel</button>
-          <button mat-flat-button color="warn" (click)="submitRefund()" [disabled]="isSaving()">
-            {{ isSaving() ? 'Processing…' : 'Confirm Refund' }}
-          </button>
-        </div>
+      <div class="pagination">
+        <button mat-stroked-button [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1; load()">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+        <span>Page {{ currentPage }}</span>
+        <button mat-stroked-button [disabled]="transactions().length < pageSize" (click)="currentPage = currentPage + 1; load()">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
       </div>
     }
   </div>

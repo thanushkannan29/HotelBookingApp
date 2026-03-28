@@ -275,9 +275,16 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         [HttpPost]
         public async Task<IActionResult> GetHotelReviews([FromBody] GetHotelReviewsRequestDto dto)
         {
-            // Use admin's own hotel from token — ignore hotelId in body
             var result = await _reviewService.GetAdminHotelReviewsAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
+        }
+
+        /// <summary>Admin replies to a guest review.</summary>
+        [HttpPatch("{reviewId}/reply")]
+        public async Task<IActionResult> Reply(Guid reviewId, [FromBody] ReplyToReviewDto dto)
+        {
+            await _reviewService.ReplyToReviewAsync(GetUserId(), reviewId, dto.AdminReply);
+            return Ok(new { success = true, message = "Reply saved." });
         }
     }
 }

@@ -18,10 +18,6 @@ export const GUEST_ROUTES: Routes = [
     loadComponent: () => import('./reviews/guest-reviews.component').then(m => m.GuestReviewsComponent),
   },
   {
-    path: 'refunds',
-    loadComponent: () => import('./refund-requests/guest-refunds.component').then(m => m.GuestRefundsComponent),
-  },
-  {
     path: 'transactions',
     loadComponent: () => import('./transactions/guest-transactions.component').then(m => m.GuestTransactionsComponent),
   },

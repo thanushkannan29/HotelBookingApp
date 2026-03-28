@@ -101,7 +101,6 @@ namespace HotelBookingAppWebApi.Services
                 TotalRevenue = totalRevenue,
                 TotalReviews = totalReviews,
                 AverageRating = Math.Round(averageRating, 2),
-                PendingRefundRequests = pendingRefunds
             };
         }
 
@@ -119,9 +118,6 @@ namespace HotelBookingAppWebApi.Services
                 .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.UserId == userId)
                 .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
-            var pendingRefunds = await _refundRepo.GetQueryable()
-                .CountAsync(r => r.UserId == userId && r.Status == RefundRequestStatus.Pending);
-
             return new GuestDashboardDto
             {
                 TotalBookings = totalBookings,
@@ -129,7 +125,6 @@ namespace HotelBookingAppWebApi.Services
                 CompletedBookings = completedBookings,
                 CancelledBookings = cancelledBookings,
                 TotalSpent = totalSpent,
-                PendingRefunds = pendingRefunds
             };
         }
 
@@ -148,9 +143,6 @@ namespace HotelBookingAppWebApi.Services
 
             var totalReviews = await _reviewRepo.GetQueryable().CountAsync();
 
-            var pendingRefunds = await _refundRepo.GetQueryable()
-                .CountAsync(r => r.Status == RefundRequestStatus.Pending);
-
             return new SuperAdminDashboardDto
             {
                 TotalHotels = totalHotels,
@@ -160,7 +152,6 @@ namespace HotelBookingAppWebApi.Services
                 TotalReservations = totalReservations,
                 TotalRevenue = totalRevenue,
                 TotalReviews = totalReviews,
-                PendingRefundRequests = pendingRefunds
             };
         }
     }

@@ -103,9 +103,11 @@ export interface HotelDetailsDto {
 
 export interface ReviewDto {
   userName: string;
+  userProfileImageUrl?: string;
   rating: number;
   comment: string;
   imageUrl?: string;
+  adminReply?: string;
   createdDate: string;
 }
 
@@ -385,6 +387,9 @@ export interface RefundRequestDto {
 export interface TransactionResponseDto {
   transactionId: string;
   reservationId: string;
+  reservationCode: string;
+  hotelName: string;
+  guestName: string;
   amount: number;
   paymentMethod: number;
   status: number;
@@ -440,11 +445,13 @@ export interface ReviewResponseDto {
   hotelId: string;
   userId: string;
   userName: string;
+  userProfileImageUrl?: string;
   reservationId: string;
   reservationCode: string;
   rating: number;
   comment: string;
   imageUrl?: string;
+  adminReply?: string;
   createdDate: string;
   contributionPoints: number;
 }
@@ -574,7 +581,7 @@ export interface AdminDashboardDto {
   totalRevenue: number;
   totalReviews: number;
   averageRating: number;
-  pendingRefundRequests: number;
+  pendingRefundRequests: number; // kept for backward compat, always 0
 }
 
 export interface GuestDashboardDto {
@@ -583,7 +590,6 @@ export interface GuestDashboardDto {
   completedBookings: number;
   cancelledBookings: number;
   totalSpent: number;
-  pendingRefunds: number;
 }
 
 export interface SuperAdminDashboardDto {
@@ -594,7 +600,6 @@ export interface SuperAdminDashboardDto {
   totalReservations: number;
   totalRevenue: number;
   totalReviews: number;
-  pendingRefundRequests: number;
 }
 
 // ─── AUDIT LOG ────────────────────────────────────────────────────────────────
