@@ -1,6 +1,5 @@
 import {
-  Component, Input, OnInit, OnDestroy, ElementRef, ViewChild,
-  AfterViewInit, ChangeDetectionStrategy, NgZone
+  Component, Input, OnInit, OnDestroy, ElementRef, ViewChild, AfterViewInit
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
@@ -11,24 +10,22 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
 @Component({
   selector: 'app-infinite-carousel',
   standalone: true,
-  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, MatIconModule, MatButtonModule, HotelCardComponent],
   template: `
     <div class="carousel-wrapper">
-      <button class="carousel-btn prev" mat-icon-button (click)="scrollLeft()" aria-label="Scroll left">
+      <button class="carousel-btn" mat-icon-button (click)="scrollLeft()" aria-label="Scroll left">
         <mat-icon>chevron_left</mat-icon>
       </button>
 
       <div class="carousel-track" #track>
-        <!-- Duplicate items for seamless loop -->
-        @for (h of displayItems; track h.hotelId + '_' + $index) {
+        @for (h of displayItems; track $index) {
           <div class="carousel-item">
             <app-hotel-card [hotel]="h" />
           </div>
         }
       </div>
 
-      <button class="carousel-btn next" mat-icon-button (click)="scrollRight()" aria-label="Scroll right">
+      <button class="carousel-btn" mat-icon-button (click)="scrollRight()" aria-label="Scroll right">
         <mat-icon>chevron_right</mat-icon>
       </button>
     </div>
@@ -40,7 +37,6 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
       align-items: center;
       gap: 4px;
     }
-
     .carousel-track {
       display: flex;
       gap: 16px;
@@ -50,22 +46,15 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
       -ms-overflow-style: none;
       flex: 1;
       padding: 4px 0 12px;
-
       &::-webkit-scrollbar { display: none; }
     }
-
-    .carousel-item {
-      flex: 0 0 280px;
-    }
-
+    .carousel-item { flex: 0 0 280px; }
     .carousel-btn {
       flex-shrink: 0;
       background: var(--color-surface) !important;
       border: 1px solid var(--color-border) !important;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12) !important;
-      z-index: 2;
       transition: all 0.2s;
-
       &:hover {
         background: var(--color-primary) !important;
         color: white !important;
@@ -79,21 +68,19 @@ export class InfiniteCarouselComponent implements OnInit, AfterViewInit, OnDestr
   @ViewChild('track') trackRef!: ElementRef<HTMLDivElement>;
 
   displayItems: HotelListItemDto[] = [];
-  private readonly CARD_WIDTH = 296; // 280px + 16px gap
+  private readonly CARD_WIDTH = 296; // 280 + 16 gap
   private autoTimer: any;
 
   ngOnInit() {
-    // Triple the items so we always have content on both sides
     if (this.hotels.length > 0) {
+      // Triple for seamless infinite loop
       this.displayItems = [...this.hotels, ...this.hotels, ...this.hotels];
     }
   }
 
   ngAfterViewInit() {
-    // Start at the middle copy so we can scroll both ways
-    setTimeout(() => this.jumpToMiddle(), 50);
-    // Auto-scroll every 3s
-    this.autoTimer = setInterval(() => this.autoScroll(), 3000);
+    setTimeout(() => this.jumpToMiddle(), 100);
+    this.autoTimer = setInterval(() => this.tick(), 3500);
   }
 
   ngOnDestroy() {
@@ -103,43 +90,45 @@ export class InfiniteCarouselComponent implements OnInit, AfterViewInit, OnDestr
   private jumpToMiddle() {
     const el = this.trackRef?.nativeElement;
     if (!el || this.hotels.length === 0) return;
+    // Disable smooth scroll for the initial jump
+    el.style.scrollBehavior = 'auto';
     el.scrollLeft = this.hotels.length * this.CARD_WIDTH;
+    el.style.scrollBehavior = 'smooth';
   }
 
-  private autoScroll() {
+  private tick() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft += this.CARD_WIDTH;
-    this.checkLoop(el);
+    this.loopCheck(el);
   }
 
   scrollLeft() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft -= this.CARD_WIDTH * 2;
-    this.checkLoop(el);
+    this.loopCheck(el);
   }
 
   scrollRight() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft += this.CARD_WIDTH * 2;
-    this.checkLoop(el);
+    this.loopCheck(el);
   }
 
-  private checkLoop(el: HTMLDivElement) {
-    const singleWidth = this.hotels.length * this.CARD_WIDTH;
-    // If we've scrolled past the last copy, jump back to middle
-    if (el.scrollLeft >= singleWidth * 2) {
+  private loopCheck(el: HTMLDivElement) {
+    const single = this.hotels.length * this.CARD_WIDTH;
+    if (el.scrollLeft >= single * 2) {
       el.style.scrollBehavior = 'auto';
-      el.scrollLeft -= singleWidth;
-      el.style.scrollBehavior = 'smooth';
+      el.scrollLeft -= single;
+      // Re-enable smooth after a frame
+      requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
     }
-    // If we've scrolled before the first copy, jump forward to middle
     if (el.scrollLeft <= 0) {
       el.style.scrollBehavior = 'auto';
-      el.scrollLeft += singleWidth;
-      el.style.scrollBehavior = 'smooth';
+      el.scrollLeft += single;
+      requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
     }
   }
 }

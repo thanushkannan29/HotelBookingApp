@@ -1711,6 +1711,40 @@
         }
       }
     },
+    "/api/public/hotels/active-states": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/public/hotels/by-state/{stateName}": {
+      "get": {
+        "tags": [
+          "PublicHotel"
+        ],
+        "parameters": [
+          {
+            "name": "stateName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/reviews": {
       "post": {
         "tags": [
@@ -1933,6 +1967,96 @@
             }
           }
         },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "SuperAdminAmenity"
+        ],
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 1
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "format": "int32",
+              "default": 10
+            }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "category",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/amenities/{id}/toggle-status": {
+      "patch": {
+        "tags": [
+          "SuperAdminAmenity"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/superadmin/amenities/{id}": {
+      "delete": {
+        "tags": [
+          "SuperAdminAmenity"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -2897,10 +3021,6 @@
             "type": "integer",
             "format": "int32"
           },
-          "amenities": {
-            "type": "string",
-            "nullable": true
-          },
           "amenityIds": {
             "type": "array",
             "items": {
@@ -3398,10 +3518,6 @@
           "maxOccupancy": {
             "type": "integer",
             "format": "int32"
-          },
-          "amenities": {
-            "type": "string",
-            "nullable": true
           },
           "amenityIds": {
             "type": "array",

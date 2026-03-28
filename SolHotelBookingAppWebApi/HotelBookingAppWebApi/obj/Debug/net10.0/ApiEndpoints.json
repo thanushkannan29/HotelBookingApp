@@ -1022,6 +1022,16 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
+    "Method": "GetActiveStates",
+    "RelativePath": "api/public/hotels/active-states",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
     "Method": "GetByCity",
     "RelativePath": "api/public/hotels/by-city",
     "HttpMethod": "GET",
@@ -1032,6 +1042,22 @@
         "Name": "city",
         "Type": "System.String",
         "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Public.PublicHotelController",
+    "Method": "GetByState",
+    "RelativePath": "api/public/hotels/by-state/{stateName}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "stateName",
+        "Type": "System.String",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1199,6 +1225,69 @@
       {
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.Amenity.UpdateAmenityDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityController",
+    "Method": "GetAll",
+    "RelativePath": "api/superadmin/amenities",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "page",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "pageSize",
+        "Type": "System.Int32",
+        "IsRequired": false
+      },
+      {
+        "Name": "search",
+        "Type": "System.String",
+        "IsRequired": false
+      },
+      {
+        "Name": "category",
+        "Type": "System.String",
+        "IsRequired": false
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityController",
+    "Method": "Delete",
+    "RelativePath": "api/superadmin/amenities/{id}",
+    "HttpMethod": "DELETE",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityController",
+    "Method": "ToggleStatus",
+    "RelativePath": "api/superadmin/amenities/{id}/toggle-status",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "id",
+        "Type": "System.Guid",
         "IsRequired": true
       }
     ],

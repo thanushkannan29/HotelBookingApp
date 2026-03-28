@@ -10,10 +10,6 @@ export const SUPERADMIN_ROUTES: Routes = [
     loadComponent: () => import('./hotel-control/hotel-control.component').then(m => m.HotelControlComponent),
   },
   {
-    path: 'cities',
-    loadComponent: () => import('./city-management/city-management.component').then(m => m.CityManagementComponent),
-  },
-  {
     path: 'amenity-requests',
     loadComponent: () => import('./amenity-requests/superadmin-amenity-requests.component').then(m => m.SuperadminAmenityRequestsComponent),
   },

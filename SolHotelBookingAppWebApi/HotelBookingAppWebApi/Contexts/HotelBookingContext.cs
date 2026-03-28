@@ -94,6 +94,9 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasIndex(h => h.City);
 
             modelBuilder.Entity<Hotel>()
+                .HasIndex(h => h.State);
+
+            modelBuilder.Entity<Hotel>()
                 .Property(h => h.CreatedAt)
                 .HasDefaultValueSql("GETUTCDATE()");
 

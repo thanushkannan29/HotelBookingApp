@@ -58,12 +58,21 @@
           </section>
         }
 
-        <!-- State Group Rows -->
+        <!-- State Group Rows (or City fallback) -->
         @for (group of stateGroups(); track group.stateName) {
           <section class="netflix-row">
             <h2 class="row-title">
               <mat-icon style="vertical-align:middle;font-size:20px">location_on</mat-icon>
               Hotels in {{ group.stateName }}
+            </h2>
+            <app-infinite-carousel [hotels]="group.hotels" />
+          </section>
+        }
+        @for (group of cityGroups(); track group.cityName) {
+          <section class="netflix-row">
+            <h2 class="row-title">
+              <mat-icon style="vertical-align:middle;font-size:20px">location_on</mat-icon>
+              Hotels in {{ group.cityName }}
             </h2>
             <app-infinite-carousel [hotels]="group.hotels" />
           </section>
