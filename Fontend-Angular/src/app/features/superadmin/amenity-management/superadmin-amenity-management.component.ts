@@ -13,6 +13,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { AmenityService } from '../../../core/services/amenity.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AmenityResponseDto } from '../../../core/models/models';
@@ -24,7 +25,7 @@ import { AmenityResponseDto } from '../../../core/models/models';
     CommonModule, ReactiveFormsModule,
     MatCardModule, MatTableModule, MatButtonModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatPaginatorModule, MatIconModule,
-    MatChipsModule, MatProgressSpinnerModule, MatSlideToggleModule,
+    MatChipsModule, MatProgressSpinnerModule, MatSlideToggleModule, MatTooltipModule,
   ],
   template: `
     <div class="container py-4">
