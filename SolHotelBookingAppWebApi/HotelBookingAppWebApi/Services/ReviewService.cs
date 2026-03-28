@@ -150,7 +150,8 @@ namespace HotelBookingAppWebApi.Services
         {
             var query = _reviewRepo.GetQueryable()
                 .Include(r => r.Reservation)
-                .Include(r => r.User)
+                .Include(r => r.User!)
+                    .ThenInclude(u => u.UserDetails)
                 .Where(r => r.HotelId == hotelId)
                 .OrderByDescending(r => r.CreatedDate);
 
@@ -224,7 +225,7 @@ namespace HotelBookingAppWebApi.Services
             HotelId = r.HotelId,
             UserId = r.UserId,
             UserName = r.User?.Name ?? string.Empty,
-            UserProfileImageUrl = r.User?.ProfileImageUrl,
+            UserProfileImageUrl = r.User?.UserDetails?.ProfileImageUrl,
             ReservationId = r.ReservationId,
             ReservationCode = reservationCode,
             Rating = r.Rating,

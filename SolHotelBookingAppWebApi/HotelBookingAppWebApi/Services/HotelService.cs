@@ -52,11 +52,11 @@ namespace HotelBookingAppWebApi.Services
                     h.City,
                     h.ImageUrl,
 
-                    AvgRating = h.Reviews
+                    AvgRating = h.Reviews!
                         .Select(r => (decimal?)r.Rating)
                         .Average(),
 
-                    ReviewCount = h.Reviews.Count(),
+                    ReviewCount = h.Reviews!.Count(),
 
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
@@ -185,8 +185,8 @@ namespace HotelBookingAppWebApi.Services
                     h.ImageUrl,
 
                     // ✅ SAFE: EF can translate this
-                    AvgRating = h.Reviews.Select(r => (decimal?)r.Rating).Average(),
-                    ReviewCount = h.Reviews.Count(),
+                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
+                    ReviewCount = h.Reviews!.Count(),
 
                     StartingPrice = h.RoomTypes!
                         .SelectMany(rt => rt.Rates!)
@@ -218,7 +218,8 @@ namespace HotelBookingAppWebApi.Services
                     .ThenInclude(rt => rt.RoomTypeAmenities!)
                         .ThenInclude(rta => rta.Amenity)
                 .Include(h => h.Reviews!)
-                    .ThenInclude(r => r.User)
+                    .ThenInclude(r => r.User!)
+                        .ThenInclude(u => u.UserDetails)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
@@ -271,7 +272,7 @@ namespace HotelBookingAppWebApi.Services
                 Reviews = reviews.OrderByDescending(r => r.CreatedDate).Take(10).Select(r => new ReviewDto
                 {
                     UserName = r.User?.Name ?? "Anonymous",
-                    UserProfileImageUrl = r.User?.ProfileImageUrl,
+                    UserProfileImageUrl = r.User?.UserDetails?.ProfileImageUrl,
                     Rating = r.Rating,
                     Comment = r.Comment,
                     ImageUrl = r.ImageUrl,
@@ -488,8 +489,8 @@ namespace HotelBookingAppWebApi.Services
                 .Select(h => new
                 {
                     h.HotelId, h.Name, h.City, h.ImageUrl,
-                    AvgRating = h.Reviews.Select(r => (decimal?)r.Rating).Average(),
-                    ReviewCount = h.Reviews.Count(),
+                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
+                    ReviewCount = h.Reviews!.Count(),
                     StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Select(r => (decimal?)r.Rate).Min()
                 })
                 .OrderByDescending(h => h.AvgRating ?? 0)
