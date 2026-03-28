@@ -358,6 +358,7 @@ namespace HotelBookingAppWebApi.Services
                 hotel.Name = dto.Name;
                 hotel.Address = dto.Address;
                 hotel.City = dto.City;
+                if (!string.IsNullOrWhiteSpace(dto.State)) hotel.State = dto.State;
                 hotel.Description = dto.Description;
                 hotel.ContactNumber = dto.ContactNumber;
                 hotel.ImageUrl = dto.ImageUrl;

@@ -8,9 +8,17 @@
 
       <div class="search-card">
         <div class="search-form">
-          <!-- F2D: City autocomplete -->
+          <!-- City autocomplete — auto-fills state -->
           <div class="search-field">
-            <app-city-autocomplete [control]="cityControl" />
+            <app-city-autocomplete [control]="cityControl" [stateControl]="stateControl" />
+          </div>
+
+          <!-- State field (auto-filled, editable) -->
+          <div class="search-field">
+            <mat-form-field appearance="outline" style="width:100%">
+              <mat-label>🗺️ State</mat-label>
+              <input matInput [formControl]="stateControl" placeholder="Auto-filled from city" />
+            </mat-form-field>
           </div>
 
           <form [formGroup]="searchForm" class="date-fields">

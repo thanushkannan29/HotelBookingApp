@@ -95,9 +95,9 @@
                 <input matInput formControlName="address" />
               </mat-form-field>
 
-              <!-- F2D: City autocomplete replaces plain city input -->
+              <!-- City autocomplete — auto-fills state -->
               <div class="col-span-1">
-                <app-city-autocomplete [control]="cityControl" />
+                <app-city-autocomplete [control]="cityControl" [stateControl]="stateFormControl" />
               </div>
 
               <mat-form-field appearance="outline">

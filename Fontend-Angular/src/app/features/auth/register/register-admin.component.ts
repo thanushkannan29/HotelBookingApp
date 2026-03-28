@@ -33,6 +33,7 @@ export class RegisterAdminComponent {
 
   // F2D: separate FormControl for city autocomplete
   cityControl = new FormControl('', [Validators.required]);
+  stateControl = new FormControl('');
 
   adminForm = this.fb.group({
     name: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
@@ -63,6 +64,7 @@ export class RegisterAdminComponent {
       ...this.adminForm.value,
       ...this.hotelForm.value,
       city: this.cityControl.value,
+      state: this.stateControl.value,
     } as any;
     this.auth.registerHotelAdmin(payload).subscribe({
       next: () => {

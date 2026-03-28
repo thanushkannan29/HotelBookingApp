@@ -17,6 +17,7 @@ export interface RegisterHotelAdminDto {
   hotelName: string;
   address: string;
   city: string;
+  state: string;
   description: string;
   contactNumber: string;
 }
@@ -160,6 +161,7 @@ export interface UpdateHotelDto {
   name: string;
   address: string;
   city: string;
+  state: string;
   description: string;
   contactNumber: string;
   imageUrl: string;

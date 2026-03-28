@@ -11,28 +11,15 @@ import { ICity } from 'country-state-city';
 @Component({
   selector: 'app-city-autocomplete',
   standalone: true,
-  imports: [
-    ReactiveFormsModule,
-    MatAutocompleteModule, MatFormFieldModule, MatInputModule,
-  ],
+  imports: [ReactiveFormsModule, MatAutocompleteModule, MatFormFieldModule, MatInputModule],
   template: `
     <mat-form-field appearance="outline" style="width:100%">
       <mat-label>📍 City</mat-label>
-      <input
-        matInput
-        [formControl]="control"
-        [matAutocomplete]="cityAuto"
-        placeholder="Search city..."
-      />
-      <mat-autocomplete
-        #cityAuto="matAutocomplete"
-        [displayWith]="displayFn"
-        (optionSelected)="onOptionSelected($event.option.value)"
-      >
+      <input matInput [formControl]="control" [matAutocomplete]="cityAuto" placeholder="Search city..." />
+      <mat-autocomplete #cityAuto="matAutocomplete" [displayWith]="displayFn"
+                        (optionSelected)="onOptionSelected($event.option.value)">
         @for (city of filteredCities; track city.name) {
-          <mat-option [value]="city">
-            {{ city.name }} — {{ city.stateCode }}
-          </mat-option>
+          <mat-option [value]="city">{{ city.name }} — {{ city.stateCode }}</mat-option>
         }
       </mat-autocomplete>
     </mat-form-field>
@@ -40,6 +27,8 @@ import { ICity } from 'country-state-city';
 })
 export class CityAutocompleteComponent implements OnInit, OnDestroy {
   @Input() control!: FormControl;
+  /** Optional: if provided, auto-fills with the state name when a city is selected */
+  @Input() stateControl?: FormControl;
 
   private locationService = inject(LocationService);
   private destroy$ = new Subject<void>();
@@ -65,6 +54,11 @@ export class CityAutocompleteComponent implements OnInit, OnDestroy {
   onOptionSelected(city: ICity) {
     this.control.setValue(city.name, { emitEvent: false });
     this.filteredCities = [];
+    // Auto-fill state if stateControl provided
+    if (this.stateControl) {
+      const stateName = this.locationService.getStateNameByCity(city.name);
+      if (stateName) this.stateControl.setValue(stateName, { emitEvent: false });
+    }
   }
 
   ngOnDestroy() {

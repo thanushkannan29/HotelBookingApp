@@ -59,8 +59,9 @@ export class HotelListComponent implements OnInit, AfterViewInit {
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  // F2D: city control as FormControl for city-autocomplete
+  // City and State controls for search
   cityControl = new FormControl('');
+  stateControl = new FormControl('');
 
   searchForm = this.fb.group({
     checkIn: [null as Date | null],
@@ -185,6 +186,7 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   clearSearch() {
     this.searchResults.set(null);
     this.cityControl.reset();
+    this.stateControl.reset();
     this.searchForm.reset();
     this.minPrice.set(0);
     this.maxPrice.set(50000);

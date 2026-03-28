@@ -37,6 +37,7 @@ export class HotelManagementComponent implements OnInit {
   dashboard   = signal<AdminDashboardDto | null>(null);
 
   cityControl = new FormControl('', [Validators.required]);
+  stateControl = new FormControl('');
 
   form = this.fb.group({
     name:          ['', [Validators.required, Validators.maxLength(200)]],
@@ -65,6 +66,7 @@ export class HotelManagementComponent implements OnInit {
         });
         this.gstForm.patchValue({ gstPercent: (hotel as any).gstPercent ?? 0 });
         this.cityControl.setValue(hotel.city);
+        this.stateControl.setValue((hotel as any).state ?? '');
         this.isLoading.set(false);
       });
     });

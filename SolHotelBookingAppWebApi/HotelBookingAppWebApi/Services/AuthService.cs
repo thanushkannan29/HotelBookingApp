@@ -111,6 +111,7 @@ namespace HotelBookingAppWebApi.Services
                     Name = dto.HotelName,
                     Address = dto.Address,
                     City = dto.City,
+                    State = dto.State,
                     Description = dto.Description,
                     ContactNumber = dto.ContactNumber,
                     IsActive = true,

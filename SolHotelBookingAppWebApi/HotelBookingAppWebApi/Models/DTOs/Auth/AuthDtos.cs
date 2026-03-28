@@ -56,6 +56,8 @@ namespace HotelBookingAppWebApi.Models.DTOs.Auth
         [Required]
         public string City { get; set; } = string.Empty;
 
+        public string State { get; set; } = string.Empty;
+
         public string Description { get; set; } = string.Empty;
 
         [Required, MaxLength(15)]

@@ -32,6 +32,8 @@ export class GuestProfileComponent implements OnInit {
   // F2D: separate FormControl for city autocomplete
   cityControl = new FormControl('');
 
+  get stateFormControl() { return this.form.get('state') as FormControl; }
+
   form = this.fb.group({
     name:           [''],
     phoneNumber:    ['', [Validators.maxLength(15)]],
