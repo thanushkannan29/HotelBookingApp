@@ -84,6 +84,10 @@ export class HotelListComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.hotelService.getTopHotels().subscribe(hotels => this.topHotels.set(hotels));
+    this.hotelService.getAmenities().subscribe(a => {
+      this.amenities.set(a.map(x => x.name));
+      this.amenityObjects.set(a);
+    });
     this.loadStateGroups();
   }
 
@@ -162,10 +166,6 @@ export class HotelListComponent implements OnInit, AfterViewInit {
         this.totalResults.set(res.recordsCount);
         this.isSearching.set(false);
         this.updatePaginatedResults();
-        this.hotelService.getAmenities().subscribe(a => {
-          this.amenities.set(a.map(x => x.name));
-          this.amenityObjects.set(a);
-        });
       },
       error: () => this.isSearching.set(false),
     });

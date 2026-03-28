@@ -69,14 +69,16 @@ export class InfiniteCarouselComponent implements OnChanges, AfterViewInit, OnDe
   @ViewChild('track') trackRef!: ElementRef<HTMLDivElement>;
 
   displayItems: HotelListItemDto[] = [];
-  private readonly CARD_WIDTH = 296; // 280 + 16 gap
+  private readonly CARD_WIDTH = 296; // 280px + 16px gap
   private autoTimer: any;
   private viewInitialized = false;
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['hotels'] && this.hotels.length > 0) {
+      // Triple the list so we always have cards on both sides to scroll into
       this.displayItems = [...this.hotels, ...this.hotels, ...this.hotels];
       if (this.viewInitialized) {
+        // Wait for DOM to render the new items before jumping
         setTimeout(() => this.jumpToMiddle(), 50);
       }
     }
@@ -87,7 +89,7 @@ export class InfiniteCarouselComponent implements OnChanges, AfterViewInit, OnDe
     if (this.hotels.length > 0) {
       setTimeout(() => this.jumpToMiddle(), 100);
     }
-    this.autoTimer = setInterval(() => this.tick(), 3500);
+    this.autoTimer = setInterval(() => this.autoScroll(), 3500);
   }
 
   ngOnDestroy() {
@@ -97,44 +99,47 @@ export class InfiniteCarouselComponent implements OnChanges, AfterViewInit, OnDe
   private jumpToMiddle() {
     const el = this.trackRef?.nativeElement;
     if (!el || this.hotels.length === 0) return;
-    // Disable smooth scroll for the initial jump
     el.style.scrollBehavior = 'auto';
+    // Start at the beginning of the middle copy
     el.scrollLeft = this.hotels.length * this.CARD_WIDTH;
-    el.style.scrollBehavior = 'smooth';
+    // Re-enable smooth after the jump settles
+    requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
   }
 
-  private tick() {
+  private autoScroll() {
     const el = this.trackRef?.nativeElement;
-    if (!el) return;
+    if (!el || this.hotels.length === 0) return;
     el.scrollLeft += this.CARD_WIDTH;
-    setTimeout(() => this.loopCheck(el), 50);
+    requestAnimationFrame(() => this.wrapIfNeeded(el));
   }
 
   scrollLeft() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft -= this.CARD_WIDTH * 2;
-    setTimeout(() => this.loopCheck(el), 50);
+    requestAnimationFrame(() => this.wrapIfNeeded(el));
   }
 
   scrollRight() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft += this.CARD_WIDTH * 2;
-    setTimeout(() => this.loopCheck(el), 50);
+    requestAnimationFrame(() => this.wrapIfNeeded(el));
   }
 
-  private loopCheck(el: HTMLDivElement) {
+  private wrapIfNeeded(el: HTMLDivElement) {
     const single = this.hotels.length * this.CARD_WIDTH;
     if (single === 0) return;
-    // Jumped past the last copy — reset to middle copy
-    if (el.scrollLeft >= single * 2) {
+    const max = single * 2; // end of middle copy
+    const min = single;     // start of middle copy
+
+    if (el.scrollLeft >= max) {
+      // Scrolled into the last copy — jump back to middle copy silently
       el.style.scrollBehavior = 'auto';
       el.scrollLeft -= single;
       requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
-    }
-    // Scrolled before the first copy — reset to middle copy
-    if (el.scrollLeft < single) {
+    } else if (el.scrollLeft < min - this.CARD_WIDTH * 2) {
+      // Scrolled into the first copy — jump forward to middle copy silently
       el.style.scrollBehavior = 'auto';
       el.scrollLeft += single;
       requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
