@@ -1,6 +1,8 @@
 import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
@@ -96,27 +98,23 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   private loadStateGroups() {
     this.hotelService.getActiveStates().subscribe({
       next: states => {
-        if (states.length === 0) {
-          // No states set yet — fall back to city-based groups
-          this.loadCityGroups();
-          return;
-        }
+        if (states.length === 0) { this.loadCityGroups(); return; }
         const limited = states.slice(0, 6);
-        const groups: { stateName: string; hotels: HotelListItemDto[] }[] = [];
-        let loaded = 0;
-        for (const state of limited) {
-          this.hotelService.getHotelsByState(state).subscribe(hotels => {
-            if (hotels.length > 0) groups.push({ stateName: state, hotels: hotels.slice(0, 10) });
-            loaded++;
-            if (loaded === limited.length) {
-              if (groups.length === 0) {
-                this.loadCityGroups();
-              } else {
-                this.stateGroups.set(groups.sort((a, b) => a.stateName.localeCompare(b.stateName)));
-              }
-            }
-          });
-        }
+        forkJoin(
+          limited.map(state =>
+            this.hotelService.getHotelsByState(state).pipe(catchError(() => of([])))
+          )
+        ).subscribe(results => {
+          const groups = limited
+            .map((state, i) => ({ stateName: state, hotels: results[i] as HotelListItemDto[] }))
+            .filter(g => g.hotels.length > 0)
+            .sort((a, b) => a.stateName.localeCompare(b.stateName));
+          if (groups.length === 0) {
+            this.loadCityGroups();
+          } else {
+            this.stateGroups.set(groups);
+          }
+        });
       },
       error: () => this.loadCityGroups()
     });
@@ -125,17 +123,16 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   private loadCityGroups() {
     this.hotelService.getCities().subscribe(cities => {
       const limited = cities.slice(0, 5);
-      const groups: { cityName: string; hotels: HotelListItemDto[] }[] = [];
-      let loaded = 0;
-      for (const city of limited) {
-        this.hotelService.getHotelsByCity(city).subscribe(hotels => {
-          groups.push({ cityName: city, hotels: hotels.slice(0, 10) });
-          loaded++;
-          if (loaded === limited.length) {
-            this.cityGroups.set(groups);
-          }
-        });
-      }
+      forkJoin(
+        limited.map(city =>
+          this.hotelService.getHotelsByCity(city).pipe(catchError(() => of([])))
+        )
+      ).subscribe(results => {
+        const groups = limited
+          .map((city, i) => ({ cityName: city, hotels: results[i] as HotelListItemDto[] }))
+          .filter(g => g.hotels.length > 0);
+        this.cityGroups.set(groups);
+      });
     });
   }
 

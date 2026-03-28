@@ -45,10 +45,11 @@ import { HotelCardComponent } from '../../../features/hotel/hotel-card/hotel-car
       scrollbar-width: none;
       -ms-overflow-style: none;
       flex: 1;
+      min-width: 0;
       padding: 4px 0 12px;
       &::-webkit-scrollbar { display: none; }
     }
-    .carousel-item { flex: 0 0 280px; min-height: 380px; display: flex; flex-direction: column; }
+    .carousel-item { flex: 0 0 280px; min-width: 280px; min-height: 380px; display: flex; flex-direction: column; }
     .carousel-btn {
       flex-shrink: 0;
       background: var(--color-surface) !important;
@@ -106,32 +107,34 @@ export class InfiniteCarouselComponent implements OnChanges, AfterViewInit, OnDe
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft += this.CARD_WIDTH;
-    this.loopCheck(el);
+    setTimeout(() => this.loopCheck(el), 50);
   }
 
   scrollLeft() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft -= this.CARD_WIDTH * 2;
-    this.loopCheck(el);
+    setTimeout(() => this.loopCheck(el), 50);
   }
 
   scrollRight() {
     const el = this.trackRef?.nativeElement;
     if (!el) return;
     el.scrollLeft += this.CARD_WIDTH * 2;
-    this.loopCheck(el);
+    setTimeout(() => this.loopCheck(el), 50);
   }
 
   private loopCheck(el: HTMLDivElement) {
     const single = this.hotels.length * this.CARD_WIDTH;
+    if (single === 0) return;
+    // Jumped past the last copy — reset to middle copy
     if (el.scrollLeft >= single * 2) {
       el.style.scrollBehavior = 'auto';
       el.scrollLeft -= single;
-      // Re-enable smooth after a frame
       requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
     }
-    if (el.scrollLeft <= 0) {
+    // Scrolled before the first copy — reset to middle copy
+    if (el.scrollLeft < single) {
       el.style.scrollBehavior = 'auto';
       el.scrollLeft += single;
       requestAnimationFrame(() => { el.style.scrollBehavior = 'smooth'; });
