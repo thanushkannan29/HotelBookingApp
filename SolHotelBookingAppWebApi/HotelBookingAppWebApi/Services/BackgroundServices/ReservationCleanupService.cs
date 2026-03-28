@@ -1,3 +1,4 @@
+using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
@@ -6,8 +7,8 @@ using Microsoft.EntityFrameworkCore;
 namespace HotelBookingAppWebApi.Services.BackgroundServices
 {
     /// <summary>
-    /// Runs every 5 minutes. Cancels Pending reservations whose payment window has expired
-    /// and restores their inventory.
+    /// Runs every 5 minutes. Cancels Pending reservations whose payment window has expired,
+    /// restores inventory, and refunds any wallet amount that was pre-deducted at booking time.
     /// </summary>
     public class ReservationCleanupService : BackgroundService
     {
@@ -109,6 +110,32 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
 
                 await unitOfWork.CommitAsync();
                 _logger.LogInformation("Expired reservation cleanup committed.");
+
+                // Refund wallet for any reservation that had wallet pre-deducted at booking time.
+                // This runs AFTER commit so the cancellation is persisted even if a refund fails.
+                var walletService = scope.ServiceProvider.GetRequiredService<IWalletService>();
+                foreach (var reservation in expired)
+                {
+                    if (reservation.WalletAmountUsed > 0)
+                    {
+                        try
+                        {
+                            await walletService.CreditAsync(
+                                reservation.UserId,
+                                reservation.WalletAmountUsed,
+                                $"Wallet refund — reservation {reservation.ReservationCode} expired without payment.");
+                            _logger.LogInformation(
+                                "Refunded ₹{Amount} to user {UserId} for expired reservation {Code}.",
+                                reservation.WalletAmountUsed, reservation.UserId, reservation.ReservationCode);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex,
+                                "Failed to refund wallet for expired reservation {Code}.",
+                                reservation.ReservationCode);
+                        }
+                    }
+                }
             }
             catch (Exception ex)
             {

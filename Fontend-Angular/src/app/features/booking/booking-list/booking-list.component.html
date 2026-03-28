@@ -96,13 +96,9 @@
                   <mat-icon>open_in_new</mat-icon>
                 </a>
                 @if (canPayNow(r)) {
-                  <button mat-flat-button color="primary" (click)="payWithRazorpay(r); $event.stopPropagation()"
-                          [disabled]="payingId() === r.reservationId" class="pay-btn" matTooltip="Pay now">
-                    @if (payingId() === r.reservationId) {
-                      <mat-spinner diameter="16" style="display:inline-block;" />
-                    } @else {
-                      <ng-container><mat-icon>payment</mat-icon> Pay Now</ng-container>
-                    }
+                  <button mat-flat-button color="primary" (click)="goToPayment(r); $event.stopPropagation()"
+                          class="pay-btn" matTooltip="Complete payment">
+                    <mat-icon>payment</mat-icon> Pay Now
                   </button>
                 }
               </div>
