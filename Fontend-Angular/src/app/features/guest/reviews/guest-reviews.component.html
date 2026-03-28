@@ -4,6 +4,9 @@
       <div>
         <h1 class="section-title">My Reviews</h1>
         <p class="section-subtitle">Share your experience with hotels you've stayed at</p>
+        @if (reviews().length > 0) {
+          <p class="contribution-summary">🏆 Your Review Contribution: {{ reviews().length * 100 }} pts</p>
+        }
       </div>
       @if (reviewableStays.length > 0 && !showAddForm()) {
         <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
@@ -138,7 +141,10 @@
           <!-- Date -->
           <ng-container matColumnDef="date">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-            <td mat-cell *matCellDef="let r">{{ r.createdDate | date:'MMM d, y' }}</td>
+            <td mat-cell *matCellDef="let r">
+              {{ r.createdDate | date:'MMM d, y' }}
+              <span class="contribution-badge">🏆 +100 pts</span>
+            </td>
           </ng-container>
 
           <!-- Actions -->

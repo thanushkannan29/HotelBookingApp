@@ -15,5 +15,14 @@ namespace HotelBookingAppWebApi.Interfaces
 
         /// <summary>SuperAdmin only — updates an amenity</summary>
         Task<AmenityResponseDto> UpdateAmenityAsync(UpdateAmenityDto dto);
+
+        /// <summary>SuperAdmin only — get all amenities paged (including inactive)</summary>
+        Task<PagedAmenityResponseDto> GetAllAmenitiesPagedAsync(int page, int pageSize, string? search, string? category);
+
+        /// <summary>SuperAdmin only — toggle IsActive flag</summary>
+        Task<bool> ToggleAmenityStatusAsync(Guid amenityId);
+
+        /// <summary>SuperAdmin only — hard delete if not in use</summary>
+        Task<bool> DeleteAmenityAsync(Guid amenityId);
     }
 }

@@ -31,6 +31,17 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
+  getActiveStates(): Observable<string[]> {
+    return this.http.get<ApiResponse<string[]>>(`${this.base}/public/hotels/active-states`)
+      .pipe(map(r => r.data ?? []));
+  }
+
+  getHotelsByState(stateName: string): Observable<HotelListItemDto[]> {
+    return this.http.get<ApiResponse<HotelListItemDto[]>>(
+      `${this.base}/public/hotels/by-state/${encodeURIComponent(stateName)}`
+    ).pipe(map(r => r.data ?? []));
+  }
+
   searchHotels(req: SearchHotelRequestDto): Observable<SearchHotelResponseDto> {
     return this.http.post<ApiResponse<SearchHotelResponseDto>>(
       `${this.base}/public/hotels/search`, req

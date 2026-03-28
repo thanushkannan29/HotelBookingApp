@@ -14,6 +14,8 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(Guid hotelId, DateOnly checkIn, DateOnly checkOut);
         Task<IEnumerable<string>> GetCitiesAsync();
         Task<IEnumerable<HotelListItemDto>> GetHotelsByCityAsync(string city);
+        Task<IEnumerable<string>> GetActiveStatesAsync();
+        Task<IEnumerable<HotelListItemDto>> GetHotelsByStateAsync(string stateName);
 
         // ── Admin ─────────────────────────────────────────────────────────────
         Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto);

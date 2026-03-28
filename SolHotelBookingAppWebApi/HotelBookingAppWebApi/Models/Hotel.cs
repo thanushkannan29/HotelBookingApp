@@ -16,6 +16,9 @@ namespace HotelBookingAppWebApi.Models
         [Required, MaxLength(100)]
         public string City { get; set; } = string.Empty;
 
+        [MaxLength(100)]
+        public string State { get; set; } = string.Empty;
+
         [MaxLength(1000)]
         public string Description { get; set; } = string.Empty;
 

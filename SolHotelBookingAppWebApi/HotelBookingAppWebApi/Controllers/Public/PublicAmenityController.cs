@@ -59,5 +59,33 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
             var result = await _service.UpdateAmenityAsync(dto);
             return Ok(new { success = true, data = result });
         }
+
+        /// <summary>Get all amenities paged (including inactive)</summary>
+        [HttpGet]
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? category = null)
+        {
+            var result = await _service.GetAllAmenitiesPagedAsync(page, pageSize, search, category);
+            return Ok(new { success = true, data = result });
+        }
+
+        /// <summary>Toggle active/inactive status</summary>
+        [HttpPatch("{id}/toggle-status")]
+        public async Task<IActionResult> ToggleStatus(Guid id)
+        {
+            var isActive = await _service.ToggleAmenityStatusAsync(id);
+            return Ok(new { success = true, data = new { isActive } });
+        }
+
+        /// <summary>Delete amenity (only if not in use)</summary>
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(Guid id)
+        {
+            await _service.DeleteAmenityAsync(id);
+            return Ok(new { success = true, message = "Amenity deleted." });
+        }
     }
 }

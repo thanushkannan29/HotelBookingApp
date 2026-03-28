@@ -46,6 +46,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Review
         public string Comment { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
         public DateTime CreatedDate { get; set; }
+
+        /// <summary>Always 100 pts per review</summary>
+        public int ContributionPoints { get; set; } = 100;
     }
 
     public class MyReviewsResponseDto
@@ -62,6 +65,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Review
         public string Comment { get; set; } = string.Empty;
         public string? ImageUrl { get; set; }
         public DateTime CreatedDate { get; set; }
+
+        /// <summary>Always 100 pts per review</summary>
+        public int ContributionPoints { get; set; } = 100;
     }
 
     public class PagedReviewResponseDto

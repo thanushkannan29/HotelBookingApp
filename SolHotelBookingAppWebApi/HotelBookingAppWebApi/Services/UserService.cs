@@ -12,15 +12,18 @@ namespace HotelBookingAppWebApi.Services
     {
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public UserService(
             IRepository<Guid, User> userRepo,
             IRepository<Guid, Reservation> reservationRepo,
+            IRepository<Guid, Review> reviewRepo,
             IUnitOfWork unitOfWork)
         {
             _userRepo = userRepo;
             _reservationRepo = reservationRepo;
+            _reviewRepo = reviewRepo;
             _unitOfWork = unitOfWork;
         }
 
@@ -35,7 +38,10 @@ namespace HotelBookingAppWebApi.Services
             if (user.UserDetails == null)
                 throw new UserProfileException("Profile details not found.");
 
-            return MapToDto(user);
+            var reviewCount = await _reviewRepo.GetQueryable()
+                .CountAsync(r => r.UserId == userId);
+
+            return MapToDto(user, reviewCount);
         }
 
         // ── UPDATE PROFILE ────────────────────────────────────────────────────
@@ -63,7 +69,7 @@ namespace HotelBookingAppWebApi.Services
                 if (dto.ProfileImageUrl != null) d.ProfileImageUrl = dto.ProfileImageUrl;
 
                 await _unitOfWork.CommitAsync();
-                return MapToDto(user);
+                return MapToDto(user, 0);
             }
             catch
             {
@@ -102,7 +108,7 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── MAPPER ────────────────────────────────────────────────────────────
-        private static UserProfileResponseDto MapToDto(User user)
+        private static UserProfileResponseDto MapToDto(User user, int reviewCount = 0)
         {
             var d = user.UserDetails!;
             return new UserProfileResponseDto
@@ -117,7 +123,8 @@ namespace HotelBookingAppWebApi.Services
                 City = d.City,
                 Pincode = d.Pincode,
                 ProfileImageUrl = d.ProfileImageUrl,
-                CreatedAt = d.CreatedAt
+                CreatedAt = d.CreatedAt,
+                TotalReviewPoints = reviewCount * 100
             };
         }
     }

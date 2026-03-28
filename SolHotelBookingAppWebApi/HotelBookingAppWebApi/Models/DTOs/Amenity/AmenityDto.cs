@@ -32,4 +32,10 @@ namespace HotelBookingAppWebApi.Models.DTOs.Amenity
         public string? IconName { get; set; }
         public bool IsActive { get; set; }
     }
+
+    public class PagedAmenityResponseDto
+    {
+        public int TotalCount { get; set; }
+        public IEnumerable<AmenityResponseDto> Amenities { get; set; } = new List<AmenityResponseDto>();
+    }
 }

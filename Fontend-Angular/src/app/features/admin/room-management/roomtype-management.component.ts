@@ -268,6 +268,6 @@ export class RoomTypeManagementComponent implements OnInit {
 
   getAmenityNames(rt: RoomTypeListDto): string {
     if (rt.amenityList?.length) return rt.amenityList.map(a => a.name).join(', ');
-    return rt.amenities || '—';
+    return '—';
   }
 }

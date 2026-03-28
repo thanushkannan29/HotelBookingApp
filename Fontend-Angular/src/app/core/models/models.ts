@@ -60,6 +60,25 @@ export interface AmenityResponseDto {
   isActive: boolean;
 }
 
+export interface CreateAmenityDto {
+  name: string;
+  category: string;
+  iconName?: string;
+}
+
+export interface UpdateAmenityDto {
+  amenityId: string;
+  name: string;
+  category: string;
+  iconName?: string;
+  isActive: boolean;
+}
+
+export interface PagedAmenityResponseDto {
+  totalCount: number;
+  amenities: AmenityResponseDto[];
+}
+
 // ─── HOTEL PUBLIC ─────────────────────────────────────────────────────────────
 export interface HotelListItemDto {
   hotelId: string;
@@ -199,7 +218,6 @@ export interface RoomTypeListDto {
   name: string;
   description: string;
   maxOccupancy: number;
-  amenities: string;
   amenityList?: { amenityId: string; name: string; iconName?: string }[];
   isActive: boolean;
   roomCount: number;
@@ -428,6 +446,7 @@ export interface ReviewResponseDto {
   comment: string;
   imageUrl?: string;
   createdDate: string;
+  contributionPoints: number;
 }
 
 // F8B: Added reservationId and reservationCode
@@ -441,6 +460,7 @@ export interface MyReviewsResponseDto {
   comment: string;
   imageUrl?: string;
   createdDate: string;
+  contributionPoints: number;
 }
 
 export interface PagedReviewResponseDto {
@@ -502,6 +522,7 @@ export interface UserProfileResponseDto {
   pincode: string;
   profileImageUrl?: string;
   createdAt: string;
+  totalReviewPoints: number;
 }
 
 export interface UpdateUserProfileDto {

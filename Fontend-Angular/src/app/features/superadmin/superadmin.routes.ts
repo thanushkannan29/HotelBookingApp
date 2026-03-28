@@ -18,6 +18,10 @@ export const SUPERADMIN_ROUTES: Routes = [
     loadComponent: () => import('./amenity-requests/superadmin-amenity-requests.component').then(m => m.SuperadminAmenityRequestsComponent),
   },
   {
+    path: 'amenities',
+    loadComponent: () => import('./amenity-management/superadmin-amenity-management.component').then(m => m.SuperadminAmenityManagementComponent),
+  },
+  {
     path: 'revenue',
     loadComponent: () => import('./revenue/superadmin-revenue.component').then(m => m.SuperadminRevenueComponent),
   },

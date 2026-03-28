@@ -3,17 +3,16 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { AsyncPipe } from '@angular/common';
-import { Subject, of } from 'rxjs';
-import { debounceTime, distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
-import { CityService } from '../../../core/services/city.service';
-import { CityDto } from '../../../core/models/models';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
+import { LocationService } from '../../../core/services/location.service';
+import { ICity } from 'country-state-city';
 
 @Component({
   selector: 'app-city-autocomplete',
   standalone: true,
   imports: [
-    ReactiveFormsModule, AsyncPipe,
+    ReactiveFormsModule,
     MatAutocompleteModule, MatFormFieldModule, MatInputModule,
   ],
   template: `
@@ -30,9 +29,9 @@ import { CityDto } from '../../../core/models/models';
         [displayWith]="displayFn"
         (optionSelected)="onOptionSelected($event.option.value)"
       >
-        @for (city of filteredCities; track city.cityId) {
+        @for (city of filteredCities; track city.name) {
           <mat-option [value]="city">
-            {{ city.cityName }} — {{ city.stateName }}
+            {{ city.name }} — {{ city.stateCode }}
           </mat-option>
         }
       </mat-autocomplete>
@@ -42,33 +41,29 @@ import { CityDto } from '../../../core/models/models';
 export class CityAutocompleteComponent implements OnInit, OnDestroy {
   @Input() control!: FormControl;
 
-  private cityService = inject(CityService);
+  private locationService = inject(LocationService);
   private destroy$ = new Subject<void>();
 
-  filteredCities: CityDto[] = [];
+  filteredCities: ICity[] = [];
 
   ngOnInit() {
     this.control.valueChanges.pipe(
       debounceTime(300),
       distinctUntilChanged(),
-      switchMap((value: string | CityDto) => {
-        const query = typeof value === 'string' ? value : value?.cityName ?? '';
-        if (!query || query.length < 2) return of([]);
-        return this.cityService.search(query);
-      }),
       takeUntil(this.destroy$)
-    ).subscribe(cities => {
-      this.filteredCities = cities;
+    ).subscribe((value: string | ICity) => {
+      const query = typeof value === 'string' ? value : value?.name ?? '';
+      this.filteredCities = this.locationService.searchCities(query);
     });
   }
 
-  displayFn(city: CityDto | string): string {
+  displayFn(city: ICity | string): string {
     if (!city) return '';
-    return typeof city === 'string' ? city : city.cityName;
+    return typeof city === 'string' ? city : city.name;
   }
 
-  onOptionSelected(city: CityDto) {
-    this.control.setValue(city.cityName, { emitEvent: false });
+  onOptionSelected(city: ICity) {
+    this.control.setValue(city.name, { emitEvent: false });
     this.filteredCities = [];
   }
 

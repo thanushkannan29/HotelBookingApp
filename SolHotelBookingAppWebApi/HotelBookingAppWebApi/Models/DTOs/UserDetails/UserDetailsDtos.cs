@@ -15,6 +15,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.UserDetails
         public string Pincode { get; set; } = string.Empty;
         public string? ProfileImageUrl { get; set; }
         public DateTime CreatedAt { get; set; }
+        public int TotalReviewPoints { get; set; }
     }
 
     public class UpdateUserProfileDto

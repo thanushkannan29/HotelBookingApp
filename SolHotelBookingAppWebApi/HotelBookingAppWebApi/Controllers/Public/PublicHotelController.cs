@@ -81,5 +81,21 @@ namespace HotelBookingAppWebApi.Controllers.Public
             var result = await _service.GetAvailabilityAsync(hotelId, checkIn, checkOut);
             return Ok(new { success = true, data = result });
         }
+
+        /// <summary>Get distinct active states that have hotels</summary>
+        [HttpGet("active-states")]
+        public async Task<IActionResult> GetActiveStates()
+        {
+            var result = await _service.GetActiveStatesAsync();
+            return Ok(new { success = true, data = result });
+        }
+
+        /// <summary>Get hotels by state name</summary>
+        [HttpGet("by-state/{stateName}")]
+        public async Task<IActionResult> GetByState(string stateName)
+        {
+            var result = await _service.GetHotelsByStateAsync(stateName);
+            return Ok(new { success = true, data = result });
+        }
     }
 }

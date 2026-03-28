@@ -132,6 +132,30 @@ namespace HotelBookingAppWebApi.Services
             return true;
         }
 
+        /// <summary>Debit wallet — deducts only down to zero, never throws on insufficient balance</summary>
+        public async Task<bool> DebitAsync(Guid userId, decimal amount, string description)
+        {
+            var wallet = await GetOrCreateWalletAsync(userId);
+            var actualDebit = Math.Min(amount, wallet.Balance);
+            if (actualDebit <= 0) return false;
+
+            wallet.Balance -= actualDebit;
+            wallet.UpdatedAt = DateTime.UtcNow;
+
+            await _txRepo.AddAsync(new WalletTransaction
+            {
+                WalletTransactionId = Guid.NewGuid(),
+                WalletId = wallet.WalletId,
+                Amount = actualDebit,
+                Type = "Debit",
+                Description = description,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _unitOfWork.SaveChangesAsync();
+            return true;
+        }
+
         public async Task<WalletResponseDto> GetGuestWalletByAdminAsync(Guid adminUserId, Guid guestUserId)
         {
             var admin = await _userRepo.GetAsync(adminUserId)

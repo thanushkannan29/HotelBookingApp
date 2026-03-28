@@ -13,17 +13,20 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
+        private readonly IWalletService _walletService;
         private readonly IUnitOfWork _unitOfWork;
 
         public ReviewService(
             IRepository<Guid, Review> reviewRepo,
             IRepository<Guid, Hotel> hotelRepo,
             IRepository<Guid, Reservation> reservationRepo,
+            IWalletService walletService,
             IUnitOfWork unitOfWork)
         {
             _reviewRepo = reviewRepo;
             _hotelRepo = hotelRepo;
             _reservationRepo = reservationRepo;
+            _walletService = walletService;
             _unitOfWork = unitOfWork;
         }
 
@@ -71,6 +74,7 @@ namespace HotelBookingAppWebApi.Services
                 };
 
                 await _reviewRepo.AddAsync(review);
+                await _walletService.CreditAsync(userId, 100m, "Review contribution reward");
                 await _unitOfWork.CommitAsync();
 
                 return MapToDto(review, reservation.ReservationCode);
@@ -125,6 +129,7 @@ namespace HotelBookingAppWebApi.Services
                 if (review.UserId != userId)
                     throw new ReviewException("You are not allowed to delete this review.");
 
+                await _walletService.DebitAsync(review.UserId, 100m, "Review contribution reversed on deletion");
                 var deleted = await _reviewRepo.DeleteAsync(reviewId);
                 await _unitOfWork.CommitAsync();
 
@@ -195,7 +200,8 @@ namespace HotelBookingAppWebApi.Services
             Rating = r.Rating,
             Comment = r.Comment,
             ImageUrl = r.ImageUrl,
-            CreatedDate = r.CreatedDate
+            CreatedDate = r.CreatedDate,
+            ContributionPoints = 100
         };
 
         private static MyReviewsResponseDto MapToMyDto(Review r) => new()
@@ -208,7 +214,8 @@ namespace HotelBookingAppWebApi.Services
             Rating = r.Rating,
             Comment = r.Comment,
             ImageUrl = r.ImageUrl,
-            CreatedDate = r.CreatedDate
+            CreatedDate = r.CreatedDate,
+            ContributionPoints = 100
         };
     }
 }

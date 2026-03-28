@@ -112,5 +112,59 @@ namespace HotelBookingAppWebApi.Services
             IconName = a.IconName,
             IsActive = a.IsActive
         };
+
+        // ── GET ALL PAGED (SuperAdmin) ─────────────────────────────────────────
+        public async Task<PagedAmenityResponseDto> GetAllAmenitiesPagedAsync(int page, int pageSize, string? search, string? category)
+        {
+            var query = _amenityRepo.GetQueryable().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(a => a.Name.ToLower().Contains(search.ToLower()) ||
+                                         a.Category.ToLower().Contains(search.ToLower()));
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "All")
+                query = query.Where(a => a.Category == category);
+
+            var total = await query.CountAsync();
+            var amenities = await query
+                .OrderBy(a => a.Category).ThenBy(a => a.Name)
+                .Skip((page - 1) * pageSize).Take(pageSize)
+                .Select(a => MapToDto(a))
+                .ToListAsync();
+
+            return new PagedAmenityResponseDto { TotalCount = total, Amenities = amenities };
+        }
+
+        // ── TOGGLE STATUS (SuperAdmin) ─────────────────────────────────────────
+        public async Task<bool> ToggleAmenityStatusAsync(Guid amenityId)
+        {
+            var amenity = await _amenityRepo.GetAsync(amenityId)
+                ?? throw new NotFoundException("Amenity not found.");
+
+            amenity.IsActive = !amenity.IsActive;
+            await _amenityRepo.UpdateAsync(amenityId, amenity);
+            await _unitOfWork.SaveChangesAsync();
+
+            return amenity.IsActive;
+        }
+
+        // ── DELETE (SuperAdmin) ────────────────────────────────────────────────
+        public async Task<bool> DeleteAmenityAsync(Guid amenityId)
+        {
+            var amenity = await _amenityRepo.GetAsync(amenityId)
+                ?? throw new NotFoundException("Amenity not found.");
+
+            var inUse = await _amenityRepo.GetQueryable()
+                .AnyAsync(a => a.AmenityId == amenityId &&
+                               a.RoomTypeAmenities != null && a.RoomTypeAmenities.Any());
+
+            if (inUse)
+                throw new ConflictException("Amenity is in use by one or more room types.");
+
+            await _amenityRepo.DeleteAsync(amenityId);
+            await _unitOfWork.SaveChangesAsync();
+
+            return true;
+        }
     }
 }

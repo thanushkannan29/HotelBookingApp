@@ -13,6 +13,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Transaction> _transactionRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
+        private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IUnitOfWork _unitOfWork;
@@ -21,6 +22,7 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Transaction> transactionRepo,
             IRepository<Guid, Reservation> reservationRepo,
             IRepository<Guid, RoomTypeInventory> inventoryRepo,
+            IRepository<Guid, ReservationRoom> reservationRoomRepo,
             IRepository<Guid, User> userRepo,
             IRepository<Guid, Hotel> hotelRepo,
             IUnitOfWork unitOfWork)
@@ -28,6 +30,7 @@ namespace HotelBookingAppWebApi.Services
             _transactionRepo = transactionRepo;
             _reservationRepo = reservationRepo;
             _inventoryRepo = inventoryRepo;
+            _reservationRoomRepo = reservationRoomRepo;
             _userRepo = userRepo;
             _hotelRepo = hotelRepo;
             _unitOfWork = unitOfWork;
@@ -211,6 +214,25 @@ namespace HotelBookingAppWebApi.Services
 
             transaction.Status = PaymentStatus.Failed;
             transaction.Reservation.Status = ReservationStatus.Pending;
+
+            // Restore inventory when transaction is marked failed
+            var reservationRooms = await _reservationRoomRepo.GetQueryable()
+                .Where(rr => rr.ReservationId == transaction.ReservationId)
+                .ToListAsync();
+
+            if (reservationRooms.Any())
+            {
+                var roomTypeId = reservationRooms.First().RoomTypeId;
+                var reservation = transaction.Reservation!;
+                var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+                var dates = Enumerable.Range(0, totalDays).Select(d => reservation.CheckInDate.AddDays(d)).ToList();
+                var inventories = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
+                    .ToListAsync();
+                var roomCount = reservationRooms.Count;
+                foreach (var inv in inventories)
+                    inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
+            }
 
             await _unitOfWork.SaveChangesAsync();
         }

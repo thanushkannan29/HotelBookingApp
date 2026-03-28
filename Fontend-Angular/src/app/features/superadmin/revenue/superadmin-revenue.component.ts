@@ -8,7 +8,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RevenueService } from '../../../core/services/revenue.service';
-import { ToastService } from '../../../core/services/toast.service';
 import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/models';
 
 @Component({
@@ -84,16 +83,6 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
                 <th mat-header-cell *matHeaderCellDef>Date</th>
                 <td mat-cell *matCellDef="let r">{{ r.createdAt | date:'mediumDate' }}</td>
               </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let r">
-                  @if (r.status === 'Pending') {
-                    <button mat-raised-button color="primary" (click)="markSent(r.superAdminRevenueId)">
-                      Mark Sent
-                    </button>
-                  }
-                </td>
-              </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
             </table>
@@ -119,7 +108,6 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
 })
 export class SuperadminRevenueComponent implements OnInit {
   private service = inject(RevenueService);
-  private toast = inject(ToastService);
 
   loading = signal(true);
   items = signal<SuperAdminRevenueDto[]>([]);
@@ -127,7 +115,7 @@ export class SuperadminRevenueComponent implements OnInit {
   summary = signal<RevenueSummaryDto | null>(null);
   pageSize = 20;
   currentPage = 1;
-  displayedColumns = ['reservationCode', 'hotelName', 'reservationAmount', 'commissionAmount', 'status', 'date', 'actions'];
+  displayedColumns = ['reservationCode', 'hotelName', 'reservationAmount', 'commissionAmount', 'status', 'date'];
 
   ngOnInit() {
     this.loadSummary();
@@ -143,12 +131,6 @@ export class SuperadminRevenueComponent implements OnInit {
     this.service.getAll(this.currentPage, this.pageSize).subscribe({
       next: data => { this.items.set(data.items); this.totalCount.set(data.totalCount); this.loading.set(false); },
       error: () => this.loading.set(false)
-    });
-  }
-
-  markSent(id: string) {
-    this.service.markSent(id).subscribe({
-      next: () => { this.toast.success('Marked as sent!'); this.load(); this.loadSummary(); }
     });
   }
 

@@ -37,6 +37,7 @@ export class HotelListComponent implements OnInit, AfterViewInit {
   topHotels = signal<HotelListItemDto[]>([]);
   searchResults = signal<HotelListItemDto[] | null>(null);
   cityGroups = signal<{ cityName: string; hotels: HotelListItemDto[] }[]>([]);
+  stateGroups = signal<{ stateName: string; hotels: HotelListItemDto[] }[]>([]);
   isSearching = signal(false);
   totalResults = signal(0);
   currentPage = signal(1);
@@ -78,7 +79,7 @@ export class HotelListComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.hotelService.getTopHotels().subscribe(hotels => this.topHotels.set(hotels));
-    this.loadCityGroups();
+    this.loadStateGroups();
   }
 
   ngAfterViewInit() {
@@ -87,6 +88,24 @@ export class HotelListComponent implements OnInit, AfterViewInit {
         this.updatePaginatedResults();
       });
     }
+  }
+
+  private loadStateGroups() {
+    this.hotelService.getActiveStates().subscribe(states => {
+      const limited = states.slice(0, 6);
+      const groups: { stateName: string; hotels: HotelListItemDto[] }[] = [];
+      let loaded = 0;
+      if (limited.length === 0) { this.stateGroups.set([]); return; }
+      for (const state of limited) {
+        this.hotelService.getHotelsByState(state).subscribe(hotels => {
+          groups.push({ stateName: state, hotels: hotels.slice(0, 10) });
+          loaded++;
+          if (loaded === limited.length) {
+            this.stateGroups.set(groups.sort((a, b) => a.stateName.localeCompare(b.stateName)));
+          }
+        });
+      }
+    });
   }
 
   private loadCityGroups() {

@@ -57,7 +57,6 @@ namespace HotelBookingAppWebApi.Services
                     Name = dto.Name,
                     Description = dto.Description,
                     MaxOccupancy = dto.MaxOccupancy,
-                    Amenities = string.Empty,
                     ImageUrl = dto.ImageUrl,
                     IsActive = true
                 };
@@ -99,7 +98,7 @@ namespace HotelBookingAppWebApi.Services
                 .FirstOrDefaultAsync(r => r.RoomTypeId == dto.RoomTypeId && r.HotelId == user.HotelId)
                 ?? throw new NotFoundException("RoomType not found.");
 
-            var before = new { roomType.Name, roomType.Description, roomType.MaxOccupancy, roomType.Amenities, roomType.ImageUrl };
+            var before = new { roomType.Name, roomType.Description, roomType.MaxOccupancy, roomType.ImageUrl };
 
             roomType.Name = dto.Name;
             roomType.Description = dto.Description;
@@ -241,7 +240,6 @@ namespace HotelBookingAppWebApi.Services
                     Name = rt.Name,
                     Description = rt.Description,
                     MaxOccupancy = rt.MaxOccupancy,
-                    Amenities = rt.Amenities,
                     AmenityList = rt.RoomTypeAmenities!.Select(rta => new AmenityItemDto
                     {
                         AmenityId = rta.AmenityId,
@@ -279,7 +277,6 @@ namespace HotelBookingAppWebApi.Services
                     Name = rt.Name,
                     Description = rt.Description,
                     MaxOccupancy = rt.MaxOccupancy,
-                    Amenities = rt.Amenities,
                     AmenityList = rt.RoomTypeAmenities!.Select(rta => new AmenityItemDto
                     {
                         AmenityId = rta.AmenityId,

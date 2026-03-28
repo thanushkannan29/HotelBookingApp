@@ -225,22 +225,13 @@ namespace HotelBookingAppWebApi.Services
 
             var reviews = hotel.Reviews ?? new List<Review>();
 
-            // Collect unique amenities from join table (new) + legacy string (fallback)
-            var amenitiesFromJoin = hotel.RoomTypes?
+            // Collect unique amenities from join table only
+            var allAmenities = hotel.RoomTypes?
                 .SelectMany(rt => rt.RoomTypeAmenities ?? Enumerable.Empty<RoomTypeAmenity>())
                 .Select(rta => rta.Amenity?.Name ?? string.Empty)
                 .Where(n => !string.IsNullOrEmpty(n))
                 .Distinct()
                 .ToList() ?? new List<string>();
-
-            var amenitiesFromString = hotel.RoomTypes?
-                .Where(rt => !string.IsNullOrEmpty(rt.Amenities))
-                .SelectMany(rt => rt.Amenities.Split(',', StringSplitOptions.RemoveEmptyEntries))
-                .Select(a => a.Trim())
-                .Distinct()
-                .ToList() ?? new List<string>();
-
-            var allAmenities = amenitiesFromJoin.Union(amenitiesFromString).Distinct().ToList();
 
             var roomTypeDtos = hotel.RoomTypes?.Select(t => new RoomTypePublicDto
             {
@@ -248,9 +239,8 @@ namespace HotelBookingAppWebApi.Services
                 Name = t.Name,
                 Description = t.Description,
                 MaxOccupancy = t.MaxOccupancy,
-                Amenities = t.RoomTypeAmenities?.Any() == true
-                    ? t.RoomTypeAmenities.Select(rta => rta.Amenity?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n))
-                    : t.Amenities?.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()) ?? Enumerable.Empty<string>(),
+                Amenities = t.RoomTypeAmenities?.Select(rta => rta.Amenity?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n))
+                    ?? Enumerable.Empty<string>(),
                 AmenityList = t.RoomTypeAmenities?.Select(rta => new AmenityPublicDto
                 {
                     AmenityId = rta.AmenityId,
@@ -469,6 +459,48 @@ namespace HotelBookingAppWebApi.Services
             await _unitOfWork.SaveChangesAsync();
             await _auditLogService.LogAsync(null, "HotelBlocked", "Hotel", hotelId,
                 "Hotel blocked by SuperAdmin.");
+        }
+
+        // ── PUBLIC: ACTIVE STATES ─────────────────────────────────────────────
+        public async Task<IEnumerable<string>> GetActiveStatesAsync()
+        {
+            return await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin && !string.IsNullOrEmpty(h.State))
+                .Select(h => h.State)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+        }
+
+        // ── PUBLIC: HOTELS BY STATE ───────────────────────────────────────────
+        public async Task<IEnumerable<HotelListItemDto>> GetHotelsByStateAsync(string stateName)
+        {
+            var hotels = await _hotelRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
+                            h.State.ToLower() == stateName.ToLower())
+                .Select(h => new
+                {
+                    h.HotelId, h.Name, h.City, h.ImageUrl,
+                    AvgRating = h.Reviews.Select(r => (decimal?)r.Rating).Average(),
+                    ReviewCount = h.Reviews.Count(),
+                    StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Select(r => (decimal?)r.Rate).Min()
+                })
+                .OrderByDescending(h => h.AvgRating ?? 0)
+                .Take(10)
+                .ToListAsync();
+
+            return hotels.Select(h => new HotelListItemDto
+            {
+                HotelId = h.HotelId,
+                Name = h.Name,
+                City = h.City,
+                ImageUrl = h.ImageUrl,
+                AverageRating = Math.Round(h.AvgRating ?? 0m, 2),
+                ReviewCount = h.ReviewCount,
+                StartingPrice = h.StartingPrice ?? 0
+            });
         }
 
         // ── SUPERADMIN: UNBLOCK HOTEL ─────────────────────────────────────────

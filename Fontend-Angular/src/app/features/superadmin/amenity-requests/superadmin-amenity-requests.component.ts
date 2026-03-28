@@ -12,6 +12,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { RouterLink } from '@angular/router';
 import { AmenityRequestService } from '../../../core/services/amenity-request.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AmenityRequestResponseDto } from '../../../core/models/models';
@@ -20,7 +21,7 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
   selector: 'app-superadmin-amenity-requests',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule, ReactiveFormsModule, RouterLink,
     MatCardModule, MatTableModule, MatButtonModule, MatFormFieldModule,
     MatInputModule, MatPaginatorModule, MatIconModule, MatChipsModule,
     MatProgressSpinnerModule, MatSelectModule, MatDialogModule
@@ -28,6 +29,13 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
   template: `
     <div class="container py-4">
       <h2 class="mb-4">🔧 Amenity Requests</h2>
+
+      <!-- Link to amenity management -->
+      <div class="mb-3">
+        <a mat-stroked-button routerLink="/superadmin/amenities">
+          <mat-icon>category</mat-icon> View All Amenities →
+        </a>
+      </div>
 
       <!-- Filter -->
       <div class="d-flex gap-3 mb-3">

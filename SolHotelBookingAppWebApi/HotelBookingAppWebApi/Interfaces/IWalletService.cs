@@ -9,6 +9,7 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<WalletResponseDto> GetGuestWalletByAdminAsync(Guid adminUserId, Guid guestUserId);
         Task CreditAsync(Guid userId, decimal amount, string description);
         Task<bool> DeductAsync(Guid userId, decimal amount, string description);
+        Task<bool> DebitAsync(Guid userId, decimal amount, string description);
         Task EnsureWalletExistsAsync(Guid userId);
     }
 }

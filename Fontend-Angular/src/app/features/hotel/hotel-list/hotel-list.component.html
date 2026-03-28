@@ -64,12 +64,15 @@
           </section>
         }
 
-        <!-- City Group Rows -->
-        @for (city of cityGroups(); track city.cityName) {
+        <!-- State Group Rows -->
+        @for (group of stateGroups(); track group.stateName) {
           <section class="netflix-row">
-            <h2 class="row-title">Hotels in {{ city.cityName }}</h2>
+            <h2 class="row-title">
+              <mat-icon style="vertical-align:middle;font-size:20px">location_on</mat-icon>
+              Hotels in {{ group.stateName }}
+            </h2>
             <div class="scroll-row">
-              @for (h of city.hotels; track h.hotelId) {
+              @for (h of group.hotels; track h.hotelId) {
                 <div class="scroll-card-wrapper">
                   <app-hotel-card [hotel]="h" />
                 </div>
