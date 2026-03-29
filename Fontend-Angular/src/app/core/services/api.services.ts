@@ -7,7 +7,6 @@ import {
   PagedTransactionResponseDto, CreateReviewDto, UpdateReviewDto,
   ReviewResponseDto, MyReviewsResponseDto, PagedReviewResponseDto,
   PagedMyReviewsResponseDto, GetHotelReviewsRequestDto,
-  RefundRequestResponseDto, ProcessRefundDto, PagedRefundRequestResponseDto,
   UserProfileResponseDto, UpdateUserProfileDto, PagedBookingHistoryDto,
   PaginationDto, AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
   PagedAuditLogResponseDto, PagedLogResponseDto,
@@ -108,39 +107,6 @@ export class ReviewService {
     return this.http.patch<any>(
       `${this.base}/admin/reviews/${reviewId}/reply`, { adminReply }
     ).pipe(map(() => undefined));
-  }
-}
-
-// ─── REFUND SERVICE ───────────────────────────────────────────────────────────
-@Injectable({ providedIn: 'root' })
-export class RefundService {
-  private http = inject(HttpClient);
-  private base = `${environment.apiUrl}`;
-
-  getGuestRefundRequests(page = 1, pageSize = 10): Observable<PagedRefundRequestResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedRefundRequestResponseDto>>(
-      `${this.base}/guest/refund-requests`, { params }
-    ).pipe(map(r => r.data!));
-  }
-
-  getHotelRefundRequests(page = 1, pageSize = 10): Observable<PagedRefundRequestResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedRefundRequestResponseDto>>(
-      `${this.base}/admin/refund-requests`, { params }
-    ).pipe(map(r => r.data!));
-  }
-
-  approveRefund(id: string, dto: ProcessRefundDto): Observable<RefundRequestResponseDto> {
-    return this.http.patch<ApiResponse<RefundRequestResponseDto>>(
-      `${this.base}/admin/refund-requests/${id}/approve`, dto
-    ).pipe(map(r => r.data!));
-  }
-
-  rejectRefund(id: string, dto: ProcessRefundDto): Observable<RefundRequestResponseDto> {
-    return this.http.patch<ApiResponse<RefundRequestResponseDto>>(
-      `${this.base}/admin/refund-requests/${id}/reject`, dto
-    ).pipe(map(r => r.data!));
   }
 }
 

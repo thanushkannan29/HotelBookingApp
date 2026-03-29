@@ -20,9 +20,6 @@ namespace HotelBookingAppWebApi.Models
         [MaxLength(100)]
         public string SuperAdminUpiId { get; set; } = "thanushstayhubsuperadmin@okaxis";
 
-        [MaxLength(20)]
-        public string Status { get; set; } = "Pending"; // "Pending" | "Sent"
-
         public DateTime CreatedAt { get; set; }
 
         public Reservation? Reservation { get; set; }

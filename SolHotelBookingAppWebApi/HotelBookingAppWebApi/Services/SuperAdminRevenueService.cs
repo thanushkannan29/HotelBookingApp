@@ -47,7 +47,6 @@ namespace HotelBookingAppWebApi.Services
                 ReservationAmount = reservation.TotalAmount,
                 CommissionAmount = commission,
                 SuperAdminUpiId = "thanushstayhubsuperadmin@okaxis",
-                Status = "Sent",
                 CreatedAt = DateTime.UtcNow
             });
 
@@ -73,15 +72,8 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<RevenueSummaryDto> GetSummaryAsync()
         {
-            var all = await _revenueRepo.GetQueryable().ToListAsync();
-            return new RevenueSummaryDto
-            {
-                TotalCommissionEarned = all.Sum(r => r.CommissionAmount),
-                TotalPending = all.Where(r => r.Status == "Pending").Sum(r => r.CommissionAmount),
-                TotalSent = all.Where(r => r.Status == "Sent").Sum(r => r.CommissionAmount),
-                PendingCount = all.Count(r => r.Status == "Pending"),
-                SentCount = all.Count(r => r.Status == "Sent")
-            };
+            var total = await _revenueRepo.GetQueryable().SumAsync(r => (decimal?)r.CommissionAmount) ?? 0;
+            return new RevenueSummaryDto { TotalCommissionEarned = total };
         }
 
         private static SuperAdminRevenueDto MapToDto(SuperAdminRevenue r) => new()
@@ -92,7 +84,6 @@ namespace HotelBookingAppWebApi.Services
             ReservationAmount = r.ReservationAmount,
             CommissionAmount = r.CommissionAmount,
             SuperAdminUpiId = r.SuperAdminUpiId,
-            Status = r.Status,
             CreatedAt = r.CreatedAt
         };
     }

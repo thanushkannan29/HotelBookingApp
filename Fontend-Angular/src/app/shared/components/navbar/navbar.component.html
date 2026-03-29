@@ -69,7 +69,6 @@
           @if (auth.isGuest()) {
             <a mat-menu-item routerLink="/guest/profile"><mat-icon>person</mat-icon> Profile</a>
             <a mat-menu-item routerLink="/guest/transactions"><mat-icon>receipt</mat-icon> Transactions</a>
-            <a mat-menu-item routerLink="/guest/refunds"><mat-icon>undo</mat-icon> Refunds</a>
           }
           @if (auth.isAdmin()) {
             <a mat-menu-item routerLink="/admin/hotel"><mat-icon>hotel</mat-icon> My Hotel</a>

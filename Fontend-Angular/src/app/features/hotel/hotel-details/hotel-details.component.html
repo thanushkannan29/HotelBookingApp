@@ -69,6 +69,9 @@
               <div class="tab-content">
                 @for (rt of h.roomTypes; track rt.roomTypeId) {
                   <div class="room-type-card">
+                    @if (rt.imageUrl) {
+                      <img [src]="rt.imageUrl" [alt]="rt.name" class="rt-photo" />
+                    }
                     <div class="rt-header">
                       <h3>{{ rt.name }}</h3>
                       <span class="occupancy">

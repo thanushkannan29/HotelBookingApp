@@ -209,29 +209,6 @@ namespace HotelBookingAppWebApi.Controllers
         }
     }
 
-    // ── GUEST REFUND REQUESTS ─────────────────────────────────────────────────
-    [Route("api/guest/refund-requests")]
-    [ApiController]
-    [Authorize(Roles = "Guest")]
-    public class GuestRefundRequestController : ControllerBase
-    {
-        private readonly IRefundRequestService _service;
-        public GuestRefundRequestController(IRefundRequestService service) => _service = service;
-        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        /// <summary>
-        /// Correction 9A: Paged refund requests for the logged-in guest.
-        /// GET /api/guest/refund-requests?page=1&amp;pageSize=10
-        /// Returns { totalCount, refundRequests } for Angular Material paginator.
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMyRefundRequests([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            var result = await _service.GetGuestRefundRequestsPagedAsync(GetUserId(), page, pageSize);
-            return Ok(new { success = true, data = result });
-        }
-    }
-
     // ── LOGS ──────────────────────────────────────────────────────────────────
     [Route("api/logs")]
     [ApiController]

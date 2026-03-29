@@ -488,37 +488,6 @@ export interface GetHotelReviewsRequestDto {
   pageSize: number;
 }
 
-// ─── REFUND REQUEST ───────────────────────────────────────────────────────────
-// F8B: Added refundPaymentMethod, refundTransactionRef
-export interface RefundRequestResponseDto {
-  refundRequestId: string;
-  reservationId: string;
-  reservationCode: string;
-  userId: string;
-  guestName: string;
-  reason: string;
-  status: string;
-  adminResponse?: string;
-  refundAmount: number;
-  refundNote?: string;
-  refundPaymentMethod?: string;
-  refundTransactionRef?: string;
-  createdAt: string;
-  processedAt?: string;
-}
-
-// F8B: Added refundPaymentMethod, refundTransactionRef
-export interface ProcessRefundDto {
-  adminResponse: string;
-  refundPaymentMethod?: string;
-  refundTransactionRef?: string;
-}
-
-export interface PagedRefundRequestResponseDto {
-  totalCount: number;
-  refundRequests: RefundRequestResponseDto[];
-}
-
 // ─── USER PROFILE ─────────────────────────────────────────────────────────────
 export interface UserProfileResponseDto {
   userId: string;
@@ -734,7 +703,6 @@ export interface SuperAdminRevenueDto {
   reservationAmount: number;
   commissionAmount: number;
   superAdminUpiId: string;
-  status: 'Pending' | 'Sent';
   createdAt: string;
 }
 
@@ -745,10 +713,6 @@ export interface PagedRevenueResponseDto {
 
 export interface RevenueSummaryDto {
   totalCommissionEarned: number;
-  totalPending: number;
-  totalSent: number;
-  pendingCount: number;
-  sentCount: number;
 }
 
 // ─── QR PAYMENT ───────────────────────────────────────────────────────────────

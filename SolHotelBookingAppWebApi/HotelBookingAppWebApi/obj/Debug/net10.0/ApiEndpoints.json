@@ -1473,22 +1473,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminRevenueController",
-    "Method": "MarkSent",
-    "RelativePath": "api/superadmin/revenue/{id}/mark-sent",
-    "HttpMethod": "PATCH",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminRevenueController",
     "Method": "GetSummary",
     "RelativePath": "api/superadmin/revenue/summary",
     "HttpMethod": "GET",

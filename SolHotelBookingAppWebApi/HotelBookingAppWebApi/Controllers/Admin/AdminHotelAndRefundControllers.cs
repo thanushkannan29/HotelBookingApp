@@ -1,6 +1,5 @@
 using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Models.DTOs.Hotel.Admin;
-using HotelBookingAppWebApi.Models.DTOs.RefundRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -36,49 +35,6 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         {
             await _service.UpdateHotelGstAsync(GetUserId(), dto.GstPercent);
             return Ok(new { success = true, message = "GST updated successfully." });
-        }
-    }
-
-    // ── REFUND REQUESTS ───────────────────────────────────────────────────────
-    [Route("api/admin/refund-requests")]
-    [ApiController]
-    [Authorize(Roles = "Admin")]
-    public class AdminRefundRequestController : ControllerBase
-    {
-        private readonly IRefundRequestService _service;
-        public AdminRefundRequestController(IRefundRequestService service) => _service = service;
-        private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-
-        /// <summary>
-        /// Correction 9A: Paged refund requests for this admin's hotel.
-        /// GET /api/admin/refund-requests?page=1&amp;pageSize=10
-        /// Returns { totalCount, refundRequests } for Angular Material paginator.
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
-        {
-            var result = await _service.GetHotelRefundRequestsPagedAsync(GetUserId(), page, pageSize);
-            return Ok(new { success = true, data = result });
-        }
-
-        /// <summary>
-        /// Approve a refund request — triggers actual refund transaction.
-        /// Body: { adminResponse, refundPaymentMethod, refundTransactionRef }
-        /// Correction 8: RefundPaymentMethod and RefundTransactionRef are now saved.
-        /// </summary>
-        [HttpPatch("{id}/approve")]
-        public async Task<IActionResult> Approve(Guid id, [FromBody] ProcessRefundDto dto)
-        {
-            var result = await _service.ApproveRefundAsync(id, GetUserId(), dto);
-            return Ok(new { success = true, data = result });
-        }
-
-        /// <summary>Reject a refund request</summary>
-        [HttpPatch("{id}/reject")]
-        public async Task<IActionResult> Reject(Guid id, [FromBody] ProcessRefundDto dto)
-        {
-            var result = await _service.RejectRefundAsync(id, GetUserId(), dto.AdminResponse);
-            return Ok(new { success = true, data = result });
         }
     }
 

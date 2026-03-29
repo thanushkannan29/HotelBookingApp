@@ -2371,29 +2371,6 @@
         }
       }
     },
-    "/api/superadmin/revenue/{id}/mark-sent": {
-      "patch": {
-        "tags": [
-          "SuperAdminRevenue"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/transactions": {
       "post": {
         "tags": [
