@@ -1,125 +1,54 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
+import { RouterLink } from '@angular/router';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
-import { RouterLink } from '@angular/router';
+import { MatTabsModule } from '@angular/material/tabs';
 import { AmenityRequestService } from '../../../core/services/amenity-request.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AmenityRequestResponseDto } from '../../../core/models/models';
+import { ConfirmDialogComponent } from '../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { InputDialogComponent } from '../../../shared/components/input-dialog/input-dialog.component';
 
 @Component({
   selector: 'app-superadmin-amenity-requests',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, RouterLink,
-    MatCardModule, MatTableModule, MatButtonModule, MatFormFieldModule,
-    MatInputModule, MatPaginatorModule, MatIconModule, MatChipsModule,
-    MatProgressSpinnerModule, MatSelectModule, MatDialogModule
+    CommonModule, RouterLink,
+    MatTableModule, MatButtonModule, MatFormFieldModule, MatInputModule,
+    MatPaginator, MatPaginatorModule, MatIconModule, MatChipsModule,
+    MatProgressSpinnerModule, MatSelectModule, MatDialogModule, MatTabsModule,
   ],
-  template: `
-    <div class="container py-4">
-      <h2 class="mb-4">🔧 Amenity Requests</h2>
-
-      <!-- Link to amenity management -->
-      <div class="mb-3">
-        <a mat-stroked-button routerLink="/superadmin/amenities">
-          <mat-icon>category</mat-icon> View All Amenities →
-        </a>
-      </div>
-
-      <!-- Filter -->
-      <div class="d-flex gap-3 mb-3">
-        <mat-form-field appearance="outline">
-          <mat-label>Filter by Status</mat-label>
-          <mat-select [(value)]="selectedStatus" (selectionChange)="load()">
-            <mat-option value="All">All</mat-option>
-            <mat-option value="Pending">⏳ Pending</mat-option>
-            <mat-option value="Approved">✅ Approved</mat-option>
-            <mat-option value="Rejected">❌ Rejected</mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-
-      @if (loading()) {
-        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-      } @else {
-        <mat-card>
-          <mat-card-content>
-            <table mat-table [dataSource]="requests()" class="w-100">
-              <ng-container matColumnDef="amenityName">
-                <th mat-header-cell *matHeaderCellDef>Amenity</th>
-                <td mat-cell *matCellDef="let r">{{ r.amenityName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="category">
-                <th mat-header-cell *matHeaderCellDef>Category</th>
-                <td mat-cell *matCellDef="let r">{{ r.category }}</td>
-              </ng-container>
-              <ng-container matColumnDef="hotel">
-                <th mat-header-cell *matHeaderCellDef>Hotel</th>
-                <td mat-cell *matCellDef="let r">{{ r.hotelName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="admin">
-                <th mat-header-cell *matHeaderCellDef>Requested By</th>
-                <td mat-cell *matCellDef="let r">{{ r.adminName }}</td>
-              </ng-container>
-              <ng-container matColumnDef="status">
-                <th mat-header-cell *matHeaderCellDef>Status</th>
-                <td mat-cell *matCellDef="let r">
-                  <mat-chip [color]="getStatusColor(r.status)" highlighted>{{ r.status }}</mat-chip>
-                </td>
-              </ng-container>
-              <ng-container matColumnDef="actions">
-                <th mat-header-cell *matHeaderCellDef>Actions</th>
-                <td mat-cell *matCellDef="let r">
-                  @if (r.status === 'Pending') {
-                    <button mat-raised-button color="primary" (click)="approve(r.amenityRequestId)" class="me-2">
-                      ✅ Approve
-                    </button>
-                    <button mat-raised-button color="warn" (click)="rejectPrompt(r.amenityRequestId)">
-                      ❌ Reject
-                    </button>
-                  }
-                </td>
-              </ng-container>
-              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-            </table>
-            <mat-paginator
-              [length]="totalCount()"
-              [pageSize]="pageSize"
-              [pageSizeOptions]="[10, 20]"
-              showFirstLastButtons
-              (page)="onPage($event)"
-            />
-          </mat-card-content>
-        </mat-card>
-      }
-    </div>
-  `
+  templateUrl: './superadmin-amenity-requests.component.html',
+  styleUrl: './superadmin-amenity-requests.component.scss',
 })
 export class SuperadminAmenityRequestsComponent implements OnInit {
   private service = inject(AmenityRequestService);
-  private toast = inject(ToastService);
+  private toast   = inject(ToastService);
+  private dialog  = inject(MatDialog);
 
-  loading = signal(true);
-  requests = signal<AmenityRequestResponseDto[]>([]);
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  loading    = signal(false);
+  requests   = signal<AmenityRequestResponseDto[]>([]);
   totalCount = signal(0);
-  pageSize = 10;
+  pageSize   = 10;
   currentPage = 1;
   selectedStatus = 'All';
   displayedColumns = ['amenityName', 'category', 'hotel', 'admin', 'status', 'actions'];
+  readonly statusTabs = ['All', 'Pending', 'Approved', 'Rejected'];
 
   ngOnInit() { this.load(); }
+
+  private resetPage() { this.currentPage = 1; this.paginator?.firstPage(); }
 
   load() {
     this.loading.set(true);
@@ -129,25 +58,48 @@ export class SuperadminAmenityRequestsComponent implements OnInit {
     });
   }
 
-  approve(id: string) {
-    this.service.approve(id).subscribe({
-      next: () => { this.toast.success('Amenity approved and added!'); this.load(); }
-    });
-  }
-
-  rejectPrompt(id: string) {
-    const note = prompt('Rejection reason:');
-    if (!note) return;
-    this.service.reject(id, note).subscribe({
-      next: () => { this.toast.success('Request rejected.'); this.load(); }
-    });
-  }
-
-  getStatusColor(status: string): 'primary' | 'accent' | 'warn' {
-    if (status === 'Approved') return 'primary';
-    if (status === 'Pending') return 'accent';
-    return 'warn';
-  }
-
+  onTabChange(i: number) { this.selectedStatus = this.statusTabs[i]; this.resetPage(); this.load(); }
   onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+
+  approve(r: AmenityRequestResponseDto) {
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Approve Request',
+        message: `Approve "${r.amenityName}" from ${r.hotelName}? It will be added to the amenities list.`,
+        confirmLabel: 'Approve',
+        confirmColor: 'primary',
+        icon: 'check_circle'
+      }
+    });
+    ref.afterClosed().subscribe(ok => {
+      if (!ok) return;
+      this.service.approve(r.amenityRequestId).subscribe({
+        next: () => { this.toast.success('Amenity approved and added!'); this.load(); }
+      });
+    });
+  }
+
+  reject(r: AmenityRequestResponseDto) {
+    const ref = this.dialog.open(InputDialogComponent, {
+      data: {
+        title: 'Reject Request',
+        label: 'Rejection Reason',
+        placeholder: 'Explain why this request is being rejected…',
+        confirmLabel: 'Reject',
+        confirmColor: 'warn',
+        multiline: true
+      }
+    });
+    ref.afterClosed().subscribe((note: string | null) => {
+      if (!note) return;
+      this.service.reject(r.amenityRequestId, note).subscribe({
+        next: () => { this.toast.success('Request rejected.'); this.load(); }
+      });
+    });
+  }
+
+  statusClass(status: string): string {
+    const m: Record<string, string> = { Approved: 'badge-success', Pending: 'badge-warning', Rejected: 'badge-error' };
+    return m[status] ?? 'badge-muted';
+  }
 }

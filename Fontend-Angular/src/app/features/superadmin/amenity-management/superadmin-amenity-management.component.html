@@ -1,0 +1,125 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/superadmin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">🏷️ Amenity Management</h1>
+        <p class="section-subtitle">{{ totalCount() }} amenities</p>
+      </div>
+    </div>
+
+    <!-- Add / Edit Form -->
+    <div class="form-card mb-4">
+      <h3 class="form-card-title">{{ editingId() ? 'Edit Amenity' : 'Add New Amenity' }}</h3>
+      <form [formGroup]="form" (ngSubmit)="save()" class="amenity-form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Name</mat-label>
+          <input matInput formControlName="name" />
+          @if (form.get('name')?.hasError('required') && form.get('name')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <mat-select formControlName="category">
+            @for (c of categories; track c) {
+              <mat-option [value]="c">{{ c }}</mat-option>
+            }
+          </mat-select>
+          @if (form.get('category')?.hasError('required') && form.get('category')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Icon Name (optional)</mat-label>
+          <input matInput formControlName="iconName" placeholder="e.g. wifi" />
+        </mat-form-field>
+
+        <div class="form-actions">
+          <button mat-flat-button color="primary" type="submit" [disabled]="saving()">
+            {{ saving() ? 'Saving…' : (editingId() ? 'Update' : 'Add Amenity') }}
+          </button>
+          @if (editingId()) {
+            <button mat-stroked-button type="button" (click)="cancelEdit()">Cancel</button>
+          }
+        </div>
+      </form>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-row mb-3">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>🔍 Search</mat-label>
+        <input matInput (input)="onSearch($any($event.target).value)" placeholder="Name or category…" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      <mat-form-field appearance="outline">
+        <mat-label>Category</mat-label>
+        <mat-select [(value)]="selectedCategory" (selectionChange)="onCategoryChange()">
+          <mat-option value="All">All</mat-option>
+          @for (c of categories; track c) {
+            <mat-option [value]="c">{{ c }}</mat-option>
+          }
+        </mat-select>
+      </mat-form-field>
+    </div>
+
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+      }
+
+      <mat-table [dataSource]="amenities()" [class.hidden]="loading()">
+        <ng-container matColumnDef="name">
+          <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+          <mat-cell *matCellDef="let a">{{ a.name }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="category">
+          <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+          <mat-cell *matCellDef="let a">{{ a.category }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="iconName">
+          <mat-header-cell *matHeaderCellDef>Icon</mat-header-cell>
+          <mat-cell *matCellDef="let a">{{ a.iconName || '—' }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let a">
+            <span class="badge {{ a.isActive ? 'badge-success' : 'badge-muted' }}">
+              {{ a.isActive ? 'Active' : 'Inactive' }}
+            </span>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let a">
+            <button mat-icon-button (click)="startEdit(a)" matTooltip="Edit"><mat-icon>edit</mat-icon></button>
+            <mat-slide-toggle [checked]="a.isActive" (change)="toggle(a)"
+              [matTooltip]="a.isActive ? 'Deactivate' : 'Activate'" class="mx-1" />
+            <button mat-icon-button color="warn" (click)="delete(a)" matTooltip="Delete">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
+            No amenities found
+          </td>
+        </tr>
+      </mat-table>
+
+      <!-- Always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>

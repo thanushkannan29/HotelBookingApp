@@ -1,0 +1,80 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/superadmin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">🔧 Amenity Requests</h1>
+        <p class="section-subtitle">{{ totalCount() }} requests</p>
+      </div>
+      <a mat-stroked-button routerLink="/superadmin/amenities">
+        <mat-icon>category</mat-icon> View All Amenities
+      </a>
+    </div>
+
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="mb-3">
+      @for (tab of statusTabs; track tab) {
+        <mat-tab [label]="tab" />
+      }
+    </mat-tab-group>
+
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+      }
+
+      <mat-table [dataSource]="requests()" [class.hidden]="loading()">
+        <ng-container matColumnDef="amenityName">
+          <mat-header-cell *matHeaderCellDef>Amenity</mat-header-cell>
+          <mat-cell *matCellDef="let r"><strong>{{ r.amenityName }}</strong></mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="category">
+          <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ r.category }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="hotel">
+          <mat-header-cell *matHeaderCellDef>Hotel</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ r.hotelName }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="admin">
+          <mat-header-cell *matHeaderCellDef>Requested By</mat-header-cell>
+          <mat-cell *matCellDef="let r">{{ r.adminName }}</mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+          </mat-cell>
+        </ng-container>
+        <ng-container matColumnDef="actions">
+          <mat-header-cell *matHeaderCellDef>Actions</mat-header-cell>
+          <mat-cell *matCellDef="let r">
+            @if (r.status === 'Pending') {
+              <button mat-flat-button color="primary" (click)="approve(r)" class="me-2">
+                <mat-icon>check</mat-icon> Approve
+              </button>
+              <button mat-stroked-button color="warn" (click)="reject(r)">
+                <mat-icon>close</mat-icon> Reject
+              </button>
+            }
+          </mat-cell>
+        </ng-container>
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
+            No requests found
+          </td>
+        </tr>
+      </mat-table>
+
+      <!-- Always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>

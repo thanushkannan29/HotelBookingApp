@@ -6,6 +6,9 @@
         <p class="section-subtitle">SuperAdmin Dashboard — Platform-wide metrics</p>
       </div>
       <div class="sa-nav">
+        <button mat-stroked-button (click)="downloadReport()">
+          <mat-icon>download</mat-icon> Download Report
+        </button>
         <a mat-stroked-button routerLink="/superadmin/hotels">
           <mat-icon>domain</mat-icon> Manage Hotels
         </a>

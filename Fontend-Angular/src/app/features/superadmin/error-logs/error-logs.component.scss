@@ -21,3 +21,10 @@
 .st-content { font-family: monospace; font-size: 0.75rem; color: rgba(255,255,255,0.75); white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; margin: 0; }
 
 .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; font-size: 0.875rem; color: var(--color-text-secondary); }
+
+mat-table.hidden { display: none; }
+.path-cell { font-family: monospace; font-size: 0.8rem; }
+.log-detail-panel { padding: 16px 20px; background: var(--color-surface-alt); border-top: 1px solid var(--color-border); }
+.log-detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+.ld-label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--color-text-muted); margin-bottom: 2px; }
+.ld-value { font-size: 0.875rem; &.exception { color: var(--color-error); font-family: monospace; } }
