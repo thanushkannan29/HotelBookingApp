@@ -35,8 +35,25 @@ namespace HotelBookingAppWebApi.Services
                 .FirstOrDefaultAsync(u => u.UserId == userId)
                 ?? throw new NotFoundException("User not found.");
 
+            // Auto-create UserDetails if missing (e.g. SuperAdmin accounts)
             if (user.UserDetails == null)
-                throw new UserProfileException("Profile details not found.");
+            {
+                var details = new UserProfileDetails
+                {
+                    UserDetailsId = Guid.NewGuid(),
+                    UserId = userId,
+                    Name = user.Name,
+                    Email = user.Email,
+                    PhoneNumber = string.Empty,
+                    Address = string.Empty,
+                    State = string.Empty,
+                    City = string.Empty,
+                    Pincode = string.Empty,
+                    CreatedAt = DateTime.UtcNow
+                };
+                user.UserDetails = details;
+                await _unitOfWork.SaveChangesAsync();
+            }
 
             var reviewCount = await _reviewRepo.GetQueryable()
                 .CountAsync(r => r.UserId == userId);

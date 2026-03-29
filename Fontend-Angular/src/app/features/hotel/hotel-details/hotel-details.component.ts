@@ -42,6 +42,10 @@ export class HotelDetailsComponent implements OnInit {
   hotelId      = '';
   today        = new Date();
 
+  get tomorrow(): Date {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1); return d;
+  }
+
   dateForm = this.fb.group({
     checkIn:  [null as Date | null],
     checkOut: [null as Date | null],

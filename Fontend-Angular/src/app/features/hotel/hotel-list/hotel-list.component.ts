@@ -72,6 +72,10 @@ export class HotelListComponent implements OnInit, AfterViewInit {
 
   today = new Date();
 
+  get tomorrow(): Date {
+    const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1); return d;
+  }
+
   // F3E: client-side filtered results
   filteredResults = computed(() => {
     const results = this.searchResults() ?? [];

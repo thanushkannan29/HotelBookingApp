@@ -8,9 +8,12 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { Subject } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { BookingService } from '../../../core/services/booking.service';
-import { ToastService } from '../../../core/services/toast.service';
 import { ReservationDetailsDto } from '../../../core/models/models';
 
 @Component({
@@ -21,13 +24,13 @@ import { ReservationDetailsDto } from '../../../core/models/models';
     MatButtonModule, MatIconModule,
     MatTableModule, MatPaginatorModule, MatTabsModule,
     MatProgressSpinnerModule, MatTooltipModule,
+    MatFormFieldModule, MatInputModule,
   ],
   templateUrl: './booking-list.component.html',
   styleUrl: './booking-list.component.scss'
 })
 export class BookingListComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
-  private toast          = inject(ToastService);
   private router         = inject(Router);
 
   reservations = signal<ReservationDetailsDto[]>([]);
@@ -35,9 +38,11 @@ export class BookingListComponent implements OnInit, OnDestroy {
   loading      = signal(false);
   pageSize     = 10;
   currentPage  = 1;
+  searchTerm   = '';
 
   countdowns: Record<string, string> = {};
   private timer: any;
+  private searchSubject = new Subject<string>();
 
   displayedColumns = ['reservationCode', 'hotelName', 'checkIn', 'checkOut', 'amount', 'status', 'actions'];
   readonly statusTabs = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
@@ -46,16 +51,19 @@ export class BookingListComponent implements OnInit, OnDestroy {
   ngOnInit() {
     this.load();
     this.timer = setInterval(() => this.updateCountdowns(), 1000);
+    this.searchSubject.pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe(s => { this.searchTerm = s; this.currentPage = 1; this.load(); });
   }
 
   ngOnDestroy() {
     if (this.timer) clearInterval(this.timer);
+    this.searchSubject.complete();
   }
 
   load() {
     this.loading.set(true);
     this.bookingService.getMyReservationsHistory(
-      this.currentPage, this.pageSize, this.selectedStatus
+      this.currentPage, this.pageSize, this.selectedStatus, this.searchTerm
     ).subscribe({
       next: res => {
         this.reservations.set(res.reservations as ReservationDetailsDto[]);
@@ -66,6 +74,8 @@ export class BookingListComponent implements OnInit, OnDestroy {
       error: () => this.loading.set(false)
     });
   }
+
+  onSearch(value: string) { this.searchSubject.next(value); }
 
   private updateCountdowns() {
     const now = Date.now();

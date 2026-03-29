@@ -157,7 +157,7 @@
               <mat-form-field appearance="outline" class="date-field">
                 <mat-label>Check-in</mat-label>
                 <input matInput [matDatepicker]="ciPick"
-                       formControlName="checkIn" [min]="today" readonly />
+                       formControlName="checkIn" [min]="tomorrow" readonly />
                 <mat-datepicker-toggle matSuffix [for]="ciPick" />
                 <mat-datepicker #ciPick />
               </mat-form-field>
