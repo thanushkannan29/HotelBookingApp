@@ -1,327 +1,216 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ActivatedRoute } from '@angular/router';
 import { AuditLogsComponent } from './audit-logs.component';
 import { AuditLogService } from '../../../core/services/api.services';
-import { of } from 'rxjs';
-import { AuditLogResponseDto } from '../../../core/models/models';
+import { of, throwError } from 'rxjs';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
+import { provideNativeDateAdapter } from '@angular/material/core';
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
+const MOCK_RESPONSE = {
+  totalCount: 3,
+  logs: [
+    { auditLogId: 'al-001', userId: 'u1', action: 'HotelUpdated', entityName: 'Hotel', entityId: 'h1', changes: '{}', createdAt: '2025-01-10T10:00:00Z' },
+    { auditLogId: 'al-002', userId: 'u1', action: 'RoomAdded',    entityName: 'Room',  entityId: 'r1', changes: '{}', createdAt: '2025-01-11T12:00:00Z' },
+    { auditLogId: 'al-003', userId: 'u2', action: 'RefundApproved', entityName: 'RefundRequest', entityId: 'rf1', changes: '{}', createdAt: '2025-01-12T09:30:00Z' }
+  ]
+};
 
-const MOCK_LOGS: AuditLogResponseDto[] = [
-  {
-    auditLogId: 'al-001',
-    userId: 'usr-001',
-    action: 'HotelUpdated',
-    entityName: 'Hotel',
-    entityId: 'hotel-001',
-    changes: '{"before":{"name":"Old Name"},"after":{"name":"New Name"}}',
-    createdAt: '2025-01-10T10:00:00Z'
-  },
-  {
-    auditLogId: 'al-002',
-    userId: 'usr-001',
-    action: 'RoomAdded',
-    entityName: 'Room',
-    entityId: 'r-001',
-    changes: '{"roomNumber":"101","floor":1}',
-    createdAt: '2025-01-11T12:00:00Z'
-  },
-  {
-    auditLogId: 'al-003',
-    userId: 'usr-002',
-    action: 'RefundApproved',
-    entityName: 'RefundRequest',
-    entityId: 'rf-001',
-    changes: '{"reservationCode":"RES-ABCD1234"}',
-    createdAt: '2025-01-12T09:30:00Z'
-  }
-];
-
-const MOCK_PAGED_RESPONSE = { totalCount: 3, logs: MOCK_LOGS };
-const MOCK_EMPTY_RESPONSE  = { totalCount: 0, logs: [] };
-
-// ── Helper: build a mock AuditLogService ───────────────────────────────────────
-
-function mockAuditLogService(response = MOCK_PAGED_RESPONSE) {
-  return {
-    getAdminAuditLogs: jasmine.createSpy('getAdminAuditLogs').and.returnValue(of(response)),
-    getAllAuditLogs:    jasmine.createSpy('getAllAuditLogs').and.returnValue(of(response))
-  };
+function buildTestBed(mode: string, response = MOCK_RESPONSE) {
+  const auditSpy = jasmine.createSpyObj('AuditLogService', ['getAdminAuditLogs', 'getAllAuditLogs']);
+  auditSpy.getAdminAuditLogs.and.returnValue(of(response));
+  auditSpy.getAllAuditLogs.and.returnValue(of(response));
+  return { auditSpy, routeData: { snapshot: { data: mode ? { mode } : {} } } };
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 describe('AuditLogsComponent', () => {
   let component: AuditLogsComponent;
   let fixture: ComponentFixture<AuditLogsComponent>;
-  let auditSpy: ReturnType<typeof mockAuditLogService>;
+  let auditSpy: jasmine.SpyObj<AuditLogService>;
 
   beforeEach(async () => {
-    auditSpy = mockAuditLogService();
+    const { auditSpy: spy, routeData } = buildTestBed('');
+    auditSpy = spy;
 
     await TestBed.configureTestingModule({
       imports: [AuditLogsComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]), provideNativeDateAdapter(),
         { provide: AuditLogService, useValue: auditSpy },
-        {
-          provide: ActivatedRoute,
-          useValue: { snapshot: { data: {} } } // no route data → defaults to 'admin' mode
-        }
+        { provide: ActivatedRoute, useValue: routeData }
       ]
     }).compileComponents();
 
-    fixture   = TestBed.createComponent(AuditLogsComponent);
+    fixture = TestBed.createComponent(AuditLogsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  // ── CREATION ─────────────────────────────────────────────────────────────────
+  // ── Creation ──────────────────────────────────────────────────────────────
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  it('should create', () => expect(component).toBeTruthy());
+
+  // ── Default state ─────────────────────────────────────────────────────────
+
+  it('should default isSuperMode to false when no route data', () => {
+    expect(component.isSuperMode).toBeFalse();
   });
 
-  // ── DEFAULT STATE ─────────────────────────────────────────────────────────────
-
-  it('should default to mode = admin', () => {
-    expect(component.mode).toBe('admin');
-  });
-
-  it('should start on page 1', () => {
-    expect(component.page()).toBe(1);
+  it('should start on currentPage 1', () => {
+    expect(component.currentPage).toBe(1);
   });
 
   it('should have pageSize of 20', () => {
     expect(component.pageSize).toBe(20);
   });
 
-  // ── ngOnInit / load ───────────────────────────────────────────────────────────
+  // ── ngOnInit / load ───────────────────────────────────────────────────────
 
   it('ngOnInit — should call getAdminAuditLogs when mode is admin', () => {
-    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalledOnceWith(1, 20);
+    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalledWith(1, 20, undefined);
     expect(auditSpy.getAllAuditLogs).not.toHaveBeenCalled();
   });
 
-  it('ngOnInit — should populate logs signal with returned data', () => {
+  it('ngOnInit — should populate logs signal', () => {
     expect(component.logs().length).toBe(3);
     expect(component.logs()[0].auditLogId).toBe('al-001');
-    expect(component.logs()[1].action).toBe('RoomAdded');
   });
 
-  it('ngOnInit — should set total signal to totalCount from response', () => {
-    expect(component.total()).toBe(3);
+  it('ngOnInit — should set totalCount signal', () => {
+    expect(component.totalCount()).toBe(3);
   });
 
-  // ── MODE: superadmin ──────────────────────────────────────────────────────────
+  it('loading — should be false after data loads', () => {
+    expect(component.loading()).toBeFalse();
+  });
 
-  it('should call getAllAuditLogs when mode is superadmin', async () => {
-    auditSpy = mockAuditLogService();
+  // ── SuperAdmin mode ───────────────────────────────────────────────────────
 
+  it('should call getAllAuditLogs when route data mode is superadmin', async () => {
+    const { auditSpy: spy2, routeData } = buildTestBed('superadmin');
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [AuditLogsComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-        { provide: AuditLogService, useValue: auditSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { data: { mode: 'superadmin' } } } }
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]), provideNativeDateAdapter(),
+        { provide: AuditLogService, useValue: spy2 },
+        { provide: ActivatedRoute, useValue: routeData }
       ]
     }).compileComponents();
-
     const f = TestBed.createComponent(AuditLogsComponent);
     f.detectChanges();
-
-    expect(auditSpy.getAllAuditLogs).toHaveBeenCalledOnceWith(1, 20);
-    expect(auditSpy.getAdminAuditLogs).not.toHaveBeenCalled();
+    expect(spy2.getAllAuditLogs).toHaveBeenCalled();
+    expect(spy2.getAdminAuditLogs).not.toHaveBeenCalled();
   });
 
-  // ── ROUTE DATA overrides @Input mode ─────────────────────────────────────────
-
-  it('should override mode from route data when route data has mode=superadmin', async () => {
-    auditSpy = mockAuditLogService();
-
+  it('isSuperMode — should be true when route data mode is superadmin', async () => {
+    const { auditSpy: spy2, routeData } = buildTestBed('superadmin');
     await TestBed.resetTestingModule();
     await TestBed.configureTestingModule({
       imports: [AuditLogsComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-        { provide: AuditLogService, useValue: auditSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { data: { mode: 'superadmin' } } } }
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]), provideNativeDateAdapter(),
+        { provide: AuditLogService, useValue: spy2 },
+        { provide: ActivatedRoute, useValue: routeData }
       ]
     }).compileComponents();
-
-    const f   = TestBed.createComponent(AuditLogsComponent);
+    const f = TestBed.createComponent(AuditLogsComponent);
     const cmp = f.componentInstance;
     f.detectChanges();
-
-    expect(cmp.mode).toBe('superadmin');
+    expect(cmp.isSuperMode).toBeTrue();
   });
 
-  // ── backLink ──────────────────────────────────────────────────────────────────
+  // ── backLink ──────────────────────────────────────────────────────────────
 
-  it('backLink — should return /admin/dashboard when mode is admin', () => {
-    component.mode = 'admin';
+  it('backLink — returns /admin/dashboard when isSuperMode is false', () => {
+    component.isSuperMode = false;
     expect(component.backLink).toBe('/admin/dashboard');
   });
 
-  it('backLink — should return /superadmin/dashboard when mode is superadmin', () => {
-    component.mode = 'superadmin';
+  it('backLink — returns /superadmin/dashboard when isSuperMode is true', () => {
+    component.isSuperMode = true;
     expect(component.backLink).toBe('/superadmin/dashboard');
   });
 
-  // ── totalPages ────────────────────────────────────────────────────────────────
+  // ── onPage ────────────────────────────────────────────────────────────────
 
-  it('totalPages — should be 1 when totalCount <= pageSize', () => {
-    component.total.set(15);
-    expect(component.totalPages).toBe(1);
-  });
-
-  it('totalPages — should be 2 when totalCount is 21 (pageSize 20)', () => {
-    component.total.set(21);
-    expect(component.totalPages).toBe(2);
-  });
-
-  it('totalPages — should be 0 when no logs exist', () => {
-    component.total.set(0);
-    expect(component.totalPages).toBe(0);
-  });
-
-  it('totalPages — should round up correctly (e.g. 41 items → 3 pages)', () => {
-    component.total.set(41);
-    expect(component.totalPages).toBe(3);
-  });
-
-  // ── next() / prev() ───────────────────────────────────────────────────────────
-
-  it('next() — should increment page and reload', () => {
-    component.total.set(50); // 3 pages
+  it('onPage — should update currentPage and reload', () => {
     auditSpy.getAdminAuditLogs.calls.reset();
-
-    component.next();
-
-    expect(component.page()).toBe(2);
-    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalledWith(2, 20);
+    component.onPage({ pageIndex: 1, pageSize: 20, length: 40 } as any);
+    expect(component.currentPage).toBe(2);
+    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalledWith(2, 20, undefined);
   });
 
-  it('next() — calling twice should go to page 3', () => {
-    component.total.set(100);
-    component.next();
-    component.next();
-    expect(component.page()).toBe(3);
+  it('onPage — should update pageSize', () => {
+    component.onPage({ pageIndex: 0, pageSize: 10, length: 40 } as any);
+    expect(component.pageSize).toBe(10);
   });
 
-  it('prev() — should decrement page and reload when page > 1', () => {
-    component.total.set(50);
-    component.next(); // page = 2
+  // ── applyFilters / clearFilters ───────────────────────────────────────────
+
+  it('applyFilters — should reset to page 1 and reload', () => {
+    component.currentPage = 3;
     auditSpy.getAdminAuditLogs.calls.reset();
-
-    component.prev();
-
-    expect(component.page()).toBe(1);
-    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalledWith(1, 20);
+    component.applyFilters();
+    expect(component.currentPage).toBe(1);
+    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalled();
   });
 
-  it('prev() — should NOT go below page 1', () => {
+  it('clearFilters — should reset form and reload', () => {
+    component.filterForm.patchValue({ action: 'HotelUpdated' });
     auditSpy.getAdminAuditLogs.calls.reset();
-    component.prev(); // already on page 1
-
-    expect(component.page()).toBe(1);
-    expect(auditSpy.getAdminAuditLogs).not.toHaveBeenCalled();
+    component.clearFilters();
+    expect(component.filterForm.get('action')?.value).toBeFalsy();
+    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalled();
   });
 
-  // ── actionClass() ─────────────────────────────────────────────────────────────
+  // ── actionClass ───────────────────────────────────────────────────────────
 
-  it('actionClass() — HotelUpdated → action-update', () => {
-    expect(component.actionClass('HotelUpdated')).toBe('action-update');
+  it('actionClass — CREATE → badge-success', () => {
+    expect(component.actionClass('CREATE')).toBe('badge-success');
   });
 
-  it('actionClass() — RoomAdded → action-create', () => {
-    expect(component.actionClass('RoomAdded')).toBe('action-create');
+  it('actionClass — UPDATE → badge-warning', () => {
+    expect(component.actionClass('UPDATE')).toBe('badge-warning');
   });
 
-  it('actionClass() — RoomTypeCreate → action-create', () => {
-    expect(component.actionClass('RoomTypeCreate')).toBe('action-create');
+  it('actionClass — DELETE → badge-error', () => {
+    expect(component.actionClass('DELETE')).toBe('badge-error');
   });
 
-  it('actionClass() — HotelDeactivated → action-delete', () => {
-    expect(component.actionClass('HotelDeactivated')).toBe('action-delete');
+  it('actionClass — LOGIN → badge-info', () => {
+    expect(component.actionClass('LOGIN')).toBe('badge-info');
   });
 
-  it('actionClass() — HotelBlocked → action-delete', () => {
-    expect(component.actionClass('HotelBlocked')).toBe('action-delete');
+  it('actionClass — unknown → badge-muted', () => {
+    expect(component.actionClass('SomeRandomAction')).toBe('badge-muted');
   });
 
-  it('actionClass() — RefundApproved → action-approve', () => {
-    expect(component.actionClass('RefundApproved')).toBe('action-approve');
+  it('actionClass — case-insensitive (create → badge-success)', () => {
+    expect(component.actionClass('create')).toBe('badge-success');
   });
 
-  it('actionClass() — RefundRejected → action-reject', () => {
-    expect(component.actionClass('RefundRejected')).toBe('action-reject');
+  // ── Error handling ────────────────────────────────────────────────────────
+
+  it('load — should set loading to false on error', () => {
+    auditSpy.getAdminAuditLogs.and.returnValue(throwError(() => new Error('fail')));
+    component.load();
+    expect(component.loading()).toBeFalse();
   });
 
-  it('actionClass() — unknown action → action-default', () => {
-    expect(component.actionClass('SomeRandomAction')).toBe('action-default');
-  });
+  // ── Search debounce ───────────────────────────────────────────────────────
 
-  it('actionClass() — should be case-insensitive (HOTELBLOCKED → action-delete)', () => {
-    expect(component.actionClass('HOTELBLOCKED')).toBe('action-delete');
-  });
-
-  // ── EMPTY STATE ───────────────────────────────────────────────────────────────
-
-  it('should show empty state when logs array is empty', async () => {
-    auditSpy = mockAuditLogService(MOCK_EMPTY_RESPONSE);
-
-    await TestBed.resetTestingModule();
-    await TestBed.configureTestingModule({
-      imports: [AuditLogsComponent],
-      providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-        { provide: AuditLogService, useValue: auditSpy },
-        { provide: ActivatedRoute, useValue: { snapshot: { data: {} } } }
-      ]
-    }).compileComponents();
-
-    const f = TestBed.createComponent(AuditLogsComponent);
-    f.detectChanges();
-    await f.whenStable();
-
-    const compiled = f.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.empty-state')).toBeTruthy();
-    expect(compiled.querySelector('.table-card')).toBeFalsy();
-  });
-
-  // ── TABLE RENDERS ─────────────────────────────────────────────────────────────
-
-  it('should render table rows for each log entry', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const rows = fixture.nativeElement.querySelectorAll('tbody tr');
-    expect(rows.length).toBe(3);
-  });
-
-  it('should display the action chip text in the first row', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-
-    const firstChip = fixture.nativeElement.querySelector('.action-chip');
-    expect(firstChip.textContent.trim()).toBe('HotelUpdated');
-  });
+  it('onSearch — should update searchTerm after debounce', fakeAsync(() => {
+    auditSpy.getAdminAuditLogs.calls.reset();
+    const event = { target: { value: 'Hotel' } } as any;
+    component.onSearch(event);
+    tick(400);
+    expect(component.searchTerm).toBe('Hotel');
+    expect(auditSpy.getAdminAuditLogs).toHaveBeenCalled();
+  }));
 });
