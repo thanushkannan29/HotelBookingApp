@@ -14,6 +14,12 @@ namespace HotelBookingAppWebApi.Models.DTOs.PromoCode
         public string Status { get; set; } = string.Empty; // Active / Used / Expired
     }
 
+    public class PagedPromoCodeResponseDto
+    {
+        public int TotalCount { get; set; }
+        public IEnumerable<PromoCodeResponseDto> PromoCodes { get; set; } = new List<PromoCodeResponseDto>();
+    }
+
     public class ValidatePromoCodeDto
     {
         [Required]

@@ -76,6 +76,29 @@ namespace HotelBookingAppWebApi.Services
             return requests.Select(r => MapToDto(r, admin.Name, hotel?.Name ?? string.Empty));
         }
 
+        public async Task<PagedAmenityRequestResponseDto> GetAdminRequestsPagedAsync(Guid adminUserId, int page, int pageSize)
+        {
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+
+            var query = _requestRepo.GetQueryable()
+                .Where(r => r.RequestedByAdminId == adminUserId)
+                .OrderByDescending(r => r.CreatedAt);
+
+            var total = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var hotel = admin.HotelId.HasValue
+                ? await _hotelRepo.GetAsync(admin.HotelId.Value)
+                : null;
+
+            return new PagedAmenityRequestResponseDto
+            {
+                TotalCount = total,
+                Requests = items.Select(r => MapToDto(r, admin.Name, hotel?.Name ?? string.Empty))
+            };
+        }
+
         public async Task<PagedAmenityRequestResponseDto> GetAllRequestsAsync(string? status, int page, int pageSize)
         {
             var query = _requestRepo.GetQueryable()

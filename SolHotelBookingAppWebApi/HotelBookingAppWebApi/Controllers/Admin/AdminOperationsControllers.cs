@@ -254,9 +254,9 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetMine()
+        public async Task<IActionResult> GetMine([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var result = await _service.GetAdminRequestsAsync(GetUserId());
+            var result = await _service.GetAdminRequestsPagedAsync(GetUserId(), page, pageSize);
             return Ok(new { success = true, data = result });
         }
     }

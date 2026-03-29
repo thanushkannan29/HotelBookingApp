@@ -657,6 +657,11 @@ export interface PromoCodeResponseDto {
   status: 'Active' | 'Used' | 'Expired';
 }
 
+export interface PagedPromoCodeResponseDto {
+  totalCount: number;
+  promoCodes: PromoCodeResponseDto[];
+}
+
 export interface ValidatePromoCodeDto {
   code: string;
   hotelId: string;

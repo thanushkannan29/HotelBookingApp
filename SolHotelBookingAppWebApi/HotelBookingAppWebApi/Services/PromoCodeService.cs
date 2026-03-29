@@ -38,6 +38,23 @@ namespace HotelBookingAppWebApi.Services
             return promos.Select(MapToDto);
         }
 
+        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize)
+        {
+            var query = _promoRepo.GetQueryable()
+                .Include(p => p.Hotel)
+                .Where(p => p.UserId == userId)
+                .OrderByDescending(p => p.CreatedAt);
+
+            var total = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedPromoCodeResponseDto
+            {
+                TotalCount = total,
+                PromoCodes = items.Select(MapToDto)
+            };
+        }
+
         public async Task<PromoCodeValidationResultDto> ValidateAsync(Guid userId, ValidatePromoCodeDto dto)
         {
             var promo = await _promoRepo.GetQueryable()
