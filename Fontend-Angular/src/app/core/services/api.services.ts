@@ -34,8 +34,10 @@ export class TransactionService {
     ).pipe(map(r => r.data!));
   }
 
-  getTransactions(page: number, pageSize: number): Observable<PagedTransactionResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getTransactions(page: number, pageSize: number, sortField?: string, sortDir?: string): Observable<PagedTransactionResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (sortField) params = params.set('sortField', sortField);
+    if (sortDir)   params = params.set('sortDir', sortDir);
     return this.http.get<ApiResponse<PagedTransactionResponseDto>>(
       `${this.base}/transactions`, { params }
     ).pipe(map(r => r.data!));
@@ -97,9 +99,9 @@ export class ReviewService {
   }
 
   // F9D: Admin view of hotel reviews
-  getHotelReviewsAdmin(page: number, pageSize: number): Observable<PagedReviewResponseDto> {
+  getHotelReviewsAdmin(page: number, pageSize: number, minRating?: number, maxRating?: number, sortDir?: string): Observable<PagedReviewResponseDto> {
     return this.http.post<ApiResponse<PagedReviewResponseDto>>(
-      `${this.base}/admin/reviews`, { page, pageSize }
+      `${this.base}/admin/reviews`, { page, pageSize, minRating, maxRating, sortDir }
     ).pipe(map(r => r.data!));
   }
 
@@ -162,8 +164,9 @@ export class AuditLogService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getAdminAuditLogs(page: number, pageSize: number): Observable<PagedAuditLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getAdminAuditLogs(page: number, pageSize: number, search?: string): Observable<PagedAuditLogResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (search?.trim()) params = params.set('search', search.trim());
     return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
       `${this.base}/admin/audit-logs`, { params }
     ).pipe(map(r => r.data!));

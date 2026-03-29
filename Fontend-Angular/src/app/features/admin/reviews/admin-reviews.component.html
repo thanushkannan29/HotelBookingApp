@@ -7,81 +7,106 @@
       </div>
     </div>
 
-    @if (loading()) {
-      <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
-    } @else if (reviews().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">star_border</mat-icon>
-        <h3>No reviews yet</h3>
-      </div>
-    } @else {
-      <div class="review-list">
-        @for (r of reviews(); track r.reviewId) {
-          <div class="review-card">
-            <!-- Header -->
-            <div class="review-header">
-              <div class="reviewer-avatar">
-                @if (r.userProfileImageUrl) {
-                  <img [src]="r.userProfileImageUrl" [alt]="r.userName" />
-                } @else {
-                  {{ r.userName.charAt(0).toUpperCase() }}
-                }
-              </div>
-              <div class="reviewer-info">
-                <strong>{{ r.userName }}</strong>
-                <div class="stars">
-                  @for (s of stars; track s) {
-                    <mat-icon [style.color]="s <= r.rating ? '#f59e0b' : '#ddd'" style="font-size:16px;width:16px;height:16px;">star</mat-icon>
-                  }
-                </div>
-              </div>
-              <span class="review-date">{{ r.createdDate | date:'MMM d, y' }}</span>
-            </div>
-
-            <!-- Comment -->
-            <p class="review-comment">{{ r.comment }}</p>
-
-            <!-- Existing reply -->
-            @if (r.adminReply && replyingId() !== r.reviewId) {
-              <div class="hotel-reply">
-                <mat-icon>hotel</mat-icon>
-                <div>
-                  <span class="reply-label">Your Response</span>
-                  <p class="reply-text">{{ r.adminReply }}</p>
-                </div>
-              </div>
-            }
-
-            <!-- Reply form -->
-            @if (replyingId() === r.reviewId) {
-              <div class="reply-form" [formGroup]="replyForm">
-                <mat-form-field appearance="outline" style="width:100%">
-                  <mat-label>Your reply to {{ r.userName }}</mat-label>
-                  <textarea matInput formControlName="adminReply" rows="3" maxlength="500"></textarea>
-                  <mat-hint align="end">{{ replyForm.get('adminReply')?.value?.length ?? 0 }}/500</mat-hint>
-                  @if (replyForm.get('adminReply')?.hasError('required') && replyForm.get('adminReply')?.touched) {
-                    <mat-error>Reply is required</mat-error>
-                  }
-                </mat-form-field>
-                <div class="reply-actions">
-                  <button mat-stroked-button (click)="cancelReply()">Cancel</button>
-                  <button mat-flat-button color="primary" (click)="submitReply()" [disabled]="isSaving()">
-                    @if (isSaving()) { Saving… } @else { Save Reply }
-                  </button>
-                </div>
-              </div>
-            } @else {
-              <div class="review-actions">
-                <button mat-stroked-button (click)="startReply(r.reviewId, r.adminReply)" style="font-size:12px;">
-                  <mat-icon>reply</mat-icon>
-                  {{ r.adminReply ? 'Edit Reply' : 'Reply' }}
-                </button>
-              </div>
-            }
-          </div>
+    <!-- Filters row -->
+    <div class="filter-toolbar mb-3">
+      <div class="rating-filters">
+        <span class="filter-label">Filter:</span>
+        @for (r of stars; track r) {
+          <button mat-stroked-button [class.active-filter]="ratingFilter === r" (click)="onRatingFilter(r)">
+            {{ r }}★
+          </button>
+        }
+        @if (ratingFilter > 0) {
+          <button mat-icon-button (click)="onRatingFilter(0)" matTooltip="Clear filter">
+            <mat-icon>close</mat-icon>
+          </button>
         }
       </div>
+      <div class="sort-controls">
+        <span class="filter-label">Sort by rating:</span>
+        <button mat-stroked-button [class.active-filter]="sortDir === 'desc'" (click)="onSort('desc')">
+          <mat-icon>arrow_downward</mat-icon> High → Low
+        </button>
+        <button mat-stroked-button [class.active-filter]="sortDir === 'asc'" (click)="onSort('asc')">
+          <mat-icon>arrow_upward</mat-icon> Low → High
+        </button>
+      </div>
+    </div>
 
+    <div class="reviews-wrap">
+      @if (loading()) {
+        <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
+      } @else if (reviews().length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">star_border</mat-icon>
+          <h3>No reviews found</h3>
+        </div>
+      } @else {
+        <div class="review-list">
+          @for (r of reviews(); track r.reviewId) {
+            <div class="review-card">
+              <div class="review-header">
+                <div class="reviewer-avatar">
+                  @if (r.userProfileImageUrl) {
+                    <img [src]="r.userProfileImageUrl" [alt]="r.userName" />
+                  } @else {
+                    {{ r.userName.charAt(0).toUpperCase() }}
+                  }
+                </div>
+                <div class="reviewer-info">
+                  <strong>{{ r.userName }}</strong>
+                  <div class="stars">
+                    @for (s of stars; track s) {
+                      <mat-icon [style.color]="s <= r.rating ? '#f59e0b' : '#ddd'" style="font-size:16px;width:16px;height:16px;">star</mat-icon>
+                    }
+                  </div>
+                </div>
+                <span class="review-date">{{ r.createdDate | date:'MMM d, y' }}</span>
+              </div>
+
+              <p class="review-comment">{{ r.comment }}</p>
+
+              @if (r.adminReply && replyingId() !== r.reviewId) {
+                <div class="hotel-reply">
+                  <mat-icon>hotel</mat-icon>
+                  <div>
+                    <span class="reply-label">Your Response</span>
+                    <p class="reply-text">{{ r.adminReply }}</p>
+                  </div>
+                </div>
+              }
+
+              @if (replyingId() === r.reviewId) {
+                <div class="reply-form" [formGroup]="replyForm">
+                  <mat-form-field appearance="outline" style="width:100%">
+                    <mat-label>Your reply to {{ r.userName }}</mat-label>
+                    <textarea matInput formControlName="adminReply" rows="3" maxlength="500"></textarea>
+                    <mat-hint align="end">{{ replyForm.get('adminReply')?.value?.length ?? 0 }}/500</mat-hint>
+                    @if (replyForm.get('adminReply')?.hasError('required') && replyForm.get('adminReply')?.touched) {
+                      <mat-error>Reply is required</mat-error>
+                    }
+                  </mat-form-field>
+                  <div class="reply-actions">
+                    <button mat-stroked-button (click)="cancelReply()">Cancel</button>
+                    <button mat-flat-button color="primary" (click)="submitReply()" [disabled]="isSaving()">
+                      @if (isSaving()) { Saving… } @else { Save Reply }
+                    </button>
+                  </div>
+                </div>
+              } @else {
+                <div class="review-actions">
+                  <button mat-stroked-button (click)="startReply(r.reviewId, r.adminReply)" style="font-size:12px;">
+                    <mat-icon>reply</mat-icon>
+                    {{ r.adminReply ? 'Edit Reply' : 'Reply' }}
+                  </button>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      <!-- Paginator always in DOM -->
       <mat-paginator
         [length]="totalCount()"
         [pageSize]="pageSize"
@@ -89,6 +114,6 @@
         showFirstLastButtons
         (page)="onPage($event)"
       />
-    }
+    </div>
   </div>
 </div>

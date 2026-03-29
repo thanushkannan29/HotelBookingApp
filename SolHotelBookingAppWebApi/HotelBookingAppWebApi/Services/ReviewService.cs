@@ -166,13 +166,37 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── GET HOTEL REVIEWS FOR ADMIN (looks up hotel from admin's userId) ──
-        public async Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(Guid adminUserId, int page, int pageSize)
+        public async Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(Guid adminUserId, int page, int pageSize,
+            int? minRating = null, int? maxRating = null, string? sortDir = null)
         {
             var admin = await _userRepo.GetAsync(adminUserId)
                 ?? throw new UnAuthorizedException("Unauthorized.");
             if (admin.HotelId == null)
                 throw new UnAuthorizedException("No hotel associated with this admin.");
-            return await GetReviewsByHotelAsync(admin.HotelId.Value, page, pageSize);
+
+            var query = _reviewRepo.GetQueryable()
+                .Include(r => r.Reservation)
+                .Include(r => r.User!).ThenInclude(u => u.UserDetails)
+                .Where(r => r.HotelId == admin.HotelId.Value)
+                .AsQueryable();
+
+            if (minRating.HasValue) query = query.Where(r => r.Rating >= minRating.Value);
+            if (maxRating.HasValue) query = query.Where(r => r.Rating <= maxRating.Value);
+
+            query = sortDir?.ToLower() == "asc"
+                ? query.OrderBy(r => r.Rating).ThenByDescending(r => r.CreatedDate)
+                : sortDir?.ToLower() == "desc"
+                    ? query.OrderByDescending(r => r.Rating).ThenByDescending(r => r.CreatedDate)
+                    : query.OrderByDescending(r => r.CreatedDate);
+
+            var total = await query.CountAsync();
+            var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedReviewResponseDto
+            {
+                TotalCount = total,
+                Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty))
+            };
         }
 
         // ── GET MY REVIEWS (non-paged) ────────────────────────────────────────

@@ -47,3 +47,9 @@
 .res-code { font-family: monospace; font-size: 0.8rem; color: var(--color-text-muted); }
 
 .pagination { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 24px; font-size: 0.875rem; color: var(--color-text-secondary); }
+
+.sortable-header {
+  cursor: pointer; user-select: none;
+  &:hover { color: var(--color-primary); }
+  .sort-icon { font-size: 16px; height: 16px; width: 16px; margin-left: 4px; vertical-align: middle; }
+}

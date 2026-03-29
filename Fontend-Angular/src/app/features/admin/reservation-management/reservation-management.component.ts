@@ -11,7 +11,6 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { BookingService } from '../../../core/services/booking.service';
@@ -25,7 +24,7 @@ import { ReservationDetailsDto } from '../../../core/models/models';
     CommonModule, RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatTableModule, MatPaginatorModule,
-    MatTabsModule, MatProgressSpinnerModule, MatChipsModule, MatTooltipModule,
+    MatTabsModule, MatProgressSpinnerModule, MatChipsModule,
   ],
   templateUrl: './reservation-management.component.html',
   styleUrl: './reservation-management.component.scss'
@@ -95,19 +94,11 @@ export class ReservationManagementComponent implements OnInit {
 
   onSort(field: string) {
     if (this.sortField === field) {
-      // toggle direction
       this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
     } else {
       this.sortField = field;
       this.sortDir   = 'asc';
     }
-    this.resetPage();
-    this.load();
-  }
-
-  clearSort() {
-    this.sortField = '';
-    this.sortDir   = '';
     this.resetPage();
     this.load();
   }

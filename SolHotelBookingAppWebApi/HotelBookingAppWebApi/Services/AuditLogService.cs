@@ -42,18 +42,25 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── ADMIN: LOGS FOR THEIR HOTEL ───────────────────────────────────────
-        public async Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(Guid adminUserId, int page, int pageSize)
+        public async Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(Guid adminUserId, int page, int pageSize, string? search = null)
         {
             var hotelId = await _userRepo.GetQueryable()
                 .Where(u => u.UserId == adminUserId)
                 .Select(u => u.HotelId)
                 .FirstOrDefaultAsync();
 
-            // Filter to actions involving Hotel, RoomType, Room entities matching the admin's hotel
             var query = _auditRepo.GetQueryable()
                 .Where(al => al.UserId == adminUserId ||
                              (al.EntityId == hotelId && hotelId != null))
-                .OrderByDescending(al => al.CreatedAt);
+                .AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(al =>
+                    al.Action.Contains(search) ||
+                    al.EntityName.Contains(search) ||
+                    al.Changes.Contains(search));
+
+            query = query.OrderByDescending(al => al.CreatedAt);
 
             var total = await query.CountAsync();
 

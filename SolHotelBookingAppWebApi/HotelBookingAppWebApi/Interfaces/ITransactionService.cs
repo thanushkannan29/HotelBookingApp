@@ -12,7 +12,7 @@ namespace HotelBookingAppWebApi.Interfaces
         /// </summary>
         Task<TransactionResponseDto> DirectGuestRefundAsync(Guid transactionId, Guid userId, RefundRequestDto dto);
 
-        Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize);
+        Task<PagedTransactionResponseDto> GetAllTransactionsAsync(Guid userId, string role, int page, int pageSize, string? sortField = null, string? sortDir = null);
 
         /// <summary>Returns UPI ID and payment reference for a reservation so the guest can pay via UPI</summary>
         Task<PaymentIntentDto> GetPaymentIntentAsync(Guid reservationId, Guid userId);

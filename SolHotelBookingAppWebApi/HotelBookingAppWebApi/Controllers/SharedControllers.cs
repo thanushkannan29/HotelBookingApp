@@ -121,11 +121,15 @@ namespace HotelBookingAppWebApi.Controllers
         /// <summary>Get transactions — Guest sees own, Admin sees hotel's, SuperAdmin sees all</summary>
         [HttpGet]
         [Authorize(Roles = "Admin,Guest,SuperAdmin")]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortField = null,
+            [FromQuery] string? sortDir = null)
         {
             var userId = GetUserId();
             var role = User.FindFirstValue(ClaimTypes.Role)!;
-            var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize);
+            var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize, sortField, sortDir);
             return Ok(new { success = true, data = result });
         }
 

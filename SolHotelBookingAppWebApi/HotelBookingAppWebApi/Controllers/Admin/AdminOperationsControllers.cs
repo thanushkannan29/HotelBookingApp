@@ -273,11 +273,12 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public AdminReviewsController(IReviewService reviewService) => _reviewService = reviewService;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        /// <summary>Admin view of all reviews for their hotel, newest first, paged.</summary>
+        /// <summary>Admin view of all reviews for their hotel, paged with optional rating filter and sort.</summary>
         [HttpPost]
         public async Task<IActionResult> GetHotelReviews([FromBody] GetHotelReviewsRequestDto dto)
         {
-            var result = await _reviewService.GetAdminHotelReviewsAsync(GetUserId(), dto.Page, dto.PageSize);
+            var result = await _reviewService.GetAdminHotelReviewsAsync(
+                GetUserId(), dto.Page, dto.PageSize, dto.MinRating, dto.MaxRating, dto.SortDir);
             return Ok(new { success = true, data = result });
         }
 

@@ -22,28 +22,6 @@
       <mat-icon matSuffix>search</mat-icon>
     </mat-form-field>
 
-    <!-- Sort Controls -->
-    <div class="sort-row mb-3">
-      <span class="sort-label">Sort by:</span>
-      <button mat-stroked-button [class.active-sort]="sortField === 'guestName'" (click)="onSort('guestName')">
-        👤 Hotel Name
-        @if (sortField === 'guestName') {
-          <mat-icon>{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-        }
-      </button>
-      <button mat-stroked-button [class.active-sort]="sortField === 'amount'" (click)="onSort('amount')">
-        💰 Amount
-        @if (sortField === 'amount') {
-          <mat-icon>{{ sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward' }}</mat-icon>
-        }
-      </button>
-      @if (sortField) {
-        <button mat-icon-button (click)="clearSort()" matTooltip="Clear sort">
-          <mat-icon>close</mat-icon>
-        </button>
-      }
-    </div>
-
     <div class="table-card">
       @if (loading()) {
         <div class="text-center py-5"><mat-spinner diameter="48" /></div>
@@ -76,7 +54,12 @@
           </ng-container>
 
           <ng-container matColumnDef="amount">
-            <mat-header-cell *matHeaderCellDef>💰 Amount</mat-header-cell>
+            <mat-header-cell *matHeaderCellDef class="sortable-header" (click)="onSort('amount')">
+              💰 Amount
+              <mat-icon class="sort-icon">
+                {{ sortField === 'amount' ? (sortDir === 'asc' ? 'arrow_upward' : 'arrow_downward') : 'unfold_more' }}
+              </mat-icon>
+            </mat-header-cell>
             <mat-cell *matCellDef="let r">₹{{ (r.finalAmount || r.totalAmount) | number:'1.0-0' }}</mat-cell>
           </ng-container>
 

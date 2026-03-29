@@ -445,7 +445,7 @@ namespace HotelBookingAppWebApi.Services
             query = sortField?.ToLower() switch
             {
                 "guestname" => desc ? query.OrderByDescending(r => r.Hotel!.Name) : query.OrderBy(r => r.Hotel!.Name),
-                "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount)  : query.OrderBy(r => r.FinalAmount),
+                "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount) : query.OrderBy(r => r.FinalAmount),
                 _           => query.OrderByDescending(r => r.CreatedDate)
             };
 

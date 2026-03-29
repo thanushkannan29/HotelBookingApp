@@ -5,7 +5,7 @@ namespace HotelBookingAppWebApi.Interfaces
     public interface IAuditLogService
     {
         Task LogAsync(Guid? userId, string action, string entityName, Guid? entityId, string changes);
-        Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(Guid adminUserId, int page, int pageSize);
+        Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(Guid adminUserId, int page, int pageSize, string? search = null);
         Task<PagedAuditLogResponseDto> GetAllAuditLogsAsync(
             int page, int pageSize,
             Guid? hotelId = null, Guid? userId = null,

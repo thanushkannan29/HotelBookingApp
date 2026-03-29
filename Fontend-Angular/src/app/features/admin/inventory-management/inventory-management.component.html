@@ -108,7 +108,7 @@
       <div class="inv-table-wrap">
         @if (isLoading()) {
           <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-        } @else if (inventories().length === 0) {
+        } @else if (allInventories().length === 0) {
           <div class="empty-state" style="padding:40px;">
             <mat-icon class="empty-icon">inventory_2</mat-icon>
             <h3>Select a room type and date range</h3>
@@ -172,6 +172,15 @@
               <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
               <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
             </mat-table>
+
+            <!-- Paginator always in DOM -->
+            <mat-paginator
+              [length]="totalCount()"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[10, 25, 62]"
+              showFirstLastButtons
+              (page)="onPage($event)"
+            />
           </div>
         }
       </div>

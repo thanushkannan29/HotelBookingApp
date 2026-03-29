@@ -73,9 +73,12 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         [HttpGet]
-        public async Task<IActionResult> GetAuditLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 20)
+        public async Task<IActionResult> GetAuditLogs(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 20,
+            [FromQuery] string? search = null)
         {
-            var result = await _service.GetAdminAuditLogsAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetAdminAuditLogsAsync(GetUserId(), page, pageSize, search);
             return Ok(new { success = true, data = result });
         }
     }

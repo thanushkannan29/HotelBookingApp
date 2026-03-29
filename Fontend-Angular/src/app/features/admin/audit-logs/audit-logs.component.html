@@ -8,6 +8,15 @@
       </div>
     </div>
 
+    <!-- Admin search -->
+    @if (!isSuperMode) {
+      <mat-form-field appearance="outline" class="w-100 mb-3">
+        <mat-label>🔍 Search by action, entity or changes</mat-label>
+        <input matInput (input)="onSearch($event)" placeholder="e.g. UPDATE, Reservation…" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    }
+
     <!-- SuperAdmin Filters -->
     @if (isSuperMode) {
       <form [formGroup]="filterForm" class="row g-3 mb-3">
@@ -40,15 +49,10 @@
       </form>
     }
 
-    @if (loading()) {
-      <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-    } @else if (logs().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">history</mat-icon>
-        <h3>No audit logs yet</h3>
-      </div>
-    } @else {
-      <div class="table-card">
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+      } @else {
         <mat-table [dataSource]="logs()">
 
           <ng-container matColumnDef="action">
@@ -88,15 +92,16 @@
             </td>
           </tr>
         </mat-table>
+      }
 
-        <mat-paginator
-          [length]="totalCount()"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="[10, 25, 50]"
-          showFirstLastButtons
-          (page)="onPage($event)"
-        />
-      </div>
-    }
+      <!-- Paginator always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 20, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
   </div>
 </div>

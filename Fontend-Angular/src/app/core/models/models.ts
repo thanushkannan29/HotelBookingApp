@@ -486,6 +486,9 @@ export interface GetHotelReviewsRequestDto {
   hotelId: string;
   page: number;
   pageSize: number;
+  minRating?: number;
+  maxRating?: number;
+  sortDir?: string; // 'asc' | 'desc' | undefined (newest first)
 }
 
 // ─── USER PROFILE ─────────────────────────────────────────────────────────────

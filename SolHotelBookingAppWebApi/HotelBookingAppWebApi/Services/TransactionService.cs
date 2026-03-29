@@ -139,7 +139,8 @@ namespace HotelBookingAppWebApi.Services
         // NOTE (Correction 10C): Admin branch has NO status filter — returns all statuses
         // (Success, Refunded, Failed) for the hotel. This is intentional.
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
-            Guid userId, string role, int page, int pageSize)
+            Guid userId, string role, int page, int pageSize,
+            string? sortField = null, string? sortDir = null)
         {
             var query = _transactionRepo.GetQueryable().AsQueryable();
 
@@ -164,12 +165,20 @@ namespace HotelBookingAppWebApi.Services
 
             var total = await query.CountAsync();
 
-            var data = await query
+            bool desc = string.IsNullOrWhiteSpace(sortDir) || sortDir.ToLower() == "desc";
+            IOrderedQueryable<Transaction> ordered = sortField?.ToLower() switch
+            {
+                "amount" => desc ? query.OrderByDescending(t => t.Amount) : query.OrderBy(t => t.Amount),
+                "type"   => desc ? query.OrderByDescending(t => t.TransactionType) : query.OrderBy(t => t.TransactionType),
+                "status" => desc ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
+                _        => query.OrderByDescending(t => t.TransactionDate)
+            };
+
+            var data = await ordered
                 .Include(t => t.Reservation)
                     .ThenInclude(r => r!.Hotel)
                 .Include(t => t.Reservation)
                     .ThenInclude(r => r!.User)
-                .OrderByDescending(t => t.TransactionDate)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
