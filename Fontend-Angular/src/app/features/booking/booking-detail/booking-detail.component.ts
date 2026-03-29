@@ -209,28 +209,130 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
     this.isDownloading.set(true);
     try {
       const { default: jsPDF } = await import('jspdf');
-      const doc = new jsPDF();
-      let y = 20;
-      doc.setFontSize(18); doc.text('StayHub - Booking Confirmation', 20, y); y += 12;
-      doc.setFontSize(12);
-      doc.text(`Reservation Code: ${res.reservationCode}`, 20, y); y += 8;
-      doc.text(`Hotel: ${res.hotelName}`, 20, y); y += 8;
-      doc.text(`Room Type: ${res.roomTypeName}`, 20, y); y += 8;
-      doc.text(`Check-in: ${res.checkInDate}`, 20, y); y += 8;
-      doc.text(`Check-out: ${res.checkOutDate}`, 20, y); y += 8;
-      doc.text(`Rooms: ${res.numberOfRooms}`, 20, y); y += 8;
-      doc.text(`Status: ${res.status}`, 20, y); y += 12;
-      doc.setFontSize(13); doc.text('Price Breakdown', 20, y); y += 8;
-      doc.setFontSize(11);
-      doc.text(`Base Amount: Rs.${res.totalAmount.toFixed(2)}`, 20, y); y += 7;
-      if (res.gstAmount > 0) { doc.text(`GST (${res.gstPercent}%): Rs.${res.gstAmount.toFixed(2)}`, 20, y); y += 7; }
-      if (res.discountAmount > 0) { doc.text(`Discount: -Rs.${res.discountAmount.toFixed(2)}`, 20, y); y += 7; }
-      if (res.walletAmountUsed > 0) { doc.text(`Wallet Used: -Rs.${res.walletAmountUsed.toFixed(2)}`, 20, y); y += 7; }
-      doc.setFontSize(13); doc.text(`Final Amount: Rs.${res.finalAmount.toFixed(2)}`, 20, y); y += 10;
-      doc.setFontSize(10); doc.text(`Booked on: ${new Date(res.createdDate).toLocaleDateString()}`, 20, y);
-      doc.save(`booking-${res.reservationCode}.pdf`);
+      const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+      const W = 210, margin = 18;
+
+      // ── Header band ──────────────────────────────────────────────────────
+      doc.setFillColor(45, 58, 140);
+      doc.rect(0, 0, W, 36, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFontSize(22); doc.setFont('helvetica', 'bold');
+      doc.text('StayHub', margin, 16);
+      doc.setFontSize(10); doc.setFont('helvetica', 'normal');
+      doc.text('Booking Confirmation', margin, 24);
+      doc.setFontSize(9);
+      doc.text(`Generated: ${new Date().toLocaleString('en-IN')}`, W - margin, 24, { align: 'right' });
+
+      // ── Status badge ─────────────────────────────────────────────────────
+      const statusColor: Record<string, [number,number,number]> = {
+        Confirmed: [46,125,50], Pending: [245,127,23],
+        Cancelled: [198,40,40], Completed: [21,101,192], NoShow: [97,97,97]
+      };
+      const [r, g, b] = statusColor[res.status] ?? [97,97,97];
+      doc.setFillColor(r, g, b);
+      doc.roundedRect(W - margin - 32, 8, 32, 10, 2, 2, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica', 'bold'); doc.setTextColor(255,255,255);
+      doc.text(res.status.toUpperCase(), W - margin - 16, 14.5, { align: 'center' });
+
+      let y = 46;
+      doc.setTextColor(30, 30, 30);
+
+      // ── Reservation code ─────────────────────────────────────────────────
+      doc.setFillColor(240, 242, 255);
+      doc.rect(margin, y - 5, W - margin * 2, 14, 'F');
+      doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+      doc.text('Reservation Code:', margin + 3, y + 3);
+      doc.setFontSize(13); doc.setTextColor(45, 58, 140);
+      doc.text(res.reservationCode, margin + 52, y + 3);
+      doc.setTextColor(30, 30, 30);
+      y += 20;
+
+      // ── Two-column layout: Hotel | Stay Details ───────────────────────────
+      const col1 = margin, col2 = W / 2 + 4;
+
+      const sectionHeader = (label: string, xPos: number, yPos: number) => {
+        doc.setFontSize(9); doc.setFont('helvetica', 'bold');
+        doc.setTextColor(45, 58, 140);
+        doc.text(label.toUpperCase(), xPos, yPos);
+        doc.setDrawColor(45, 58, 140);
+        doc.line(xPos, yPos + 1, xPos + 80, yPos + 1);
+        doc.setTextColor(30, 30, 30);
+      };
+
+      const row = (label: string, value: string, xPos: number, yPos: number) => {
+        doc.setFontSize(9); doc.setFont('helvetica', 'normal'); doc.setTextColor(100,100,100);
+        doc.text(label, xPos, yPos);
+        doc.setFont('helvetica', 'bold'); doc.setTextColor(30,30,30);
+        doc.text(value, xPos + 28, yPos);
+      };
+
+      sectionHeader('Hotel Details', col1, y);
+      sectionHeader('Stay Details', col2, y);
+      y += 7;
+
+      row('Hotel:', res.hotelName, col1, y);
+      row('Check-in:', new Date(res.checkInDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }), col2, y);
+      y += 7;
+      row('Room Type:', res.roomTypeName, col1, y);
+      row('Check-out:', new Date(res.checkOutDate).toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }), col2, y);
+      y += 7;
+      row('Rooms:', String(res.numberOfRooms), col1, y);
+      const nights = Math.round((new Date(res.checkOutDate).getTime() - new Date(res.checkInDate).getTime()) / 86400000);
+      row('Nights:', String(nights), col2, y);
+      y += 7;
+      if (res.cancellationFeePaid) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(46,125,50);
+        doc.text('🛡 Cancellation Protection Active', col1, y);
+        doc.setTextColor(30,30,30);
+        y += 6;
+      }
+      y += 6;
+
+      // ── Price Breakdown ───────────────────────────────────────────────────
+      sectionHeader('Price Breakdown', col1, y); y += 8;
+
+      const priceRow = (label: string, amount: string, color?: [number,number,number]) => {
+        doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+        doc.setTextColor(color ? color[0] : 60, color ? color[1] : 60, color ? color[2] : 60);
+        doc.text(label, col1, y);
+        doc.text(amount, W - margin, y, { align: 'right' });
+        doc.setTextColor(30,30,30);
+        y += 7;
+      };
+
+      priceRow('Base Amount', `Rs. ${res.totalAmount.toFixed(2)}`);
+      if (res.gstAmount > 0) priceRow(`GST (${res.gstPercent}%)`, `Rs. ${res.gstAmount.toFixed(2)}`);
+      if (res.discountAmount > 0) priceRow('Promo Discount', `-Rs. ${res.discountAmount.toFixed(2)}`, [46,125,50]);
+      if (res.walletAmountUsed > 0) priceRow('Wallet Used', `-Rs. ${res.walletAmountUsed.toFixed(2)}`, [46,125,50]);
+      if ((res as any).cancellationFeeAmount > 0) priceRow('Cancellation Protection', `+Rs. ${(res as any).cancellationFeeAmount.toFixed(2)}`, [21,101,192]);
+
+      // Total line
+      doc.setDrawColor(200,200,200); doc.line(col1, y - 2, W - margin, y - 2);
+      doc.setFillColor(45, 58, 140);
+      doc.rect(col1, y, W - margin * 2, 10, 'F');
+      doc.setFontSize(11); doc.setFont('helvetica', 'bold'); doc.setTextColor(255,255,255);
+      doc.text('Total Amount Paid', col1 + 3, y + 7);
+      doc.text(`Rs. ${res.finalAmount.toFixed(2)}`, W - margin - 3, y + 7, { align: 'right' });
+      y += 18;
+
+      // ── Booked on ─────────────────────────────────────────────────────────
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(120,120,120);
+      doc.text(`Booked on: ${new Date(res.createdDate).toLocaleString('en-IN')}`, col1, y);
+      y += 12;
+
+      // ── Footer ────────────────────────────────────────────────────────────
+      doc.setFillColor(240, 242, 255);
+      doc.rect(0, 277, W, 20, 'F');
+      doc.setFontSize(8); doc.setTextColor(45, 58, 140);
+      doc.text('Thank you for choosing StayHub! For support: support@stayhub.in', W / 2, 285, { align: 'center' });
+      doc.setTextColor(120,120,120);
+      doc.text('This is a computer-generated document. No signature required.', W / 2, 291, { align: 'center' });
+
+      doc.save(`StayHub-Booking-${res.reservationCode}.pdf`);
       this.toast.success('PDF downloaded!');
-    } catch { this.toast.error('PDF generation failed. Run: npm install jspdf'); }
+    } catch (e) {
+      this.toast.error('PDF generation failed. Ensure jsPDF is installed: npm install jspdf');
+    }
     this.isDownloading.set(false);
   }
 

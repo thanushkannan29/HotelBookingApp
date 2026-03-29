@@ -22,6 +22,14 @@
       }
     </mat-tab-group>
 
+    <div style="margin-bottom:16px;">
+      <mat-form-field appearance="outline" style="width:100%;max-width:400px;">
+        <mat-label>🔍 Search by code or hotel name</mat-label>
+        <input matInput (input)="onSearch($any($event.target).value)" placeholder="e.g. RES-ABC or Grand Hotel" />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
     @if (loading()) {
       <div class="loading-state">
         <mat-spinner diameter="48" />

@@ -85,11 +85,10 @@ namespace HotelBookingAppWebApi.Services
         {
             // Use local date (not UTC) to avoid timezone issues with IST clients
             var today = DateOnly.FromDateTime(DateTime.Now);
-            var yesterday = today.AddDays(-1);
 
-            // Block only past dates — allow today and future
-            if (dto.CheckInDate <= yesterday)
-                throw new ValidationException("Check-in date cannot be in the past.");
+            // Block today and past dates — only allow from tomorrow onwards
+            if (dto.CheckInDate <= today)
+                throw new ValidationException("Check-in date must be at least tomorrow.");
 
             if (dto.CheckInDate >= dto.CheckOutDate)
                 throw new ValidationException("Check-out must be after check-in.");
@@ -375,7 +374,7 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── GET MY RESERVATIONS (PAGED + STATUS FILTER) ───────────────────────
-        public async Task<PagedReservationResponseDto> GetMyReservationsPagedAsync(Guid userId, int page, int pageSize, string? status = null)
+        public async Task<PagedReservationResponseDto> GetMyReservationsPagedAsync(Guid userId, int page, int pageSize, string? status = null, string? search = null)
         {
             var query = _reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
@@ -387,6 +386,11 @@ namespace HotelBookingAppWebApi.Services
             if (!string.IsNullOrWhiteSpace(status) && status != "All" &&
                 Enum.TryParse<ReservationStatus>(status, out var statusEnum))
                 query = query.Where(r => r.Status == statusEnum);
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(r =>
+                    r.ReservationCode.Contains(search) ||
+                    (r.Hotel != null && r.Hotel.Name.Contains(search)));
 
             var total = await query.CountAsync();
             var items = await query.OrderByDescending(r => r.CreatedDate)
