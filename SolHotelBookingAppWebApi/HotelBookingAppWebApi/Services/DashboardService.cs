@@ -88,6 +88,7 @@ namespace HotelBookingAppWebApi.Services
             {
                 HotelId = hotelId,
                 HotelName = hotel.Name,
+                HotelImageUrl = hotel.ImageUrl,
                 IsActive = hotel.IsActive,
                 IsBlockedBySuperAdmin = hotel.IsBlockedBySuperAdmin,
                 TotalRooms = totalRooms,

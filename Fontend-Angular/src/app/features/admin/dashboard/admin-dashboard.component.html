@@ -6,10 +6,10 @@
       <div class="admin-header animate-fade-in">
         <div class="welcome-block">
           <div class="welcome-avatar">
-            @if (profile()?.profileImageUrl) {
-              <img [src]="profile()!.profileImageUrl!" [alt]="auth.currentUser()?.userName" />
+            @if (data()?.hotelImageUrl) {
+              <img [src]="data()!.hotelImageUrl!" [alt]="data()!.hotelName" />
             } @else {
-              <span>{{ auth.currentUser()?.userName?.charAt(0)?.toUpperCase() }}</span>
+              <span>{{ data()?.hotelName?.charAt(0)?.toUpperCase() }}</span>
             }
           </div>
           <div>
@@ -127,14 +127,6 @@
             </a>
             <a class="nav-item" routerLink="/admin/reservations">
               <mat-icon>event_note</mat-icon><span>Reservations</span>
-            </a>
-            <a class="nav-item" routerLink="/admin/refunds" [class.alert]="d.pendingRefundRequests > 0">
-              <mat-icon>replay</mat-icon>
-              <span>Refunds
-                @if (d.pendingRefundRequests > 0) {
-                  <span class="alert-dot">{{ d.pendingRefundRequests }}</span>
-                }
-              </span>
             </a>
             <a class="nav-item" routerLink="/admin/audit-logs">
               <mat-icon>history</mat-icon><span>Audit Logs</span>

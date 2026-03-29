@@ -20,22 +20,27 @@
         @for (tx of transactions(); track tx.transactionId) {
           <div class="tx-card">
             <div class="tx-main">
-              <div class="tx-icon" [class]="statusClass(tx.status)">
-                <mat-icon>{{ tx.status === 4 ? 'replay' : tx.status === 2 ? 'check_circle' : tx.status === 3 ? 'cancel' : 'schedule' }}</mat-icon>
+              <div class="tx-icon" [class]="txIconClass(tx)">
+                <mat-icon>{{ txIcon(tx) }}</mat-icon>
               </div>
               <div class="tx-info">
-                <div class="tx-method">{{ getPaymentMethodLabel(tx.paymentMethod) }}</div>
+                <div class="tx-method">{{ txLabel(tx) }}</div>
                 @if (tx.guestName) {
                   <div class="tx-guest">👤 {{ tx.guestName }}</div>
                 }
                 @if (tx.reservationCode) {
                   <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
                 }
+                @if (tx.description) {
+                  <div class="tx-code">{{ tx.description }}</div>
+                }
                 <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
               </div>
               <div class="tx-right">
-                <div class="tx-amount">₹{{ tx.amount | number:'1.0-0' }}</div>
-                <span class="badge {{ statusClass(tx.status) }}">{{ statusLabel(tx.status) }}</span>
+                <div class="tx-amount" [style.color]="amountColor(tx)">
+                  {{ tx.transactionType === 'AutoRefund' ? '-' : tx.transactionType === 'CommissionSent' ? '-' : '' }}₹{{ tx.amount | number:'1.0-0' }}
+                </div>
+                <span class="badge {{ txBadgeClass(tx) }}">{{ txBadgeLabel(tx) }}</span>
               </div>
             </div>
           </div>

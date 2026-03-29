@@ -27,35 +27,31 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        public async Task ProcessCompletedReservationsAsync()
+        /// <summary>Called inline when admin marks a reservation as Completed.</summary>
+        public async Task RecordCommissionAsync(Guid reservationId)
         {
-            var processedIds = await _revenueRepo.GetQueryable()
-                .Select(r => r.ReservationId)
-                .ToListAsync();
+            // Idempotent — skip if already recorded
+            var alreadyExists = await _revenueRepo.GetQueryable()
+                .AnyAsync(r => r.ReservationId == reservationId);
+            if (alreadyExists) return;
 
-            var completed = await _reservationRepo.GetQueryable()
-                .Where(r => r.Status == ReservationStatus.Completed &&
-                            !processedIds.Contains(r.ReservationId))
-                .ToListAsync();
+            var reservation = await _reservationRepo.GetAsync(reservationId)
+                ?? throw new NotFoundException("Reservation not found.");
 
-            foreach (var res in completed)
+            var commission = Math.Round(reservation.TotalAmount * 0.02M, 2);
+            await _revenueRepo.AddAsync(new SuperAdminRevenue
             {
-                var commission = Math.Round(res.TotalAmount * 0.02M, 2);
-                await _revenueRepo.AddAsync(new SuperAdminRevenue
-                {
-                    SuperAdminRevenueId = Guid.NewGuid(),
-                    ReservationId = res.ReservationId,
-                    HotelId = res.HotelId,
-                    ReservationAmount = res.TotalAmount,
-                    CommissionAmount = commission,
-                    SuperAdminUpiId = "thanushstayhubsuperadmin@okaxis",
-                    Status = "Pending",
-                    CreatedAt = DateTime.UtcNow
-                });
-            }
+                SuperAdminRevenueId = Guid.NewGuid(),
+                ReservationId = reservation.ReservationId,
+                HotelId = reservation.HotelId,
+                ReservationAmount = reservation.TotalAmount,
+                CommissionAmount = commission,
+                SuperAdminUpiId = "thanushstayhubsuperadmin@okaxis",
+                Status = "Sent",
+                CreatedAt = DateTime.UtcNow
+            });
 
-            if (completed.Count > 0)
-                await _unitOfWork.SaveChangesAsync();
+            await _unitOfWork.SaveChangesAsync();
         }
 
         public async Task<PagedRevenueResponseDto> GetAllRevenueAsync(int page, int pageSize)
@@ -86,16 +82,6 @@ namespace HotelBookingAppWebApi.Services
                 PendingCount = all.Count(r => r.Status == "Pending"),
                 SentCount = all.Count(r => r.Status == "Sent")
             };
-        }
-
-        public async Task<bool> MarkSentAsync(Guid revenueId)
-        {
-            var record = await _revenueRepo.GetAsync(revenueId)
-                ?? throw new NotFoundException("Revenue record not found.");
-
-            record.Status = "Sent";
-            await _unitOfWork.SaveChangesAsync();
-            return true;
         }
 
         private static SuperAdminRevenueDto MapToDto(SuperAdminRevenue r) => new()

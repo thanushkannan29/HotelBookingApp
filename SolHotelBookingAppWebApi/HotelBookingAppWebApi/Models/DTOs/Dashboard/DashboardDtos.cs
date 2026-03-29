@@ -15,6 +15,7 @@ namespace HotelBookingAppWebApi.Models.DTOs.Dashboard
     {
         public Guid HotelId { get; set; }
         public string HotelName { get; set; } = string.Empty;
+        public string? HotelImageUrl { get; set; }
         public bool IsActive { get; set; }
         public bool IsBlockedBySuperAdmin { get; set; }
         public int TotalRooms { get; set; }

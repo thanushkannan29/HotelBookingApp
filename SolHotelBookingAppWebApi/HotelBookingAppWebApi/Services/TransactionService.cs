@@ -16,6 +16,9 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
+        private readonly IRepository<Guid, Wallet> _walletRepo;
+        private readonly IRepository<Guid, WalletTransaction> _walletTxRepo;
+        private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo;
         private readonly IUnitOfWork _unitOfWork;
 
         public TransactionService(
@@ -25,6 +28,9 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, ReservationRoom> reservationRoomRepo,
             IRepository<Guid, User> userRepo,
             IRepository<Guid, Hotel> hotelRepo,
+            IRepository<Guid, Wallet> walletRepo,
+            IRepository<Guid, WalletTransaction> walletTxRepo,
+            IRepository<Guid, SuperAdminRevenue> revenueRepo,
             IUnitOfWork unitOfWork)
         {
             _transactionRepo = transactionRepo;
@@ -33,6 +39,9 @@ namespace HotelBookingAppWebApi.Services
             _reservationRoomRepo = reservationRoomRepo;
             _userRepo = userRepo;
             _hotelRepo = hotelRepo;
+            _walletRepo = walletRepo;
+            _walletTxRepo = walletTxRepo;
+            _revenueRepo = revenueRepo;
             _unitOfWork = unitOfWork;
         }
 
@@ -165,10 +174,145 @@ namespace HotelBookingAppWebApi.Services
                 .Take(pageSize)
                 .ToListAsync();
 
+            var txList = data.Select(MapToDto).ToList();
+
+            // ── GUEST: append wallet refund credits ───────────────────────────
+            if (role == "Guest")
+            {
+                var wallet = await _walletRepo.GetQueryable()
+                    .FirstOrDefaultAsync(w => w.UserId == userId);
+
+                if (wallet != null)
+                {
+                    var refundEntries = await _walletTxRepo.GetQueryable()
+                        .Where(wt => wt.WalletId == wallet.WalletId &&
+                                     wt.Type == "Credit" &&
+                                     wt.Description.Contains("Refund"))
+                        .OrderByDescending(wt => wt.CreatedAt)
+                        .ToListAsync();
+
+                    foreach (var wt in refundEntries)
+                    {
+                        txList.Add(new TransactionResponseDto
+                        {
+                            TransactionId = wt.WalletTransactionId,
+                            ReservationId = Guid.Empty,
+                            ReservationCode = string.Empty,
+                            HotelName = string.Empty,
+                            GuestName = string.Empty,
+                            Amount = wt.Amount,
+                            PaymentMethod = PaymentMethod.Wallet,
+                            Status = PaymentStatus.Refunded,
+                            TransactionDate = wt.CreatedAt,
+                            TransactionType = "WalletRefund",
+                            Description = wt.Description
+                        });
+                    }
+
+                    // re-sort combined list
+                    txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
+                    total += refundEntries.Count;
+                }
+            }
+
+            // ── ADMIN: append auto-refund sent to guests + commission to superadmin ──
+            if (role == "Admin")
+            {
+                var adminHotelId = await _userRepo.GetQueryable()
+                    .Where(u => u.UserId == userId)
+                    .Select(u => u.HotelId)
+                    .FirstOrDefaultAsync();
+
+                if (adminHotelId != null)
+                {
+                    // Commission entries sent to superadmin
+                    var commissions = await _revenueRepo.GetQueryable()
+                        .Include(r => r.Reservation)
+                        .Where(r => r.HotelId == adminHotelId)
+                        .OrderByDescending(r => r.CreatedAt)
+                        .ToListAsync();
+
+                    foreach (var c in commissions)
+                    {
+                        txList.Add(new TransactionResponseDto
+                        {
+                            TransactionId = c.SuperAdminRevenueId,
+                            ReservationId = c.ReservationId,
+                            ReservationCode = c.Reservation?.ReservationCode ?? string.Empty,
+                            HotelName = string.Empty,
+                            GuestName = string.Empty,
+                            Amount = c.CommissionAmount,
+                            PaymentMethod = PaymentMethod.UPI,
+                            Status = PaymentStatus.Success,
+                            TransactionDate = c.CreatedAt,
+                            TransactionType = "CommissionSent",
+                            Description = $"2% commission sent to SuperAdmin for reservation {c.Reservation?.ReservationCode}"
+                        });
+                    }
+
+                    // Auto-refunds sent to guests (wallet credits with "Refund" in description for this hotel's reservations)
+                    var hotelReservationIds = await _reservationRepo.GetQueryable()
+                        .Where(r => r.HotelId == adminHotelId)
+                        .Select(r => r.ReservationId)
+                        .ToListAsync();
+
+                    var guestUserIds = await _reservationRepo.GetQueryable()
+                        .Where(r => r.HotelId == adminHotelId)
+                        .Select(r => r.UserId)
+                        .Distinct()
+                        .ToListAsync();
+
+                    var guestWalletIds = await _walletRepo.GetQueryable()
+                        .Where(w => guestUserIds.Contains(w.UserId))
+                        .Select(w => new { w.WalletId, w.UserId })
+                        .ToListAsync();
+
+                    var walletIdList = guestWalletIds.Select(w => w.WalletId).ToList();
+
+                    var autoRefunds = await _walletTxRepo.GetQueryable()
+                        .Where(wt => walletIdList.Contains(wt.WalletId) &&
+                                     wt.Type == "Credit" &&
+                                     wt.Description.Contains("Refund"))
+                        .OrderByDescending(wt => wt.CreatedAt)
+                        .ToListAsync();
+
+                    var walletUserMap = guestWalletIds.ToDictionary(w => w.WalletId, w => w.UserId);
+                    var userNames = await _userRepo.GetQueryable()
+                        .Where(u => guestUserIds.Contains(u.UserId))
+                        .Select(u => new { u.UserId, u.Name })
+                        .ToListAsync();
+                    var userNameMap = userNames.ToDictionary(u => u.UserId, u => u.Name);
+
+                    foreach (var wt in autoRefunds)
+                    {
+                        var guestUserId = walletUserMap.GetValueOrDefault(wt.WalletId);
+                        var guestName = guestUserId != Guid.Empty ? userNameMap.GetValueOrDefault(guestUserId) ?? string.Empty : string.Empty;
+
+                        txList.Add(new TransactionResponseDto
+                        {
+                            TransactionId = wt.WalletTransactionId,
+                            ReservationId = Guid.Empty,
+                            ReservationCode = string.Empty,
+                            HotelName = string.Empty,
+                            GuestName = guestName,
+                            Amount = wt.Amount,
+                            PaymentMethod = PaymentMethod.Wallet,
+                            Status = PaymentStatus.Refunded,
+                            TransactionDate = wt.CreatedAt,
+                            TransactionType = "AutoRefund",
+                            Description = wt.Description
+                        });
+                    }
+
+                    txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
+                    total += commissions.Count + autoRefunds.Count;
+                }
+            }
+
             return new PagedTransactionResponseDto
             {
                 TotalCount = total,
-                Transactions = data.Select(MapToDto)
+                Transactions = txList
             };
         }
 
@@ -251,7 +395,8 @@ namespace HotelBookingAppWebApi.Services
             Amount = t.Amount,
             PaymentMethod = t.PaymentMethod,
             Status = t.Status,
-            TransactionDate = t.TransactionDate
+            TransactionDate = t.TransactionDate,
+            TransactionType = "Payment"
         };
 
         // ── RECORD FAILED PAYMENT (Razorpay failure) ──────────────────────────

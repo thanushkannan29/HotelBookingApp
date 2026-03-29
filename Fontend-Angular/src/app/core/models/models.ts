@@ -394,6 +394,8 @@ export interface TransactionResponseDto {
   paymentMethod: number;
   status: number;
   transactionDate: string;
+  transactionType: string; // 'Payment' | 'WalletRefund' | 'AutoRefund' | 'CommissionSent'
+  description?: string;
 }
 
 export interface PagedTransactionResponseDto {
@@ -568,6 +570,7 @@ export interface PaginationDto {
 export interface AdminDashboardDto {
   hotelId: string;
   hotelName: string;
+  hotelImageUrl?: string;
   isActive: boolean;
   isBlockedBySuperAdmin: boolean;
   totalRooms: number;

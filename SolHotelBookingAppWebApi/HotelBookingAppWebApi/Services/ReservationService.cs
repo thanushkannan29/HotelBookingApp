@@ -21,6 +21,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, User> _userRepo;
         private readonly IWalletService _walletService;
         private readonly IPromoCodeService _promoCodeService;
+        private readonly ISuperAdminRevenueService _superAdminRevenueService;
         private readonly IUnitOfWork _unitOfWork;
 
         public ReservationService(
@@ -34,6 +35,7 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, User> userRepo,
             IWalletService walletService,
             IPromoCodeService promoCodeService,
+            ISuperAdminRevenueService superAdminRevenueService,
             IUnitOfWork unitOfWork)
         {
             _reservationRepo = reservationRepo;
@@ -46,6 +48,7 @@ namespace HotelBookingAppWebApi.Services
             _userRepo = userRepo;
             _walletService = walletService;
             _promoCodeService = promoCodeService;
+            _superAdminRevenueService = superAdminRevenueService;
             _unitOfWork = unitOfWork;
         }
 
@@ -530,6 +533,9 @@ namespace HotelBookingAppWebApi.Services
 
             // Generate promo code for the guest
             await _promoCodeService.GeneratePromoForCompletedReservationAsync(res.ReservationId);
+
+            // Record 2% commission to SuperAdmin (inline — no background service needed)
+            await _superAdminRevenueService.RecordCommissionAsync(res.ReservationId);
 
             return true;
         }

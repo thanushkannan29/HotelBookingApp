@@ -32,6 +32,30 @@ export class GuestTransactionsComponent implements OnInit {
     return s[id] ?? 'badge-muted';
   }
 
+  txIcon(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'WalletRefund') return 'account_balance_wallet';
+    if (tx.status === 4) return 'replay';
+    if (tx.status === 2) return 'check_circle';
+    if (tx.status === 3) return 'cancel';
+    return 'schedule';
+  }
+
+  txIconClass(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'WalletRefund') return 'badge-info';
+    return this.statusClass(tx.status);
+  }
+
+  txLabel(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'WalletRefund') return '💰 Hotel Refund (Wallet Credit)';
+    return this.paymentMethodLabel(tx.paymentMethod);
+  }
+
+  amountColor(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'WalletRefund') return 'var(--color-success)';
+    if (tx.status === 3) return 'var(--color-error)';
+    return 'var(--color-text-primary)';
+  }
+
   ngOnInit() { this.load(); }
 
   load() {

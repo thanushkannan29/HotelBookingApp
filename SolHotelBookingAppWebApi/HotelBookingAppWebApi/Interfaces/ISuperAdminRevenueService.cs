@@ -6,7 +6,6 @@ namespace HotelBookingAppWebApi.Interfaces
     {
         Task<PagedRevenueResponseDto> GetAllRevenueAsync(int page, int pageSize);
         Task<RevenueSummaryDto> GetSummaryAsync();
-        Task<bool> MarkSentAsync(Guid revenueId);
-        Task ProcessCompletedReservationsAsync(); // called by background service
+        Task RecordCommissionAsync(Guid reservationId); // called when reservation is completed
     }
 }

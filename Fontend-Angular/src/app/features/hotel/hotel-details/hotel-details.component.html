@@ -123,9 +123,15 @@
                     }
                     @if (review.adminReply) {
                       <div class="admin-reply">
-                        <mat-icon style="font-size:14px;width:14px;height:14px;">hotel</mat-icon>
-                        <div>
-                          <span class="admin-reply-label">Hotel Response</span>
+                        <div class="admin-reply-avatar">
+                          @if (h.imageUrl) {
+                            <img [src]="h.imageUrl" [alt]="h.name" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+                          } @else {
+                            <mat-icon style="font-size:18px;width:18px;height:18px;">hotel</mat-icon>
+                          }
+                        </div>
+                        <div class="admin-reply-body">
+                          <span class="admin-reply-label">{{ h.name }}</span>
                           <p class="admin-reply-text">{{ review.adminReply }}</p>
                         </div>
                       </div>

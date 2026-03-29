@@ -295,6 +295,27 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReviewsController",
+    "Method": "Reply",
+    "RelativePath": "api/admin/reviews/{reviewId}/reply",
+    "HttpMethod": "PATCH",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "reviewId",
+        "Type": "System.Guid",
+        "IsRequired": true
+      },
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Models.DTOs.Review.ReplyToReviewDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
     "Method": "Add",
     "RelativePath": "api/admin/rooms",

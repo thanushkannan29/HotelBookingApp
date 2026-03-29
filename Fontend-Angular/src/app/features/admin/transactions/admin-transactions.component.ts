@@ -63,6 +63,45 @@ export class AdminTransactionsComponent implements OnInit {
     return map[this.statusLabel(status)] ?? 'badge-muted';
   }
 
+  txIcon(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return 'send';
+    if (tx.transactionType === 'AutoRefund') return 'account_balance_wallet';
+    if (tx.status === 4) return 'replay';
+    if (tx.status === 2) return 'check_circle';
+    if (tx.status === 3) return 'cancel';
+    return 'schedule';
+  }
+
+  txIconClass(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return 'badge-muted';
+    if (tx.transactionType === 'AutoRefund') return 'badge-warning';
+    return this.statusClass(tx.status);
+  }
+
+  txLabel(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return '📤 Commission Sent to SuperAdmin (2%)';
+    if (tx.transactionType === 'AutoRefund') return '💰 Auto Refund Sent to Guest';
+    return this.getPaymentMethodLabel(tx.paymentMethod);
+  }
+
+  txBadgeClass(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return 'badge-muted';
+    if (tx.transactionType === 'AutoRefund') return 'badge-warning';
+    return this.statusClass(tx.status);
+  }
+
+  txBadgeLabel(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return 'Commission';
+    if (tx.transactionType === 'AutoRefund') return 'Refunded';
+    return this.statusLabel(tx.status);
+  }
+
+  amountColor(tx: TransactionResponseDto): string {
+    if (tx.transactionType === 'CommissionSent') return 'var(--color-error)';
+    if (tx.transactionType === 'AutoRefund') return 'var(--color-error)';
+    return 'var(--color-text-primary)';
+  }
+
   shortId(id: string): string {
     return id ? id.substring(0, 8).toUpperCase() + '…' : '—';
   }

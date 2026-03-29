@@ -3,11 +3,11 @@ import { RouterLink } from '@angular/router';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { DecimalPipe } from '@angular/common';
-import { DashboardService, UserService } from '../../../core/services/api.services';
+import { DashboardService } from '../../../core/services/api.services';
 import { HotelService } from '../../../core/services/hotel.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
-import { AdminDashboardDto, UserProfileResponseDto } from '../../../core/models/models';
+import { AdminDashboardDto } from '../../../core/models/models';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -19,17 +19,14 @@ import { AdminDashboardDto, UserProfileResponseDto } from '../../../core/models/
 export class AdminDashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private hotelService     = inject(HotelService);
-  private userService      = inject(UserService);
   private toast            = inject(ToastService);
   auth                     = inject(AuthService);
 
   data             = signal<AdminDashboardDto | null>(null);
-  profile          = signal<UserProfileResponseDto | null>(null);
   isTogglingStatus = signal(false);
 
   ngOnInit() {
     this.dashboardService.getAdminDashboard().subscribe(d => this.data.set(d));
-    this.userService.getProfile().subscribe(p => this.profile.set(p));
   }
 
   toggleHotelStatus() {

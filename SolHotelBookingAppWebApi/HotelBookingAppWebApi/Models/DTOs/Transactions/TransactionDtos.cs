@@ -28,6 +28,9 @@ namespace HotelBookingAppWebApi.Models.DTOs.Transactions
         public PaymentMethod PaymentMethod { get; set; }
         public PaymentStatus Status { get; set; }
         public DateTime TransactionDate { get; set; }
+        /// <summary>"Payment" | "WalletRefund" | "CommissionSent"</summary>
+        public string TransactionType { get; set; } = "Payment";
+        public string? Description { get; set; }
     }
 
     public class PagedTransactionResponseDto

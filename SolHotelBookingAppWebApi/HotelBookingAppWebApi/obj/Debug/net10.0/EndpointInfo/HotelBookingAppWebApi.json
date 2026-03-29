@@ -496,6 +496,48 @@
         }
       }
     },
+    "/api/admin/reviews/{reviewId}/reply": {
+      "patch": {
+        "tags": [
+          "AdminReviews"
+        ],
+        "parameters": [
+          {
+            "name": "reviewId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyToReviewDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyToReviewDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyToReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/admin/rooms": {
       "post": {
         "tags": [
@@ -3053,6 +3095,20 @@
         "type": "object",
         "properties": {
           "note": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "ReplyToReviewDto": {
+        "required": [
+          "adminReply"
+        ],
+        "type": "object",
+        "properties": {
+          "adminReply": {
+            "maxLength": 1000,
             "minLength": 1,
             "type": "string"
           }

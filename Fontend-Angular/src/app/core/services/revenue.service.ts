@@ -23,10 +23,4 @@ export class RevenueService {
       `${this.base}/superadmin/revenue/summary`
     ).pipe(map(r => r.data!));
   }
-
-  markSent(id: string): Observable<void> {
-    return this.http.patch<any>(
-      `${this.base}/superadmin/revenue/${id}/mark-sent`, {}
-    ).pipe(map(() => undefined));
-  }
 }

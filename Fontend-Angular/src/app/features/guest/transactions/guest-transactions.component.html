@@ -20,24 +20,30 @@
         @for (tx of transactions(); track tx.transactionId) {
           <div class="tx-card">
             <div class="tx-main">
-              <div class="tx-icon" [class]="statusClass(tx.status)">
-                <mat-icon>{{ tx.status === 4 ? 'replay' : tx.status === 2 ? 'check_circle' : tx.status === 3 ? 'cancel' : 'schedule' }}</mat-icon>
+              <div class="tx-icon" [class]="txIconClass(tx)">
+                <mat-icon>{{ txIcon(tx) }}</mat-icon>
               </div>
               <div class="tx-info">
-                <div class="tx-method">{{ paymentMethodLabel(tx.paymentMethod) }}</div>
+                <div class="tx-method">{{ txLabel(tx) }}</div>
                 @if (tx.hotelName) {
                   <div class="tx-hotel">🏨 {{ tx.hotelName }}</div>
                 }
                 @if (tx.reservationCode) {
                   <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
                 }
+                @if (tx.description) {
+                  <div class="tx-code">{{ tx.description }}</div>
+                }
                 <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
               </div>
               <div class="tx-right">
-                <div class="tx-amount" [style.color]="tx.status === 4 ? 'var(--color-success)' : tx.status === 3 ? 'var(--color-error)' : 'var(--color-text-primary)'">
-                  {{ tx.status === 4 ? '+' : '' }}₹{{ tx.amount | number:'1.0-0' }}
+                <div class="tx-amount" [style.color]="amountColor(tx)">
+                  {{ tx.transactionType === 'WalletRefund' ? '+' : '' }}₹{{ tx.amount | number:'1.0-0' }}
                 </div>
                 <span class="badge" [class]="statusClass(tx.status)">{{ paymentStatusLabel(tx.status) }}</span>
+                @if (tx.transactionType === 'WalletRefund') {
+                  <span class="badge badge-info" style="margin-top:2px;">Wallet Refund</span>
+                }
               </div>
             </div>
           </div>

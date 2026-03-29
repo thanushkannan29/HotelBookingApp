@@ -63,12 +63,5 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
             var result = await _service.GetSummaryAsync();
             return Ok(new { success = true, data = result });
         }
-
-        [HttpPatch("{id}/mark-sent")]
-        public async Task<IActionResult> MarkSent(Guid id)
-        {
-            await _service.MarkSentAsync(id);
-            return Ok(new { success = true, message = "Marked as sent." });
-        }
     }
 }
