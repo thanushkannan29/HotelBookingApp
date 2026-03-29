@@ -90,6 +90,13 @@
               "format": "int32",
               "default": 20
             }
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2336,6 +2343,20 @@
               "format": "int32",
               "default": 10
             }
+          },
+          {
+            "name": "sortField",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "sortDir",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2801,6 +2822,20 @@
           "pageSize": {
             "type": "integer",
             "format": "int32"
+          },
+          "minRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxRating": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "sortDir": {
+            "type": "string",
+            "nullable": true
           }
         },
         "additionalProperties": false

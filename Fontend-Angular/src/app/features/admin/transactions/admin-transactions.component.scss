@@ -5,12 +5,11 @@
   overflow: hidden;
 }
 
-.sortable-header {
-  cursor: pointer; user-select: none;
-  display: flex; align-items: center; gap: 4px;
-  &:hover { color: var(--color-primary); }
-  .sort-icon { font-size: 16px; height: 16px; width: 16px; }
+.spinner-wrap {
+  display: flex; justify-content: center; padding: 60px;
 }
+
+mat-table.hidden { display: none; }
 
 .tx-type-cell {
   display: flex; align-items: center; gap: 8px; font-size: 0.85rem;
@@ -28,6 +27,14 @@
   font-family: monospace; font-size: 0.78rem;
   background: var(--color-surface-alt); padding: 2px 6px;
   border-radius: 4px; color: var(--color-text-muted);
+}
+
+.text-muted { color: var(--color-text-muted); }
+
+.empty-cell {
+  text-align: center; padding: 40px;
+  mat-icon { font-size: 40px; color: #ccc; display: block; margin: 0 auto 8px; }
+  p { color: var(--color-text-muted); margin: 0; }
 }
 
 .badge {

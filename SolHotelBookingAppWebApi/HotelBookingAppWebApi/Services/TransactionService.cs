@@ -119,8 +119,8 @@ namespace HotelBookingAppWebApi.Services
             reservation.CancelledDate = DateTime.UtcNow;
             reservation.CancellationReason = dto.Reason;
 
-            var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
-            var roomCount = reservation.ReservationRooms.Count;
+            var roomTypeId = reservation.ReservationRooms?.FirstOrDefault()?.RoomTypeId ?? Guid.Empty;
+            var roomCount = reservation.ReservationRooms?.Count ?? 0;
             var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
             var dates = Enumerable.Range(0, totalDays).Select(d => reservation.CheckInDate.AddDays(d)).ToList();
 
@@ -168,9 +168,9 @@ namespace HotelBookingAppWebApi.Services
             bool desc = string.IsNullOrWhiteSpace(sortDir) || sortDir.ToLower() == "desc";
             IOrderedQueryable<Transaction> ordered = sortField?.ToLower() switch
             {
-                "amount" => desc ? query.OrderByDescending(t => t.Amount) : query.OrderBy(t => t.Amount),
-                "type"   => desc ? query.OrderByDescending(t => t.TransactionType) : query.OrderBy(t => t.TransactionType),
-                "status" => desc ? query.OrderByDescending(t => t.Status) : query.OrderBy(t => t.Status),
+                "amount" => desc ? query.OrderByDescending(t => t.Amount)          : query.OrderBy(t => t.Amount),
+                "status" => desc ? query.OrderByDescending(t => t.Status)          : query.OrderBy(t => t.Status),
+                "type"   => desc ? query.OrderByDescending(t => t.PaymentMethod)   : query.OrderBy(t => t.PaymentMethod),
                 _        => query.OrderByDescending(t => t.TransactionDate)
             };
 
