@@ -18,9 +18,11 @@ export class AmenityRequestService {
     ).pipe(map(r => r.data!));
   }
 
-  getMine(): Observable<AmenityRequestResponseDto[]> {
-    return this.http.get<ApiResponse<AmenityRequestResponseDto[]>>(
-      `${this.base}/admin/amenity-requests`
+  getMine(page = 1, pageSize = 10): Observable<PagedAmenityRequestResponseDto> {
+    const params = new HttpParams()
+      .set('page', page).set('pageSize', pageSize);
+    return this.http.get<ApiResponse<PagedAmenityRequestResponseDto>>(
+      `${this.base}/admin/amenity-requests`, { params }
     ).pipe(map(r => r.data!));
   }
 

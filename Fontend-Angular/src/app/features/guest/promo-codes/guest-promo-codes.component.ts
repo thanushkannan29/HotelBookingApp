@@ -7,6 +7,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { PromoCodeService } from '../../../core/services/promo-code.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { PromoCodeResponseDto } from '../../../core/models/models';
@@ -16,7 +17,8 @@ import { PromoCodeResponseDto } from '../../../core/models/models';
   standalone: true,
   imports: [
     CommonModule, MatCardModule, MatTableModule, MatButtonModule,
-    MatIconModule, MatChipsModule, MatProgressSpinnerModule, MatTooltipModule
+    MatIconModule, MatChipsModule, MatProgressSpinnerModule,
+    MatTooltipModule, MatPaginatorModule,
   ],
   template: `
     <div class="container py-4">
@@ -24,7 +26,7 @@ import { PromoCodeResponseDto } from '../../../core/models/models';
 
       @if (loading()) {
         <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-      } @else if (codes().length === 0) {
+      } @else if (codes().length === 0 && totalCount() === 0) {
         <mat-card class="text-center py-5">
           <mat-icon style="font-size:48px;color:#ccc">local_offer</mat-icon>
           <p class="mt-2 text-muted">No promo codes yet. Complete a stay to earn one!</p>
@@ -63,6 +65,13 @@ import { PromoCodeResponseDto } from '../../../core/models/models';
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
             </table>
+            <mat-paginator
+              [length]="totalCount()"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[5, 10, 20]"
+              showFirstLastButtons
+              (page)="onPage($event)"
+            />
           </mat-card-content>
         </mat-card>
       }
@@ -75,14 +84,26 @@ export class GuestPromoCodesComponent implements OnInit {
 
   loading = signal(true);
   codes = signal<PromoCodeResponseDto[]>([]);
+  totalCount = signal(0);
+  pageSize = 10;
+  currentPage = 1;
   displayedColumns = ['code', 'hotel', 'discount', 'expiry', 'status'];
 
-  ngOnInit() {
-    this.promoService.getMyCodes().subscribe({
-      next: data => { this.codes.set(data); this.loading.set(false); },
+  ngOnInit() { this.load(); }
+
+  load() {
+    this.loading.set(true);
+    this.promoService.getMyCodes(this.currentPage, this.pageSize).subscribe({
+      next: data => {
+        this.codes.set(data.promoCodes ?? []);
+        this.totalCount.set(data.totalCount ?? 0);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
   }
+
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 
   copy(code: string) {
     navigator.clipboard.writeText(code);

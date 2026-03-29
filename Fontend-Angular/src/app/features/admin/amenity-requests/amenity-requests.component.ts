@@ -9,6 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { DatePipe } from '@angular/common';
 import { AmenityRequestService } from '../../../core/services/amenity-request.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AmenityRequestResponseDto } from '../../../core/models/models';
@@ -17,9 +19,10 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
   selector: 'app-amenity-requests',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule,
+    CommonModule, ReactiveFormsModule, DatePipe,
     MatCardModule, MatTableModule, MatButtonModule, MatFormFieldModule,
-    MatInputModule, MatIconModule, MatChipsModule, MatProgressSpinnerModule
+    MatInputModule, MatIconModule, MatChipsModule,
+    MatProgressSpinnerModule, MatPaginatorModule,
   ],
   template: `
     <div class="container py-4">
@@ -69,7 +72,7 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
         <mat-card-content>
           @if (loading()) {
             <div class="text-center py-4"><mat-spinner diameter="40" /></div>
-          } @else if (requests().length === 0) {
+          } @else if (requests().length === 0 && totalCount() === 0) {
             <div class="text-center py-4 text-muted">No requests submitted yet.</div>
           } @else {
             <table mat-table [dataSource]="requests()" class="w-100">
@@ -98,6 +101,13 @@ import { AmenityRequestResponseDto } from '../../../core/models/models';
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
             </table>
+            <mat-paginator
+              [length]="totalCount()"
+              [pageSize]="pageSize"
+              [pageSizeOptions]="[5, 10, 20]"
+              showFirstLastButtons
+              (page)="onPage($event)"
+            />
           }
         </mat-card-content>
       </mat-card>
@@ -112,6 +122,9 @@ export class AmenityRequestsComponent implements OnInit {
   loading = signal(true);
   submitting = signal(false);
   requests = signal<AmenityRequestResponseDto[]>([]);
+  totalCount = signal(0);
+  pageSize = 10;
+  currentPage = 1;
   displayedColumns = ['amenityName', 'category', 'status', 'note', 'date'];
 
   form = this.fb.group({
@@ -123,17 +136,30 @@ export class AmenityRequestsComponent implements OnInit {
   ngOnInit() { this.load(); }
 
   load() {
-    this.service.getMine().subscribe({
-      next: data => { this.requests.set(data); this.loading.set(false); },
+    this.loading.set(true);
+    this.service.getMine(this.currentPage, this.pageSize).subscribe({
+      next: data => {
+        this.requests.set(data.requests ?? []);
+        this.totalCount.set(data.totalCount ?? 0);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
   }
+
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
 
   submit() {
     if (this.form.invalid) return;
     this.submitting.set(true);
     this.service.create(this.form.value as any).subscribe({
-      next: () => { this.toast.success('Request submitted!'); this.form.reset(); this.load(); this.submitting.set(false); },
+      next: () => {
+        this.toast.success('Request submitted!');
+        this.form.reset();
+        this.currentPage = 1;
+        this.load();
+        this.submitting.set(false);
+      },
       error: () => this.submitting.set(false)
     });
   }
