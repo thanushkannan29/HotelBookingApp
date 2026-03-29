@@ -55,3 +55,7 @@
 }
 
 .edit-form { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
+
+.table-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
+.spinner-wrap { display: flex; justify-content: center; padding: 48px; }
+mat-table.hidden { display: none; }

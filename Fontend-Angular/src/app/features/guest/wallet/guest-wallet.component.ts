@@ -31,10 +31,8 @@ declare var Razorpay: any;
     <div class="container py-4">
       <h2 class="mb-4">💼 My Wallet</h2>
 
-      @if (loading()) {
-        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-      } @else {
-        <!-- Balance Card -->
+      <!-- Balance Card — shown once loaded -->
+      @if (!loading() && wallet()) {
         <div class="row mb-4">
           <div class="col-md-4">
             <mat-card class="wallet-balance-card">
@@ -66,52 +64,56 @@ declare var Razorpay: any;
             </mat-card>
           </div>
         </div>
-
-        <!-- Transaction History -->
-        <mat-card>
-          <mat-card-header>
-            <mat-card-title>🧾 Transaction History</mat-card-title>
-          </mat-card-header>
-          <mat-card-content>
-            @if (transactions().length === 0 && !loading()) {
-              <div class="text-center py-4 text-muted">No transactions yet.</div>
-            }
-            <table mat-table [dataSource]="transactions()" class="w-100" [class.d-none]="transactions().length === 0 && !loading()">
-                <ng-container matColumnDef="description">
-                  <th mat-header-cell *matHeaderCellDef>Description</th>
-                  <td mat-cell *matCellDef="let t">{{ t.description }}</td>
-                </ng-container>
-                <ng-container matColumnDef="amount">
-                  <th mat-header-cell *matHeaderCellDef>Amount</th>
-                  <td mat-cell *matCellDef="let t">
-                    <span [class]="t.type === 'Credit' ? 'text-success' : 'text-danger'">
-                      {{ t.type === 'Credit' ? '+' : '-' }}₹{{ t.amount | number:'1.2-2' }}
-                    </span>
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="type">
-                  <th mat-header-cell *matHeaderCellDef>Type</th>
-                  <td mat-cell *matCellDef="let t">
-                    <mat-chip [color]="t.type === 'Credit' ? 'primary' : 'warn'" highlighted>{{ t.type }}</mat-chip>
-                  </td>
-                </ng-container>
-                <ng-container matColumnDef="date">
-                  <th mat-header-cell *matHeaderCellDef>Date</th>
-                  <td mat-cell *matCellDef="let t">{{ t.createdAt | date:'medium' }}</td>
-                </ng-container>
-                <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-                <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-              </table>
-              <mat-paginator
-                [length]="totalCount()"
-                [pageSize]="pageSize"
-                [pageSizeOptions]="[5, 10, 20]"
-                showFirstLastButtons
-                (page)="onPage($event)"
-              />
-          </mat-card-content>
-        </mat-card>
       }
+
+      <!-- Transaction History — table + paginator always in DOM -->
+      <mat-card>
+        <mat-card-header>
+          <mat-card-title>🧾 Transaction History</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          @if (loading()) {
+            <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+          }
+          <table mat-table [dataSource]="transactions()" class="w-100" [style.display]="loading() ? 'none' : ''">
+            <ng-container matColumnDef="description">
+              <th mat-header-cell *matHeaderCellDef>Description</th>
+              <td mat-cell *matCellDef="let t">{{ t.description }}</td>
+            </ng-container>
+            <ng-container matColumnDef="amount">
+              <th mat-header-cell *matHeaderCellDef>Amount</th>
+              <td mat-cell *matCellDef="let t">
+                <span [class]="t.type === 'Credit' ? 'text-success' : 'text-danger'">
+                  {{ t.type === 'Credit' ? '+' : '-' }}₹{{ t.amount | number:'1.2-2' }}
+                </span>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let t">
+                <mat-chip [color]="t.type === 'Credit' ? 'primary' : 'warn'" highlighted>{{ t.type }}</mat-chip>
+              </td>
+            </ng-container>
+            <ng-container matColumnDef="date">
+              <th mat-header-cell *matHeaderCellDef>Date</th>
+              <td mat-cell *matCellDef="let t">{{ t.createdAt | date:'medium' }}</td>
+            </ng-container>
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell" colspan="4" style="text-align:center;padding:24px;color:#999;">No transactions yet.</td>
+            </tr>
+          </table>
+          <!-- Always in DOM — never destroyed -->
+          <mat-paginator
+            [length]="totalCount()"
+            [pageSize]="pageSize"
+            [pageSizeOptions]="[5, 10, 20]"
+            showFirstLastButtons
+            (page)="onPage($event)"
+          />
+        </mat-card-content>
+      </mat-card>
     </div>
   `,
   styles: [`
