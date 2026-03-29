@@ -34,6 +34,9 @@
             <mat-icon>{{ d.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
             {{ d.isActive ? 'Deactivate' : 'Activate' }} Hotel
           </button>
+          <button mat-stroked-button (click)="downloadReport()">
+            <mat-icon>download</mat-icon> Download Report
+          </button>
           <a mat-flat-button color="primary" routerLink="/admin/hotel">
             <mat-icon>edit</mat-icon> Edit Hotel
           </a>

@@ -163,24 +163,11 @@ namespace HotelBookingAppWebApi.Services
             }
             // SuperAdmin → no filter — sees everything
 
-            var total = await query.CountAsync();
-
-            bool desc = string.IsNullOrWhiteSpace(sortDir) || sortDir.ToLower() == "desc";
-            IOrderedQueryable<Transaction> ordered = sortField?.ToLower() switch
-            {
-                "amount" => desc ? query.OrderByDescending(t => t.Amount)          : query.OrderBy(t => t.Amount),
-                "status" => desc ? query.OrderByDescending(t => t.Status)          : query.OrderBy(t => t.Status),
-                "type"   => desc ? query.OrderByDescending(t => t.PaymentMethod)   : query.OrderBy(t => t.PaymentMethod),
-                _        => query.OrderByDescending(t => t.TransactionDate)
-            };
-
-            var data = await ordered
-                .Include(t => t.Reservation)
-                    .ThenInclude(r => r!.Hotel)
-                .Include(t => t.Reservation)
-                    .ThenInclude(r => r!.User)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
+            // Fetch ALL db transactions for this scope (no Skip/Take yet)
+            var data = await query
+                .Include(t => t.Reservation).ThenInclude(r => r!.Hotel)
+                .Include(t => t.Reservation).ThenInclude(r => r!.User)
+                .OrderByDescending(t => t.TransactionDate)
                 .ToListAsync();
 
             var txList = data.Select(MapToDto).ToList();
@@ -220,7 +207,6 @@ namespace HotelBookingAppWebApi.Services
 
                     // re-sort combined list
                     txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
-                    total += refundEntries.Count;
                 }
             }
 
@@ -259,12 +245,7 @@ namespace HotelBookingAppWebApi.Services
                         });
                     }
 
-                    // Auto-refunds sent to guests (wallet credits with "Refund" in description for this hotel's reservations)
-                    var hotelReservationIds = await _reservationRepo.GetQueryable()
-                        .Where(r => r.HotelId == adminHotelId)
-                        .Select(r => r.ReservationId)
-                        .ToListAsync();
-
+                    // Auto-refunds sent to guests
                     var guestUserIds = await _reservationRepo.GetQueryable()
                         .Where(r => r.HotelId == adminHotelId)
                         .Select(r => r.UserId)
@@ -314,15 +295,15 @@ namespace HotelBookingAppWebApi.Services
                     }
 
                     txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
-                    total += commissions.Count + autoRefunds.Count;
                 }
             }
 
-            return new PagedTransactionResponseDto
-            {
-                TotalCount = total,
-                Transactions = txList
-            };
+            // ── Paginate the fully combined list ──────────────────────────────
+            var sorted = txList.OrderByDescending(t => t.TransactionDate).ToList();
+            var total  = sorted.Count;
+            var paged  = sorted.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            return new PagedTransactionResponseDto { TotalCount = total, Transactions = paged };
         }
 
         // ── PAYMENT INTENT (Correction 7D) ────────────────────────────────────
