@@ -26,7 +26,7 @@ import { UserProfileResponseDto } from '../../../core/models/models';
                 @if (p.profileImageUrl) {
                   <img [src]="p.profileImageUrl" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
                 } @else {
-                  <span>{{ p.name?.charAt(0)?.toUpperCase() }}</span>
+                  <span>{{ p.name.charAt(0).toUpperCase() }}</span>
                 }
               </div>
               <div>
