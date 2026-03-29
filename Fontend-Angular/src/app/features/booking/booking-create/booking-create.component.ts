@@ -28,6 +28,8 @@ import {
   ReservationResponseDto, ReservationDetailsDto, QrPaymentResponseDto, WalletResponseDto
 } from '../../../core/models/models';
 
+import { environment } from '../../../../environments/environment';
+
 // Razorpay type declaration
 declare var Razorpay: any;
 
@@ -431,7 +433,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
     const amountPaise = Math.round(amount * 100);
 
     const options: any = {
-      key: 'rzp_test_SVtcM9b8whLPCh',
+      key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
       name: '🏨 StayHub',
@@ -526,7 +528,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
     };
 
     const options: any = {
-      key: 'rzp_test_SVtcM9b8whLPCh',
+      key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
       name: '🏨 StayHub',

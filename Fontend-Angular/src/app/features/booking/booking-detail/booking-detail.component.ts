@@ -16,6 +16,8 @@ import { TransactionService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
 import { QrPaymentResponseDto, ReservationDetailsDto } from '../../../core/models/models';
 
+import { environment } from '../../../../environments/environment';
+
 declare var Razorpay: any;
 
 @Component({
@@ -126,7 +128,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
     const upiId = this.qrPayment()?.upiId ?? res.upiId ?? '';
 
     const options: any = {
-      key: 'rzp_test_SVtcM9b8whLPCh',
+      key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
       name: '🏨 StayHub',
