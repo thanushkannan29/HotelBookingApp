@@ -1,17 +1,17 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatTableModule } from '@angular/material/table';
-import { MatSortModule } from '@angular/material/sort';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { BookingService } from '../../../core/services/booking.service';
@@ -24,8 +24,8 @@ import { ReservationDetailsDto } from '../../../core/models/models';
   imports: [
     CommonModule, RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
-    MatTableModule, MatSortModule, MatPaginatorModule,
-    MatTabsModule, MatProgressSpinnerModule, MatChipsModule,
+    MatTableModule, MatPaginatorModule,
+    MatTabsModule, MatProgressSpinnerModule, MatChipsModule, MatTooltipModule,
   ],
   templateUrl: './reservation-management.component.html',
   styleUrl: './reservation-management.component.scss'
@@ -34,6 +34,8 @@ export class ReservationManagementComponent implements OnInit {
   private bookingService = inject(BookingService);
   private toast          = inject(ToastService);
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   reservations   = signal<ReservationDetailsDto[]>([]);
   totalCount     = signal(0);
   loading        = signal(false);
@@ -41,21 +43,30 @@ export class ReservationManagementComponent implements OnInit {
   currentPage    = 1;
   selectedStatus = 'All';
   searchTerm     = '';
-  displayedColumns = ['reservationCode', 'guestName', 'checkIn', 'checkOut', 'rooms', 'amount', 'status', 'actions'];
+  sortField      = '';
+  sortDir        = '';
 
+  displayedColumns = ['reservationCode', 'guestName', 'checkIn', 'checkOut', 'rooms', 'amount', 'status', 'actions'];
   readonly statusTabs = ['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'];
   private searchSubject = new Subject<string>();
 
   ngOnInit() {
     this.load();
     this.searchSubject.pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe(s => { this.searchTerm = s; this.currentPage = 1; this.load(); });
+      .subscribe(s => { this.searchTerm = s; this.resetPage(); this.load(); });
+  }
+
+  private resetPage() {
+    this.currentPage = 1;
+    // firstPage() resets the paginator UI without emitting a page event
+    this.paginator?.firstPage();
   }
 
   load() {
     this.loading.set(true);
     this.bookingService.getHotelReservations(
-      this.currentPage, this.pageSize, this.selectedStatus, this.searchTerm
+      this.currentPage, this.pageSize, this.selectedStatus, this.searchTerm,
+      this.sortField, this.sortDir
     ).subscribe({
       next: res => {
         this.reservations.set(res.reservations as ReservationDetailsDto[]);
@@ -68,7 +79,7 @@ export class ReservationManagementComponent implements OnInit {
 
   onTabChange(index: number) {
     this.selectedStatus = this.statusTabs[index];
-    this.currentPage = 1;
+    this.resetPage();
     this.load();
   }
 
@@ -78,7 +89,26 @@ export class ReservationManagementComponent implements OnInit {
 
   onPage(e: PageEvent) {
     this.currentPage = e.pageIndex + 1;
-    this.pageSize = e.pageSize;
+    this.pageSize    = e.pageSize;
+    this.load();
+  }
+
+  onSort(field: string) {
+    if (this.sortField === field) {
+      // toggle direction
+      this.sortDir = this.sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortDir   = 'asc';
+    }
+    this.resetPage();
+    this.load();
+  }
+
+  clearSort() {
+    this.sortField = '';
+    this.sortDir   = '';
+    this.resetPage();
     this.load();
   }
 

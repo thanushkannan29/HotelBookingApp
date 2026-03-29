@@ -418,7 +418,8 @@ namespace HotelBookingAppWebApi.Services
 
         // ── GET ADMIN RESERVATIONS (WITH STATUS + SEARCH FILTER) ─────────────
         public async Task<PagedReservationResponseDto> GetAdminReservationsAsync(
-            Guid adminUserId, string? status, string? search, int page, int pageSize)
+            Guid adminUserId, string? status, string? search, int page, int pageSize,
+            string? sortField = null, string? sortDir = null)
         {
             var admin = await _userRepo.GetAsync(adminUserId) ?? throw new UnAuthorizedException("Unauthorized.");
             if (admin.HotelId == null) throw new UnAuthorizedException("No hotel associated with this admin.");
@@ -439,8 +440,16 @@ namespace HotelBookingAppWebApi.Services
                     (r.User != null && r.User.Name.Contains(search)));
 
             var total = await query.CountAsync();
-            var items = await query.OrderByDescending(r => r.CreatedDate)
-                .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            bool desc = string.IsNullOrWhiteSpace(sortDir) || sortDir.ToLower() == "desc";
+            query = sortField?.ToLower() switch
+            {
+                "guestname" => desc ? query.OrderByDescending(r => r.Hotel!.Name) : query.OrderBy(r => r.Hotel!.Name),
+                "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount)  : query.OrderBy(r => r.FinalAmount),
+                _           => query.OrderByDescending(r => r.CreatedDate)
+            };
+
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
         }

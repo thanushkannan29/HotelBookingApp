@@ -10,6 +10,16 @@
 
 .filter-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
 
+.sort-row {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+  .sort-label { font-size: 0.8rem; color: var(--color-text-muted); font-weight: 500; }
+  button { font-size: 0.8rem; }
+  button.active-sort {
+    background: var(--color-primary); color: white; border-color: var(--color-primary);
+    mat-icon { font-size: 16px; height: 16px; width: 16px; vertical-align: middle; }
+  }
+}
+
 .filter-pill {
   padding: 5px 14px; border-radius: 20px;
   border: 1.5px solid var(--color-border); background: white;

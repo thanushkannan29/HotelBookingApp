@@ -194,9 +194,11 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             [FromQuery] string? status = "All",
             [FromQuery] string? search = null,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sortField = null,
+            [FromQuery] string? sortDir = null)
         {
-            var result = await _service.GetAdminReservationsAsync(GetUserId(), status, search, page, pageSize);
+            var result = await _service.GetAdminReservationsAsync(GetUserId(), status, search, page, pageSize, sortField, sortDir);
             return Ok(new { success = true, data = result });
         }
 
