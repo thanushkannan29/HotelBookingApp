@@ -193,7 +193,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       reason: this.cancelForm.get('reason')!.value!,
     }).subscribe({
       next: () => {
-        this.toast.success('Reservation cancelled. Refund request created if applicable.');
+        this.toast.success('Reservation cancelled. Refund will be credited to your wallet if applicable.');
         this.reservation.update(r => r ? { ...r, status: 'Cancelled' } : r);
         this.showCancelForm.set(false);
         this.isCancelling.set(false);
@@ -250,6 +250,10 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
     const checkIn = new Date(res.checkInDate);
     const today = new Date(); today.setHours(0,0,0,0); checkIn.setHours(0,0,0,0);
     const days = Math.round((checkIn.getTime() - today.getTime()) / 86400000);
+    if (res.cancellationFeePaid) {
+      if (days >= 1) return `Full refund of ₹${res.totalAmount.toFixed(2)} — cancellation protection active`;
+      return 'No refund — same-day cancellation not covered by protection';
+    }
     if (days >= 5) return `You will receive ₹${(res.totalAmount * 0.5).toFixed(2)} refund (50% — 5+ days before check-in)`;
     if (days >= 3) return `You will receive ₹${(res.totalAmount * 0.25).toFixed(2)} refund (25% — 3–4 days before check-in)`;
     return 'No refund applicable — within 2 days of check-in';

@@ -427,17 +427,39 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
 
   topUp() {
     if (this.topUpForm.invalid) return;
-    this.isToppingUp.set(true);
-    this.walletService.topUp({ amount: this.topUpForm.value.amount! }).subscribe({
-      next: w => {
-        this.walletInfo.set(w);
-        this.toast.success(`₹${this.topUpForm.value.amount} added to wallet!`);
-        this.topUpForm.reset({ amount: 500 });
-        this.showTopUp.set(false);
-        this.isToppingUp.set(false);
+    const amount = this.topUpForm.value.amount!;
+    const amountPaise = Math.round(amount * 100);
+
+    const options: any = {
+      key: 'rzp_test_SVtcM9b8whLPCh',
+      amount: amountPaise,
+      currency: 'INR',
+      name: '🏨 StayHub',
+      description: `Wallet Top-up — ₹${amount}`,
+      image: 'https://i.imgur.com/n5tjHFD.png',
+      theme: { color: '#2d3a8c' },
+      handler: () => {
+        this.isToppingUp.set(true);
+        this.walletService.topUp({ amount }).subscribe({
+          next: w => {
+            this.walletInfo.set(w);
+            this.toast.success(`₹${amount} added to wallet!`);
+            this.topUpForm.reset({ amount: 500 });
+            this.showTopUp.set(false);
+            this.isToppingUp.set(false);
+          },
+          error: () => this.isToppingUp.set(false)
+        });
       },
-      error: () => this.isToppingUp.set(false)
-    });
+      modal: { ondismiss: () => this.toast.error('Payment cancelled.') }
+    };
+
+    try {
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch {
+      this.toast.error('Razorpay failed to load. Please try again.');
+    }
   }
 
   createReservation() {

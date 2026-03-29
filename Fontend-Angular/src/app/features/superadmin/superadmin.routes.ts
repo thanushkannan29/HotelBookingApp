@@ -30,5 +30,9 @@ export const SUPERADMIN_ROUTES: Routes = [
     path: 'error-logs',
     loadComponent: () => import('./error-logs/error-logs.component').then(m => m.ErrorLogsComponent),
   },
+  {
+    path: 'profile',
+    loadComponent: () => import('./profile/superadmin-profile.component').then(m => m.SuperAdminProfileComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

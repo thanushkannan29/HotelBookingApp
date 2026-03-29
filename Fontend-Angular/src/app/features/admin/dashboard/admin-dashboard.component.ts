@@ -26,7 +26,10 @@ export class AdminDashboardComponent implements OnInit {
   isTogglingStatus = signal(false);
 
   ngOnInit() {
-    this.dashboardService.getAdminDashboard().subscribe(d => this.data.set(d));
+    this.dashboardService.getAdminDashboard().subscribe(d => {
+      this.data.set(d);
+      this.auth.updateHotelImage(d.hotelImageUrl ?? null);
+    });
   }
 
   toggleHotelStatus() {

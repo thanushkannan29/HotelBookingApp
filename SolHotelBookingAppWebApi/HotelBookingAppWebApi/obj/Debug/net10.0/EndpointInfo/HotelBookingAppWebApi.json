@@ -258,122 +258,6 @@
         }
       }
     },
-    "/api/admin/refund-requests": {
-      "get": {
-        "tags": [
-          "AdminRefundRequest"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/admin/refund-requests/{id}/approve": {
-      "patch": {
-        "tags": [
-          "AdminRefundRequest"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/admin/refund-requests/{id}/reject": {
-      "patch": {
-        "tags": [
-          "AdminRefundRequest"
-        ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string",
-              "format": "uuid"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            },
-            "text/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProcessRefundDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
     "/api/admin/reservations": {
       "get": {
         "tags": [
@@ -1148,38 +1032,6 @@
             }
           }
         },
-        "responses": {
-          "200": {
-            "description": "Success"
-          }
-        }
-      }
-    },
-    "/api/guest/refund-requests": {
-      "get": {
-        "tags": [
-          "GuestRefundRequest"
-        ],
-        "parameters": [
-          {
-            "name": "page",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 1
-            }
-          },
-          {
-            "name": "pageSize",
-            "in": "query",
-            "schema": {
-              "type": "integer",
-              "format": "int32",
-              "default": 10
-            }
-          }
-        ],
         "responses": {
           "200": {
             "description": "Success"
@@ -2953,27 +2805,6 @@
         ],
         "type": "integer",
         "format": "int32"
-      },
-      "ProcessRefundDto": {
-        "required": [
-          "adminResponse"
-        ],
-        "type": "object",
-        "properties": {
-          "adminResponse": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "refundPaymentMethod": {
-            "type": "string",
-            "nullable": true
-          },
-          "refundTransactionRef": {
-            "type": "string",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false
       },
       "RefundRequestDto": {
         "required": [

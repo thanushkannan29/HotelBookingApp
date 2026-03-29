@@ -60,7 +60,11 @@ namespace HotelBookingAppWebApi.Services
 
                 var d = user.UserDetails;
 
-                if (!string.IsNullOrWhiteSpace(dto.Name)) d.Name = dto.Name;
+                if (!string.IsNullOrWhiteSpace(dto.Name))
+                {
+                    d.Name = dto.Name;
+                    user.Name = dto.Name; // keep User.Name in sync so reviews show updated name
+                }
                 if (!string.IsNullOrWhiteSpace(dto.PhoneNumber)) d.PhoneNumber = dto.PhoneNumber;
                 if (!string.IsNullOrWhiteSpace(dto.Address)) d.Address = dto.Address;
                 if (!string.IsNullOrWhiteSpace(dto.State)) d.State = dto.State;

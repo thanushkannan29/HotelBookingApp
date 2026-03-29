@@ -485,8 +485,17 @@ namespace HotelBookingAppWebApi.Services
 
                     if (res.CancellationFeePaid)
                     {
-                        refundPercent = 100;
-                        refundNote = "Full refund — cancellation protection fee was paid.";
+                        // With protection: full refund if cancelled at least 1 day before check-in
+                        if (daysUntilCheckIn >= 1)
+                        {
+                            refundPercent = 100;
+                            refundNote = "Full refund — cancellation protection active, cancelled 1+ day before check-in.";
+                        }
+                        else
+                        {
+                            refundPercent = 0;
+                            refundNote = "No refund — cancelled on check-in day (protection does not cover same-day cancellation).";
+                        }
                     }
                     else if (daysUntilCheckIn >= 5)
                     {

@@ -17,9 +17,13 @@ export class AuthService {
 
   private _currentUser = signal<CurrentUser | null>(null);
   private _token = signal<string | null>(null);
+  private _profileImageUrl = signal<string | null>(null);
+  private _hotelImageUrl = signal<string | null>(null);
 
   readonly currentUser = this._currentUser.asReadonly();
   readonly token = this._token.asReadonly();
+  readonly profileImageUrl = this._profileImageUrl.asReadonly();
+  readonly hotelImageUrl = this._hotelImageUrl.asReadonly();
   readonly isAuthenticated = computed(() => !!this._currentUser());
   readonly isGuest = computed(() => this._currentUser()?.role === 'Guest');
   readonly isAdmin = computed(() => this._currentUser()?.role === 'Admin');
@@ -89,6 +93,16 @@ export class AuthService {
   updateUserName(newName: string): void {
     const user = this._currentUser();
     if (user) this._currentUser.set({ ...user, userName: newName });
+  }
+
+  /** Call after profile load/update to sync profile image in navbar */
+  updateProfileImage(url: string | null): void {
+    this._profileImageUrl.set(url);
+  }
+
+  /** Call after admin dashboard load to sync hotel image in navbar */
+  updateHotelImage(url: string | null): void {
+    this._hotelImageUrl.set(url);
   }
 
   private clearStorage(): void {

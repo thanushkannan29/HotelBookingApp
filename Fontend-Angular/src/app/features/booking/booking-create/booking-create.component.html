@@ -236,6 +236,7 @@
                             @if (isToppingUp()) { <mat-spinner diameter="18" /> } @else { Add Money }
                           </button>
                         </form>
+                        <p style="font-size:11px;color:#888;margin-top:4px;">Pay via UPI, Card, or Net Banking — powered by Razorpay</p>
                       </div>
                     }
                   </mat-card-content>
@@ -263,7 +264,8 @@
                         <div class="policy-box" [class.policy-active]="payCancellationFee()">
                           <strong style="color:#2e7d32">✅ With Protection (₹{{ cancellationFeeAmount() | number:'1.2-2' }} extra)</strong>
                           <ul style="margin:6px 0 0;padding-left:16px;font-size:13px;color:#2e7d32">
-                            <li>Cancel anytime — full refund</li>
+                            <li>Cancel up to 1 day before check-in — full refund</li>
+                            <li>Cancel on check-in day: No refund</li>
                           </ul>
                         </div>
                       </div>

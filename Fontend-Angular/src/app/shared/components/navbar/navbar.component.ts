@@ -6,13 +6,15 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../../core/services/auth.service';
+import { UserService } from '../../../core/services/api.services';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
   imports: [
-    RouterLink, RouterLinkActive,
+    CommonModule, RouterLink, RouterLinkActive,
     MatToolbarModule, MatButtonModule,
     MatIconModule, MatMenuModule, MatDividerModule, MatTooltipModule
   ],
@@ -21,6 +23,7 @@ import { AuthService } from '../../../core/services/auth.service';
 })
 export class NavbarComponent implements OnInit {
   auth = inject(AuthService);
+  private userService = inject(UserService);
   mobileOpen = signal(false);
   isDarkMode = signal(false);
 
@@ -29,6 +32,13 @@ export class NavbarComponent implements OnInit {
     if (saved === 'dark') {
       this.isDarkMode.set(true);
       document.body.classList.add('dark-theme');
+    }
+    // Load profile image for guest/superadmin on navbar init
+    if (this.auth.isAuthenticated() && (this.auth.isGuest() || this.auth.isSuperAdmin())) {
+      this.userService.getProfile().subscribe({
+        next: p => this.auth.updateProfileImage(p.profileImageUrl ?? null),
+        error: () => {}
+      });
     }
   }
 

@@ -54,8 +54,8 @@ export class GuestProfileComponent implements OnInit {
         pincode: p.pincode,
         profileImageUrl: p.profileImageUrl ?? '',
       });
-      // F2D: patch city separately
       this.cityControl.setValue(p.city ?? '');
+      this.auth.updateProfileImage(p.profileImageUrl ?? null);
     });
   }
 
@@ -71,8 +71,8 @@ export class GuestProfileComponent implements OnInit {
         this.isEditing.set(false);
         this.isSaving.set(false);
         this.toast.success('Profile updated successfully.');
-        // Sync the new name into the auth signal so navbar/dashboard update immediately
         if (updated.name) this.auth.updateUserName(updated.name);
+        this.auth.updateProfileImage(updated.profileImageUrl ?? null);
       },
       error: () => this.isSaving.set(false),
     });

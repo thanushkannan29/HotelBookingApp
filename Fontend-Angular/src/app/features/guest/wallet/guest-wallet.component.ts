@@ -14,6 +14,8 @@ import { WalletService } from '../../../core/services/wallet.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { WalletResponseDto, WalletTransactionDto } from '../../../core/models/models';
 
+declare var Razorpay: any;
+
 @Component({
   selector: 'app-guest-wallet',
   standalone: true,
@@ -47,16 +49,17 @@ import { WalletResponseDto, WalletTransactionDto } from '../../../core/models/mo
                 <mat-card-title>💳 Add Money</mat-card-title>
               </mat-card-header>
               <mat-card-content>
-                <form [formGroup]="topUpForm" (ngSubmit)="topUp()" class="d-flex gap-3 align-items-start mt-2">
+                <form [formGroup]="topUpForm" (ngSubmit)="openRazorpay()" class="d-flex gap-3 align-items-start mt-2">
                   <mat-form-field appearance="outline" class="flex-grow-1">
                     <mat-label>Amount (₹)</mat-label>
                     <input matInput type="number" formControlName="amount" min="1" max="100000" />
                     <mat-error>Enter a valid amount (1–1,00,000)</mat-error>
                   </mat-form-field>
                   <button mat-raised-button color="primary" type="submit" [disabled]="topUpForm.invalid || topping()">
-                    @if (topping()) { <mat-spinner diameter="20" /> } @else { Add Money }
+                    @if (topping()) { <mat-spinner diameter="20" /> } @else { 💳 Add Money }
                   </button>
                 </form>
+                <p style="font-size:12px;color:#888;margin-top:4px;">Pay via UPI, Card, or Net Banking — powered by Razorpay</p>
               </mat-card-content>
             </mat-card>
           </div>
@@ -131,10 +134,21 @@ export class GuestWalletComponent implements OnInit {
   displayedColumns = ['description', 'amount', 'type', 'date'];
 
   topUpForm = this.fb.group({
-    amount: [null, [Validators.required, Validators.min(1), Validators.max(100000)]]
+    amount: [null as number | null, [Validators.required, Validators.min(1), Validators.max(100000)]]
   });
 
-  ngOnInit() { this.load(1, this.pageSize); }
+  ngOnInit() {
+    this.loadRazorpay();
+    this.load(1, this.pageSize);
+  }
+
+  private loadRazorpay() {
+    if (typeof Razorpay !== 'undefined') return;
+    const script = document.createElement('script');
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.async = true;
+    document.head.appendChild(script);
+  }
 
   load(page: number, pageSize: number) {
     this.loading.set(true);
@@ -149,19 +163,41 @@ export class GuestWalletComponent implements OnInit {
     });
   }
 
-  topUp() {
+  openRazorpay() {
     if (this.topUpForm.invalid) return;
-    this.topping.set(true);
-    this.walletService.topUp({ amount: this.topUpForm.value.amount! }).subscribe({
-      next: w => {
-        this.wallet.set(w);
-        this.toast.success(`₹${this.topUpForm.value.amount} added to wallet!`);
-        this.topUpForm.reset();
-        this.topping.set(false);
-        this.load(1, this.pageSize);
+    const amount = this.topUpForm.value.amount!;
+    const amountPaise = Math.round(amount * 100);
+
+    const options: any = {
+      key: 'rzp_test_SVtcM9b8whLPCh',
+      amount: amountPaise,
+      currency: 'INR',
+      name: '🏨 StayHub',
+      description: `Wallet Top-up — ₹${amount}`,
+      image: 'https://i.imgur.com/n5tjHFD.png',
+      theme: { color: '#2d3a8c' },
+      handler: () => {
+        this.topping.set(true);
+        this.walletService.topUp({ amount }).subscribe({
+          next: w => {
+            this.wallet.set(w);
+            this.toast.success(`₹${amount} added to wallet!`);
+            this.topUpForm.reset();
+            this.topping.set(false);
+            this.load(1, this.pageSize);
+          },
+          error: () => this.topping.set(false)
+        });
       },
-      error: () => this.topping.set(false)
-    });
+      modal: { ondismiss: () => this.toast.error('Payment cancelled.') }
+    };
+
+    try {
+      const rzp = new Razorpay(options);
+      rzp.open();
+    } catch {
+      this.toast.error('Razorpay failed to load. Please try again.');
+    }
   }
 
   onPage(e: PageEvent) { this.load(e.pageIndex + 1, e.pageSize); }

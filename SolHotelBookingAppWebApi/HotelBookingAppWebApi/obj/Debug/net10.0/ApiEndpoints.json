@@ -153,69 +153,6 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRefundRequestController",
-    "Method": "GetAll",
-    "RelativePath": "api/admin/refund-requests",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRefundRequestController",
-    "Method": "Approve",
-    "RelativePath": "api/admin/refund-requests/{id}/approve",
-    "HttpMethod": "PATCH",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.RefundRequest.ProcessRefundDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRefundRequestController",
-    "Method": "Reject",
-    "RelativePath": "api/admin/refund-requests/{id}/reject",
-    "HttpMethod": "PATCH",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "id",
-        "Type": "System.Guid",
-        "IsRequired": true
-      },
-      {
-        "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Models.DTOs.RefundRequest.ProcessRefundDto",
-        "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
     "Method": "GetAll",
     "RelativePath": "api/admin/reservations",
@@ -691,27 +628,6 @@
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.PromoCode.ValidatePromoCodeDto",
         "IsRequired": true
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.GuestRefundRequestController",
-    "Method": "GetMyRefundRequests",
-    "RelativePath": "api/guest/refund-requests",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
       }
     ],
     "ReturnTypes": []

@@ -56,7 +56,17 @@
 
       @if (auth.isAuthenticated()) {
         <button class="user-btn" [matMenuTriggerFor]="userMenu">
-          <div class="avatar">{{ (auth.currentUser()?.userName ?? 'U')[0].toUpperCase() }}</div>
+          <div class="avatar">
+            @if (auth.isGuest() && auth.profileImageUrl()) {
+              <img [src]="auth.profileImageUrl()!" alt="profile" class="avatar-img" />
+            } @else if (auth.isAdmin() && auth.hotelImageUrl()) {
+              <img [src]="auth.hotelImageUrl()!" alt="hotel" class="avatar-img" />
+            } @else if (auth.isSuperAdmin() && auth.profileImageUrl()) {
+              <img [src]="auth.profileImageUrl()!" alt="profile" class="avatar-img" />
+            } @else {
+              {{ (auth.currentUser()?.userName ?? 'U')[0].toUpperCase() }}
+            }
+          </div>
           <span class="user-name">{{ auth.currentUser()?.userName }}</span>
           <mat-icon>expand_more</mat-icon>
         </button>
@@ -73,6 +83,9 @@
           @if (auth.isAdmin()) {
             <a mat-menu-item routerLink="/admin/hotel"><mat-icon>hotel</mat-icon> My Hotel</a>
             <a mat-menu-item routerLink="/admin/audit-logs"><mat-icon>history</mat-icon> Audit Logs</a>
+          }
+          @if (auth.isSuperAdmin()) {
+            <a mat-menu-item routerLink="/superadmin/profile"><mat-icon>person</mat-icon> Profile</a>
           }
           <mat-divider />
           <button mat-menu-item class="logout-btn" (click)="auth.logout()">
