@@ -1,10 +1,10 @@
-﻿import { Component, inject, signal, OnInit, OnDestroy } from '@angular/core';
+﻿import { Component, inject, signal, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -33,6 +33,8 @@ export class BookingListComponent implements OnInit, OnDestroy {
   private bookingService = inject(BookingService);
   private router         = inject(Router);
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   reservations = signal<ReservationDetailsDto[]>([]);
   totalCount   = signal(0);
   loading      = signal(false);
@@ -52,7 +54,7 @@ export class BookingListComponent implements OnInit, OnDestroy {
     this.load();
     this.timer = setInterval(() => this.updateCountdowns(), 1000);
     this.searchSubject.pipe(debounceTime(400), distinctUntilChanged())
-      .subscribe(s => { this.searchTerm = s; this.currentPage = 1; this.load(); });
+      .subscribe(s => { this.searchTerm = s; this.currentPage = 1; this.paginator?.firstPage(); this.load(); });
   }
 
   ngOnDestroy() {
@@ -110,6 +112,7 @@ export class BookingListComponent implements OnInit, OnDestroy {
   onTabChange(index: number) {
     this.selectedStatus = this.statusTabs[index];
     this.currentPage = 1;
+    this.paginator?.firstPage();
     this.load();
   }
 

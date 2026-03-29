@@ -1,0 +1,75 @@
+<div class="page-wrapper">
+  <div class="container" style="max-width:860px;">
+    <div class="page-header-row">
+      <div>
+        <h1 class="section-title">🎫 My Promo Codes</h1>
+        <p class="section-subtitle">{{ totalCount() }} promo codes</p>
+      </div>
+    </div>
+
+    <mat-tab-group (selectedIndexChange)="onTabChange($event)" class="mb-3">
+      @for (tab of statusTabs; track tab) {
+        <mat-tab [label]="tab" />
+      }
+    </mat-tab-group>
+
+    <div class="table-card">
+      @if (loading()) {
+        <div class="spinner-wrap"><mat-spinner diameter="40" /></div>
+      }
+
+      <mat-table [dataSource]="codes()" [class.hidden]="loading()">
+
+        <ng-container matColumnDef="code">
+          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+          <mat-cell *matCellDef="let c">
+            <span class="code-tag">{{ c.code }}</span>
+            <button mat-icon-button (click)="copy(c.code)" matTooltip="Copy">
+              <mat-icon style="font-size:16px;">content_copy</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="hotel">
+          <mat-header-cell *matHeaderCellDef>Hotel</mat-header-cell>
+          <mat-cell *matCellDef="let c">{{ c.hotelName }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="discount">
+          <mat-header-cell *matHeaderCellDef>Discount</mat-header-cell>
+          <mat-cell *matCellDef="let c"><strong>{{ c.discountPercent }}%</strong></mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="expiry">
+          <mat-header-cell *matHeaderCellDef>Expires</mat-header-cell>
+          <mat-cell *matCellDef="let c">{{ c.expiryDate | date:'MMM d, y' }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let c">
+            <span class="badge {{ statusClass(c.status) }}">{{ c.status }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:40px;color:#999;">
+            No promo codes found. Complete a stay to earn one!
+          </td>
+        </tr>
+      </mat-table>
+
+      <!-- Always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>

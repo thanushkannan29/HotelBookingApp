@@ -38,13 +38,27 @@ namespace HotelBookingAppWebApi.Services
             return promos.Select(MapToDto);
         }
 
-        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize)
+        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize, string? status = null)
         {
             var query = _promoRepo.GetQueryable()
                 .Include(p => p.Hotel)
                 .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.CreatedAt);
+                .AsQueryable();
 
+            // Apply status filter in memory after mapping (status is computed, not a DB column)
+            var now = DateTime.UtcNow;
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+            {
+                query = status switch
+                {
+                    "Active"  => query.Where(p => !p.IsUsed && p.ExpiryDate >= now),
+                    "Used"    => query.Where(p => p.IsUsed),
+                    "Expired" => query.Where(p => !p.IsUsed && p.ExpiryDate < now),
+                    _         => query
+                };
+            }
+
+            query = query.OrderByDescending(p => p.CreatedAt);
             var total = await query.CountAsync();
             var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 

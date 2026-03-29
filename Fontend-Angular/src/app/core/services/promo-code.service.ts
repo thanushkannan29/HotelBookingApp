@@ -12,8 +12,9 @@ export class PromoCodeService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getMyCodes(page = 1, pageSize = 10): Observable<PagedPromoCodeResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getMyCodes(page = 1, pageSize = 10, status = 'All'): Observable<PagedPromoCodeResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (status && status !== 'All') params = params.set('status', status);
     return this.http.get<ApiResponse<PagedPromoCodeResponseDto>>(
       `${this.base}/guest/promo-codes`, { params }
     ).pipe(map(r => r.data!));

@@ -88,87 +88,85 @@
       </div>
     }
 
-    <!-- F5: Reviews MatTable -->
-    @if (reviews().length > 0) {
-      <div class="table-toolbar" style="margin-top:24px;">
-        <mat-form-field appearance="outline" class="search-field">
-          <mat-label>Search reviews</mat-label>
-          <mat-icon matPrefix>search</mat-icon>
-          <input matInput (keyup)="applyFilter($event)" placeholder="Hotel, comment…" />
-        </mat-form-field>
-      </div>
+    <!-- Reviews Table -->
+    <div style="margin-top:24px;">
+      <div class="table-card">
+        @if (loading()) {
+          <div class="spinner-wrap"><mat-spinner diameter="40" /></div>
+        }
 
-      <div class="mat-elevation-z1 table-card">
-        <table mat-table [dataSource]="dataSource" matSort>
+        <mat-table [dataSource]="reviews()" [class.hidden]="loading()">
 
           <!-- Hotel -->
           <ng-container matColumnDef="hotel">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Hotel</th>
-            <td mat-cell *matCellDef="let r"><strong>{{ r.hotelName }}</strong></td>
+            <mat-header-cell *matHeaderCellDef>Hotel</mat-header-cell>
+            <mat-cell *matCellDef="let r"><strong>{{ r.hotelName }}</strong></mat-cell>
           </ng-container>
 
-          <!-- F6C: Stay / Reservation Code -->
           <ng-container matColumnDef="stay">
-            <th mat-header-cell *matHeaderCellDef>Stay</th>
-            <td mat-cell *matCellDef="let r">
+            <mat-header-cell *matHeaderCellDef>Stay</mat-header-cell>
+            <mat-cell *matCellDef="let r">
               <span class="stay-code">{{ r.reservationCode }}</span>
-            </td>
+            </mat-cell>
           </ng-container>
 
-          <!-- Rating -->
           <ng-container matColumnDef="rating">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Rating</th>
-            <td mat-cell *matCellDef="let r">
+            <mat-header-cell *matHeaderCellDef>Rating</mat-header-cell>
+            <mat-cell *matCellDef="let r">
               <div class="star-display-inline">
                 @for (s of stars; track s) {
                   <mat-icon class="star-icon-sm" [class.filled]="s <= r.rating">star</mat-icon>
                 }
                 <span class="rating-num">{{ r.rating }}/5</span>
               </div>
-            </td>
+            </mat-cell>
           </ng-container>
 
-          <!-- Comment -->
           <ng-container matColumnDef="comment">
-            <th mat-header-cell *matHeaderCellDef>Comment</th>
-            <td mat-cell *matCellDef="let r">
+            <mat-header-cell *matHeaderCellDef>Comment</mat-header-cell>
+            <mat-cell *matCellDef="let r">
               <span class="comment-preview" [matTooltip]="r.comment">
                 {{ r.comment.length > 60 ? (r.comment | slice:0:60) + '…' : r.comment }}
               </span>
-            </td>
+            </mat-cell>
           </ng-container>
 
-          <!-- Date -->
           <ng-container matColumnDef="date">
-            <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
-            <td mat-cell *matCellDef="let r">
+            <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
+            <mat-cell *matCellDef="let r">
               {{ r.createdDate | date:'MMM d, y' }}
               <span class="contribution-badge">🏆 +100 pts</span>
-            </td>
+            </mat-cell>
           </ng-container>
 
-          <!-- Actions -->
           <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let r">
-              <button mat-icon-button (click)="startEdit(r)" matTooltip="Edit review">
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <button mat-icon-button (click)="startEdit(r)" matTooltip="Edit">
                 <mat-icon>edit</mat-icon>
               </button>
-              <button mat-icon-button color="warn" (click)="deleteReview(r.reviewId)"
-                      matTooltip="Delete review">
+              <button mat-icon-button color="warn" (click)="deleteReview(r.reviewId)" matTooltip="Delete">
                 <mat-icon>delete</mat-icon>
               </button>
-            </td>
+            </mat-cell>
           </ng-container>
 
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
 
           <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">No reviews match</td>
+            <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">No reviews yet</td>
           </tr>
-        </table>
-        <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons />
+        </mat-table>
+
+        <!-- Always in DOM -->
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[5, 10, 25]"
+          showFirstLastButtons
+          (page)="onPage($event)"
+        />
       </div>
 
       <!-- Inline edit form (shown below table) -->
@@ -206,6 +204,6 @@
           </form>
         </div>
       }
-    }
+    </div>
   </div>
 </div>

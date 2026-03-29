@@ -3,62 +3,65 @@
     <div class="page-header-row">
       <div>
         <h1 class="section-title">My Transactions</h1>
-        <p class="section-subtitle">Your full payment history</p>
+        <p class="section-subtitle">{{ totalCount() }} total transactions</p>
       </div>
       <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Refresh</button>
     </div>
 
     @if (loading()) {
       <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
-    } @else if (transactions().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">receipt_long</mat-icon>
-        <h3>No transactions yet</h3>
-      </div>
-    } @else {
-      <div class="tx-list">
-        @for (tx of transactions(); track tx.transactionId) {
-          <div class="tx-card">
-            <div class="tx-main">
-              <div class="tx-icon" [class]="txIconClass(tx)">
-                <mat-icon>{{ txIcon(tx) }}</mat-icon>
-              </div>
-              <div class="tx-info">
-                <div class="tx-method">{{ txLabel(tx) }}</div>
-                @if (tx.hotelName) {
-                  <div class="tx-hotel">🏨 {{ tx.hotelName }}</div>
-                }
-                @if (tx.reservationCode) {
-                  <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
-                }
-                @if (tx.description) {
-                  <div class="tx-code">{{ tx.description }}</div>
-                }
-                <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
-              </div>
-              <div class="tx-right">
-                <div class="tx-amount" [style.color]="amountColor(tx)">
-                  {{ tx.transactionType === 'WalletRefund' ? '+' : '' }}₹{{ tx.amount | number:'1.0-0' }}
+    }
+
+    <div [class.hidden]="loading()">
+      @if (!loading() && transactions().length === 0) {
+        <div class="empty-state">
+          <mat-icon class="empty-icon">receipt_long</mat-icon>
+          <h3>No transactions yet</h3>
+        </div>
+      } @else {
+        <div class="tx-list">
+          @for (tx of transactions(); track tx.transactionId) {
+            <div class="tx-card">
+              <div class="tx-main">
+                <div class="tx-icon" [class]="txIconClass(tx)">
+                  <mat-icon>{{ txIcon(tx) }}</mat-icon>
                 </div>
-                <span class="badge" [class]="statusClass(tx.status)">{{ paymentStatusLabel(tx.status) }}</span>
-                @if (tx.transactionType === 'WalletRefund') {
-                  <span class="badge badge-info" style="margin-top:2px;">Wallet Refund</span>
-                }
+                <div class="tx-info">
+                  <div class="tx-method">{{ txLabel(tx) }}</div>
+                  @if (tx.hotelName) {
+                    <div class="tx-hotel">🏨 {{ tx.hotelName }}</div>
+                  }
+                  @if (tx.reservationCode) {
+                    <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
+                  }
+                  @if (tx.description) {
+                    <div class="tx-code">{{ tx.description }}</div>
+                  }
+                  <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
+                </div>
+                <div class="tx-right">
+                  <div class="tx-amount" [style.color]="amountColor(tx)">
+                    {{ tx.transactionType === 'WalletRefund' ? '+' : '' }}₹{{ tx.amount | number:'1.0-0' }}
+                  </div>
+                  <span class="badge" [class]="statusClass(tx.status)">{{ paymentStatusLabel(tx.status) }}</span>
+                  @if (tx.transactionType === 'WalletRefund') {
+                    <span class="badge badge-info" style="margin-top:2px;">Wallet Refund</span>
+                  }
+                </div>
               </div>
             </div>
-          </div>
-        }
-      </div>
+          }
+        </div>
+      }
 
-      <div class="pagination">
-        <button mat-stroked-button [disabled]="currentPage === 1" (click)="currentPage = currentPage - 1; load()">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        <span>Page {{ currentPage }}</span>
-        <button mat-stroked-button [disabled]="transactions().length < pageSize" (click)="currentPage = currentPage + 1; load()">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-      </div>
-    }
+      <!-- Always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[10, 25, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
   </div>
 </div>

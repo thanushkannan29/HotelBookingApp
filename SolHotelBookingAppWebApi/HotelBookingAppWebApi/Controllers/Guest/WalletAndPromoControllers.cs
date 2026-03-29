@@ -46,9 +46,12 @@ namespace HotelBookingAppWebApi.Controllers.Guest
 
         /// <summary>List all promo codes for the current guest</summary>
         [HttpGet]
-        public async Task<IActionResult> GetMine([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetMine(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null)
         {
-            var result = await _service.GetGuestPromoCodesPagedAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetGuestPromoCodesPagedAsync(GetUserId(), page, pageSize, status);
             return Ok(new { success = true, data = result });
         }
 

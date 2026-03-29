@@ -73,10 +73,10 @@ declare var Razorpay: any;
             <mat-card-title>🧾 Transaction History</mat-card-title>
           </mat-card-header>
           <mat-card-content>
-            @if (transactions().length === 0) {
+            @if (transactions().length === 0 && !loading()) {
               <div class="text-center py-4 text-muted">No transactions yet.</div>
-            } @else {
-              <table mat-table [dataSource]="transactions()" class="w-100">
+            }
+            <table mat-table [dataSource]="transactions()" class="w-100" [class.d-none]="transactions().length === 0 && !loading()">
                 <ng-container matColumnDef="description">
                   <th mat-header-cell *matHeaderCellDef>Description</th>
                   <td mat-cell *matCellDef="let t">{{ t.description }}</td>
@@ -109,7 +109,6 @@ declare var Razorpay: any;
                 showFirstLastButtons
                 (page)="onPage($event)"
               />
-            }
           </mat-card-content>
         </mat-card>
       }
@@ -202,5 +201,5 @@ export class GuestWalletComponent implements OnInit {
     }
   }
 
-  onPage(e: PageEvent) { this.load(e.pageIndex + 1, e.pageSize); }
+  onPage(e: PageEvent) { this.pageSize = e.pageSize; this.load(e.pageIndex + 1, e.pageSize); }
 }
