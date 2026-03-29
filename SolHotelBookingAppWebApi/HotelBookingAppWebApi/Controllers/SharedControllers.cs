@@ -232,9 +232,12 @@ namespace HotelBookingAppWebApi.Controllers
 
         [HttpGet]
         [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null)
         {
-            var result = await _service.GetAllLogsAsync(page, pageSize);
+            var result = await _service.GetAllLogsAsync(page, pageSize, search);
             return Ok(new { success = true, data = result });
         }
     }

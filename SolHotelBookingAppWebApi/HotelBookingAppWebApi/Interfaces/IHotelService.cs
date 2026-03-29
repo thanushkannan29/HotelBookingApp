@@ -24,7 +24,7 @@ namespace HotelBookingAppWebApi.Interfaces
 
         // ── SuperAdmin ────────────────────────────────────────────────────────
         Task<IEnumerable<SuperAdminHotelListDto>> GetAllHotelsForSuperAdminAsync();
-        Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(int page, int pageSize);
+        Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(int page, int pageSize, string? search = null, string? status = null);
         Task BlockHotelAsync(Guid hotelId);
         Task UnblockHotelAsync(Guid hotelId);
     }

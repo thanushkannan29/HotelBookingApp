@@ -1060,6 +1060,13 @@
               "format": "int32",
               "default": 10
             }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {

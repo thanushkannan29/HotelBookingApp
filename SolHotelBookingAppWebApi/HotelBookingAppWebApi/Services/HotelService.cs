@@ -542,12 +542,28 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── SUPERADMIN: LIST ALL HOTELS (paged) ───────────────────────────────
-        public async Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(int page, int pageSize)
+        public async Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(
+            int page, int pageSize, string? search = null, string? status = null)
         {
-            var totalCount = await _hotelRepo.GetQueryable().CountAsync();
+            var query = _hotelRepo.GetQueryable().AsNoTracking().AsQueryable();
 
-            var hotels = await _hotelRepo.GetQueryable()
-                .AsNoTracking()
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(h => h.Name.Contains(search) || h.City.Contains(search));
+
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+            {
+                query = status switch
+                {
+                    "Active"   => query.Where(h => h.IsActive && !h.IsBlockedBySuperAdmin),
+                    "Inactive" => query.Where(h => !h.IsActive && !h.IsBlockedBySuperAdmin),
+                    "Blocked"  => query.Where(h => h.IsBlockedBySuperAdmin),
+                    _          => query
+                };
+            }
+
+            var totalCount = await query.CountAsync();
+
+            var hotels = await query
                 .OrderBy(h => h.Name)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)

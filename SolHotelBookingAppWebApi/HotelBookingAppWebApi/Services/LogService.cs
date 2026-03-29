@@ -37,12 +37,21 @@ namespace HotelBookingAppWebApi.Services
             };
 
         // ── ALL LOGS (SuperAdmin) ─────────────────────────────────────────────
-        public async Task<PagedLogResponseDto> GetAllLogsAsync(int page, int pageSize)
+        public async Task<PagedLogResponseDto> GetAllLogsAsync(int page, int pageSize, string? search = null)
         {
             if (page <= 0 || pageSize <= 0)
                 throw new AppException("Invalid pagination parameters.", 400);
 
-            var query = _logRepo.GetQueryable().OrderByDescending(l => l.CreatedAt);
+            var query = _logRepo.GetQueryable().AsQueryable();
+
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(l =>
+                    l.RequestPath.Contains(search) ||
+                    l.ExceptionType.Contains(search) ||
+                    l.UserName.Contains(search) ||
+                    l.Message.Contains(search));
+
+            query = query.OrderByDescending(l => l.CreatedAt);
             var total = await query.CountAsync();
             var logs = await query.Skip((page - 1) * pageSize).Take(pageSize).Select(LogSelector).ToListAsync();
 

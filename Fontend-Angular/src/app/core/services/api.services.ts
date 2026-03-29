@@ -202,8 +202,9 @@ export class LogService {
     ).pipe(map(r => r.data!));
   }
 
-  getAllLogs(page: number, pageSize: number): Observable<PagedLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
+  getAllLogs(page: number, pageSize: number, search?: string): Observable<PagedLogResponseDto> {
+    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
+    if (search?.trim()) params = params.set('search', search.trim());
     return this.http.get<ApiResponse<PagedLogResponseDto>>(
       `${this.base}/logs`, { params }
     ).pipe(map(r => r.data!));

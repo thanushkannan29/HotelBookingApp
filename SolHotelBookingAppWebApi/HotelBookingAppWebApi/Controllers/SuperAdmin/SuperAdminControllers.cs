@@ -19,9 +19,13 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
         /// Returns { totalCount, hotels } for Angular Material paginator.
         /// </summary>
         [HttpGet]
-        public async Task<IActionResult> GetAll([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetAll(
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? search = null,
+            [FromQuery] string? status = null)
         {
-            var result = await _service.GetAllHotelsForSuperAdminPagedAsync(page, pageSize);
+            var result = await _service.GetAllHotelsForSuperAdminPagedAsync(page, pageSize, search, status);
             return Ok(new { success = true, data = result });
         }
 
