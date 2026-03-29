@@ -34,7 +34,7 @@ export interface InputDialogData {
       <mat-dialog-actions align="end">
         <button mat-stroked-button [mat-dialog-close]="null">Cancel</button>
         <button mat-flat-button [color]="data.confirmColor || 'primary'"
-                [disabled]="!value?.trim()"
+                [disabled]="!value.trim()"
                 [mat-dialog-close]="value">
           {{ data.confirmLabel || 'Submit' }}
         </button>
