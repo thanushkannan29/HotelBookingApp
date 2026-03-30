@@ -24,7 +24,7 @@
         <div class="text-center py-5"><mat-spinner diameter="48" /></div>
       }
 
-      <mat-table [dataSource]="logs()" [class.hidden]="loading()">
+      <mat-table [dataSource]="logs()" multiTemplateDataRows [class.hidden]="loading()">
 
         <ng-container matColumnDef="statusCode">
           <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
@@ -67,8 +67,46 @@
           </mat-cell>
         </ng-container>
 
+        <!-- Inline detail row -->
+        <ng-container matColumnDef="expandedDetail">
+          <mat-cell *matCellDef="let log" [attr.colspan]="displayedColumns.length" class="detail-cell">
+            @if (expandedRow()?.logId === log.logId) {
+              <div class="log-detail-panel">
+                <div class="log-detail-grid">
+                  <div>
+                    <span class="ld-label">Message</span>
+                    <span class="ld-value">{{ log.message }}</span>
+                  </div>
+                  <div>
+                    <span class="ld-label">Exception</span>
+                    <span class="ld-value exception">{{ log.exceptionType }}</span>
+                  </div>
+                  <div>
+                    <span class="ld-label">Controller / Action</span>
+                    <span class="ld-value">{{ log.controller }} / {{ log.action }}</span>
+                  </div>
+                </div>
+                @if (log.stackTrace) {
+                  <div class="stacktrace">
+                    <div class="st-label">Stack Trace</div>
+                    <pre class="st-content">{{ log.stackTrace }}</pre>
+                  </div>
+                }
+              </div>
+            }
+          </mat-cell>
+        </ng-container>
+
         <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-        <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleRow(row)" style="cursor:pointer;"></mat-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"
+                 (click)="toggleRow(row)"
+                 style="cursor:pointer;"
+                 [class.expanded-row]="expandedRow()?.logId === row.logId">
+        </mat-row>
+        <mat-row *matRowDef="let row; columns: ['expandedDetail']"
+                 class="detail-row"
+                 [class.collapsed]="expandedRow()?.logId !== row.logId">
+        </mat-row>
 
         <tr class="mat-row" *matNoDataRow>
           <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
@@ -77,24 +115,6 @@
         </tr>
       </mat-table>
 
-      <!-- Expanded detail -->
-      @if (expandedRow(); as log) {
-        <div class="log-detail-panel">
-          <div class="log-detail-grid">
-            <div><span class="ld-label">Message</span><span class="ld-value">{{ log.message }}</span></div>
-            <div><span class="ld-label">Exception</span><span class="ld-value exception">{{ log.exceptionType }}</span></div>
-            <div><span class="ld-label">Controller / Action</span><span class="ld-value">{{ log.controller }} / {{ log.action }}</span></div>
-          </div>
-          @if (log.stackTrace) {
-            <div class="stacktrace">
-              <div class="st-label">Stack Trace</div>
-              <pre class="st-content">{{ log.stackTrace }}</pre>
-            </div>
-          }
-        </div>
-      }
-
-      <!-- Always in DOM -->
       <mat-paginator
         [length]="totalCount()"
         [pageSize]="pageSize"

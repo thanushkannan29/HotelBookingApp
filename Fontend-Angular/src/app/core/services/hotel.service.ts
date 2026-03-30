@@ -4,7 +4,7 @@ import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
   ApiResponse, HotelListItemDto, HotelDetailsDto, SearchHotelRequestDto,
-  SearchHotelResponseDto, RoomTypePublicDto, RoomAvailabilityDto,
+  SearchHotelResponseDto, RoomAvailabilityDto,
   UpdateHotelDto, SuperAdminHotelListDto, PagedSuperAdminHotelResponseDto,
   AmenityResponseDto,
 } from '../models/models';
@@ -60,12 +60,6 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
-  getRoomTypes(hotelId: string): Observable<RoomTypePublicDto[]> {
-    return this.http.get<ApiResponse<RoomTypePublicDto[]>>(
-      `${this.base}/public/hotels/${hotelId}/roomtypes`
-    ).pipe(map(r => r.data!));
-  }
-
   getAvailability(hotelId: string, checkIn: string, checkOut: string): Observable<RoomAvailabilityDto[]> {
     const params = new HttpParams().set('checkIn', checkIn).set('checkOut', checkOut);
     return this.http.get<ApiResponse<RoomAvailabilityDto[]>>(
@@ -73,7 +67,6 @@ export class HotelService {
     ).pipe(map(r => r.data!));
   }
 
-  // F9A: Amenities from API
   getAmenities(): Observable<AmenityResponseDto[]> {
     return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
       .pipe(map(r => r.data ?? []));
@@ -104,11 +97,6 @@ export class HotelService {
 
   unblockHotel(id: string): Observable<void> {
     return this.http.patch<any>(`${this.base}/superadmin/hotels/${id}/unblock`, {})
-      .pipe(map(() => undefined));
-  }
-
-  setHotelGst(gstPercent: number): Observable<void> {
-    return this.http.patch<any>(`${this.base}/admin/hotels/gst`, { gstPercent })
       .pipe(map(() => undefined));
   }
 }

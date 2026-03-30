@@ -46,12 +46,15 @@ describe('HotelListComponent', () => {
 
   beforeEach(async () => {
     hotelSpy = jasmine.createSpyObj('HotelService', [
-      'getTopHotels', 'getCities', 'searchHotels'
+      'getTopHotels', 'getCities', 'getActiveStates', 'getHotelsByState', 'getAmenities', 'searchHotelsWithFilters'
     ]);
 
     hotelSpy.getTopHotels.and.returnValue(of(MOCK_TOP_HOTELS));
     hotelSpy.getCities.and.returnValue(of(MOCK_CITIES));
-    hotelSpy.searchHotels.and.returnValue(of(MOCK_SEARCH_RESPONSE));
+    hotelSpy.getActiveStates.and.returnValue(of([]));
+    hotelSpy.getHotelsByState.and.returnValue(of([]));
+    hotelSpy.getAmenities.and.returnValue(of([]));
+    hotelSpy.searchHotelsWithFilters.and.returnValue(of(MOCK_SEARCH_RESPONSE));
 
     await TestBed.configureTestingModule({
       imports: [HotelListComponent],
@@ -159,7 +162,7 @@ describe('HotelListComponent', () => {
 
   // ── search() — HAPPY PATH ──────────────────────────────────────────────────
 
-  it('search() — should call searchHotels with formatted dates and city', () => {
+  it('search() — should call searchHotelsWithFilters with formatted dates and city', () => {
     component.searchForm.patchValue({
       city:     'Chennai',
       checkIn:  new Date('2025-06-01'),
@@ -168,7 +171,7 @@ describe('HotelListComponent', () => {
 
     component.search();
 
-    expect(hotelSpy.searchHotels).toHaveBeenCalledOnceWith(
+    expect(hotelSpy.searchHotelsWithFilters).toHaveBeenCalledOnceWith(
       jasmine.objectContaining({
         city:       'Chennai',
         checkIn:    '2025-06-01',
@@ -225,43 +228,43 @@ describe('HotelListComponent', () => {
 
   // ── search() — INCOMPLETE FORM ─────────────────────────────────────────────
 
-  it('search() — should NOT call searchHotels when city is missing', () => {
-    hotelSpy.searchHotels.calls.reset();
+  it('search() — should NOT call searchHotelsWithFilters when city is missing', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
     component.searchForm.patchValue({
       city: '', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
     });
 
     component.search();
 
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
   });
 
-  it('search() — should NOT call searchHotels when checkIn is null', () => {
-    hotelSpy.searchHotels.calls.reset();
+  it('search() — should NOT call searchHotelsWithFilters when checkIn is null', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
     component.searchForm.patchValue({
       city: 'Chennai', checkIn: null, checkOut: new Date('2025-06-03')
     });
 
     component.search();
 
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
   });
 
-  it('search() — should NOT call searchHotels when checkOut is null', () => {
-    hotelSpy.searchHotels.calls.reset();
+  it('search() — should NOT call searchHotelsWithFilters when checkOut is null', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
     component.searchForm.patchValue({
       city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: null
     });
 
     component.search();
 
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
   });
 
   // ── search() — ERROR ───────────────────────────────────────────────────────
 
   it('search() — should reset isSearching to false on API error', () => {
-    hotelSpy.searchHotels.and.returnValue(throwError(() => new Error('fail')));
+    hotelSpy.searchHotelsWithFilters.and.returnValue(throwError(() => new Error('fail')));
     component.searchForm.patchValue({
       city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
     });
@@ -272,7 +275,7 @@ describe('HotelListComponent', () => {
   });
 
   it('search() — should NOT populate searchResults on API error', () => {
-    hotelSpy.searchHotels.and.returnValue(throwError(() => new Error('fail')));
+    hotelSpy.searchHotelsWithFilters.and.returnValue(throwError(() => new Error('fail')));
     component.searchForm.patchValue({
       city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
     });
@@ -314,24 +317,24 @@ describe('HotelListComponent', () => {
 
   // ── loadMore() ─────────────────────────────────────────────────────────────
 
-  it('loadMore() — should call searchHotels with incremented pageNumber', () => {
+  it('loadMore() — should call searchHotelsWithFilters with incremented pageNumber', () => {
     component.searchForm.patchValue({
       city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
     });
     component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
     component.currentPage.set(1);
-    hotelSpy.searchHotels.calls.reset();
+    hotelSpy.searchHotelsWithFilters.calls.reset();
 
     component.loadMore();
 
-    expect(hotelSpy.searchHotels).toHaveBeenCalledWith(
+    expect(hotelSpy.searchHotelsWithFilters).toHaveBeenCalledWith(
       jasmine.objectContaining({ pageNumber: 2, pageSize: 9 })
     );
   });
 
   it('loadMore() — should append results to existing searchResults', () => {
     const extra = [makeHotel('hotel-006', 'Extra Hotel')];
-    hotelSpy.searchHotels.and.returnValue(of({
+    hotelSpy.searchHotelsWithFilters.and.returnValue(of({
       hotels: extra, pageNumber: 2, recordsCount: 3
     }));
     component.searchForm.patchValue({
@@ -358,13 +361,13 @@ describe('HotelListComponent', () => {
     expect(component.currentPage()).toBe(2);
   });
 
-  it('loadMore() — should NOT call searchHotels when city is missing', () => {
-    hotelSpy.searchHotels.calls.reset();
+  it('loadMore() — should NOT call searchHotelsWithFilters when city is missing', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
     component.searchForm.patchValue({ city: '', checkIn: null, checkOut: null });
 
     component.loadMore();
 
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
   });
 
   // ── TEMPLATE RENDERS ───────────────────────────────────────────────────────
