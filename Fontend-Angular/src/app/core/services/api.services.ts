@@ -202,8 +202,7 @@ export class RoomTypeService {
   private base = `${environment.apiUrl}`;
 
   getRoomTypes(page = 1, pageSize = 100): Observable<any> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<any>>(`${this.base}/admin/roomtypes`, { params })
+    return this.http.post<ApiResponse<any>>(`${this.base}/admin/roomtypes/list`, { page, pageSize })
       .pipe(map(r => r.data!));
   }
 
@@ -252,9 +251,8 @@ export class RoomService {
   private base = `${environment.apiUrl}`;
 
   getRooms(pageNumber: number, pageSize: number): Observable<any> {
-    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<any>>(
-      `${this.base}/admin/rooms`, { params }
+    return this.http.post<ApiResponse<any>>(
+      `${this.base}/admin/rooms/list`, { page: pageNumber, pageSize }
     ).pipe(map(r => r.data!));
   }
 

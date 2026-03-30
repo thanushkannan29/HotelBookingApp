@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -13,10 +13,8 @@ export class PromoCodeService {
   private base = `${environment.apiUrl}`;
 
   getMyCodes(page = 1, pageSize = 10, status = 'All'): Observable<PagedPromoCodeResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status && status !== 'All') params = params.set('status', status);
-    return this.http.get<ApiResponse<PagedPromoCodeResponseDto>>(
-      `${this.base}/guest/promo-codes`, { params }
+    return this.http.post<ApiResponse<PagedPromoCodeResponseDto>>(
+      `${this.base}/guest/promo-codes/list`, { page, pageSize, status }
     ).pipe(map(r => r.data!));
   }
 

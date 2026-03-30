@@ -104,11 +104,8 @@ export class HotelService {
 
   // ── SUPERADMIN ────────────────────────────────────────────────────────────
   getAllHotelsForSuperAdmin(page = 1, pageSize = 10, search?: string, status?: string): Observable<PagedSuperAdminHotelResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (search?.trim()) params = params.set('search', search.trim());
-    if (status && status !== 'All') params = params.set('status', status);
-    return this.http.get<ApiResponse<PagedSuperAdminHotelResponseDto>>(
-      `${this.base}/superadmin/hotels`, { params }
+    return this.http.post<ApiResponse<PagedSuperAdminHotelResponseDto>>(
+      `${this.base}/superadmin/hotels/list`, { page, pageSize, search, status }
     ).pipe(map(r => r.data!));
   }
 

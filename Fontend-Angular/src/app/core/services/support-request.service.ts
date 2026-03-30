@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -32,9 +32,8 @@ export class SupportRequestService {
   }
 
   getGuestRequests(page = 1, pageSize = 10): Observable<PagedSupportRequestResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedSupportRequestResponseDto>>(
-      `${this.base}/guest/support`, { params }
+    return this.http.post<ApiResponse<PagedSupportRequestResponseDto>>(
+      `${this.base}/guest/support/list`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
@@ -46,22 +45,15 @@ export class SupportRequestService {
   }
 
   getAdminRequests(page = 1, pageSize = 10): Observable<PagedSupportRequestResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedSupportRequestResponseDto>>(
-      `${this.base}/admin/support`, { params }
+    return this.http.post<ApiResponse<PagedSupportRequestResponseDto>>(
+      `${this.base}/admin/support/list`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
   // ── SuperAdmin ────────────────────────────────────────────────────────────
   getAll(status = 'All', role = 'All', search = '', page = 1, pageSize = 10): Observable<PagedSupportRequestResponseDto> {
-    let params = new HttpParams()
-      .set('page', page)
-      .set('pageSize', pageSize);
-    if (status && status !== 'All') params = params.set('status', status);
-    if (role && role !== 'All') params = params.set('role', role);
-    if (search) params = params.set('search', search);
-    return this.http.get<ApiResponse<PagedSupportRequestResponseDto>>(
-      `${this.base}/superadmin/support`, { params }
+    return this.http.post<ApiResponse<PagedSupportRequestResponseDto>>(
+      `${this.base}/superadmin/support/list`, { status, role, search, page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
