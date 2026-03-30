@@ -25,7 +25,6 @@ import {
   UpdateReviewDto,
   GetHotelReviewsRequestDto,
   UpdateUserProfileDto,
-  PaginationDto,
   CreateRoomTypeDto,
   UpdateRoomTypeDto,
   CreateRoomTypeRateDto,
@@ -321,27 +320,6 @@ describe('UserService', () => {
     expect(req.request.body.name).toBe('Thanush Kumar');
     expect(req.request.body.city).toBe('Coimbatore');
     req.flush({ success: true, data: mockUpdated });
-  });
-
-  it('getBookingHistory() — should POST /user-profile/booking-history with pagination dto', () => {
-    const dto: PaginationDto = { page: 1, pageSize: 10 };
-
-    service.getBookingHistory(dto).subscribe(result => {
-      expect(result.totalCount).toBe(8);
-      expect(result.bookings.length).toBe(1);
-    });
-
-    const req = http.expectOne(`${BASE}/user-profile/booking-history`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.page).toBe(1);
-    expect(req.request.body.pageSize).toBe(10);
-    req.flush({
-      success: true,
-      data: {
-        totalCount: 8,
-        bookings: [{ reservationId: 'res-001', reservationCode: 'RES-ABCD1234', hotelName: 'Grand Palace', checkInDate: '2025-01-10', checkOutDate: '2025-01-12', totalAmount: 10000, status: 'Completed', createdDate: '2025-01-05T10:00:00Z' }]
-      }
-    });
   });
 });
 

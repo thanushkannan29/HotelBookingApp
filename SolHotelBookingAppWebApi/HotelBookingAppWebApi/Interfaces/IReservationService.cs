@@ -11,7 +11,6 @@ namespace HotelBookingAppWebApi.Interfaces
         Task<PagedReservationResponseDto> GetMyReservationsPagedAsync(Guid userId, int page, int pageSize, string? status = null, string? search = null);
         Task<bool> CancelReservationAsync(Guid userId, string reservationCode, string reason);
         Task<bool> CompleteReservationAsync(string reservationCode);
-        Task<PagedReservationResponseDto> GetHotelReservationsAsync(Guid userId, int page, int pageSize);
         Task<PagedReservationResponseDto> GetAdminReservationsAsync(Guid adminUserId, string? status, string? search, int page, int pageSize, string? sortField = null, string? sortDir = null);
         Task<IEnumerable<AvailableRoomDto>> GetAvailableRoomsAsync(Guid hotelId, Guid roomTypeId, DateOnly checkIn, DateOnly checkOut);
         Task<IEnumerable<RoomOccupancyDto>> GetRoomOccupancyAsync(Guid adminUserId, DateOnly date);

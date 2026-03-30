@@ -403,14 +403,6 @@ export interface PagedTransactionResponseDto {
   transactions: TransactionResponseDto[];
 }
 
-// F8A: New interface
-export interface PaymentIntentDto {
-  upiId?: string;
-  amount: number;
-  paymentRef: string;
-  hotelName: string;
-}
-
 export const PaymentMethod: Record<number, string> = {
   1: 'Credit Card',
   2: 'Debit Card',
@@ -515,22 +507,6 @@ export interface UpdateUserProfileDto {
   city?: string;
   pincode?: string;
   profileImageUrl?: string;
-}
-
-export interface BookingHistoryDto {
-  reservationId: string;
-  reservationCode: string;
-  hotelName: string;
-  checkInDate: string;
-  checkOutDate: string;
-  totalAmount: number;
-  status: string;
-  createdDate: string;
-}
-
-export interface PagedBookingHistoryDto {
-  totalCount: number;
-  bookings: BookingHistoryDto[];
 }
 
 export interface PaginationDto {

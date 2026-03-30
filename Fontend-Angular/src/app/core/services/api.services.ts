@@ -7,13 +7,13 @@ import {
   PagedTransactionResponseDto, CreateReviewDto, UpdateReviewDto,
   ReviewResponseDto, PagedReviewResponseDto,
   PagedMyReviewsResponseDto, GetHotelReviewsRequestDto,
-  UserProfileResponseDto, UpdateUserProfileDto, PagedBookingHistoryDto,
-  PaginationDto, AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
+  UserProfileResponseDto, UpdateUserProfileDto,
+  AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
   PagedAuditLogResponseDto, PagedLogResponseDto,
   CreateRoomTypeDto, UpdateRoomTypeDto, RoomTypeListDto, CreateRoomTypeRateDto,
   UpdateRoomTypeRateDto, GetRateByDateRequestDto, CreateRoomDto, UpdateRoomDto,
   RoomListResponseDto, CreateInventoryDto, UpdateInventoryDto, InventoryResponseDto,
-  PaymentIntentDto, RoomOccupancyDto, AmenityResponseDto,
+  RoomOccupancyDto, AmenityResponseDto,
 } from '../models/models';
 
 // ─── TRANSACTION SERVICE ──────────────────────────────────────────────────────
@@ -37,13 +37,6 @@ export class TransactionService {
   getTransactions(page: number, pageSize: number, sortField?: string, sortDir?: string): Observable<PagedTransactionResponseDto> {
     return this.http.post<ApiResponse<PagedTransactionResponseDto>>(
       `${this.base}/transactions/list`, { page, pageSize, sortField, sortDir }
-    ).pipe(map(r => r.data!));
-  }
-
-  // F9B: Payment intent for UPI flow
-  getPaymentIntent(reservationId: string): Observable<PaymentIntentDto> {
-    return this.http.get<ApiResponse<PaymentIntentDto>>(
-      `${this.base}/transactions/payment-intent/${reservationId}`
     ).pipe(map(r => r.data!));
   }
 
@@ -116,12 +109,6 @@ export class UserService {
   updateProfile(dto: UpdateUserProfileDto): Observable<UserProfileResponseDto> {
     return this.http.put<ApiResponse<UserProfileResponseDto>>(
       `${this.base}/user-profile`, dto
-    ).pipe(map(r => r.data!));
-  }
-
-  getBookingHistory(dto: PaginationDto): Observable<PagedBookingHistoryDto> {
-    return this.http.post<ApiResponse<PagedBookingHistoryDto>>(
-      `${this.base}/user-profile/booking-history`, dto
     ).pipe(map(r => r.data!));
   }
 }

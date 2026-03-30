@@ -398,24 +398,6 @@ namespace HotelBookingAppWebApi.Services
             return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
         }
 
-        // ── GET HOTEL RESERVATIONS (ADMIN, PAGED + FILTER) ────────────────────
-        public async Task<PagedReservationResponseDto> GetHotelReservationsAsync(Guid userId, int page, int pageSize)
-        {
-            var admin = await _userRepo.GetAsync(userId) ?? throw new UnAuthorizedException("Unauthorized.");
-            if (admin.HotelId == null) throw new UnAuthorizedException("No hotel associated with this admin.");
-
-            var query = _reservationRepo.GetQueryable()
-                .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
-                .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.RoomType)
-                .Include(r => r.Hotel).Include(r => r.User)
-                .Where(r => r.HotelId == admin.HotelId)
-                .OrderByDescending(r => r.CreatedDate);
-
-            var total = await query.CountAsync();
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-            return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
-        }
-
         // ── GET ADMIN RESERVATIONS (WITH STATUS + SEARCH FILTER) ─────────────
         public async Task<PagedReservationResponseDto> GetAdminReservationsAsync(
             Guid adminUserId, string? status, string? search, int page, int pageSize,

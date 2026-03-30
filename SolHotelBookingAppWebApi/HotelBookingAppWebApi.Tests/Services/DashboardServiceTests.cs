@@ -17,7 +17,6 @@ public class DashboardServiceTests
     private readonly Mock<IRepository<Guid, Review>> _reviewRepo = new();
     private readonly Mock<IRepository<Guid, Room>> _roomRepo = new();
     private readonly Mock<IRepository<Guid, RoomType>> _roomTypeRepo = new();
-    private readonly Mock<IRepository<Guid, RefundRequest>> _refundRepo = new();
     private readonly DashboardService _sut;
 
     public DashboardServiceTests()
@@ -25,7 +24,7 @@ public class DashboardServiceTests
         _sut = new DashboardService(
             _userRepo.Object, _hotelRepo.Object, _reservationRepo.Object,
             _transactionRepo.Object, _reviewRepo.Object, _roomRepo.Object,
-            _roomTypeRepo.Object, _refundRepo.Object);
+            _roomTypeRepo.Object);
     }
 
     private static Hotel MakeHotel(Guid id) => new()
@@ -82,9 +81,6 @@ public class DashboardServiceTests
             new() { ReviewId = Guid.NewGuid(), HotelId = hotelId, UserId = Guid.NewGuid(), ReservationId = Guid.NewGuid(), Rating = 4, Comment = "Good", CreatedDate = DateTime.UtcNow }
         }.AsQueryable().BuildMock();
         _reviewRepo.Setup(r => r.GetQueryable()).Returns(reviews);
-
-        var refunds = new List<RefundRequest>().AsQueryable().BuildMock();
-        _refundRepo.Setup(r => r.GetQueryable()).Returns(refunds);
 
         // Act
         var result = await _sut.GetAdminDashboardAsync(adminId);
