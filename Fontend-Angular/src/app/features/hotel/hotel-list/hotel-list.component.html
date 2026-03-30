@@ -109,7 +109,7 @@
             <div class="filter-group">
               <label class="filter-label">Sort By</label>
               <mat-form-field appearance="outline" style="width:100%">
-                <mat-select [value]="sortBy()" (selectionChange)="sortBy.set($event.value); search(1); paginator.firstPage()">
+                <mat-select [value]="sortBy()" (selectionChange)="sortBy.set($event.value); search(1); paginator?.firstPage()">
                   <mat-option value="">Default</mat-option>
                   <mat-option value="price_asc">💰 Price: Low → High</mat-option>
                   <mat-option value="price_desc">💰 Price: High → Low</mat-option>

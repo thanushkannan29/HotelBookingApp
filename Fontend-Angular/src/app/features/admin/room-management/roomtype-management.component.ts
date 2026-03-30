@@ -119,7 +119,12 @@ export class RoomTypeManagementComponent implements OnInit {
 
   onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
-  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
+  private fmt(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
   // ── RATES ─────────────────────────────────────────────────────────────────
   toggleRates(rtId: string) {

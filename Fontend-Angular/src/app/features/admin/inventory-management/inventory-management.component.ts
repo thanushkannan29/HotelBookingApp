@@ -72,7 +72,12 @@ export class InventoryManagementComponent implements OnInit {
     });
   }
 
-  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
+  private fmt(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
 
   private applyPage() {
     const all = this.allInventories();
