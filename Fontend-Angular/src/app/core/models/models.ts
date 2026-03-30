@@ -742,6 +742,55 @@ export interface ReservationPricingFields {
   promoCodeUsed?: string;
 }
 
+// ─── SUPPORT REQUEST ──────────────────────────────────────────────────────────
+export interface PublicSupportRequestDto {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  category: string;
+}
+
+export interface GuestSupportRequestDto {
+  subject: string;
+  message: string;
+  category: string;
+  reservationCode?: string;
+  hotelId?: string;
+}
+
+export interface AdminSupportRequestDto {
+  subject: string;
+  message: string;
+  category: string;
+}
+
+export interface SupportRequestResponseDto {
+  supportRequestId: string;
+  subject: string;
+  message: string;
+  category: string;
+  status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
+  adminResponse?: string;
+  submitterRole: string;
+  submitterName: string;
+  submitterEmail: string;
+  reservationCode?: string;
+  hotelName?: string;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface PagedSupportRequestResponseDto {
+  totalCount: number;
+  requests: SupportRequestResponseDto[];
+}
+
+export interface RespondSupportRequestDto {
+  response: string;
+  status: string;
+}
+
 // ─── ROOM TYPE RATE ───────────────────────────────────────────────────────────
 export interface RoomTypeRateDto {
   roomTypeRateId: string;

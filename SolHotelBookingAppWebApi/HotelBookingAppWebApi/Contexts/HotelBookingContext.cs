@@ -34,6 +34,7 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<AmenityRequest> AmenityRequests { get; set; }
         public DbSet<SuperAdminRevenue> SuperAdminRevenues { get; set; }
         public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
+        public DbSet<SupportRequest> SupportRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -357,6 +358,27 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<SuperAdminRevenue>()
                 .Property(sr => sr.CommissionAmount)
                 .HasPrecision(18, 2);
+
+            // ─── SUPPORT REQUEST ──────────────────────────────────────────────
+            modelBuilder.Entity<SupportRequest>()
+                .Property(s => s.Status)
+                .HasConversion<int>();
+
+            modelBuilder.Entity<SupportRequest>()
+                .Property(s => s.CreatedAt)
+                .HasDefaultValueSql("GETUTCDATE()");
+
+            modelBuilder.Entity<SupportRequest>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<SupportRequest>()
+                .HasOne(s => s.Hotel)
+                .WithMany()
+                .HasForeignKey(s => s.HotelId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             // ─── RESERVATION — new decimal fields ────────────────────────────
             modelBuilder.Entity<Reservation>()

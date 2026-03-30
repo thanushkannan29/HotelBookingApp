@@ -43,5 +43,9 @@ export const ADMIN_ROUTES: Routes = [
     path: 'amenity-requests',
     loadComponent: () => import('./amenity-requests/amenity-requests.component').then(m => m.AmenityRequestsComponent),
   },
+  {
+    path: 'support',
+    loadComponent: () => import('./support-requests/admin-support-requests.component').then(m => m.AdminSupportRequestsComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

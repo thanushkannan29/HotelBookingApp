@@ -97,6 +97,7 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPromoCodeService, PromoCodeService>();
 builder.Services.AddScoped<IAmenityRequestService, AmenityRequestService>();
 builder.Services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
+builder.Services.AddScoped<ISupportRequestService, SupportRequestService>();
 
 // ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
 builder.Services.AddHostedService<ReservationCleanupService>();          // cancels expired pending reservations

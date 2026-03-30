@@ -1,0 +1,41 @@
+.page-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+
+.request-panel { margin-bottom: 8px; border-radius: var(--radius-md) !important; border: 1px solid var(--color-border); }
+
+.panel-title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.cat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; color: var(--color-primary); }
+.subject-text { font-weight: 600; font-size: .9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.panel-desc { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cat-tag { font-size: .75rem; color: var(--color-text-secondary); background: var(--color-surface-alt); padding: 2px 8px; border-radius: 12px; }
+.date-tag { font-size: .75rem; color: var(--color-text-muted); }
+
+.panel-body { padding: 8px 0; display: flex; flex-direction: column; gap: 14px; }
+
+.detail-row { display: flex; flex-direction: column; gap: 4px; }
+.detail-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--color-text-muted); font-weight: 600; }
+.detail-value { font-size: .875rem; color: var(--color-text-primary); margin: 0; line-height: 1.6; }
+
+.response-block {
+  background: rgba(46,125,50,.06); border: 1px solid rgba(46,125,50,.2);
+  border-radius: var(--radius-md); padding: 14px 16px;
+}
+.response-header {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  font-weight: 600; font-size: .85rem; color: var(--color-success);
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+.response-date { font-size: .75rem; color: var(--color-text-muted); margin-left: auto; }
+.response-text { font-size: .875rem; color: var(--color-text-primary); margin: 0; line-height: 1.6; }
+
+.pending-response {
+  display: flex; align-items: center; gap: 8px;
+  font-size: .85rem; color: var(--color-text-muted);
+  mat-icon { font-size: 18px; width: 18px; height: 18px; }
+}
+
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  mat-icon { font-size: 48px; width: 48px; height: 48px; color: var(--color-text-muted); margin-bottom: 12px; }
+  p { color: var(--color-text-secondary); margin-bottom: 16px; }
+}

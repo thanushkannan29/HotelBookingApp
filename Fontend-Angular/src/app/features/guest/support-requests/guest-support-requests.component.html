@@ -1,0 +1,88 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/guest/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">🎫 My Support Requests</h1>
+        <p class="section-subtitle">Track your complaints and support requests</p>
+      </div>
+      <a mat-flat-button color="primary" routerLink="/contact">
+        <mat-icon>add</mat-icon> New Request
+      </a>
+    </div>
+
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="40" /></div>
+      } @else if (requests().length === 0) {
+        <div class="empty-state">
+          <mat-icon>support_agent</mat-icon>
+          <p>No support requests yet.</p>
+          <a mat-flat-button color="primary" routerLink="/contact">Submit a Request</a>
+        </div>
+      } @else {
+        <mat-accordion>
+          @for (r of requests(); track r.supportRequestId) {
+            <mat-expansion-panel class="request-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title class="panel-title">
+                  <mat-icon class="cat-icon">{{ statusIcon(r.status) }}</mat-icon>
+                  <span class="subject-text">{{ r.subject }}</span>
+                </mat-panel-title>
+                <mat-panel-description class="panel-desc">
+                  <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+                  <span class="cat-tag">{{ r.category }}</span>
+                  <span class="date-tag">{{ r.createdAt | date:'MMM d, y' }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="panel-body">
+                <div class="detail-row">
+                  <span class="detail-label">Message</span>
+                  <p class="detail-value">{{ r.message }}</p>
+                </div>
+                @if (r.reservationCode) {
+                  <div class="detail-row">
+                    <span class="detail-label">Reservation</span>
+                    <span class="detail-value code-tag">{{ r.reservationCode }}</span>
+                  </div>
+                }
+                @if (r.hotelName) {
+                  <div class="detail-row">
+                    <span class="detail-label">Hotel</span>
+                    <span class="detail-value">{{ r.hotelName }}</span>
+                  </div>
+                }
+                @if (r.adminResponse) {
+                  <div class="response-block">
+                    <div class="response-header">
+                      <mat-icon>support_agent</mat-icon>
+                      <span>Platform Response</span>
+                      @if (r.respondedAt) {
+                        <span class="response-date">{{ r.respondedAt | date:'MMM d, y' }}</span>
+                      }
+                    </div>
+                    <p class="response-text">{{ r.adminResponse }}</p>
+                  </div>
+                } @else {
+                  <div class="pending-response">
+                    <mat-icon>hourglass_empty</mat-icon>
+                    <span>Awaiting response from our support team</span>
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>
