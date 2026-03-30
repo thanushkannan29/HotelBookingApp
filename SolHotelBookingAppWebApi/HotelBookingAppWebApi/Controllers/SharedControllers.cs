@@ -213,14 +213,6 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result });
         }
 
-        [HttpGet("my-reviews")]
-        [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> GetMyReviews()
-        {
-            var result = await _service.GetMyReviewsAsync(GetUserId());
-            return Ok(new { success = true, data = result });
-        }
-
         /// <summary>
         /// Correction 9A: My reviews paged — returns { totalCount, reviews }.
         /// POST /api/reviews/my-reviews/paged

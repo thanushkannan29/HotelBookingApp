@@ -71,13 +71,13 @@ describe('GuestReviewsComponent', () => {
 
   beforeEach(async () => {
     reviewSpy  = jasmine.createSpyObj('ReviewService', [
-      'getMyReviews', 'addReview', 'updateReview', 'deleteReview'
+      'getMyReviewsPaged', 'addReview', 'updateReview', 'deleteReview'
     ]);
     bookingSpy = jasmine.createSpyObj('BookingService', ['getMyReservations']);
     toastSpy   = jasmine.createSpyObj('ToastService', ['success', 'error']);
 
     // Default happy-path responses
-    reviewSpy.getMyReviews.and.returnValue(of(MOCK_REVIEWS));
+    reviewSpy.getMyReviewsPaged.and.returnValue(of({ totalCount: 2, reviews: MOCK_REVIEWS }));
     reviewSpy.addReview.and.returnValue(of({
       reviewId: 'rev-003', hotelId: 'hotel-003', userId: 'usr-001',
       rating: 5, comment: 'Fantastic!', createdDate: '2025-02-01T10:00:00Z'
@@ -135,8 +135,8 @@ describe('GuestReviewsComponent', () => {
 
   // ── ngOnInit ───────────────────────────────────────────────────────────────
 
-  it('ngOnInit — should call getMyReviews on startup', () => {
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+  it('ngOnInit — should call getMyReviewsPaged on startup', () => {
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('ngOnInit — should call getMyReservations on startup', () => {
@@ -335,11 +335,11 @@ describe('GuestReviewsComponent', () => {
     component.addForm.patchValue({
       hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
     });
-    reviewSpy.getMyReviews.calls.reset();
+    reviewSpy.getMyReviewsPaged.calls.reset();
 
     component.addReview();
 
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('addReview() — should reset isSaving to false on success', () => {
@@ -466,11 +466,11 @@ describe('GuestReviewsComponent', () => {
 
   it('saveEdit() — should reload reviews after success', () => {
     component.startEdit(MOCK_REVIEWS[0]);
-    reviewSpy.getMyReviews.calls.reset();
+    reviewSpy.getMyReviewsPaged.calls.reset();
 
     component.saveEdit('rev-001');
 
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('saveEdit() — should reset isSaving to false on success', () => {

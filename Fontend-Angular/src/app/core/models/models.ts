@@ -730,17 +730,6 @@ export interface QrPaymentResponseDto {
   hotelName: string;
 }
 
-// ─── RESERVATION (updated with GST/promo/wallet fields) ──────────────────────
-export interface ReservationPricingFields {
-  gstPercent: number;
-  gstAmount: number;
-  discountPercent: number;
-  discountAmount: number;
-  walletAmountUsed: number;
-  finalAmount: number;
-  promoCodeUsed?: string;
-}
-
 // ─── SUPPORT REQUEST ──────────────────────────────────────────────────────────
 export interface PublicSupportRequestDto {
   name: string;

@@ -256,23 +256,6 @@ describe('ReviewService', () => {
     expect(req.request.body.page).toBe(1);
     req.flush({ success: true, data: { totalCount: 25, reviews: [] } });
   });
-
-  it('getMyReviews() — should GET /reviews/my-reviews and return array', () => {
-    const mockReviews = [
-      { reviewId: 'rev-001', hotelId: 'hotel-001', hotelName: 'Grand Palace', rating: 5, comment: 'Excellent!', createdDate: '2025-01-10T10:00:00Z' },
-      { reviewId: 'rev-002', hotelId: 'hotel-002', hotelName: 'Sea View Inn', rating: 4, comment: 'Good stay', createdDate: '2024-12-20T10:00:00Z' }
-    ];
-
-    service.getMyReviews().subscribe(result => {
-      expect(result.length).toBe(2);
-      expect(result[0].hotelName).toBe('Grand Palace');
-      expect(result[1].rating).toBe(4);
-    });
-
-    const req = http.expectOne(`${BASE}/reviews/my-reviews`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: mockReviews });
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

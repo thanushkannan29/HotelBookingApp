@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import {
   ApiResponse, CreatePaymentDto, RefundRequestDto, TransactionResponseDto,
   PagedTransactionResponseDto, CreateReviewDto, UpdateReviewDto,
-  ReviewResponseDto, MyReviewsResponseDto, PagedReviewResponseDto,
+  ReviewResponseDto, PagedReviewResponseDto,
   PagedMyReviewsResponseDto, GetHotelReviewsRequestDto,
   UserProfileResponseDto, UpdateUserProfileDto, PagedBookingHistoryDto,
   PaginationDto, AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
@@ -81,11 +81,6 @@ export class ReviewService {
     return this.http.post<ApiResponse<PagedReviewResponseDto>>(
       `${this.base}/reviews/hotel`, dto
     ).pipe(map(r => r.data!));
-  }
-
-  getMyReviews(): Observable<MyReviewsResponseDto[]> {
-    return this.http.get<ApiResponse<MyReviewsResponseDto[]>>(`${this.base}/reviews/my-reviews`)
-      .pipe(map(r => r.data!));
   }
 
   getMyReviewsPaged(page: number, pageSize: number): Observable<PagedMyReviewsResponseDto> {

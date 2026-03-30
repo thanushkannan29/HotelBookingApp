@@ -199,19 +199,6 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        // ── GET MY REVIEWS (non-paged) ────────────────────────────────────────
-        public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
-        {
-            var reviews = await _reviewRepo.GetQueryable()
-                .Include(r => r.Hotel)
-                .Include(r => r.Reservation)
-                .Where(r => r.UserId == userId)
-                .OrderByDescending(r => r.CreatedDate)
-                .ToListAsync();
-
-            return reviews.Select(MapToMyDto);
-        }
-
         // ── GET MY REVIEWS (paged) ────────────────────────────────────────────
         public async Task<PagedMyReviewsResponseDto> GetMyReviewsPagedAsync(Guid userId, int page, int pageSize)
         {
