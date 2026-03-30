@@ -9,6 +9,21 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
+    // ── SHARED PAGINATION DTOs ────────────────────────────────────────────────
+    public class PageQueryDto
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+        public int PageNumber { get => Page; }
+    }
+
+    public class ReservationQueryDto : PageQueryDto
+    {
+        public string? Status { get; set; } = "All";
+        public string? Search { get; set; }
+        public string? SortField { get; set; }
+        public string? SortDir { get; set; }
+    }
     // ── ROOMS ─────────────────────────────────────────────────────────────────
     [Route("api/admin/rooms")]
     [ApiController]
@@ -48,11 +63,11 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         /// <summary>List all rooms for this admin's hotel (paged). TotalCount included in response wrapper.</summary>
-        [HttpGet]
-        public async Task<IActionResult> List([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("list")]
+        public async Task<IActionResult> List([FromBody] PageQueryDto dto)
         {
             var userId = GetUserId();
-            var rooms = await _service.GetRoomsByHotelAsync(userId, pageNumber, pageSize);
+            var rooms = await _service.GetRoomsByHotelAsync(userId, dto.PageNumber, dto.PageSize);
             var totalCount = await _service.GetRoomCountByHotelAsync(userId);
             return Ok(new { success = true, data = new { totalCount, items = rooms } });
         }
@@ -83,13 +98,13 @@ namespace HotelBookingAppWebApi.Controllers.Admin
 
         /// <summary>
         /// Correction 9A: Paged room types.
-        /// GET /api/admin/roomtypes?page=1&amp;pageSize=10
+        /// POST /api/admin/roomtypes/list
         /// Returns { totalCount, roomTypes } for Angular Material paginator.
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> List([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("list")]
+        public async Task<IActionResult> List([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetRoomTypesByHotelPagedAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetRoomTypesByHotelPagedAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
 
@@ -189,16 +204,10 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         /// <summary>List reservations with optional status filter and search</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] string? status = "All",
-            [FromQuery] string? search = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? sortField = null,
-            [FromQuery] string? sortDir = null)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetAll([FromBody] ReservationQueryDto dto)
         {
-            var result = await _service.GetAdminReservationsAsync(GetUserId(), status, search, page, pageSize, sortField, sortDir);
+            var result = await _service.GetAdminReservationsAsync(GetUserId(), dto.Status ?? "All", dto.Search, dto.Page, dto.PageSize, dto.SortField, dto.SortDir);
             return Ok(new { success = true, data = result });
         }
 
@@ -255,10 +264,10 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             return Ok(new { success = true, data = result });
         }
 
-        [HttpGet]
-        public async Task<IActionResult> GetMine([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetMine([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetAdminRequestsPagedAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetAdminRequestsPagedAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
     }

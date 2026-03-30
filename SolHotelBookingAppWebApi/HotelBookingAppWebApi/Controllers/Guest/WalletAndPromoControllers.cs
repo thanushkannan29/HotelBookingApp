@@ -4,9 +4,14 @@ using HotelBookingAppWebApi.Models.DTOs.Wallet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using HotelBookingAppWebApi.Controllers;
 
 namespace HotelBookingAppWebApi.Controllers.Guest
 {
+    public class PromoQueryDto : PageQueryDto
+    {
+        public string? Status { get; set; }
+    }
     // ── WALLET ────────────────────────────────────────────────────────────────
     [Route("api/guest/wallet")]
     [ApiController]
@@ -18,10 +23,10 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         /// <summary>Get wallet balance and transaction history (paged)</summary>
-        [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("list")]
+        public async Task<IActionResult> Get([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetWalletAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetWalletAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
 
@@ -45,13 +50,10 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
         /// <summary>List all promo codes for the current guest</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMine(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? status = null)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetMine([FromBody] PromoQueryDto dto)
         {
-            var result = await _service.GetGuestPromoCodesPagedAsync(GetUserId(), page, pageSize, status);
+            var result = await _service.GetGuestPromoCodesPagedAsync(GetUserId(), dto.Page, dto.PageSize, dto.Status);
             return Ok(new { success = true, data = result });
         }
 

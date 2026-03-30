@@ -8,6 +8,32 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers
 {
+    // ── SHARED PAGINATION DTOs ────────────────────────────────────────────────
+    public class PageQueryDto
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 10;
+    }
+
+    public class TransactionQueryDto : PageQueryDto
+    {
+        public string? SortField { get; set; }
+        public string? SortDir { get; set; }
+    }
+
+    public class LogQueryDto : PageQueryDto
+    {
+        public string? Search { get; set; }
+    }
+
+    public class AuditLogSuperAdminQueryDto : PageQueryDto
+    {
+        public string? HotelId { get; set; }
+        public string? UserId { get; set; }
+        public string? Action { get; set; }
+        public string? DateFrom { get; set; }
+        public string? DateTo { get; set; }
+    }
     // ── DASHBOARD ─────────────────────────────────────────────────────────────
     [Route("api/dashboard")]
     [ApiController]
@@ -119,17 +145,13 @@ namespace HotelBookingAppWebApi.Controllers
         }
 
         /// <summary>Get transactions — Guest sees own, Admin sees hotel's, SuperAdmin sees all</summary>
-        [HttpGet]
+        [HttpPost("list")]
         [Authorize(Roles = "Admin,Guest,SuperAdmin")]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? sortField = null,
-            [FromQuery] string? sortDir = null)
+        public async Task<IActionResult> GetAll([FromBody] TransactionQueryDto dto)
         {
             var userId = GetUserId();
             var role = User.FindFirstValue(ClaimTypes.Role)!;
-            var result = await _service.GetAllTransactionsAsync(userId, role, page, pageSize, sortField, sortDir);
+            var result = await _service.GetAllTransactionsAsync(userId, role, dto.Page, dto.PageSize, dto.SortField, dto.SortDir);
             return Ok(new { success = true, data = result });
         }
 
@@ -201,14 +223,14 @@ namespace HotelBookingAppWebApi.Controllers
 
         /// <summary>
         /// Correction 9A: My reviews paged — returns { totalCount, reviews }.
-        /// GET /api/reviews/my-reviews/paged?page=1&amp;pageSize=10
+        /// POST /api/reviews/my-reviews/paged
         /// Auth: Guest
         /// </summary>
-        [HttpGet("my-reviews/paged")]
+        [HttpPost("my-reviews/paged")]
         [Authorize(Roles = "Guest")]
-        public async Task<IActionResult> GetMyReviewsPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        public async Task<IActionResult> GetMyReviewsPaged([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetMyReviewsPagedAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetMyReviewsPagedAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
     }
@@ -223,21 +245,18 @@ namespace HotelBookingAppWebApi.Controllers
         public LogsController(ILogService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        [HttpGet("my-logs")]
-        public async Task<IActionResult> GetMyLogs([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+        [HttpPost("my-logs")]
+        public async Task<IActionResult> GetMyLogs([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetUserLogsAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetUserLogsAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
 
-        [HttpGet]
+        [HttpPost("list")]
         [Authorize(Roles = "SuperAdmin")]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null)
+        public async Task<IActionResult> GetAll([FromBody] LogQueryDto dto)
         {
-            var result = await _service.GetAllLogsAsync(page, pageSize, search);
+            var result = await _service.GetAllLogsAsync(dto.Page, dto.PageSize, dto.Search);
             return Ok(new { success = true, data = result });
         }
     }

@@ -3,9 +3,16 @@ using HotelBookingAppWebApi.Models.DTOs.SupportRequest;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using HotelBookingAppWebApi.Controllers;
 
 namespace HotelBookingAppWebApi.Controllers
 {
+    public class SupportQueryDto : PageQueryDto
+    {
+        public string? Status { get; set; }
+        public string? Role { get; set; }
+        public string? Search { get; set; }
+    }
     // ── PUBLIC (unauthenticated) ──────────────────────────────────────────────
     [Route("api/support")]
     [ApiController]
@@ -42,13 +49,11 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result, message = "Your support request has been submitted." });
         }
 
-        /// <summary>GET /api/guest/support — guest views own requests</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMine(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        /// <summary>POST /api/guest/support/list — guest views own requests</summary>
+        [HttpPost("list")]
+        public async Task<IActionResult> GetMine([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetGuestRequestsAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetGuestRequestsAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
     }
@@ -71,13 +76,11 @@ namespace HotelBookingAppWebApi.Controllers
             return Ok(new { success = true, data = result, message = "Your report has been submitted to the platform team." });
         }
 
-        /// <summary>GET /api/admin/support — admin views own reports</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetMine(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        /// <summary>POST /api/admin/support/list — admin views own reports</summary>
+        [HttpPost("list")]
+        public async Task<IActionResult> GetMine([FromBody] PageQueryDto dto)
         {
-            var result = await _service.GetAdminRequestsAsync(GetUserId(), page, pageSize);
+            var result = await _service.GetAdminRequestsAsync(GetUserId(), dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
     }
@@ -91,16 +94,11 @@ namespace HotelBookingAppWebApi.Controllers
         private readonly ISupportRequestService _service;
         public SuperAdminSupportController(ISupportRequestService service) => _service = service;
 
-        /// <summary>GET /api/superadmin/support — all requests with filters</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] string? status = null,
-            [FromQuery] string? role = null,
-            [FromQuery] string? search = null,
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+        /// <summary>POST /api/superadmin/support/list — all requests with filters</summary>
+        [HttpPost("list")]
+        public async Task<IActionResult> GetAll([FromBody] SupportQueryDto dto)
         {
-            var result = await _service.GetAllRequestsAsync(status, role, search, page, pageSize);
+            var result = await _service.GetAllRequestsAsync(dto.Status, dto.Role, dto.Search, dto.Page, dto.PageSize);
             return Ok(new { success = true, data = result });
         }
 

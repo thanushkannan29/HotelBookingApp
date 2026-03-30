@@ -35,11 +35,8 @@ export class TransactionService {
   }
 
   getTransactions(page: number, pageSize: number, sortField?: string, sortDir?: string): Observable<PagedTransactionResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (sortField) params = params.set('sortField', sortField);
-    if (sortDir)   params = params.set('sortDir', sortDir);
-    return this.http.get<ApiResponse<PagedTransactionResponseDto>>(
-      `${this.base}/transactions`, { params }
+    return this.http.post<ApiResponse<PagedTransactionResponseDto>>(
+      `${this.base}/transactions/list`, { page, pageSize, sortField, sortDir }
     ).pipe(map(r => r.data!));
   }
 
@@ -92,9 +89,8 @@ export class ReviewService {
   }
 
   getMyReviewsPaged(page: number, pageSize: number): Observable<PagedMyReviewsResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedMyReviewsResponseDto>>(
-      `${this.base}/reviews/my-reviews/paged`, { params }
+    return this.http.post<ApiResponse<PagedMyReviewsResponseDto>>(
+      `${this.base}/reviews/my-reviews/paged`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
@@ -104,7 +100,6 @@ export class ReviewService {
       `${this.base}/admin/reviews`, { page, pageSize, minRating, maxRating, sortDir }
     ).pipe(map(r => r.data!));
   }
-
   replyToReview(reviewId: string, adminReply: string): Observable<void> {
     return this.http.patch<any>(
       `${this.base}/admin/reviews/${reviewId}/reply`, { adminReply }
@@ -165,10 +160,8 @@ export class AuditLogService {
   private base = `${environment.apiUrl}`;
 
   getAdminAuditLogs(page: number, pageSize: number, search?: string): Observable<PagedAuditLogResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
-      `${this.base}/admin/audit-logs`, { params }
+    return this.http.post<ApiResponse<PagedAuditLogResponseDto>>(
+      `${this.base}/admin/audit-logs/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 
@@ -177,14 +170,8 @@ export class AuditLogService {
     hotelId?: string, userId?: string,
     action?: string, dateFrom?: string, dateTo?: string
   ): Observable<PagedAuditLogResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (hotelId)   params = params.set('hotelId', hotelId);
-    if (userId)    params = params.set('userId', userId);
-    if (action)    params = params.set('action', action);
-    if (dateFrom)  params = params.set('dateFrom', dateFrom);
-    if (dateTo)    params = params.set('dateTo', dateTo);
-    return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
-      `${this.base}/superadmin/audit-logs`, { params }
+    return this.http.post<ApiResponse<PagedAuditLogResponseDto>>(
+      `${this.base}/superadmin/audit-logs/list`, { page, pageSize, hotelId, userId, action, dateFrom, dateTo }
     ).pipe(map(r => r.data!));
   }
 }
@@ -196,17 +183,14 @@ export class LogService {
   private base = `${environment.apiUrl}`;
 
   getMyLogs(page: number, pageSize: number): Observable<PagedLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedLogResponseDto>>(
-      `${this.base}/logs/my-logs`, { params }
+    return this.http.post<ApiResponse<PagedLogResponseDto>>(
+      `${this.base}/logs/my-logs`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
   getAllLogs(page: number, pageSize: number, search?: string): Observable<PagedLogResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<ApiResponse<PagedLogResponseDto>>(
-      `${this.base}/logs`, { params }
+    return this.http.post<ApiResponse<PagedLogResponseDto>>(
+      `${this.base}/logs/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 }

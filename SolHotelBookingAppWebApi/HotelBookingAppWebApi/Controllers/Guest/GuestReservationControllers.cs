@@ -6,9 +6,15 @@ using HotelBookingAppWebApi.Models.DTOs.UserDetails;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using HotelBookingAppWebApi.Controllers;
 
 namespace HotelBookingAppWebApi.Controllers.Guest
 {
+    public class ReservationHistoryQueryDto : PageQueryDto
+    {
+        public string? Status { get; set; }
+        public string? Search { get; set; }
+    }
     // ── GUEST RESERVATIONS ────────────────────────────────────────────────────
     [Route("api/guest/reservations")]
     [ApiController]
@@ -44,10 +50,10 @@ namespace HotelBookingAppWebApi.Controllers.Guest
         }
 
         /// <summary>Get reservation history with pagination and optional status filter</summary>
-        [HttpGet("history")]
-        public async Task<IActionResult> GetHistory([FromQuery] int page = 1, [FromQuery] int pageSize = 10, [FromQuery] string? status = null, [FromQuery] string? search = null)
+        [HttpPost("history")]
+        public async Task<IActionResult> GetHistory([FromBody] ReservationHistoryQueryDto dto)
         {
-            var result = await _service.GetMyReservationsPagedAsync(GetUserId(), page, pageSize, status, search);
+            var result = await _service.GetMyReservationsPagedAsync(GetUserId(), dto.Page, dto.PageSize, dto.Status, dto.Search);
             return Ok(new { success = true, data = result });
         }
 

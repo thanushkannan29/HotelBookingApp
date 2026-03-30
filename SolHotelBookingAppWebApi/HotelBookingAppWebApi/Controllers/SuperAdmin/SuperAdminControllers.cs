@@ -1,9 +1,15 @@
 using HotelBookingAppWebApi.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using HotelBookingAppWebApi.Controllers;
 
 namespace HotelBookingAppWebApi.Controllers.SuperAdmin
 {
+    public class HotelQueryDto : PageQueryDto
+    {
+        public string? Search { get; set; }
+        public string? Status { get; set; }
+    }
     // ── SUPERADMIN HOTEL MANAGEMENT ───────────────────────────────────────────
     [Route("api/superadmin/hotels")]
     [ApiController]
@@ -15,17 +21,13 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
 
         /// <summary>
         /// Correction 9A: Paged list of all hotels with revenue and reservation stats.
-        /// GET /api/superadmin/hotels?page=1&amp;pageSize=10
+        /// POST /api/superadmin/hotels/list
         /// Returns { totalCount, hotels } for Angular Material paginator.
         /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10,
-            [FromQuery] string? search = null,
-            [FromQuery] string? status = null)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetAll([FromBody] HotelQueryDto dto)
         {
-            var result = await _service.GetAllHotelsForSuperAdminPagedAsync(page, pageSize, search, status);
+            var result = await _service.GetAllHotelsForSuperAdminPagedAsync(dto.Page, dto.PageSize, dto.Search, dto.Status);
             return Ok(new { success = true, data = result });
         }
 
@@ -56,17 +58,14 @@ namespace HotelBookingAppWebApi.Controllers.SuperAdmin
         public SuperAdminAuditLogController(IAuditLogService service) => _service = service;
 
         /// <summary>View all audit logs with optional filters</summary>
-        [HttpGet]
-        public async Task<IActionResult> GetAll(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            [FromQuery] Guid? hotelId = null,
-            [FromQuery] Guid? userId = null,
-            [FromQuery] string? action = null,
-            [FromQuery] DateTime? dateFrom = null,
-            [FromQuery] DateTime? dateTo = null)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetAll([FromBody] AuditLogSuperAdminQueryDto dto)
         {
-            var result = await _service.GetAllAuditLogsAsync(page, pageSize, hotelId, userId, action, dateFrom, dateTo);
+            Guid? hotelId = dto.HotelId != null ? Guid.Parse(dto.HotelId) : null;
+            Guid? userId  = dto.UserId  != null ? Guid.Parse(dto.UserId)  : null;
+            DateTime? dateFrom = dto.DateFrom != null ? DateTime.Parse(dto.DateFrom) : null;
+            DateTime? dateTo   = dto.DateTo   != null ? DateTime.Parse(dto.DateTo)   : null;
+            var result = await _service.GetAllAuditLogsAsync(dto.Page, dto.PageSize, hotelId, userId, dto.Action, dateFrom, dateTo);
             return Ok(new { success = true, data = result });
         }
     }

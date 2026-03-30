@@ -27,11 +27,8 @@ export class BookingService {
   }
 
   getMyReservationsHistory(page: number, pageSize: number, status?: string, search?: string): Observable<PagedReservationResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status && status !== 'All') params = params.set('status', status);
-    if (search?.trim()) params = params.set('search', search.trim());
-    return this.http.get<ApiResponse<PagedReservationResponseDto>>(
-      `${this.base}/guest/reservations/history`, { params }
+    return this.http.post<ApiResponse<PagedReservationResponseDto>>(
+      `${this.base}/guest/reservations/history`, { page, pageSize, status, search }
     ).pipe(map(r => r.data!));
   }
 
@@ -76,13 +73,8 @@ export class BookingService {
     status?: string, search?: string,
     sortField?: string, sortDir?: string
   ): Observable<PagedReservationResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (status) params = params.set('status', status);
-    if (search) params = params.set('search', search);
-    if (sortField) params = params.set('sortField', sortField);
-    if (sortDir)   params = params.set('sortDir', sortDir);
-    return this.http.get<ApiResponse<PagedReservationResponseDto>>(
-      `${this.base}/admin/reservations`, { params }
+    return this.http.post<ApiResponse<PagedReservationResponseDto>>(
+      `${this.base}/admin/reservations/list`, { page, pageSize, status, search, sortField, sortDir }
     ).pipe(map(r => r.data!));
   }
 

@@ -6,6 +6,12 @@ using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Controllers.Admin
 {
+    public class AuditLogQueryDto
+    {
+        public int Page { get; set; } = 1;
+        public int PageSize { get; set; } = 20;
+        public string? Search { get; set; }
+    }
     // ── HOTEL ─────────────────────────────────────────────────────────────────
     [Route("api/admin/hotels")]
     [ApiController]
@@ -72,13 +78,10 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public AdminAuditLogController(IAuditLogService service) => _service = service;
         private Guid GetUserId() => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-        [HttpGet]
-        public async Task<IActionResult> GetAuditLogs(
-            [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 20,
-            [FromQuery] string? search = null)
+        [HttpPost("list")]
+        public async Task<IActionResult> GetAuditLogs([FromBody] AuditLogQueryDto dto)
         {
-            var result = await _service.GetAdminAuditLogsAsync(GetUserId(), page, pageSize, search);
+            var result = await _service.GetAdminAuditLogsAsync(GetUserId(), dto.Page, dto.PageSize, dto.Search);
             return Ok(new { success = true, data = result });
         }
     }

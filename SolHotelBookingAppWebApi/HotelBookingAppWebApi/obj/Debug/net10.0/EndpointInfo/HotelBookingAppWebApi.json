@@ -3398,15 +3398,14 @@
       },
       "RespondSupportRequestDto": {
         "required": [
-          "response",
           "status"
         ],
         "type": "object",
         "properties": {
           "response": {
             "maxLength": 2000,
-            "minLength": 1,
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "status": {
             "maxLength": 50,
