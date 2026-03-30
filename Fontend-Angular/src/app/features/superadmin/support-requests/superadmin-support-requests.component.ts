@@ -73,7 +73,7 @@ export class SuperadminSupportRequestsComponent implements OnInit {
   onStatusTab(i: number) { this.selectedStatus = this.statusTabs[i]; this.resetPage(); this.load(); }
   onRoleTab(i: number)   { this.selectedRole   = this.roleTabs[i];   this.resetPage(); this.load(); }
   onSearch(e: Event)     { this.searchSubject.next((e.target as HTMLInputElement).value); }
-  onPage(e: PageEvent)   { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent)   { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   respond(r: SupportRequestResponseDto) {
     const ref = this.dialog.open(InputDialogComponent, {

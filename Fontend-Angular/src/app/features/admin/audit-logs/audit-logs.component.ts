@@ -91,7 +91,7 @@ export class AuditLogsComponent implements OnInit {
 
   applyFilters() { this.resetPage(); this.load(); }
   clearFilters() { this.filterForm.reset(); this.resetPage(); this.load(); }
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   actionClass(action: string): string {
     const m: Record<string, string> = {

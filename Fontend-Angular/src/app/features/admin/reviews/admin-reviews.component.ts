@@ -72,7 +72,7 @@ export class AdminReviewsComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   onRatingFilter(rating: number) {
     this.ratingFilter = this.ratingFilter === rating ? 0 : rating;

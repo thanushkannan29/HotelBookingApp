@@ -52,6 +52,7 @@ export class AdminTransactionsComponent implements OnInit {
     this.currentPage = e.pageIndex + 1;
     this.pageSize    = e.pageSize;
     this.load();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   getPaymentMethodLabel(method: number): string {

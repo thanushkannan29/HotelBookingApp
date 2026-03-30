@@ -81,5 +81,6 @@ export class GuestTransactionsComponent implements OnInit {
     this.currentPage = e.pageIndex + 1;
     this.pageSize    = e.pageSize;
     this.load();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

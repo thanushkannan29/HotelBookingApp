@@ -102,6 +102,7 @@ export class InventoryManagementComponent implements OnInit {
     this.currentPage = e.pageIndex + 1;
     this.pageSize    = e.pageSize;
     this.applyPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   addInventory() {

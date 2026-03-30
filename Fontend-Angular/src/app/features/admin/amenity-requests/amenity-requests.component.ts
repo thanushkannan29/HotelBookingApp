@@ -78,7 +78,7 @@ export class AmenityRequestsComponent implements OnInit {
     this.searchSubject.next((e.target as HTMLInputElement).value);
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   submit() {
     if (this.form.invalid) { this.form.markAllAsTouched(); return; }

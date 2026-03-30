@@ -76,7 +76,7 @@ export class SuperadminAmenityManagementComponent implements OnInit {
 
   onSearch(value: string) { this.searchQuery = value; this.searchSubject.next(value); }
   onCategoryChange() { this.currentPage = 1; this.paginator?.firstPage(); this.load(); }
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   startEdit(a: AmenityResponseDto) {
     this.editingId.set(a.amenityId);

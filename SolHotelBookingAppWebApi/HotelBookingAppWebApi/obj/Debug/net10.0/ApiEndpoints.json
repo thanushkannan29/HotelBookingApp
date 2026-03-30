@@ -25,7 +25,7 @@
     "Parameters": [
       {
         "Name": "dto",
-        "Type": "HotelBookingAppWebApi.Controllers.Admin.PageQueryDto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.AmenityRequestAdminQueryDto",
         "IsRequired": true
       }
     ],

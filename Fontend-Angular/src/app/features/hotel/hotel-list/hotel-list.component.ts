@@ -147,6 +147,7 @@ export class HotelListComponent implements OnInit {
 
   onPage(e: PageEvent) {
     this.search(e.pageIndex + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   applyFilters() {

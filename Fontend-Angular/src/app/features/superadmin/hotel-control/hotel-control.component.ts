@@ -78,7 +78,7 @@ export class HotelControlComponent implements OnInit {
 
   onSearch(e: Event) { this.searchSubject.next((e.target as HTMLInputElement).value); }
   onTabChange(i: number) { this.selectedStatus = this.statusTabs[i]; this.resetPage(); this.load(); }
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   async block(hotel: SuperAdminHotelListDto) {
     const { ConfirmDialogComponent } = await import('../../../shared/components/confirm-dialog/confirm-dialog.component');

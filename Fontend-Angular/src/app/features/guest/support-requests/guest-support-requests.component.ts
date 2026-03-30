@@ -44,7 +44,7 @@ export class GuestSupportRequestsComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   statusClass(s: string): string {
     const m: Record<string, string> = {

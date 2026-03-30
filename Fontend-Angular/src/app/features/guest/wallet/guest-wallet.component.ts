@@ -203,5 +203,5 @@ export class GuestWalletComponent implements OnInit {
     }
   }
 
-  onPage(e: PageEvent) { this.pageSize = e.pageSize; this.load(e.pageIndex + 1, e.pageSize); }
+  onPage(e: PageEvent) { this.pageSize = e.pageSize; this.load(e.pageIndex + 1, e.pageSize); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }

@@ -59,7 +59,7 @@ export class ErrorLogsComponent implements OnInit {
   }
 
   onSearch(e: Event) { this.searchSubject.next((e.target as HTMLInputElement).value); }
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   toggleRow(row: LogResponseDto) {
     this.expandedRow.set(this.expandedRow()?.logId === row.logId ? null : row);

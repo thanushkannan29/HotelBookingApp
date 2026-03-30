@@ -100,7 +100,7 @@ export class RoomManagementComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.loadRooms(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.loadRooms(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   addRoom() {
     if (this.addForm.invalid) { this.addForm.markAllAsTouched(); return; }
