@@ -24,6 +24,11 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         public string? SortField { get; set; }
         public string? SortDir { get; set; }
     }
+
+    public class AmenityRequestAdminQueryDto : PageQueryDto
+    {
+        public string? Search { get; set; }
+    }
     // ── ROOMS ─────────────────────────────────────────────────────────────────
     [Route("api/admin/rooms")]
     [ApiController]
@@ -265,9 +270,9 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         [HttpPost("list")]
-        public async Task<IActionResult> GetMine([FromBody] PageQueryDto dto)
+        public async Task<IActionResult> GetMine([FromBody] AmenityRequestAdminQueryDto dto)
         {
-            var result = await _service.GetAdminRequestsPagedAsync(GetUserId(), dto.Page, dto.PageSize);
+            var result = await _service.GetAdminRequestsPagedAsync(GetUserId(), dto.Page, dto.PageSize, dto.Search);
             return Ok(new { success = true, data = result });
         }
     }

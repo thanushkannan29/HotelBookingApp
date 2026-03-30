@@ -18,20 +18,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminAmenityRequestController",
     "Method": "GetMine",
-    "RelativePath": "api/admin/amenity-requests",
-    "HttpMethod": "GET",
+    "RelativePath": "api/admin/amenity-requests/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -39,25 +34,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminAuditLogController",
     "Method": "GetAuditLogs",
-    "RelativePath": "api/admin/audit-logs",
-    "HttpMethod": "GET",
+    "RelativePath": "api/admin/audit-logs/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.AuditLogQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -170,47 +155,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
-    "Method": "GetAll",
-    "RelativePath": "api/admin/reservations",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "sortField",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "sortDir",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
     "Method": "Complete",
     "RelativePath": "api/admin/reservations/{code}/complete",
     "HttpMethod": "PATCH",
@@ -236,6 +180,22 @@
       {
         "Name": "code",
         "Type": "System.String",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminReservationController",
+    "Method": "GetAll",
+    "RelativePath": "api/admin/reservations/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.ReservationQueryDto",
         "IsRequired": true
       }
     ],
@@ -312,27 +272,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
-    "Method": "List",
-    "RelativePath": "api/admin/rooms",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "pageNumber",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
     "Method": "Toggle",
     "RelativePath": "api/admin/rooms/{roomId}/status",
     "HttpMethod": "PATCH",
@@ -354,6 +293,22 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
+    "Method": "List",
+    "RelativePath": "api/admin/rooms/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.PageQueryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomController",
     "Method": "GetOccupancy",
     "RelativePath": "api/admin/rooms/occupancy",
     "HttpMethod": "GET",
@@ -363,27 +318,6 @@
       {
         "Name": "date",
         "Type": "System.DateOnly",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
-    "Method": "List",
-    "RelativePath": "api/admin/roomtypes",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
         "IsRequired": false
       }
     ],
@@ -460,6 +394,22 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
+    "Method": "List",
+    "RelativePath": "api/admin/roomtypes/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Admin.PageQueryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.Admin.AdminRoomTypeController",
     "Method": "AddRate",
     "RelativePath": "api/admin/roomtypes/rate",
     "HttpMethod": "POST",
@@ -525,20 +475,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.AdminSupportController",
     "Method": "GetMine",
-    "RelativePath": "api/admin/support",
-    "HttpMethod": "GET",
+    "RelativePath": "api/admin/support/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -672,25 +617,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestPromoCodeController",
     "Method": "GetMine",
-    "RelativePath": "api/guest/promo-codes",
-    "HttpMethod": "GET",
+    "RelativePath": "api/guest/promo-codes/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Guest.PromoQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -809,29 +744,14 @@
     "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestReservationController",
     "Method": "GetHistory",
     "RelativePath": "api/guest/reservations/history",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.Guest.ReservationHistoryQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -855,20 +775,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.GuestSupportController",
     "Method": "GetMine",
-    "RelativePath": "api/guest/support",
-    "HttpMethod": "GET",
+    "RelativePath": "api/guest/support/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -876,20 +791,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.Guest.GuestWalletController",
     "Method": "Get",
-    "RelativePath": "api/guest/wallet",
-    "HttpMethod": "GET",
+    "RelativePath": "api/guest/wallet/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -913,25 +823,15 @@
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.LogsController",
     "Method": "GetAll",
-    "RelativePath": "api/logs",
-    "HttpMethod": "GET",
+    "RelativePath": "api/logs/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.LogQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -940,19 +840,14 @@
     "ContainingType": "HotelBookingAppWebApi.Controllers.LogsController",
     "Method": "GetMyLogs",
     "RelativePath": "api/logs/my-logs",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1218,19 +1113,14 @@
     "ContainingType": "HotelBookingAppWebApi.Controllers.ReviewsController",
     "Method": "GetMyReviewsPaged",
     "RelativePath": "api/reviews/my-reviews/paged",
-    "HttpMethod": "GET",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.PageQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1332,32 +1222,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityRequestController",
-    "Method": "GetAll",
-    "RelativePath": "api/superadmin/amenity-requests",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityRequestController",
     "Method": "Approve",
     "RelativePath": "api/superadmin/amenity-requests/{id}/approve",
     "HttpMethod": "PATCH",
@@ -1394,78 +1258,33 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAuditLogController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAmenityRequestController",
     "Method": "GetAll",
-    "RelativePath": "api/superadmin/audit-logs",
-    "HttpMethod": "GET",
+    "RelativePath": "api/superadmin/amenity-requests/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "hotelId",
-        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "userId",
-        "Type": "System.Nullable\u00601[[System.Guid, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "action",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "dateFrom",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
-      },
-      {
-        "Name": "dateTo",
-        "Type": "System.Nullable\u00601[[System.DateTime, System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.SuperAdmin.AmenityRequestQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminHotelController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminAuditLogController",
     "Method": "GetAll",
-    "RelativePath": "api/superadmin/hotels",
-    "HttpMethod": "GET",
+    "RelativePath": "api/superadmin/audit-logs/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.AuditLogSuperAdminQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1503,22 +1322,33 @@
     "ReturnTypes": []
   },
   {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminRevenueController",
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminHotelController",
     "Method": "GetAll",
-    "RelativePath": "api/superadmin/revenue",
-    "HttpMethod": "GET",
+    "RelativePath": "api/superadmin/hotels/list",
+    "HttpMethod": "POST",
     "IsController": true,
     "Order": 0,
     "Parameters": [
       {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.SuperAdmin.HotelQueryDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdmin.SuperAdminRevenueController",
+    "Method": "GetAll",
+    "RelativePath": "api/superadmin/revenue/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
       {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.SuperAdmin.RevenueQueryDto",
+        "IsRequired": true
       }
     ],
     "ReturnTypes": []
@@ -1531,42 +1361,6 @@
     "IsController": true,
     "Order": 0,
     "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdminSupportController",
-    "Method": "GetAll",
-    "RelativePath": "api/superadmin/support",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "status",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "role",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "search",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      }
-    ],
     "ReturnTypes": []
   },
   {
@@ -1585,6 +1379,22 @@
       {
         "Name": "dto",
         "Type": "HotelBookingAppWebApi.Models.DTOs.SupportRequest.RespondSupportRequestDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.SuperAdminSupportController",
+    "Method": "GetAll",
+    "RelativePath": "api/superadmin/support/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.SupportQueryDto",
         "IsRequired": true
       }
     ],
@@ -1624,37 +1434,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
-    "Method": "GetAll",
-    "RelativePath": "api/transactions",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [
-      {
-        "Name": "page",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "pageSize",
-        "Type": "System.Int32",
-        "IsRequired": false
-      },
-      {
-        "Name": "sortField",
-        "Type": "System.String",
-        "IsRequired": false
-      },
-      {
-        "Name": "sortDir",
-        "Type": "System.String",
-        "IsRequired": false
-      }
-    ],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
     "Method": "DirectRefund",
     "RelativePath": "api/transactions/{id}/refund",
     "HttpMethod": "POST",
@@ -1685,6 +1464,22 @@
       {
         "Name": "reservationId",
         "Type": "System.Guid",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": []
+  },
+  {
+    "ContainingType": "HotelBookingAppWebApi.Controllers.TransactionsController",
+    "Method": "GetAll",
+    "RelativePath": "api/transactions/list",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "HotelBookingAppWebApi.Controllers.TransactionQueryDto",
         "IsRequired": true
       }
     ],

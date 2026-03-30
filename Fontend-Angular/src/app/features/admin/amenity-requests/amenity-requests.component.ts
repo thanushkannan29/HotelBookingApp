@@ -64,16 +64,9 @@ export class AmenityRequestsComponent implements OnInit {
 
   load() {
     this.loading.set(true);
-    this.service.getMine(this.currentPage, this.pageSize).subscribe({
+    this.service.getMine(this.currentPage, this.pageSize, this.searchTerm || undefined).subscribe({
       next: data => {
-        // client-side search filter since backend doesn't support it yet
-        const all = data.requests ?? [];
-        const filtered = this.searchTerm
-          ? all.filter(r =>
-              r.amenityName.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-              r.category.toLowerCase().includes(this.searchTerm.toLowerCase()))
-          : all;
-        this.requests.set(filtered);
+        this.requests.set(data.requests ?? []);
         this.totalCount.set(data.totalCount ?? 0);
         this.loading.set(false);
       },

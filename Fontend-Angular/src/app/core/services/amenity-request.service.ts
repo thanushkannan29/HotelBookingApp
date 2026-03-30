@@ -18,9 +18,9 @@ export class AmenityRequestService {
     ).pipe(map(r => r.data!));
   }
 
-  getMine(page = 1, pageSize = 10): Observable<PagedAmenityRequestResponseDto> {
+  getMine(page = 1, pageSize = 10, search?: string): Observable<PagedAmenityRequestResponseDto> {
     return this.http.post<ApiResponse<PagedAmenityRequestResponseDto>>(
-      `${this.base}/admin/amenity-requests/list`, { page, pageSize }
+      `${this.base}/admin/amenity-requests/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 
