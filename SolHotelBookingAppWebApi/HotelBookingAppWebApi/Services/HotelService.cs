@@ -490,7 +490,7 @@ namespace HotelBookingAppWebApi.Services
             HotelId = hotelId,
             Name = name,
             City = city,
-            ImageUrl = imageUrl,
+            ImageUrl = imageUrl ?? string.Empty,
             AverageRating = Math.Round(avgRating ?? 0m, 2),
             ReviewCount = reviewCount,
             StartingPrice = startingPrice ?? 0
