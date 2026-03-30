@@ -13,6 +13,8 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
     /// </summary>
     public class NoShowAutoCancelService : BackgroundService
     {
+        private static readonly TimeSpan PollingInterval = TimeSpan.FromMinutes(5);
+
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<NoShowAutoCancelService> _logger;
 
@@ -24,91 +26,77 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
             _logger = logger;
         }
 
+        // ── BACKGROUND LOOP ───────────────────────────────────────────────────
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("NoShowAutoCancelService started.");
+            _logger.LogInformation("{Service} started.", nameof(NoShowAutoCancelService));
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
-                {
-                    await ProcessNoShowsAsync(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in NoShowAutoCancelService.");
-                }
+                await RunSafeAsync(stoppingToken);
+                await Task.Delay(PollingInterval, stoppingToken);
+            }
+        }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        // ── PROCESSING ────────────────────────────────────────────────────────
+
+        private async Task RunSafeAsync(CancellationToken ct)
+        {
+            try
+            {
+                await ProcessNoShowsAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in {Service}.", nameof(NoShowAutoCancelService));
             }
         }
 
         private async Task ProcessNoShowsAsync(CancellationToken ct)
         {
             using var scope = _scopeFactory.CreateScope();
-
             var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
             var inventoryRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            var noShows = await FetchNoShowReservationsAsync(reservationRepo, ct);
+            if (!noShows.Any()) return;
 
-            // Confirmed reservations that are past checkout and guest never checked in
-            var noShows = await reservationRepo.GetQueryable()
+            _logger.LogInformation("NoShow processing: {Count} reservations.", noShows.Count);
+
+            var inventoryLookup = await InventoryRestoreHelper
+                .BuildInventoryLookupAsync(noShows, inventoryRepo, ct);
+
+            await CommitNoShowsAsync(noShows, inventoryLookup, unitOfWork);
+        }
+
+        private static async Task<List<Reservation>> FetchNoShowReservationsAsync(
+            IRepository<Guid, Reservation> reservationRepo, CancellationToken ct)
+        {
+            var today = DateOnly.FromDateTime(DateTime.UtcNow);
+            return await reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms)
                 .Where(r =>
                     r.Status == ReservationStatus.Confirmed &&
                     r.IsCheckedIn == false &&
                     r.CheckOutDate < today)
                 .ToListAsync(ct);
+        }
 
-            if (!noShows.Any()) return;
-
-            _logger.LogInformation("NoShow processing: {Count} reservations.", noShows.Count);
-
-            var roomTypeIds = noShows
-                .SelectMany(r => r.ReservationRooms!)
-                .Select(rr => rr.RoomTypeId).Distinct().ToList();
-
-            var allDates = noShows
-                .SelectMany(r => Enumerable.Range(0,
-                    r.CheckOutDate.DayNumber - r.CheckInDate.DayNumber)
-                    .Select(d => r.CheckInDate.AddDays(d)))
-                .Distinct().ToList();
-
-            var inventories = await inventoryRepo.GetQueryable()
-                .Where(i => roomTypeIds.Contains(i.RoomTypeId) && allDates.Contains(i.Date))
-                .ToListAsync(ct);
-
-            var invLookup = inventories
-                .GroupBy(i => new { i.RoomTypeId, i.Date })
-                .ToDictionary(g => g.Key, g => g.First());
-
+        private async Task CommitNoShowsAsync(
+            List<Reservation> noShows,
+            Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory> inventoryLookup,
+            IUnitOfWork unitOfWork)
+        {
             var now = DateTime.UtcNow;
-
             await unitOfWork.BeginTransactionAsync();
             try
             {
                 foreach (var reservation in noShows)
                 {
-                    reservation.Status = ReservationStatus.NoShow;
-                    reservation.CancellationReason = "No-show: guest did not check in before checkout date.";
-                    reservation.CancelledDate = now;
-
-                    // Restore inventory (rooms are freed)
-                    if (!(reservation.ReservationRooms?.Any() ?? false)) continue;
-
-                    var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
-                    var roomCount = reservation.ReservationRooms.Count;
-                    var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-
-                    for (int d = 0; d < totalDays; d++)
-                    {
-                        var date = reservation.CheckInDate.AddDays(d);
-                        var key = new { RoomTypeId = roomTypeId, Date = date };
-                        if (invLookup.TryGetValue(key, out var inv))
-                            inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
-                    }
+                    MarkAsNoShow(reservation, now);
+                    InventoryRestoreHelper.RestoreInventory(reservation, inventoryLookup);
                 }
 
                 await unitOfWork.CommitAsync();
@@ -117,8 +105,15 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
             catch (Exception ex)
             {
                 await unitOfWork.RollbackAsync();
-                _logger.LogError(ex, "Rollback during NoShowAutoCancel.");
+                _logger.LogError(ex, "Rollback during {Service}.", nameof(NoShowAutoCancelService));
             }
+        }
+
+        private static void MarkAsNoShow(Reservation reservation, DateTime now)
+        {
+            reservation.Status = ReservationStatus.NoShow;
+            reservation.CancellationReason = "No-show: guest did not check in before checkout date.";
+            reservation.CancelledDate = now;
         }
     }
 }

@@ -5,7 +5,12 @@ using System.Linq.Expressions;
 
 namespace HotelBookingAppWebApi.Repository
 {
-    public class Repository<K, C> : IRepository<K, C> where C : class
+    /// <summary>
+    /// Generic EF Core repository implementation.
+    /// Provides standard CRUD and queryable access without saving changes —
+    /// callers are responsible for committing via IUnitOfWork.
+    /// </summary>
+    public class Repository<TKey, TEntity> : IRepository<TKey, TEntity> where TEntity : class
     {
         protected readonly HotelBookingContext _context;
 
@@ -14,45 +19,53 @@ namespace HotelBookingAppWebApi.Repository
             _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
-        public async Task<C?> AddAsync(C entity)
+        /// <inheritdoc/>
+        public async Task<TEntity?> AddAsync(TEntity entity)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
-            await _context.Set<C>().AddAsync(entity);
+            ArgumentNullException.ThrowIfNull(entity);
+            await _context.Set<TEntity>().AddAsync(entity);
             return entity;
         }
 
-        public async Task<C?> DeleteAsync(K key)
+        /// <inheritdoc/>
+        public async Task<TEntity?> DeleteAsync(TKey key)
         {
-            var item = await GetAsync(key);
-            if (item == null) return null;
-            _context.Set<C>().Remove(item);
-            return item;
+            var entity = await GetAsync(key);
+            if (entity is null) return null;
+            _context.Set<TEntity>().Remove(entity);
+            return entity;
         }
 
-        public async Task<IEnumerable<C>> GetAllAsync()
-            => await _context.Set<C>().ToListAsync();
+        /// <inheritdoc/>
+        public async Task<IEnumerable<TEntity>> GetAllAsync()
+            => await _context.Set<TEntity>().ToListAsync();
 
-        public async Task<C?> GetAsync(K key)
-            => await _context.FindAsync<C>(key);
+        /// <inheritdoc/>
+        public async Task<TEntity?> GetAsync(TKey key)
+            => await _context.FindAsync<TEntity>(key);
 
-        public async Task<C?> UpdateAsync(K key, C item)
+        /// <inheritdoc/>
+        public async Task<TEntity?> UpdateAsync(TKey key, TEntity entity)
         {
-            if (item == null) return null;
-            var existingItem = await GetAsync(key);
-            if (existingItem == null) return null;
-            _context.Entry(existingItem).CurrentValues.SetValues(item);
-            return existingItem;
+            if (entity is null) return null;
+            var existing = await GetAsync(key);
+            if (existing is null) return null;
+            _context.Entry(existing).CurrentValues.SetValues(entity);
+            return existing;
         }
 
-        public async Task<C?> FirstOrDefaultAsync(Expression<Func<C, bool>> predicate)
-            => await _context.Set<C>().FirstOrDefaultAsync(predicate);
+        /// <inheritdoc/>
+        public async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate)
+            => await _context.Set<TEntity>().FirstOrDefaultAsync(predicate);
 
-        public IQueryable<C> GetQueryable()
-            => _context.Set<C>();
+        /// <inheritdoc/>
+        public IQueryable<TEntity> GetQueryable()
+            => _context.Set<TEntity>();
 
-        public async Task<IEnumerable<C>> GetAllByForeignKeyAsync(
-            Expression<Func<C, bool>> predicate, int limit, int pageNumber)
-            => await _context.Set<C>()
+        /// <inheritdoc/>
+        public async Task<IEnumerable<TEntity>> GetAllByForeignKeyAsync(
+            Expression<Func<TEntity, bool>> predicate, int limit, int pageNumber)
+            => await _context.Set<TEntity>()
                 .Where(predicate)
                 .Skip((pageNumber - 1) * limit)
                 .Take(limit)

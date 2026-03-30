@@ -8,8 +8,15 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// Records and retrieves the 2% platform commission earned by SuperAdmin
+    /// on each completed reservation.
+    /// </summary>
     public class SuperAdminRevenueService : ISuperAdminRevenueService
     {
+        private const decimal CommissionRate = 0.02M;
+        private const string SuperAdminUpiId = "thanushstayhubsuperadmin@okaxis";
+
         private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
@@ -27,29 +34,20 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
-        /// <summary>Called inline when admin marks a reservation as Completed.</summary>
+        // ── PUBLIC API ────────────────────────────────────────────────────────
+
+        /// <summary>
+        /// Records a 2% commission for a completed reservation.
+        /// Idempotent — safe to call multiple times for the same reservation.
+        /// </summary>
         public async Task RecordCommissionAsync(Guid reservationId)
         {
-            // Idempotent — skip if already recorded
-            var alreadyExists = await _revenueRepo.GetQueryable()
-                .AnyAsync(r => r.ReservationId == reservationId);
-            if (alreadyExists) return;
+            if (await CommissionAlreadyRecordedAsync(reservationId)) return;
 
             var reservation = await _reservationRepo.GetAsync(reservationId)
                 ?? throw new NotFoundException("Reservation not found.");
 
-            var commission = Math.Round(reservation.TotalAmount * 0.02M, 2);
-            await _revenueRepo.AddAsync(new SuperAdminRevenue
-            {
-                SuperAdminRevenueId = Guid.NewGuid(),
-                ReservationId = reservation.ReservationId,
-                HotelId = reservation.HotelId,
-                ReservationAmount = reservation.TotalAmount,
-                CommissionAmount = commission,
-                SuperAdminUpiId = "thanushstayhubsuperadmin@okaxis",
-                CreatedAt = DateTime.UtcNow
-            });
-
+            await _revenueRepo.AddAsync(BuildCommissionRecord(reservation));
             await _unitOfWork.SaveChangesAsync();
         }
 
@@ -72,19 +70,37 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<RevenueSummaryDto> GetSummaryAsync()
         {
-            var total = await _revenueRepo.GetQueryable().SumAsync(r => (decimal?)r.CommissionAmount) ?? 0;
+            var total = await _revenueRepo.GetQueryable()
+                .SumAsync(r => (decimal?)r.CommissionAmount) ?? 0;
+
             return new RevenueSummaryDto { TotalCommissionEarned = total };
         }
 
-        private static SuperAdminRevenueDto MapToDto(SuperAdminRevenue r) => new()
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private async Task<bool> CommissionAlreadyRecordedAsync(Guid reservationId)
+            => await _revenueRepo.GetQueryable().AnyAsync(r => r.ReservationId == reservationId);
+
+        private static SuperAdminRevenue BuildCommissionRecord(Reservation reservation) => new()
         {
-            SuperAdminRevenueId = r.SuperAdminRevenueId,
-            ReservationCode = r.Reservation?.ReservationCode ?? string.Empty,
-            HotelName = r.Hotel?.Name ?? string.Empty,
-            ReservationAmount = r.ReservationAmount,
-            CommissionAmount = r.CommissionAmount,
-            SuperAdminUpiId = r.SuperAdminUpiId,
-            CreatedAt = r.CreatedAt
+            SuperAdminRevenueId = Guid.NewGuid(),
+            ReservationId = reservation.ReservationId,
+            HotelId = reservation.HotelId,
+            ReservationAmount = reservation.TotalAmount,
+            CommissionAmount = Math.Round(reservation.TotalAmount * CommissionRate, 2),
+            SuperAdminUpiId = SuperAdminUpiId,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        private static SuperAdminRevenueDto MapToDto(SuperAdminRevenue record) => new()
+        {
+            SuperAdminRevenueId = record.SuperAdminRevenueId,
+            ReservationCode = record.Reservation?.ReservationCode ?? string.Empty,
+            HotelName = record.Hotel?.Name ?? string.Empty,
+            ReservationAmount = record.ReservationAmount,
+            CommissionAmount = record.CommissionAmount,
+            SuperAdminUpiId = record.SuperAdminUpiId,
+            CreatedAt = record.CreatedAt
         };
     }
 }

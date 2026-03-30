@@ -7,6 +7,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// Aggregates statistics for Admin, Guest, and SuperAdmin dashboards.
+    /// Each dashboard method is self-contained and queries only what it needs.
+    /// </summary>
     public class DashboardService : IDashboardService
     {
         private readonly IRepository<Guid, User> _userRepo;
@@ -35,47 +39,18 @@ namespace HotelBookingAppWebApi.Services
             _roomTypeRepo = roomTypeRepo;
         }
 
-        // ── ADMIN DASHBOARD ───────────────────────────────────────────────────
+        // ── PUBLIC API ────────────────────────────────────────────────────────
+
         public async Task<AdminDashboardDto> GetAdminDashboardAsync(Guid userId)
         {
-            var user = await _userRepo.GetQueryable()
-                .Where(u => u.UserId == userId)
-                .Select(u => new { u.HotelId })
-                .FirstOrDefaultAsync();
-
-            if (user == null || user.HotelId == null)
-                throw new NotFoundException("Admin hotel not found.");
-
-            var hotelId = user.HotelId.Value;
-
+            var hotelId = await GetAdminHotelIdOrThrowAsync(userId);
             var hotel = await _hotelRepo.GetAsync(hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
 
-            var totalRooms = await _roomRepo.GetQueryable()
-                .CountAsync(r => r.HotelId == hotelId);
-
-            var activeRooms = await _roomRepo.GetQueryable()
-                .CountAsync(r => r.HotelId == hotelId && r.IsActive);
-
-            var totalRoomTypes = await _roomTypeRepo.GetQueryable()
-                .CountAsync(rt => rt.HotelId == hotelId);
-
-            var resQuery = _reservationRepo.GetQueryable().Where(r => r.HotelId == hotelId);
-
-            var totalReservations = await resQuery.CountAsync();
-            var pendingReservations = await resQuery.CountAsync(r => r.Status == ReservationStatus.Pending);
-            var activeReservations = await resQuery.CountAsync(r => r.Status == ReservationStatus.Confirmed);
-            var completedReservations = await resQuery.CountAsync(r => r.Status == ReservationStatus.Completed);
-            var cancelledReservations = await resQuery.CountAsync(r => r.Status == ReservationStatus.Cancelled);
-
-            var totalRevenue = await _transactionRepo.GetQueryable()
-                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.HotelId == hotelId)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0;
-
-            var reviewQuery = _reviewRepo.GetQueryable().Where(r => r.HotelId == hotelId);
-            var totalReviews = await reviewQuery.CountAsync();
-            var averageRating = totalReviews > 0
-                ? await reviewQuery.AverageAsync(r => (decimal?)r.Rating) ?? 0 : 0;
+            var roomStats = await GetRoomStatsAsync(hotelId);
+            var reservationStats = await GetReservationStatsAsync(hotelId);
+            var totalRevenue = await GetHotelRevenueAsync(hotelId);
+            var reviewStats = await GetReviewStatsAsync(hotelId);
 
             return new AdminDashboardDto
             {
@@ -84,69 +59,103 @@ namespace HotelBookingAppWebApi.Services
                 HotelImageUrl = hotel.ImageUrl,
                 IsActive = hotel.IsActive,
                 IsBlockedBySuperAdmin = hotel.IsBlockedBySuperAdmin,
-                TotalRooms = totalRooms,
-                ActiveRooms = activeRooms,
-                TotalRoomTypes = totalRoomTypes,
-                TotalReservations = totalReservations,
-                PendingReservations = pendingReservations,
-                ActiveReservations = activeReservations,
-                CompletedReservations = completedReservations,
-                CancelledReservations = cancelledReservations,
+                TotalRooms = roomStats.Total,
+                ActiveRooms = roomStats.Active,
+                TotalRoomTypes = roomStats.Types,
+                TotalReservations = reservationStats.Total,
+                PendingReservations = reservationStats.Pending,
+                ActiveReservations = reservationStats.Confirmed,
+                CompletedReservations = reservationStats.Completed,
+                CancelledReservations = reservationStats.Cancelled,
                 TotalRevenue = totalRevenue,
-                TotalReviews = totalReviews,
-                AverageRating = Math.Round(averageRating, 2),
+                TotalReviews = reviewStats.Count,
+                AverageRating = reviewStats.Average
             };
         }
 
-        // ── GUEST DASHBOARD ───────────────────────────────────────────────────
         public async Task<GuestDashboardDto> GetGuestDashboardAsync(Guid userId)
         {
             var resQuery = _reservationRepo.GetQueryable().Where(r => r.UserId == userId);
-
-            var totalBookings = await resQuery.CountAsync();
-            var activeBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Confirmed);
-            var completedBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Completed);
-            var cancelledBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Cancelled);
-
-            var totalSpent = await _transactionRepo.GetQueryable()
-                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.UserId == userId)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            var totalSpent = await GetGuestSpendAsync(userId);
 
             return new GuestDashboardDto
             {
-                TotalBookings = totalBookings,
-                ActiveBookings = activeBookings,
-                CompletedBookings = completedBookings,
-                CancelledBookings = cancelledBookings,
-                TotalSpent = totalSpent,
+                TotalBookings = await resQuery.CountAsync(),
+                ActiveBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Confirmed),
+                CompletedBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Completed),
+                CancelledBookings = await resQuery.CountAsync(r => r.Status == ReservationStatus.Cancelled),
+                TotalSpent = totalSpent
             };
         }
 
-        // ── SUPERADMIN DASHBOARD ──────────────────────────────────────────────
         public async Task<SuperAdminDashboardDto> GetSuperAdminDashboardAsync()
         {
-            var totalHotels = await _hotelRepo.GetQueryable().CountAsync();
-            var activeHotels = await _hotelRepo.GetQueryable().CountAsync(h => h.IsActive);
-            var blockedHotels = await _hotelRepo.GetQueryable().CountAsync(h => h.IsBlockedBySuperAdmin);
-            var totalUsers = await _userRepo.GetQueryable().CountAsync();
-            var totalReservations = await _reservationRepo.GetQueryable().CountAsync();
-
             var totalRevenue = await _transactionRepo.GetQueryable()
                 .Where(t => t.Status == PaymentStatus.Success)
                 .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
-            var totalReviews = await _reviewRepo.GetQueryable().CountAsync();
-
             return new SuperAdminDashboardDto
             {
-                TotalHotels = totalHotels,
-                ActiveHotels = activeHotels,
-                BlockedHotels = blockedHotels,
-                TotalUsers = totalUsers,
-                TotalReservations = totalReservations,
+                TotalHotels = await _hotelRepo.GetQueryable().CountAsync(),
+                ActiveHotels = await _hotelRepo.GetQueryable().CountAsync(h => h.IsActive),
+                BlockedHotels = await _hotelRepo.GetQueryable().CountAsync(h => h.IsBlockedBySuperAdmin),
+                TotalUsers = await _userRepo.GetQueryable().CountAsync(),
+                TotalReservations = await _reservationRepo.GetQueryable().CountAsync(),
                 TotalRevenue = totalRevenue,
-                TotalReviews = totalReviews,
+                TotalReviews = await _reviewRepo.GetQueryable().CountAsync()
             };
         }
+
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private async Task<Guid> GetAdminHotelIdOrThrowAsync(Guid userId)
+        {
+            var hotelId = await _userRepo.GetQueryable()
+                .Where(u => u.UserId == userId)
+                .Select(u => u.HotelId)
+                .FirstOrDefaultAsync();
+
+            if (hotelId is null) throw new NotFoundException("Admin hotel not found.");
+            return hotelId.Value;
+        }
+
+        private async Task<(int Total, int Active, int Types)> GetRoomStatsAsync(Guid hotelId)
+        {
+            var total = await _roomRepo.GetQueryable().CountAsync(r => r.HotelId == hotelId);
+            var active = await _roomRepo.GetQueryable().CountAsync(r => r.HotelId == hotelId && r.IsActive);
+            var types = await _roomTypeRepo.GetQueryable().CountAsync(rt => rt.HotelId == hotelId);
+            return (total, active, types);
+        }
+
+        private async Task<(int Total, int Pending, int Confirmed, int Completed, int Cancelled)>
+            GetReservationStatsAsync(Guid hotelId)
+        {
+            var q = _reservationRepo.GetQueryable().Where(r => r.HotelId == hotelId);
+            return (
+                await q.CountAsync(),
+                await q.CountAsync(r => r.Status == ReservationStatus.Pending),
+                await q.CountAsync(r => r.Status == ReservationStatus.Confirmed),
+                await q.CountAsync(r => r.Status == ReservationStatus.Completed),
+                await q.CountAsync(r => r.Status == ReservationStatus.Cancelled)
+            );
+        }
+
+        private async Task<decimal> GetHotelRevenueAsync(Guid hotelId)
+            => await _transactionRepo.GetQueryable()
+                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.HotelId == hotelId)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+
+        private async Task<(int Count, decimal Average)> GetReviewStatsAsync(Guid hotelId)
+        {
+            var q = _reviewRepo.GetQueryable().Where(r => r.HotelId == hotelId);
+            var count = await q.CountAsync();
+            var avg = count > 0 ? Math.Round(await q.AverageAsync(r => (decimal?)r.Rating) ?? 0, 2) : 0;
+            return (count, avg);
+        }
+
+        private async Task<decimal> GetGuestSpendAsync(Guid userId)
+            => await _transactionRepo.GetQueryable()
+                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.UserId == userId)
+                .SumAsync(t => (decimal?)t.Amount) ?? 0;
     }
 }

@@ -8,10 +8,12 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
 {
     /// <summary>
     /// Runs every 5 minutes. When a hotel becomes inactive, all its Confirmed reservations
-    /// are cancelled and their payments are refunded directly to the guest wallet.
+    /// are cancelled and their payments are fully refunded to the guest wallet.
     /// </summary>
     public class HotelDeactivationRefundService : BackgroundService
     {
+        private static readonly TimeSpan PollingInterval = TimeSpan.FromMinutes(5);
+
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<HotelDeactivationRefundService> _logger;
 
@@ -23,37 +25,58 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
             _logger = logger;
         }
 
+        // ── BACKGROUND LOOP ───────────────────────────────────────────────────
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("HotelDeactivationRefundService started.");
+            _logger.LogInformation("{Service} started.", nameof(HotelDeactivationRefundService));
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
-                {
-                    await ProcessDeactivatedHotelsAsync(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in HotelDeactivationRefundService.");
-                }
+                await RunSafeAsync(stoppingToken);
+                await Task.Delay(PollingInterval, stoppingToken);
+            }
+        }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        // ── PROCESSING ────────────────────────────────────────────────────────
+
+        private async Task RunSafeAsync(CancellationToken ct)
+        {
+            try
+            {
+                await ProcessDeactivatedHotelsAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in {Service}.", nameof(HotelDeactivationRefundService));
             }
         }
 
         private async Task ProcessDeactivatedHotelsAsync(CancellationToken ct)
         {
             using var scope = _scopeFactory.CreateScope();
-
             var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
-            var transactionRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Transaction>>();
-            var inventoryRepo   = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
-            var walletService   = scope.ServiceProvider.GetRequiredService<IWalletService>();
-            var unitOfWork      = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var inventoryRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
+            var walletService = scope.ServiceProvider.GetRequiredService<IWalletService>();
+            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            // Find all Confirmed reservations whose hotel is inactive
-            var affectedReservations = await reservationRepo.GetQueryable()
+            var affected = await FetchAffectedReservationsAsync(reservationRepo, ct);
+            if (!affected.Any()) return;
+
+            _logger.LogInformation(
+                "Hotel deactivation: processing {Count} confirmed reservations for auto-refund.",
+                affected.Count);
+
+            var inventoryLookup = await InventoryRestoreHelper
+                .BuildInventoryLookupAsync(affected, inventoryRepo, ct);
+
+            await CommitCancellationsAsync(affected, inventoryLookup, walletService, unitOfWork);
+        }
+
+        private static async Task<List<Reservation>> FetchAffectedReservationsAsync(
+            IRepository<Guid, Reservation> reservationRepo, CancellationToken ct)
+        {
+            return await reservationRepo.GetQueryable()
                 .Include(r => r.Hotel)
                 .Include(r => r.ReservationRooms)
                 .Include(r => r.Transactions)
@@ -62,76 +85,24 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                     r.Hotel != null &&
                     !r.Hotel.IsActive)
                 .ToListAsync(ct);
+        }
 
-            if (!affectedReservations.Any()) return;
-
-            _logger.LogInformation(
-                "Hotel deactivation: processing {Count} confirmed reservations for auto-refund.",
-                affectedReservations.Count);
-
-            var roomTypeIds = affectedReservations
-                .SelectMany(r => r.ReservationRooms!)
-                .Select(rr => rr.RoomTypeId).Distinct().ToList();
-
-            var allDates = affectedReservations
-                .SelectMany(r => Enumerable.Range(0,
-                    r.CheckOutDate.DayNumber - r.CheckInDate.DayNumber)
-                    .Select(d => r.CheckInDate.AddDays(d)))
-                .Distinct().ToList();
-
-            var inventories = await inventoryRepo.GetQueryable()
-                .Where(i => roomTypeIds.Contains(i.RoomTypeId) && allDates.Contains(i.Date))
-                .ToListAsync(ct);
-
-            var invLookup = inventories
-                .GroupBy(i => new { i.RoomTypeId, i.Date })
-                .ToDictionary(g => g.Key, g => g.First());
-
+        private async Task CommitCancellationsAsync(
+            List<Reservation> reservations,
+            Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory> inventoryLookup,
+            IWalletService walletService,
+            IUnitOfWork unitOfWork)
+        {
             var now = DateTime.UtcNow;
-
             await unitOfWork.BeginTransactionAsync();
             try
             {
-                foreach (var reservation in affectedReservations)
+                foreach (var reservation in reservations)
                 {
-                    // 1. Cancel the reservation
-                    reservation.Status = ReservationStatus.Cancelled;
-                    reservation.CancellationReason = "Hotel deactivated — automatic cancellation and full refund.";
-                    reservation.CancelledDate = now;
-
-                    // 2. Restore inventory
-                    if (reservation.ReservationRooms?.Any() ?? false)
-                    {
-                        var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
-                        var roomCount  = reservation.ReservationRooms.Count;
-                        var totalDays  = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-
-                        for (int d = 0; d < totalDays; d++)
-                        {
-                            var date = reservation.CheckInDate.AddDays(d);
-                            var key  = new { RoomTypeId = roomTypeId, Date = date };
-                            if (invLookup.TryGetValue(key, out var inv))
-                                inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
-                        }
-                    }
-
-                    // 3. Mark any successful transaction as Refunded and credit wallet directly
-                    var successTx = reservation.Transactions?
-                        .FirstOrDefault(t => t.Status == PaymentStatus.Success);
-
-                    if (successTx != null)
-                    {
-                        successTx.Status = PaymentStatus.Refunded;
-
-                        var refundAmount = reservation.FinalAmount > 0
-                            ? reservation.FinalAmount
-                            : reservation.TotalAmount;
-
-                        await walletService.CreditAsync(
-                            reservation.UserId,
-                            refundAmount,
-                            $"Full refund for cancelled reservation {reservation.ReservationCode} (hotel deactivated)");
-                    }
+                    CancelReservation(reservation, now);
+                    InventoryRestoreHelper.RestoreInventory(reservation, inventoryLookup);
+                    MarkSuccessTransactionRefunded(reservation);
+                    await IssueWalletRefundAsync(reservation, walletService);
                 }
 
                 await unitOfWork.CommitAsync();
@@ -140,8 +111,40 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
             catch (Exception ex)
             {
                 await unitOfWork.RollbackAsync();
-                _logger.LogError(ex, "Rollback during HotelDeactivationRefund.");
+                _logger.LogError(ex, "Rollback during {Service}.", nameof(HotelDeactivationRefundService));
             }
+        }
+
+        private static void CancelReservation(Reservation reservation, DateTime now)
+        {
+            reservation.Status = ReservationStatus.Cancelled;
+            reservation.CancellationReason = "Hotel deactivated — automatic cancellation and full refund.";
+            reservation.CancelledDate = now;
+        }
+
+        private static void MarkSuccessTransactionRefunded(Reservation reservation)
+        {
+            var successTx = reservation.Transactions?
+                .FirstOrDefault(t => t.Status == PaymentStatus.Success);
+            if (successTx is not null)
+                successTx.Status = PaymentStatus.Refunded;
+        }
+
+        private static async Task IssueWalletRefundAsync(
+            Reservation reservation, IWalletService walletService)
+        {
+            var successTx = reservation.Transactions?
+                .FirstOrDefault(t => t.Status == PaymentStatus.Refunded);
+            if (successTx is null) return;
+
+            var refundAmount = reservation.FinalAmount > 0
+                ? reservation.FinalAmount
+                : reservation.TotalAmount;
+
+            await walletService.CreditAsync(
+                reservation.UserId,
+                refundAmount,
+                $"Full refund for cancelled reservation {reservation.ReservationCode} (hotel deactivated)");
         }
     }
 }
