@@ -75,7 +75,8 @@ namespace HotelBookingAppWebApi.Models.DTOs.Hotel.Public
 
     public class SearchHotelRequestDto
     {
-        public string City { get; set; } = string.Empty;
+        public string? City { get; set; }
+        public string? State { get; set; }
         public DateOnly CheckIn { get; set; }
         public DateOnly CheckOut { get; set; }
         public int PageNumber { get; set; } = 1;

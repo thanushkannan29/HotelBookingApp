@@ -87,8 +87,13 @@ namespace HotelBookingAppWebApi.Services
         {
             var query = _hotelRepo.GetQueryable()
                 .AsNoTracking()
-                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
-                            h.City.ToLower() == request.City.ToLower());
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin);
+
+            // City or State filter
+            if (!string.IsNullOrWhiteSpace(request.City))
+                query = query.Where(h => h.City.ToLower() == request.City.ToLower());
+            else if (!string.IsNullOrWhiteSpace(request.State))
+                query = query.Where(h => h.State.ToLower() == request.State.ToLower());
 
             // Amenity filter
             if (request.AmenityIds != null && request.AmenityIds.Count > 0)
@@ -120,7 +125,13 @@ namespace HotelBookingAppWebApi.Services
 
             var totalRecords = await query.CountAsync();
             if (totalRecords == 0)
-                throw new NotFoundException("No hotels found for the given criteria.");
+                return new SearchHotelResponseDto
+                {
+                    Hotels = new List<HotelListItemDto>(),
+                    PageNumber = request.PageNumber,
+                    RecordsCount = 0,
+                    TotalCount = 0
+                };
 
             // Sort
             IQueryable<Hotel> sorted = request.SortBy switch
