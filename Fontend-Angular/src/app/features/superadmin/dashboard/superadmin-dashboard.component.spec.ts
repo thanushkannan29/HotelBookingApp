@@ -18,7 +18,6 @@ const MOCK_DASHBOARD: SuperAdminDashboardDto = {
   totalReservations:    5000,
   totalRevenue:         25000000,
   totalReviews:         800,
-  pendingRefundRequests: 12,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -97,10 +96,6 @@ describe('SuperAdminDashboardComponent', () => {
 
   it('data — totalReviews should be correct', () => {
     expect(component.data()?.totalReviews).toBe(800);
-  });
-
-  it('data — pendingRefundRequests should be correct', () => {
-    expect(component.data()?.pendingRefundRequests).toBe(12);
   });
 
   // ── DATA CONSISTENCY ───────────────────────────────────────────────────────

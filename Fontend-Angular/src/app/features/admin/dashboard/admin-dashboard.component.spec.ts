@@ -18,7 +18,7 @@ const MOCK_DASHBOARD: AdminDashboardDto = {
   totalRooms: 20, activeRooms: 18, totalRoomTypes: 3,
   totalReservations: 120, pendingReservations: 5, activeReservations: 10,
   completedReservations: 100, cancelledReservations: 5,
-  totalRevenue: 600000, totalReviews: 45, averageRating: 4.3, pendingRefundRequests: 2
+  totalRevenue: 600000, totalReviews: 45, averageRating: 4.3
 };
 
 describe('AdminDashboardComponent', () => {

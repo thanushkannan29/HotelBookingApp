@@ -16,7 +16,6 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Room> _roomRepo;
         private readonly IRepository<Guid, RoomType> _roomTypeRepo;
-        private readonly IRepository<Guid, RefundRequest> _refundRepo;
 
         public DashboardService(
             IRepository<Guid, User> userRepo,
@@ -25,8 +24,7 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Transaction> transactionRepo,
             IRepository<Guid, Review> reviewRepo,
             IRepository<Guid, Room> roomRepo,
-            IRepository<Guid, RoomType> roomTypeRepo,
-            IRepository<Guid, RefundRequest> refundRepo)
+            IRepository<Guid, RoomType> roomTypeRepo)
         {
             _userRepo = userRepo;
             _hotelRepo = hotelRepo;
@@ -35,7 +33,6 @@ namespace HotelBookingAppWebApi.Services
             _reviewRepo = reviewRepo;
             _roomRepo = roomRepo;
             _roomTypeRepo = roomTypeRepo;
-            _refundRepo = refundRepo;
         }
 
         // ── ADMIN DASHBOARD ───────────────────────────────────────────────────
@@ -79,10 +76,6 @@ namespace HotelBookingAppWebApi.Services
             var totalReviews = await reviewQuery.CountAsync();
             var averageRating = totalReviews > 0
                 ? await reviewQuery.AverageAsync(r => (decimal?)r.Rating) ?? 0 : 0;
-
-            var pendingRefunds = await _refundRepo.GetQueryable()
-                .CountAsync(r => r.Reservation!.HotelId == hotelId &&
-                                 r.Status == RefundRequestStatus.Pending);
 
             return new AdminDashboardDto
             {

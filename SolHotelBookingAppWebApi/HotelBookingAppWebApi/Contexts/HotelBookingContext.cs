@@ -23,7 +23,6 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<RoomTypeInventory> RoomTypeInventories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Log> Logs { get; set; }
-        public DbSet<RefundRequest> RefundRequests { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
         // Correction 2: Amenity master table
         public DbSet<Amenity> Amenities { get; set; }
@@ -173,12 +172,6 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasForeignKey(t => t.ReservationId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<Reservation>()
-                .HasMany(r => r.RefundRequests)
-                .WithOne(rr => rr.Reservation)
-                .HasForeignKey(rr => rr.ReservationId)
-                .OnDelete(DeleteBehavior.Cascade);
-
             // ─── RESERVATION ROOM ─────────────────────────────────────────────
             modelBuilder.Entity<ReservationRoom>()
                 .Property(rr => rr.PricePerNight)
@@ -226,25 +219,6 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasOne(r => r.Reservation)
                 .WithMany()
                 .HasForeignKey(r => r.ReservationId)
-                .OnDelete(DeleteBehavior.Restrict);
-
-            // ─── REFUND REQUEST ───────────────────────────────────────────────
-            modelBuilder.Entity<RefundRequest>()
-                .Property(r => r.Status)
-                .HasConversion<int>();
-
-            modelBuilder.Entity<RefundRequest>()
-                .Property(r => r.CreatedAt)
-                .HasDefaultValueSql("GETUTCDATE()");
-
-            modelBuilder.Entity<RefundRequest>()
-                .Property(r => r.RefundAmount)
-                .HasPrecision(18, 2);
-
-            modelBuilder.Entity<RefundRequest>()
-                .HasOne(r => r.User)
-                .WithMany()
-                .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             // ─── AUDIT LOG ────────────────────────────────────────────────────

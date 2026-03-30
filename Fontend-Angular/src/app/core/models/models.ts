@@ -556,7 +556,6 @@ export interface AdminDashboardDto {
   totalRevenue: number;
   totalReviews: number;
   averageRating: number;
-  pendingRefundRequests: number; // kept for backward compat, always 0
 }
 
 export interface GuestDashboardDto {

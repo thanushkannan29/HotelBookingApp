@@ -9,7 +9,6 @@ import { environment } from '../../../environments/environment';
 import {
   TransactionService,
   ReviewService,
-  RefundService,
   UserService,
   DashboardService,
   AuditLogService,
@@ -25,7 +24,6 @@ import {
   CreateReviewDto,
   UpdateReviewDto,
   GetHotelReviewsRequestDto,
-  ProcessRefundDto,
   UpdateUserProfileDto,
   PaginationDto,
   CreateRoomTypeDto,
@@ -278,90 +276,6 @@ describe('ReviewService', () => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RefundService
-// ─────────────────────────────────────────────────────────────────────────────
-describe('RefundService', () => {
-  let service: RefundService;
-  let http: HttpTestingController;
-
-  beforeEach(() => {
-    ({ http } = setupTestBed());
-    service = TestBed.inject(RefundService);
-  });
-
-  afterEach(() => http.verify());
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('getGuestRefundRequests() — should GET /guest/refund-requests', () => {
-    const mockRefunds = [
-      { refundRequestId: 'rf-001', reservationId: 'res-001', reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Trip cancelled', status: 'Pending', refundAmount: 5000, createdAt: '2025-01-10T10:00:00Z' }
-    ];
-
-    service.getGuestRefundRequests().subscribe(result => {
-      expect(result.length).toBe(1);
-      expect(result[0].status).toBe('Pending');
-      expect(result[0].refundAmount).toBe(5000);
-    });
-
-    const req = http.expectOne(`${BASE}/guest/refund-requests`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: mockRefunds });
-  });
-
-  it('getHotelRefundRequests() — should GET /admin/refund-requests', () => {
-    service.getHotelRefundRequests().subscribe(result => {
-      expect(result.length).toBe(2);
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests`);
-    expect(req.request.method).toBe('GET');
-    req.flush({
-      success: true,
-      data: [
-        { refundRequestId: 'rf-001', status: 'Pending', refundAmount: 5000, reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Cancelled', createdAt: '2025-01-10T10:00:00Z' },
-        { refundRequestId: 'rf-002', status: 'Pending', refundAmount: 2600, reservationCode: 'RES-WXYZ5678', userId: 'usr-002', guestName: 'Ravi', reason: 'No show', createdAt: '2025-01-11T10:00:00Z' }
-      ]
-    });
-  });
-
-  it('approveRefund() — should POST to /admin/refund-requests/{id}/approve', () => {
-    const dto: ProcessRefundDto = { adminResponse: 'Refund approved. Amount credited within 5 days.' };
-
-    service.approveRefund('rf-001', dto).subscribe(result => {
-      expect(result.status).toBe('Approved');
-      expect(result.adminResponse).toBe('Refund approved. Amount credited within 5 days.');
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests/rf-001/approve`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.adminResponse).toBe('Refund approved. Amount credited within 5 days.');
-    req.flush({
-      success: true,
-      data: { refundRequestId: 'rf-001', status: 'Approved', adminResponse: 'Refund approved. Amount credited within 5 days.', refundAmount: 5000, reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Cancelled', createdAt: '2025-01-10T10:00:00Z', processedAt: '2025-01-12T10:00:00Z' }
-    });
-  });
-
-  it('rejectRefund() — should POST to /admin/refund-requests/{id}/reject', () => {
-    const dto: ProcessRefundDto = { adminResponse: 'Outside the cancellation window. No refund applicable.' };
-
-    service.rejectRefund('rf-002', dto).subscribe(result => {
-      expect(result.status).toBe('Rejected');
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests/rf-002/reject`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.adminResponse).toContain('cancellation window');
-    req.flush({
-      success: true,
-      data: { refundRequestId: 'rf-002', status: 'Rejected', adminResponse: 'Outside the cancellation window. No refund applicable.', refundAmount: 2600, reservationCode: 'RES-WXYZ5678', userId: 'usr-002', guestName: 'Ravi', reason: 'No show', createdAt: '2025-01-11T10:00:00Z', processedAt: '2025-01-12T10:00:00Z' }
-    });
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
 // UserService
 // ─────────────────────────────────────────────────────────────────────────────
 describe('UserService', () => {
@@ -473,8 +387,7 @@ describe('DashboardService', () => {
       totalRooms: 20, activeRooms: 18, totalRoomTypes: 3,
       totalReservations: 120, pendingReservations: 5,
       activeReservations: 10, completedReservations: 100, cancelledReservations: 5,
-      totalRevenue: 600000, totalReviews: 45, averageRating: 4.3,
-      pendingRefundRequests: 2
+      totalRevenue: 600000, totalReviews: 45, averageRating: 4.3
     };
 
     service.getAdminDashboard().subscribe(result => {
@@ -493,13 +406,12 @@ describe('DashboardService', () => {
     const mockDashboard = {
       totalBookings: 8, activeBookings: 2,
       completedBookings: 5, cancelledBookings: 1,
-      totalSpent: 40000, pendingRefunds: 1
+      totalSpent: 40000
     };
 
     service.getGuestDashboard().subscribe(result => {
       expect(result.totalBookings).toBe(8);
       expect(result.totalSpent).toBe(40000);
-      expect(result.pendingRefunds).toBe(1);
     });
 
     const req = http.expectOne(`${BASE}/dashboard/guest`);
@@ -511,8 +423,7 @@ describe('DashboardService', () => {
     const mockDashboard = {
       totalHotels: 50, activeHotels: 46, blockedHotels: 4,
       totalUsers: 1200, totalReservations: 5000,
-      totalRevenue: 25000000, totalReviews: 800,
-      pendingRefundRequests: 12
+      totalRevenue: 25000000, totalReviews: 800
     };
 
     service.getSuperAdminDashboard().subscribe(result => {

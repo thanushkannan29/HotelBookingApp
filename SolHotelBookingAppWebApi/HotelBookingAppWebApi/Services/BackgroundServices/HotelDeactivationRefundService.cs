@@ -1,3 +1,4 @@
+using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
@@ -7,7 +8,7 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
 {
     /// <summary>
     /// Runs every 5 minutes. When a hotel becomes inactive, all its Confirmed reservations
-    /// are cancelled and their payments are refunded automatically.
+    /// are cancelled and their payments are refunded directly to the guest wallet.
     /// </summary>
     public class HotelDeactivationRefundService : BackgroundService
     {
@@ -47,9 +48,9 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
 
             var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
             var transactionRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Transaction>>();
-            var inventoryRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
-            var refundRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RefundRequest>>();
-            var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+            var inventoryRepo   = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
+            var walletService   = scope.ServiceProvider.GetRequiredService<IWalletService>();
+            var unitOfWork      = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
             // Find all Confirmed reservations whose hotel is inactive
             var affectedReservations = await reservationRepo.GetQueryable()
@@ -95,26 +96,26 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                 {
                     // 1. Cancel the reservation
                     reservation.Status = ReservationStatus.Cancelled;
-                    reservation.CancellationReason = "Hotel deactivated — automatic cancellation and refund.";
+                    reservation.CancellationReason = "Hotel deactivated — automatic cancellation and full refund.";
                     reservation.CancelledDate = now;
 
                     // 2. Restore inventory
                     if (reservation.ReservationRooms?.Any() ?? false)
                     {
                         var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
-                        var roomCount = reservation.ReservationRooms.Count;
-                        var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+                        var roomCount  = reservation.ReservationRooms.Count;
+                        var totalDays  = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
 
                         for (int d = 0; d < totalDays; d++)
                         {
                             var date = reservation.CheckInDate.AddDays(d);
-                            var key = new { RoomTypeId = roomTypeId, Date = date };
+                            var key  = new { RoomTypeId = roomTypeId, Date = date };
                             if (invLookup.TryGetValue(key, out var inv))
                                 inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
                         }
                     }
 
-                    // 3. Mark any successful transaction as Refunded
+                    // 3. Mark any successful transaction as Refunded and credit wallet directly
                     var successTx = reservation.Transactions?
                         .FirstOrDefault(t => t.Status == PaymentStatus.Success);
 
@@ -122,32 +123,14 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                     {
                         successTx.Status = PaymentStatus.Refunded;
 
-                        // 4. Auto-approve a refund request and credit wallet
-                        var alreadyExists = await refundRepo.GetQueryable()
-                            .AnyAsync(rr => rr.ReservationId == reservation.ReservationId, ct);
+                        var refundAmount = reservation.FinalAmount > 0
+                            ? reservation.FinalAmount
+                            : reservation.TotalAmount;
 
-                        if (!alreadyExists)
-                        {
-                            await refundRepo.AddAsync(new RefundRequest
-                            {
-                                RefundRequestId = Guid.NewGuid(),
-                                ReservationId = reservation.ReservationId,
-                                UserId = reservation.UserId,
-                                Reason = "Hotel deactivated by admin/SuperAdmin.",
-                                Status = RefundRequestStatus.Approved,
-                                AdminResponse = "Auto-approved due to hotel deactivation.",
-                                CreatedAt = now,
-                                ProcessedAt = now
-                            });
-
-                            // Credit refund amount to guest wallet
-                            var walletService = scope.ServiceProvider.GetRequiredService<HotelBookingAppWebApi.Interfaces.IWalletService>();
-                            var refundAmount = reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount;
-                            await walletService.CreditAsync(
-                                reservation.UserId,
-                                refundAmount,
-                                $"Refund for cancelled reservation {reservation.ReservationCode} (hotel deactivated)");
-                        }
+                        await walletService.CreditAsync(
+                            reservation.UserId,
+                            refundAmount,
+                            $"Full refund for cancelled reservation {reservation.ReservationCode} (hotel deactivated)");
                     }
                 }
 
