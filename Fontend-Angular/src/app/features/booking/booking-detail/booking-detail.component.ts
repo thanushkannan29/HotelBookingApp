@@ -354,12 +354,22 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
     const checkIn = new Date(res.checkInDate);
     const today = new Date(); today.setHours(0,0,0,0); checkIn.setHours(0,0,0,0);
     const days = Math.round((checkIn.getTime() - today.getTime()) / 86400000);
-    if (res.cancellationFeePaid) {
-      if (days >= 1) return `Full refund of ₹${res.totalAmount.toFixed(2)} — cancellation protection active`;
-      return 'No refund — same-day cancellation not covered by protection';
+
+    // After check-in or stay already passed — no refund
+    if (res.isCheckedIn || days < 0) {
+      return `No refund — reservation already checked in or stay has passed`;
     }
-    if (days >= 5) return `You will receive ₹${(res.totalAmount * 0.5).toFixed(2)} refund (50% — 5+ days before check-in)`;
-    if (days >= 3) return `You will receive ₹${(res.totalAmount * 0.25).toFixed(2)} refund (25% — 3–4 days before check-in)`;
-    return 'No refund applicable — within 2 days of check-in';
+
+    if (res.cancellationFeePaid) {
+      // With protection: full refund before check-in day, 50% on check-in day
+      if (days > 0) return `Full refund of ₹${res.totalAmount.toFixed(2)} — protection active, cancelled before check-in day`;
+      return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled on check-in day (protection provides partial refund)`;
+    }
+
+    // Without protection — industry-standard tiered policy
+    if (days >= 7) return `Full refund of ₹${res.totalAmount.toFixed(2)} — free cancellation, 7+ days before check-in`;
+    if (days >= 3) return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled 3–6 days before check-in`;
+    if (days >= 1) return `25% refund of ₹${(res.totalAmount * 0.25).toFixed(2)} — cancelled 1–2 days before check-in`;
+    return `No refund — cancelled on check-in day`;
   }
 }

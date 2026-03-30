@@ -224,17 +224,12 @@
 
                   <!-- Refund preview -->
                   <div class="refund-preview mb-3">
-                    @if (res.cancellationFeePaid) {
-                      <div class="refund-preview-ok">
-                        <mat-icon style="color:#2e7d32">shield</mat-icon>
-                        <span>Cancellation protection active — you will receive a <strong>full refund of ₹{{ res.totalAmount | number:'1.2-2' }}</strong></span>
-                      </div>
-                    } @else {
-                      <div class="refund-preview-info">
-                        <mat-icon>info</mat-icon>
-                        <span>{{ getRefundPreview(res) }}</span>
-                      </div>
-                    }
+                    <div [class]="getRefundPreview(res).startsWith('No refund') ? 'refund-preview-warn' : 'refund-preview-ok'">
+                      <mat-icon [style.color]="getRefundPreview(res).startsWith('No refund') ? '#c62828' : '#2e7d32'">
+                        {{ res.cancellationFeePaid ? 'shield' : 'info' }}
+                      </mat-icon>
+                      <span>{{ getRefundPreview(res) }}</span>
+                    </div>
                     <p style="font-size:12px;color:#888;margin-top:4px;">Policy: {{ res.cancellationPolicyText }}</p>
                   </div>
 

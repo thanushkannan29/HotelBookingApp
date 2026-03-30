@@ -472,48 +472,65 @@ namespace HotelBookingAppWebApi.Services
                 var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
                 if (hasPaid)
                 {
-                    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                    var today = DateOnly.FromDateTime(DateTime.Now); // local date (IST)
                     var daysUntilCheckIn = res.CheckInDate.DayNumber - today.DayNumber;
 
                     decimal refundPercent;
                     string refundNote;
 
-                    if (res.CancellationFeePaid)
+                    // ── AFTER CHECK-IN: no refund regardless of protection ──────────────
+                    if (res.IsCheckedIn || daysUntilCheckIn < 0)
                     {
-                        // With protection: full refund if cancelled at least 1 day before check-in
-                        if (daysUntilCheckIn >= 1)
+                        refundPercent = 0;
+                        refundNote = "No refund — reservation already checked in or stay has passed.";
+                    }
+                    // ── WITH CANCELLATION PROTECTION ────────────────────────────────────
+                    else if (res.CancellationFeePaid)
+                    {
+                        if (daysUntilCheckIn > 0)
                         {
+                            // Before check-in day: full refund (protection covers this)
                             refundPercent = 100;
-                            refundNote = "Full refund — cancellation protection active, cancelled 1+ day before check-in.";
+                            refundNote = "Full refund — cancellation protection active, cancelled before check-in day.";
                         }
                         else
                         {
-                            refundPercent = 0;
-                            refundNote = "No refund — cancelled on check-in day (protection does not cover same-day cancellation).";
+                            // On check-in day: 50% refund (protection gives partial benefit)
+                            refundPercent = 50;
+                            refundNote = "50% refund — cancelled on check-in day (protection provides partial refund).";
                         }
                     }
-                    else if (daysUntilCheckIn >= 5)
-                    {
-                        refundPercent = 50;
-                        refundNote = "50% refund — cancelled 5+ days before check-in.";
-                    }
-                    else if (daysUntilCheckIn >= 3)
-                    {
-                        refundPercent = 25;
-                        refundNote = "25% refund — cancelled 3–4 days before check-in.";
-                    }
+                    // ── WITHOUT PROTECTION: standard tiered policy ───────────────────────
                     else
                     {
-                        refundPercent = 0;
-                        refundNote = "No refund — cancelled within 2 days of check-in.";
+                        if (daysUntilCheckIn >= 7)
+                        {
+                            refundPercent = 100;
+                            refundNote = "Full refund — cancelled 7+ days before check-in.";
+                        }
+                        else if (daysUntilCheckIn >= 3)
+                        {
+                            refundPercent = 50;
+                            refundNote = "50% refund — cancelled 3–6 days before check-in.";
+                        }
+                        else if (daysUntilCheckIn >= 1)
+                        {
+                            refundPercent = 25;
+                            refundNote = "25% refund — cancelled 1–2 days before check-in.";
+                        }
+                        else
+                        {
+                            // Same day (daysUntilCheckIn == 0)
+                            refundPercent = 0;
+                            refundNote = "No refund — cancelled on check-in day.";
+                        }
                     }
 
                     if (refundPercent > 0)
                     {
                         var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);
-                        // Auto-credit wallet directly — no manual admin approval needed
                         await _walletService.CreditAsync(userId, refundAmount,
-                            $"Auto-refund ({refundNote}) for {res.ReservationCode}");
+                            $"Refund ({refundNote}) for {res.ReservationCode}");
                     }
                 }
 
@@ -653,9 +670,9 @@ namespace HotelBookingAppWebApi.Services
             var firstRoomType = r.ReservationRooms?.FirstOrDefault()?.RoomType;
             string policyText;
             if (r.CancellationFeePaid)
-                policyText = "Full refund anytime (protection fee paid)";
+                policyText = "Full refund before check-in day · 50% on check-in day · No refund after check-in (protection fee paid)";
             else
-                policyText = "50% refund if 5+ days before check-in, 25% if 3–4 days, no refund within 2 days";
+                policyText = "Free cancellation 7+ days before · 50% refund 3–6 days before · 25% refund 1–2 days before · No refund on check-in day or after";
 
             return new ReservationDetailsDto
             {
