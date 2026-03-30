@@ -187,12 +187,14 @@ namespace HotelBookingAppWebApi.Services
                 .FirstOrDefaultAsync(r => r.SupportRequestId == requestId)
                 ?? throw new NotFoundException("Support request not found.");
 
-            if (!Enum.TryParse<SupportRequestStatus>(dto.Status, out var newStatus))
+            if (!Enum.TryParse<SupportRequestStatus>(dto.Status, out var newStatus)
+                || newStatus == SupportRequestStatus.Open)
                 newStatus = SupportRequestStatus.Resolved;
 
-            request.AdminResponse = dto.Response;
             request.Status = newStatus;
             request.RespondedAt = DateTime.UtcNow;
+            if (!string.IsNullOrWhiteSpace(dto.Response))
+                request.AdminResponse = dto.Response;
 
             await _unitOfWork.SaveChangesAsync();
 

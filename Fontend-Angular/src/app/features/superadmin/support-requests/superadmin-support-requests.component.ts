@@ -49,7 +49,7 @@ export class SuperadminSupportRequestsComponent implements OnInit {
   selectedRole   = 'All';
   searchTerm     = '';
 
-  readonly statusTabs = ['All', 'Open', 'InProgress', 'Resolved', 'Closed'];
+  readonly statusTabs = ['All', 'Open', 'InProgress', 'Resolved'];
   readonly roleTabs   = ['All', 'Guest', 'Admin', 'Public'];
 
   private searchSubject = new Subject<string>();
@@ -95,10 +95,15 @@ export class SuperadminSupportRequestsComponent implements OnInit {
     });
   }
 
+  markInProgress(r: SupportRequestResponseDto) {
+    this.service.respond(r.supportRequestId, { response: r.adminResponse ?? '', status: 'InProgress' }).subscribe({
+      next: () => { this.toast.success('Marked as In Progress.'); this.load(); },
+    });
+  }
+
   statusClass(s: string): string {
     const m: Record<string, string> = {
-      Open: 'badge-warning', InProgress: 'badge-primary',
-      Resolved: 'badge-success', Closed: 'badge-muted',
+      Open: 'badge-warning', InProgress: 'badge-primary', Resolved: 'badge-success',
     };
     return m[s] ?? 'badge-muted';
   }

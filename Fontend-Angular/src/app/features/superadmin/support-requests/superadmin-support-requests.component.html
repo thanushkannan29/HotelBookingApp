@@ -83,11 +83,11 @@
                   <p class="detail-value">{{ r.message }}</p>
                 </div>
 
-                @if (r.adminResponse) {
+                @if (r.status === 'Resolved') {
                   <div class="response-block">
                     <div class="response-header">
-                      <mat-icon>support_agent</mat-icon>
-                      <span>Your Response</span>
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Response Sent</span>
                       @if (r.respondedAt) {
                         <span class="response-date">{{ r.respondedAt | date:'MMM d, y' }}</span>
                       }
@@ -97,10 +97,20 @@
                       <mat-icon>edit</mat-icon> Update Response
                     </button>
                   </div>
-                } @else {
+                } @else if (r.status === 'InProgress') {
                   <div class="action-row">
                     <button mat-flat-button color="primary" (click)="respond(r)">
-                      <mat-icon>reply</mat-icon> Respond
+                      <mat-icon>reply</mat-icon> Send Response & Resolve
+                    </button>
+                  </div>
+                } @else {
+                  <!-- Open -->
+                  <div class="action-row">
+                    <button mat-stroked-button (click)="markInProgress(r)">
+                      <mat-icon>pending</mat-icon> Mark In Progress
+                    </button>
+                    <button mat-flat-button color="primary" (click)="respond(r)">
+                      <mat-icon>reply</mat-icon> Respond & Resolve
                     </button>
                   </div>
                 }

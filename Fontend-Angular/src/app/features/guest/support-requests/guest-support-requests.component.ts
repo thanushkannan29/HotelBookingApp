@@ -48,16 +48,14 @@ export class GuestSupportRequestsComponent implements OnInit {
 
   statusClass(s: string): string {
     const m: Record<string, string> = {
-      Open: 'badge-warning', InProgress: 'badge-primary',
-      Resolved: 'badge-success', Closed: 'badge-muted',
+      Open: 'badge-warning', InProgress: 'badge-primary', Resolved: 'badge-success',
     };
     return m[s] ?? 'badge-muted';
   }
 
   statusIcon(s: string): string {
     const m: Record<string, string> = {
-      Open: 'radio_button_unchecked', InProgress: 'pending',
-      Resolved: 'check_circle', Closed: 'cancel',
+      Open: 'radio_button_unchecked', InProgress: 'pending', Resolved: 'check_circle',
     };
     return m[s] ?? 'help';
   }

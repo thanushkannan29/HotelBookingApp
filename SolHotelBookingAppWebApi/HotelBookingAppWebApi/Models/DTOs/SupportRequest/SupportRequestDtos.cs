@@ -85,9 +85,10 @@ namespace HotelBookingAppWebApi.Models.DTOs.SupportRequest
 
     public class RespondSupportRequestDto
     {
-        [Required, MaxLength(2000)]
+        [MaxLength(2000)]
         public string Response { get; set; } = string.Empty;
 
+        /// <summary>InProgress or Resolved</summary>
         [Required, MaxLength(50)]
         public string Status { get; set; } = "Resolved";
     }

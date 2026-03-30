@@ -770,7 +770,7 @@ export interface SupportRequestResponseDto {
   subject: string;
   message: string;
   category: string;
-  status: 'Open' | 'InProgress' | 'Resolved' | 'Closed';
+  status: 'Open' | 'InProgress' | 'Resolved';
   adminResponse?: string;
   submitterRole: string;
   submitterName: string;
@@ -788,7 +788,7 @@ export interface PagedSupportRequestResponseDto {
 
 export interface RespondSupportRequestDto {
   response: string;
-  status: string;
+  status: 'InProgress' | 'Resolved';
 }
 
 // ─── ROOM TYPE RATE ───────────────────────────────────────────────────────────
