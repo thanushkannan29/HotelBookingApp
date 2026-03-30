@@ -10,7 +10,7 @@ namespace HotelBookingAppWebApi.Contexts
         {
         }
 
-        // ─── TABLES ───────────────────────────────────────────────────────────
+        // ─── CORE TABLES ──────────────────────────────────────────────────────
         public DbSet<User> Users { get; set; }
         public DbSet<UserProfileDetails> UserProfileDetails { get; set; }
         public DbSet<Hotel> Hotels { get; set; }
@@ -24,15 +24,15 @@ namespace HotelBookingAppWebApi.Contexts
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Log> Logs { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
-        // Correction 2: Amenity master table
+
+        // ─── FEATURE TABLES ───────────────────────────────────────────────────
         public DbSet<Amenity> Amenities { get; set; }
-        // New tables
+        public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
         public DbSet<Wallet> Wallets { get; set; }
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<PromoCode> PromoCodes { get; set; }
         public DbSet<AmenityRequest> AmenityRequests { get; set; }
         public DbSet<SuperAdminRevenue> SuperAdminRevenues { get; set; }
-        public DbSet<RoomTypeAmenity> RoomTypeAmenities { get; set; }
         public DbSet<SupportRequest> SupportRequests { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -208,13 +208,12 @@ namespace HotelBookingAppWebApi.Contexts
             modelBuilder.Entity<Review>()
                 .HasIndex(r => r.HotelId);
 
-            // Correction 4: one review per reservation (not per hotel)
-            // Unique index on (UserId, ReservationId) — one review per completed stay
+            // One review per completed reservation (UserId + ReservationId unique)
             modelBuilder.Entity<Review>()
                 .HasIndex(r => new { r.UserId, r.ReservationId })
                 .IsUnique();
 
-            // Correction 4: Review -> Reservation FK (Restrict so deleting reservation doesn't cascade-delete reviews)
+            // Restrict so deleting a reservation does not cascade-delete its reviews
             modelBuilder.Entity<Review>()
                 .HasOne(r => r.Reservation)
                 .WithMany()
@@ -232,7 +231,6 @@ namespace HotelBookingAppWebApi.Contexts
                 .HasDefaultValueSql("GETUTCDATE()");
 
             // ─── AMENITY ──────────────────────────────────────────────────────
-            // Correction 2: Amenity master table configuration
             modelBuilder.Entity<Amenity>()
                 .HasIndex(a => a.Name)
                 .IsUnique();
@@ -393,7 +391,7 @@ namespace HotelBookingAppWebApi.Contexts
                 .Property(t => t.WalletAmountUsed)
                 .HasPrecision(18, 2);
 
-            // Correction 2: Seed data — 30 common amenities
+            // ─── AMENITY SEED DATA (30 common amenities) ──────────────────────
             modelBuilder.Entity<Amenity>().HasData(
                 new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000001"), Name = "WiFi",               Category = "Tech",      IconName = "wifi",               IsActive = true },
                 new Amenity { AmenityId = Guid.Parse("10000000-0000-0000-0000-000000000002"), Name = "AC",                 Category = "Room",      IconName = "ac_unit",            IsActive = true },
