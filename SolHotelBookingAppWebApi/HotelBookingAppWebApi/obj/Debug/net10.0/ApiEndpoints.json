@@ -1101,16 +1101,6 @@
   },
   {
     "ContainingType": "HotelBookingAppWebApi.Controllers.ReviewsController",
-    "Method": "GetMyReviews",
-    "RelativePath": "api/reviews/my-reviews",
-    "HttpMethod": "GET",
-    "IsController": true,
-    "Order": 0,
-    "Parameters": [],
-    "ReturnTypes": []
-  },
-  {
-    "ContainingType": "HotelBookingAppWebApi.Controllers.ReviewsController",
     "Method": "GetMyReviewsPaged",
     "RelativePath": "api/reviews/my-reviews/paged",
     "HttpMethod": "POST",

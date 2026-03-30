@@ -39,13 +39,6 @@ export class TransactionService {
       `${this.base}/transactions/list`, { page, pageSize, sortField, sortDir }
     ).pipe(map(r => r.data!));
   }
-
-  // F7E via Admin: mark transaction as failed
-  markTransactionFailed(transactionId: string): Observable<void> {
-    return this.http.patch<any>(
-      `${this.base}/admin/transactions/${transactionId}/mark-failed`, {}
-    ).pipe(map(() => undefined));
-  }
 }
 
 // ─── REVIEW SERVICE ───────────────────────────────────────────────────────────
@@ -292,11 +285,5 @@ export class AmenityService {
   getAmenities(): Observable<AmenityResponseDto[]> {
     return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
       .pipe(map(r => r.data ?? []));
-  }
-
-  searchAmenities(query: string): Observable<AmenityResponseDto[]> {
-    return this.http.get<ApiResponse<AmenityResponseDto[]>>(
-      `${this.base}/public/amenities/search`, { params: { query } }
-    ).pipe(map(r => r.data ?? []));
   }
 }

@@ -42,12 +42,6 @@ export class HotelService {
     ).pipe(map(r => r.data ?? []));
   }
 
-  searchHotels(req: SearchHotelRequestDto): Observable<SearchHotelResponseDto> {
-    return this.http.post<ApiResponse<SearchHotelResponseDto>>(
-      `${this.base}/public/hotels/search`, req
-    ).pipe(map(r => r.data!));
-  }
-
   searchHotelsWithFilters(req: SearchHotelRequestDto & {
     amenityIds?: string[];
     minPrice?: number;
@@ -83,12 +77,6 @@ export class HotelService {
   getAmenities(): Observable<AmenityResponseDto[]> {
     return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
       .pipe(map(r => r.data ?? []));
-  }
-
-  searchAmenities(query: string): Observable<AmenityResponseDto[]> {
-    return this.http.get<ApiResponse<AmenityResponseDto[]>>(
-      `${this.base}/public/amenities/search`, { params: { query } }
-    ).pipe(map(r => r.data ?? []));
   }
 
   // ── ADMIN ─────────────────────────────────────────────────────────────────
