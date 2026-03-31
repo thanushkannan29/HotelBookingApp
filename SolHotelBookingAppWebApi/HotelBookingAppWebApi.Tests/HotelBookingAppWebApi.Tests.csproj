@@ -6,6 +6,11 @@
 		<Nullable>enable</Nullable>
 		<IsPackable>false</IsPackable>
 		<IsTestProject>true</IsTestProject>
+		<RunSettingsFilePath>$(MSBuildThisFileDirectory)coverage.runsettings</RunSettingsFilePath>
+	</PropertyGroup>
+
+	<PropertyGroup Label="FineCodeCoverage">
+		<UseDataCollector>false</UseDataCollector>
 	</PropertyGroup>
 
 	<ItemGroup>
