@@ -253,3 +253,4 @@ C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingAppWebApi.Tests\obj\Debug\net10.0\HotelBoo.7EC2DE1C.Up2Date
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingAppWebApi.Tests\obj\Debug\net10.0\HotelBookingAppWebApi.Tests.genruntimeconfig.cache
 C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingAppWebApi.Tests\obj\Debug\net10.0\ref\HotelBookingAppWebApi.Tests.dll
+C:\Users\Thanush.K\OneDrive - New American Funding\Desktop\My_Naf_Final_Project\HotelBookingApp\SolHotelBookingAppWebApi\HotelBookingAppWebApi.Tests\obj\Debug\net10.0\MvcTestingAppManifest.json

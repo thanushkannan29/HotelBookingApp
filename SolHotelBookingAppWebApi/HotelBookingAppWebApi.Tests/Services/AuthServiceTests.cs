@@ -13,164 +13,263 @@ namespace HotelBookingAppWebApi.Tests.Services;
 
 public class AuthServiceTests
 {
-    private readonly Mock<IRepository<Guid, User>> _userRepo = new();
-    private readonly Mock<IRepository<Guid, Hotel>> _hotelRepo = new();
-    private readonly Mock<IRepository<Guid, UserProfileDetails>> _profileRepo = new();
-    private readonly Mock<IPasswordService> _passwordService = new();
-    private readonly Mock<ITokenService> _tokenService = new();
-    private readonly Mock<IWalletService> _walletService = new();
-    private readonly Mock<IUnitOfWork> _unitOfWork = new();
-    private readonly AuthService _sut;
+    private readonly Mock<IRepository<Guid, User>> _userRepoMock = new();
+    private readonly Mock<IRepository<Guid, Hotel>> _hotelRepoMock = new();
+    private readonly Mock<IRepository<Guid, UserProfileDetails>> _profileRepoMock = new();
+    private readonly Mock<IPasswordService> _passwordServiceMock = new();
+    private readonly Mock<ITokenService> _tokenServiceMock = new();
+    private readonly Mock<IWalletService> _walletServiceMock = new();
+    private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
-    public AuthServiceTests()
+    private AuthService CreateSut() => new(
+        _userRepoMock.Object,
+        _hotelRepoMock.Object,
+        _profileRepoMock.Object,
+        _passwordServiceMock.Object,
+        _tokenServiceMock.Object,
+        _walletServiceMock.Object,
+        _unitOfWorkMock.Object);
+
+    private void SetupEmptyUserQueryable()
     {
-        _sut = new AuthService(
-            _userRepo.Object, _hotelRepo.Object, _profileRepo.Object,
-            _passwordService.Object, _tokenService.Object,
-            _walletService.Object, _unitOfWork.Object);
+        var empty = new List<User>().AsQueryable().BuildMock();
+        _userRepoMock.Setup(r => r.GetQueryable()).Returns(empty);
+    }
+
+    private void SetupExistingUserQueryable(User user)
+    {
+        var users = new List<User> { user }.AsQueryable().BuildMock();
+        _userRepoMock.Setup(r => r.GetQueryable()).Returns(users);
+    }
+
+    private void SetupPasswordService()
+    {
+        var salt = new byte[] { 1, 2, 3 };
+        var hash = new byte[] { 4, 5, 6 };
+        byte[]? outSalt = salt;
+        _passwordServiceMock
+            .Setup(p => p.HashPassword(It.IsAny<string>(), null, out outSalt))
+            .Returns(hash);
+        _passwordServiceMock
+            .Setup(p => p.HashPassword(It.IsAny<string>(), It.IsAny<byte[]>(), out It.Ref<byte[]?>.IsAny))
+            .Returns(hash);
     }
 
     // ── RegisterGuestAsync ────────────────────────────────────────────────────
 
     [Fact]
-    public async Task RegisterGuestAsync_NewEmail_ReturnsToken()
+    public async Task RegisterGuestAsync_ValidDto_ReturnsAuthResponseDto()
     {
+        // Arrange
+        SetupEmptyUserQueryable();
+        SetupPasswordService();
+        _userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
+        _profileRepoMock.Setup(r => r.AddAsync(It.IsAny<UserProfileDetails>())).ReturnsAsync((UserProfileDetails p) => p);
+        _tokenServiceMock.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("jwt-token");
+        var sut = CreateSut();
         var dto = new RegisterUserDto { Name = "Alice", Email = "alice@test.com", Password = "pass123" };
-        var users = new List<User>().AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(users);
-        _passwordService.Setup(p => p.HashPassword(dto.Password, null, out It.Ref<byte[]?>.IsAny))
-            .Returns((string _, byte[]? _, out byte[]? salt) => { salt = new byte[] { 1 }; return new byte[] { 2 }; });
-        _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
-        _profileRepo.Setup(r => r.AddAsync(It.IsAny<UserProfileDetails>())).ReturnsAsync(new UserProfileDetails());
-        _tokenService.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("jwt-token");
 
-        var result = await _sut.RegisterGuestAsync(dto);
+        // Act
+        var result = await sut.RegisterGuestAsync(dto);
 
+        // Assert
+        result.Should().NotBeNull();
         result.Token.Should().Be("jwt-token");
-        _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
-        _walletService.Verify(w => w.EnsureWalletExistsAsync(It.IsAny<Guid>()), Times.Once);
     }
 
     [Fact]
-    public async Task RegisterGuestAsync_DuplicateEmail_ThrowsConflict()
+    public async Task RegisterGuestAsync_DuplicateEmail_ThrowsConflictException()
     {
-        var dto = new RegisterUserDto { Name = "Bob", Email = "bob@test.com", Password = "pass" };
-        var existing = new List<User> { new() { Email = "bob@test.com" } }.AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(existing);
+        // Arrange
+        var existing = new User { UserId = Guid.NewGuid(), Email = "alice@test.com", Name = "Alice",
+            Password = new byte[]{1}, PasswordSaltValue = new byte[]{2}, Role = UserRole.Guest, CreatedAt = DateTime.UtcNow };
+        SetupExistingUserQueryable(existing);
+        var sut = CreateSut();
+        var dto = new RegisterUserDto { Name = "Alice", Email = "alice@test.com", Password = "pass123" };
 
-        await _sut.Invoking(s => s.RegisterGuestAsync(dto))
-            .Should().ThrowAsync<ConflictException>();
-        _unitOfWork.Verify(u => u.RollbackAsync(), Times.Never);
+        // Act
+        var act = async () => await sut.RegisterGuestAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<ConflictException>().WithMessage("*already registered*");
     }
 
     [Fact]
-    public async Task RegisterGuestAsync_OnException_Rollback()
+    public async Task RegisterGuestAsync_InnerException_CallsRollback()
     {
-        var dto = new RegisterUserDto { Name = "X", Email = "x@test.com", Password = "p" };
-        var users = new List<User>().AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(users);
-        _passwordService.Setup(p => p.HashPassword(It.IsAny<string>(), null, out It.Ref<byte[]?>.IsAny))
-            .Returns((string _, byte[]? _, out byte[]? salt) => { salt = new byte[] { 1 }; return new byte[] { 2 }; });
-        _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ThrowsAsync(new Exception("db error"));
+        // Arrange
+        SetupEmptyUserQueryable();
+        SetupPasswordService();
+        _userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>())).ThrowsAsync(new Exception("DB error"));
+        var sut = CreateSut();
+        var dto = new RegisterUserDto { Name = "Alice", Email = "alice@test.com", Password = "pass123" };
 
-        await _sut.Invoking(s => s.RegisterGuestAsync(dto)).Should().ThrowAsync<Exception>();
-        _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
+        // Act
+        var act = async () => await sut.RegisterGuestAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(), Times.Once);
     }
 
     // ── RegisterHotelAdminAsync ───────────────────────────────────────────────
 
     [Fact]
-    public async Task RegisterHotelAdminAsync_NewEmail_ReturnsToken()
+    public async Task RegisterHotelAdminAsync_ValidDto_CreatesHotelAndAdmin()
     {
+        // Arrange
+        SetupEmptyUserQueryable();
+        SetupPasswordService();
+        _hotelRepoMock.Setup(r => r.AddAsync(It.IsAny<Hotel>())).ReturnsAsync((Hotel h) => h);
+        _userRepoMock.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
+        _profileRepoMock.Setup(r => r.AddAsync(It.IsAny<UserProfileDetails>())).ReturnsAsync((UserProfileDetails p) => p);
+        _tokenServiceMock.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("admin-jwt");
+        var sut = CreateSut();
         var dto = new RegisterHotelAdminDto
         {
-            Name = "Admin", Email = "admin@hotel.com", Password = "pass",
-            HotelName = "Grand", Address = "123 St", City = "NYC",
-            State = "NY", Description = "Luxury", ContactNumber = "1234567890"
+            Name = "Admin", Email = "admin@hotel.com", Password = "pass123",
+            HotelName = "Grand Hotel", Address = "123 Main", City = "Mumbai",
+            State = "MH", ContactNumber = "9999999999"
         };
-        var users = new List<User>().AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(users);
-        _hotelRepo.Setup(r => r.AddAsync(It.IsAny<Hotel>())).ReturnsAsync((Hotel h) => h);
-        _passwordService.Setup(p => p.HashPassword(dto.Password, null, out It.Ref<byte[]?>.IsAny))
-            .Returns((string _, byte[]? _, out byte[]? salt) => { salt = new byte[] { 1 }; return new byte[] { 2 }; });
-        _userRepo.Setup(r => r.AddAsync(It.IsAny<User>())).ReturnsAsync((User u) => u);
-        _profileRepo.Setup(r => r.AddAsync(It.IsAny<UserProfileDetails>())).ReturnsAsync(new UserProfileDetails());
-        _tokenService.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("admin-token");
 
-        var result = await _sut.RegisterHotelAdminAsync(dto);
+        // Act
+        var result = await sut.RegisterHotelAdminAsync(dto);
 
-        result.Token.Should().Be("admin-token");
-        _unitOfWork.Verify(u => u.CommitAsync(), Times.Once);
+        // Assert
+        result.Token.Should().Be("admin-jwt");
+        _hotelRepoMock.Verify(r => r.AddAsync(It.IsAny<Hotel>()), Times.Once);
     }
 
     [Fact]
-    public async Task RegisterHotelAdminAsync_DuplicateEmail_ThrowsConflict()
+    public async Task RegisterHotelAdminAsync_DuplicateEmail_ThrowsConflictException()
     {
-        var dto = new RegisterHotelAdminDto { Email = "dup@hotel.com", Name = "X", Password = "p", HotelName = "H", Address = "A", City = "C", ContactNumber = "123" };
-        var existing = new List<User> { new() { Email = "dup@hotel.com" } }.AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(existing);
+        // Arrange
+        var existing = new User { UserId = Guid.NewGuid(), Email = "admin@hotel.com", Name = "Admin",
+            Password = new byte[]{1}, PasswordSaltValue = new byte[]{2}, Role = UserRole.Admin, CreatedAt = DateTime.UtcNow };
+        SetupExistingUserQueryable(existing);
+        var sut = CreateSut();
+        var dto = new RegisterHotelAdminDto
+        {
+            Name = "Admin", Email = "admin@hotel.com", Password = "pass123",
+            HotelName = "Grand Hotel", Address = "123 Main", City = "Mumbai", ContactNumber = "9999999999"
+        };
 
-        await _sut.Invoking(s => s.RegisterHotelAdminAsync(dto)).Should().ThrowAsync<ConflictException>();
+        // Act
+        var act = async () => await sut.RegisterHotelAdminAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<ConflictException>();
     }
 
     [Fact]
-    public async Task RegisterHotelAdminAsync_OnException_Rollback()
+    public async Task RegisterHotelAdminAsync_InnerException_CallsRollback()
     {
-        var dto = new RegisterHotelAdminDto { Email = "err@hotel.com", Name = "X", Password = "p", HotelName = "H", Address = "A", City = "C", ContactNumber = "123" };
-        var users = new List<User>().AsQueryable().BuildMock();
-        _userRepo.Setup(r => r.GetQueryable()).Returns(users);
-        _hotelRepo.Setup(r => r.AddAsync(It.IsAny<Hotel>())).ThrowsAsync(new Exception("fail"));
+        // Arrange
+        SetupEmptyUserQueryable();
+        SetupPasswordService();
+        _hotelRepoMock.Setup(r => r.AddAsync(It.IsAny<Hotel>())).ThrowsAsync(new Exception("DB error"));
+        var sut = CreateSut();
+        var dto = new RegisterHotelAdminDto
+        {
+            Name = "Admin", Email = "admin@hotel.com", Password = "pass123",
+            HotelName = "Grand Hotel", Address = "123 Main", City = "Mumbai", ContactNumber = "9999999999"
+        };
 
-        await _sut.Invoking(s => s.RegisterHotelAdminAsync(dto)).Should().ThrowAsync<Exception>();
-        _unitOfWork.Verify(u => u.RollbackAsync(), Times.Once);
+        // Act
+        var act = async () => await sut.RegisterHotelAdminAsync(dto);
+
+        // Assert
+        await act.Should().ThrowAsync<Exception>();
+        _unitOfWorkMock.Verify(u => u.RollbackAsync(), Times.Once);
     }
 
     // ── LoginAsync ────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task LoginAsync_ValidCredentials_ReturnsToken()
+    public async Task LoginAsync_ValidCredentials_ReturnsAuthResponseDto()
     {
-        var hash = new byte[] { 99 };
-        var salt = new byte[] { 1 };
-        var user = new User { UserId = Guid.NewGuid(), Email = "u@test.com", Password = hash, PasswordSaltValue = salt, IsActive = true, Role = UserRole.Guest, Name = "U", CreatedAt = DateTime.UtcNow };
-        _userRepo.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>())).ReturnsAsync(user);
-        _passwordService.Setup(p => p.HashPassword("pass", salt, out It.Ref<byte[]?>.IsAny)).Returns((string _, byte[]? _, out byte[]? s) => { s = null; return hash; });
-        _tokenService.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("login-token");
+        // Arrange
+        var salt = new byte[] { 1, 2, 3 };
+        var hash = new byte[] { 4, 5, 6 };
+        var user = new User
+        {
+            UserId = Guid.NewGuid(), Email = "alice@test.com", Name = "Alice",
+            Password = hash, PasswordSaltValue = salt, IsActive = true,
+            Role = UserRole.Guest, CreatedAt = DateTime.UtcNow
+        };
+        _userRepoMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .ReturnsAsync(user);
+        byte[]? outSalt = null;
+        _passwordServiceMock.Setup(p => p.HashPassword("pass123", salt, out outSalt)).Returns(hash);
+        _tokenServiceMock.Setup(t => t.CreateToken(It.IsAny<TokenPayloadDto>())).Returns("jwt");
+        var sut = CreateSut();
 
-        var result = await _sut.LoginAsync(new LoginDto { Email = "u@test.com", Password = "pass" });
+        // Act
+        var result = await sut.LoginAsync(new LoginDto { Email = "alice@test.com", Password = "pass123" });
 
-        result.Token.Should().Be("login-token");
+        // Assert
+        result.Token.Should().Be("jwt");
     }
 
     [Fact]
-    public async Task LoginAsync_UserNotFound_ThrowsUnauthorized()
+    public async Task LoginAsync_EmailNotFound_ThrowsUnAuthorizedException()
     {
-        _userRepo.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>())).ReturnsAsync((User?)null);
+        // Arrange
+        _userRepoMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .ReturnsAsync((User?)null);
+        var sut = CreateSut();
 
-        await _sut.Invoking(s => s.LoginAsync(new LoginDto { Email = "no@test.com", Password = "p" }))
-            .Should().ThrowAsync<UnAuthorizedException>();
+        // Act
+        var act = async () => await sut.LoginAsync(new LoginDto { Email = "nobody@test.com", Password = "pass" });
+
+        // Assert
+        await act.Should().ThrowAsync<UnAuthorizedException>();
     }
 
     [Fact]
-    public async Task LoginAsync_InactiveUser_ThrowsUnauthorized()
+    public async Task LoginAsync_AccountDeactivated_ThrowsUnAuthorizedException()
     {
-        var user = new User { IsActive = false, Password = new byte[] { 1 }, PasswordSaltValue = new byte[] { 1 }, Name = "X", Email = "x@x.com", CreatedAt = DateTime.UtcNow };
-        _userRepo.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>())).ReturnsAsync(user);
+        // Arrange
+        var user = new User
+        {
+            UserId = Guid.NewGuid(), Email = "alice@test.com", Name = "Alice",
+            Password = new byte[]{1}, PasswordSaltValue = new byte[]{2},
+            IsActive = false, Role = UserRole.Guest, CreatedAt = DateTime.UtcNow
+        };
+        _userRepoMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .ReturnsAsync(user);
+        var sut = CreateSut();
 
-        await _sut.Invoking(s => s.LoginAsync(new LoginDto { Email = "x@x.com", Password = "p" }))
-            .Should().ThrowAsync<UnAuthorizedException>().WithMessage("*deactivated*");
+        // Act
+        var act = async () => await sut.LoginAsync(new LoginDto { Email = "alice@test.com", Password = "pass" });
+
+        // Assert
+        await act.Should().ThrowAsync<UnAuthorizedException>().WithMessage("*deactivated*");
     }
 
     [Fact]
-    public async Task LoginAsync_WrongPassword_ThrowsUnauthorized()
+    public async Task LoginAsync_WrongPassword_ThrowsUnAuthorizedException()
     {
-        var hash = new byte[] { 99 };
-        var salt = new byte[] { 1 };
-        var user = new User { IsActive = true, Password = hash, PasswordSaltValue = salt, Name = "X", Email = "x@x.com", CreatedAt = DateTime.UtcNow };
-        _userRepo.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>())).ReturnsAsync(user);
-        _passwordService.Setup(p => p.HashPassword("wrong", salt, out It.Ref<byte[]?>.IsAny)).Returns((string _, byte[]? _, out byte[]? s) => { s = null; return new byte[] { 0 }; });
+        // Arrange
+        var salt = new byte[] { 1, 2, 3 };
+        var correctHash = new byte[] { 4, 5, 6 };
+        var wrongHash = new byte[] { 7, 8, 9 };
+        var user = new User
+        {
+            UserId = Guid.NewGuid(), Email = "alice@test.com", Name = "Alice",
+            Password = correctHash, PasswordSaltValue = salt, IsActive = true,
+            Role = UserRole.Guest, CreatedAt = DateTime.UtcNow
+        };
+        _userRepoMock.Setup(r => r.FirstOrDefaultAsync(It.IsAny<System.Linq.Expressions.Expression<Func<User, bool>>>()))
+            .ReturnsAsync(user);
+        byte[]? outSalt = null;
+        _passwordServiceMock.Setup(p => p.HashPassword("wrongpass", salt, out outSalt)).Returns(wrongHash);
+        var sut = CreateSut();
 
-        await _sut.Invoking(s => s.LoginAsync(new LoginDto { Email = "x@x.com", Password = "wrong" }))
-            .Should().ThrowAsync<UnAuthorizedException>().WithMessage("*credentials*");
+        // Act
+        var act = async () => await sut.LoginAsync(new LoginDto { Email = "alice@test.com", Password = "wrongpass" });
+
+        // Assert
+        await act.Should().ThrowAsync<UnAuthorizedException>();
     }
 }

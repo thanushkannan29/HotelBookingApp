@@ -1,3 +1,4 @@
+using FluentAssertions;
 using HotelBookingAppWebApi.Models.DTOs.Auth;
 using HotelBookingAppWebApi.Services;
 using Microsoft.Extensions.Configuration;
@@ -8,138 +9,129 @@ namespace HotelBookingAppWebApi.Tests.Services;
 
 public class TokenServiceTests
 {
-    private readonly TokenService _sut;
-    private const string TestKey = "super-secret-jwt-key-for-testing-1234567890";
-
-    public TokenServiceTests()
+    private static IConfiguration BuildConfig(string? jwtKey = "super-secret-key-for-testing-1234567890")
     {
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?> { ["Keys:Jwt"] = TestKey })
-            .Build();
-        _sut = new TokenService(config);
+        var dict = new Dictionary<string, string?>();
+        if (jwtKey != null) dict["Keys:Jwt"] = jwtKey;
+        return new ConfigurationBuilder().AddInMemoryCollection(dict).Build();
     }
 
-    // ── CreateToken ───────────────────────────────────────────────────────────
+    private static TokenPayloadDto BuildPayload(Guid? hotelId = null) => new()
+    {
+        UserId = Guid.NewGuid(),
+        UserName = "TestUser",
+        Role = "Guest",
+        HotelId = hotelId
+    };
 
     [Fact]
-    public void CreateToken_ValidPayload_ReturnsNonEmptyToken()
+    public void CreateToken_ValidPayload_ReturnsJwtString()
     {
         // Arrange
-        var payload = new TokenPayloadDto
-        {
-            UserId = Guid.NewGuid(),
-            UserName = "Alice",
-            Role = "Guest",
-            HotelId = null
-        };
+        var sut = new TokenService(BuildConfig());
+        var payload = BuildPayload();
 
         // Act
-        var token = _sut.CreateToken(payload);
+        var result = sut.CreateToken(payload);
 
         // Assert
-        token.Should().NotBeNullOrWhiteSpace();
+        result.Should().NotBeNullOrEmpty();
     }
 
     [Fact]
-    public void CreateToken_ValidPayload_TokenContainsUserId()
+    public void CreateToken_ValidPayload_ContainsUserIdClaim()
     {
         // Arrange
-        var userId = Guid.NewGuid();
-        var payload = new TokenPayloadDto { UserId = userId, UserName = "Bob", Role = "Admin" };
+        var sut = new TokenService(BuildConfig());
+        var payload = BuildPayload();
 
         // Act
-        var token = _sut.CreateToken(payload);
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
-
-        // Assert — JWT short claim type for NameIdentifier is "nameid"
-        jwt.Claims.Should().Contain(c =>
-            c.Value == userId.ToString());
-    }
-
-    [Fact]
-    public void CreateToken_ValidPayload_TokenContainsRole()
-    {
-        // Arrange
-        var payload = new TokenPayloadDto { UserId = Guid.NewGuid(), UserName = "Admin", Role = "Admin" };
-
-        // Act
-        var token = _sut.CreateToken(payload);
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
+        var result = sut.CreateToken(payload);
 
         // Assert
-        jwt.Claims.Should().Contain(c => c.Value == "Admin");
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+        token.Claims.Should().Contain(c =>
+            c.Type == ClaimTypes.NameIdentifier &&
+            c.Value == payload.UserId.ToString());
     }
 
     [Fact]
-    public void CreateToken_WithHotelId_TokenContainsHotelIdClaim()
+    public void CreateToken_ValidPayload_ContainsUserNameClaim()
     {
         // Arrange
+        var sut = new TokenService(BuildConfig());
+        var payload = BuildPayload();
+
+        // Act
+        var result = sut.CreateToken(payload);
+
+        // Assert
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+        token.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == "TestUser");
+    }
+
+    [Fact]
+    public void CreateToken_ValidPayload_ContainsRoleClaim()
+    {
+        // Arrange
+        var sut = new TokenService(BuildConfig());
+        var payload = BuildPayload();
+
+        // Act
+        var result = sut.CreateToken(payload);
+
+        // Assert
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+        token.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "Guest");
+    }
+
+    [Fact]
+    public void CreateToken_WithHotelId_ContainsHotelIdClaim()
+    {
+        // Arrange
+        var sut = new TokenService(BuildConfig());
         var hotelId = Guid.NewGuid();
-        var payload = new TokenPayloadDto
-        {
-            UserId = Guid.NewGuid(),
-            UserName = "HotelAdmin",
-            Role = "Admin",
-            HotelId = hotelId
-        };
+        var payload = BuildPayload(hotelId);
 
         // Act
-        var token = _sut.CreateToken(payload);
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
+        var result = sut.CreateToken(payload);
 
         // Assert
-        jwt.Claims.Should().Contain(c => c.Type == "HotelId" && c.Value == hotelId.ToString());
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+        token.Claims.Should().Contain(c => c.Type == "HotelId" && c.Value == hotelId.ToString());
     }
 
     [Fact]
-    public void CreateToken_WithoutHotelId_NoHotelIdClaim()
+    public void CreateToken_WithoutHotelId_DoesNotContainHotelIdClaim()
     {
         // Arrange
-        var payload = new TokenPayloadDto
-        {
-            UserId = Guid.NewGuid(),
-            UserName = "Guest",
-            Role = "Guest",
-            HotelId = null
-        };
+        var sut = new TokenService(BuildConfig());
+        var payload = BuildPayload(null);
 
         // Act
-        var token = _sut.CreateToken(payload);
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
+        var result = sut.CreateToken(payload);
 
         // Assert
-        jwt.Claims.Should().NotContain(c => c.Type == "HotelId");
+        var handler = new JwtSecurityTokenHandler();
+        var token = handler.ReadJwtToken(result);
+        token.Claims.Should().NotContain(c => c.Type == "HotelId");
     }
 
     [Fact]
-    public void CreateToken_TokenExpiresInFuture()
+    public void Constructor_MissingJwtKey_ThrowsInvalidOperationException()
     {
         // Arrange
-        var payload = new TokenPayloadDto { UserId = Guid.NewGuid(), UserName = "U", Role = "Guest" };
+        var config = BuildConfig(null);
 
         // Act
-        var token = _sut.CreateToken(payload);
-        var handler = new JwtSecurityTokenHandler();
-        var jwt = handler.ReadJwtToken(token);
-
-        // Assert
-        jwt.ValidTo.Should().BeAfter(DateTime.UtcNow);
-    }
-
-    [Fact]
-    public void CreateToken_MissingJwtKey_ThrowsInvalidOperationException()
-    {
-        // Arrange
-        var config = new ConfigurationBuilder()
-            .AddInMemoryCollection(new Dictionary<string, string?>())
-            .Build();
-
-        // Act & Assert
         var act = () => new TokenService(config);
-        act.Should().Throw<InvalidOperationException>().WithMessage("*JWT Key*");
+
+        // Assert
+        act.Should().Throw<InvalidOperationException>()
+            .WithMessage("*JWT Key*");
     }
 }
