@@ -2,6 +2,7 @@ using FluentAssertions;
 using HotelBookingAppWebApi.Controllers;
 using HotelBookingAppWebApi.Controllers.SuperAdmin;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Models.DTOs.AuditLog;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -21,7 +22,7 @@ public class SuperAdminAuditLogControllerTests
         // Arrange
         var dto = new AuditLogSuperAdminQueryDto { Page = 1, PageSize = 10 };
         _serviceMock.Setup(s => s.GetAllAuditLogsAsync(1, 10, null, null, null, null, null))
-            .ReturnsAsync(new object());
+            .ReturnsAsync(new PagedAuditLogResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);

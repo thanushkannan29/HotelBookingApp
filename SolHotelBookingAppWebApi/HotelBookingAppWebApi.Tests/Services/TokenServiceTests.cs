@@ -51,8 +51,9 @@ public class TokenServiceTests
         // Assert
         var handler = new JwtSecurityTokenHandler();
         var token = handler.ReadJwtToken(result);
+        // JWT short claim type for NameIdentifier is "nameid"
         token.Claims.Should().Contain(c =>
-            c.Type == ClaimTypes.NameIdentifier &&
+            (c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid") &&
             c.Value == payload.UserId.ToString());
     }
 
@@ -69,7 +70,10 @@ public class TokenServiceTests
         // Assert
         var handler = new JwtSecurityTokenHandler();
         var token = handler.ReadJwtToken(result);
-        token.Claims.Should().Contain(c => c.Type == ClaimTypes.Name && c.Value == "TestUser");
+        // JWT short claim type for Name is "unique_name"
+        token.Claims.Should().Contain(c =>
+            (c.Type == ClaimTypes.Name || c.Type == "unique_name") &&
+            c.Value == "TestUser");
     }
 
     [Fact]
@@ -85,7 +89,10 @@ public class TokenServiceTests
         // Assert
         var handler = new JwtSecurityTokenHandler();
         var token = handler.ReadJwtToken(result);
-        token.Claims.Should().Contain(c => c.Type == ClaimTypes.Role && c.Value == "Guest");
+        // JWT short claim type for Role is "role"
+        token.Claims.Should().Contain(c =>
+            (c.Type == ClaimTypes.Role || c.Type == "role") &&
+            c.Value == "Guest");
     }
 
     [Fact]

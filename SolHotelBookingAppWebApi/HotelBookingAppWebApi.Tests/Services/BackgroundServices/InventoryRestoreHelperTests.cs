@@ -4,22 +4,11 @@ using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Services.BackgroundServices;
 using MockQueryable.Moq;
 using Moq;
-using System.Reflection;
 
 namespace HotelBookingAppWebApi.Tests.Services.BackgroundServices;
 
 public class InventoryRestoreHelperTests
 {
-    private static MethodInfo GetBuildInventoryLookup()
-        => typeof(InventoryRestoreHelper).GetMethod(
-            "BuildInventoryLookupAsync",
-            BindingFlags.NonPublic | BindingFlags.Static)!;
-
-    private static MethodInfo GetRestoreInventory()
-        => typeof(InventoryRestoreHelper).GetMethod(
-            "RestoreInventory",
-            BindingFlags.NonPublic | BindingFlags.Static)!;
-
     [Fact]
     public async Task BuildInventoryLookupAsync_ValidReservations_ReturnsLookup()
     {
@@ -49,10 +38,9 @@ public class InventoryRestoreHelperTests
         var queryable = new List<RoomTypeInventory> { inventory }.AsQueryable().BuildMock();
         inventoryRepoMock.Setup(r => r.GetQueryable()).Returns(queryable);
 
-        // Act — call via reflection since it's internal
-        var task = (Task<Dictionary<(Guid, DateOnly), RoomTypeInventory>>)GetBuildInventoryLookup()
-            .Invoke(null, new object[] { new List<Reservation> { reservation }, inventoryRepoMock.Object, CancellationToken.None })!;
-        var result = await task;
+        // Act
+        var result = await InventoryRestoreHelper.BuildInventoryLookupAsync(
+            new List<Reservation> { reservation }, inventoryRepoMock.Object, CancellationToken.None);
 
         // Assert
         result.Should().NotBeNull();
@@ -60,7 +48,7 @@ public class InventoryRestoreHelperTests
     }
 
     [Fact]
-    public void RestoreInventory_ValidReservation_IncrementsAvailableCount()
+    public void RestoreInventory_ValidReservation_DecrementsReservedCount()
     {
         // Arrange
         var roomTypeId = Guid.NewGuid();
@@ -88,7 +76,7 @@ public class InventoryRestoreHelperTests
         };
 
         // Act
-        GetRestoreInventory().Invoke(null, new object[] { reservation, lookup });
+        InventoryRestoreHelper.RestoreInventory(reservation, lookup);
 
         // Assert
         inventory.ReservedInventory.Should().Be(2);
@@ -110,7 +98,7 @@ public class InventoryRestoreHelperTests
         };
 
         // Act
-        var act = () => GetRestoreInventory().Invoke(null, new object[] { reservation, lookup });
+        var act = () => InventoryRestoreHelper.RestoreInventory(reservation, lookup);
 
         // Assert
         act.Should().NotThrow();

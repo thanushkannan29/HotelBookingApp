@@ -3,6 +3,7 @@ using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Repository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace HotelBookingAppWebApi.Tests.Repository;
 
@@ -12,6 +13,7 @@ public class RepositoryTests
     {
         var options = new DbContextOptionsBuilder<HotelBookingContext>()
             .UseInMemoryDatabase(dbName)
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         return new HotelBookingContext(options);
     }

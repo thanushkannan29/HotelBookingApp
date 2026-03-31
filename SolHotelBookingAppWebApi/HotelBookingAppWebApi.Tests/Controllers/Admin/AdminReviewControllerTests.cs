@@ -26,7 +26,7 @@ public class AdminReviewControllerTests
         // Arrange
         var dto = new GetHotelReviewsRequestDto { HotelId = Guid.NewGuid(), Page = 1, PageSize = 10 };
         _serviceMock.Setup(s => s.GetAdminHotelReviewsAsync(_userId, 1, 10, null, null, null))
-            .ReturnsAsync(new object());
+            .ReturnsAsync(new PagedReviewResponseDto());
 
         // Act
         var result = await _sut.GetHotelReviews(dto);

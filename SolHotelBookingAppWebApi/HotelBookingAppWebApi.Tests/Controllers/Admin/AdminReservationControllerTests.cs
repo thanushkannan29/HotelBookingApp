@@ -3,6 +3,7 @@ using HotelBookingAppWebApi.Controllers;
 using HotelBookingAppWebApi.Controllers.Admin;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Models.DTOs.Reservation;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -26,7 +27,7 @@ public class AdminReservationControllerTests
         // Arrange
         var dto = new ReservationQueryDto { Page = 1, PageSize = 10 };
         _serviceMock.Setup(s => s.GetAdminReservationsAsync(_userId, "All", null, 1, 10, null, null))
-            .ReturnsAsync(new object());
+            .ReturnsAsync(new PagedReservationResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);
@@ -54,7 +55,7 @@ public class AdminReservationControllerTests
     public async Task Complete_ValidCode_ReturnsOk()
     {
         // Arrange
-        _serviceMock.Setup(s => s.CompleteReservationAsync("RES001")).Returns(Task.CompletedTask);
+        _serviceMock.Setup(s => s.CompleteReservationAsync("RES001")).ReturnsAsync(true);
 
         // Act
         var result = await _sut.Complete("RES001");
@@ -81,7 +82,7 @@ public class AdminReservationControllerTests
     public async Task Confirm_ValidCode_ReturnsOk()
     {
         // Arrange
-        _serviceMock.Setup(s => s.ConfirmReservationAsync("RES001")).Returns(Task.CompletedTask);
+        _serviceMock.Setup(s => s.ConfirmReservationAsync("RES001")).ReturnsAsync(true);
 
         // Act
         var result = await _sut.Confirm("RES001");

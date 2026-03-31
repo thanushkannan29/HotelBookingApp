@@ -1,4 +1,5 @@
 using FluentAssertions;
+using HotelBookingAppWebApi.Controllers;
 using HotelBookingAppWebApi.Controllers.Admin;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;

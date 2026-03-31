@@ -83,7 +83,8 @@ public class AdminInventoryControllerTests
         var roomTypeId = Guid.NewGuid();
         var start = DateOnly.FromDateTime(DateTime.Today);
         var end = DateOnly.FromDateTime(DateTime.Today.AddDays(7));
-        _serviceMock.Setup(s => s.GetInventoryAsync(_userId, roomTypeId, start, end)).ReturnsAsync(new List<object>());
+        _serviceMock.Setup(s => s.GetInventoryAsync(_userId, roomTypeId, start, end))
+            .ReturnsAsync(new List<InventoryResponseDto>());
 
         // Act
         var result = await _sut.Get(roomTypeId, start, end);

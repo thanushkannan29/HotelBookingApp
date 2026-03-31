@@ -3,6 +3,7 @@ using HotelBookingAppWebApi.Controllers;
 using HotelBookingAppWebApi.Controllers.SuperAdmin;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Models.DTOs.Hotel.SuperAdmin;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -21,7 +22,8 @@ public class SuperAdminHotelControllerTests
     {
         // Arrange
         var dto = new HotelQueryDto { Page = 1, PageSize = 10 };
-        _serviceMock.Setup(s => s.GetAllHotelsForSuperAdminPagedAsync(1, 10, null, null)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetAllHotelsForSuperAdminPagedAsync(1, 10, null, null))
+            .ReturnsAsync(new PagedSuperAdminHotelResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);

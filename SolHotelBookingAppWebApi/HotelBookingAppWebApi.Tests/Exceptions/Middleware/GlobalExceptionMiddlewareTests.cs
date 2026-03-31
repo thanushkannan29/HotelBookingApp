@@ -4,6 +4,7 @@ using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Exceptions.Middleware;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -17,7 +18,8 @@ public class GlobalExceptionMiddlewareTests
     {
         var services = new ServiceCollection();
         services.AddDbContext<HotelBookingContext>(o =>
-            o.UseInMemoryDatabase(dbName));
+            o.UseInMemoryDatabase(dbName)
+             .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning)));
         services.AddLogging();
         return services.BuildServiceProvider();
     }

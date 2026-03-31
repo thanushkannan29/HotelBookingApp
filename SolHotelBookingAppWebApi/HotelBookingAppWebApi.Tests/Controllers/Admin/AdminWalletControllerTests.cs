@@ -2,6 +2,7 @@ using FluentAssertions;
 using HotelBookingAppWebApi.Controllers.Admin;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Models.DTOs.Wallet;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -24,7 +25,7 @@ public class AdminWalletControllerTests
     {
         // Arrange
         var guestId = Guid.NewGuid();
-        _serviceMock.Setup(s => s.GetGuestWalletByAdminAsync(_userId, guestId)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetGuestWalletByAdminAsync(_userId, guestId)).ReturnsAsync(new WalletResponseDto());
 
         // Act
         var result = await _sut.GetGuestWallet(guestId);

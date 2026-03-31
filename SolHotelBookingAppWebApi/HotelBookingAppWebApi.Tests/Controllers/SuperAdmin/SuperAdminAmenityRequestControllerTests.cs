@@ -26,7 +26,7 @@ public class SuperAdminAmenityRequestControllerTests
     {
         // Arrange
         var dto = new AmenityRequestQueryDto { Page = 1, PageSize = 10 };
-        _serviceMock.Setup(s => s.GetAllRequestsAsync("All", 1, 10)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetAllRequestsAsync("All", 1, 10)).ReturnsAsync(new PagedAmenityRequestResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);
@@ -40,7 +40,7 @@ public class SuperAdminAmenityRequestControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _serviceMock.Setup(s => s.ApproveRequestAsync(id, _userId)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.ApproveRequestAsync(id, _userId)).ReturnsAsync(new AmenityRequestResponseDto());
 
         // Act
         var result = await _sut.Approve(id);
@@ -69,7 +69,7 @@ public class SuperAdminAmenityRequestControllerTests
         // Arrange
         var id = Guid.NewGuid();
         var dto = new RejectAmenityRequestDto { Note = "Not needed." };
-        _serviceMock.Setup(s => s.RejectRequestAsync(id, _userId, dto.Note)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.RejectRequestAsync(id, _userId, dto.Note)).ReturnsAsync(new AmenityRequestResponseDto());
 
         // Act
         var result = await _sut.Reject(id, dto);

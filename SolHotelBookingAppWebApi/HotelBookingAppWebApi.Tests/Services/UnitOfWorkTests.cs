@@ -2,6 +2,7 @@ using FluentAssertions;
 using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Diagnostics;
 
 namespace HotelBookingAppWebApi.Tests.Services;
 
@@ -11,6 +12,7 @@ public class UnitOfWorkTests
     {
         var options = new DbContextOptionsBuilder<HotelBookingContext>()
             .UseInMemoryDatabase(dbName)
+            .ConfigureWarnings(w => w.Ignore(InMemoryEventId.TransactionIgnoredWarning))
             .Options;
         return new HotelBookingContext(options);
     }
@@ -23,10 +25,10 @@ public class UnitOfWorkTests
         var uow = new UnitOfWork(ctx);
 
         // Act
-        await uow.BeginTransactionAsync();
+        var act = async () => await uow.BeginTransactionAsync();
 
-        // Assert — no exception means transaction started
-        uow.Should().NotBeNull();
+        // Assert
+        await act.Should().NotThrowAsync();
         uow.Dispose();
     }
 
@@ -38,7 +40,7 @@ public class UnitOfWorkTests
         var uow = new UnitOfWork(ctx);
         await uow.BeginTransactionAsync();
 
-        // Act — second call should be a no-op (guard)
+        // Act
         var act = async () => await uow.BeginTransactionAsync();
 
         // Assert

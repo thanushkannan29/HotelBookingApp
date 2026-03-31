@@ -22,7 +22,8 @@ public class SuperAdminSupportControllerTests
     {
         // Arrange
         var dto = new SupportQueryDto { Page = 1, PageSize = 10 };
-        _serviceMock.Setup(s => s.GetAllRequestsAsync(null, null, null, 1, 10)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetAllRequestsAsync(null, null, null, 1, 10))
+            .ReturnsAsync(new PagedSupportRequestResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);
@@ -37,7 +38,7 @@ public class SuperAdminSupportControllerTests
         // Arrange
         var id = Guid.NewGuid();
         var dto = new RespondSupportRequestDto { Response = "We'll fix it.", Status = "Resolved" };
-        _serviceMock.Setup(s => s.RespondAsync(id, dto)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.RespondAsync(id, dto)).ReturnsAsync(new SupportRequestResponseDto());
 
         // Act
         var result = await _sut.Respond(id, dto);

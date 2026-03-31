@@ -2,6 +2,7 @@ using FluentAssertions;
 using HotelBookingAppWebApi.Controllers;
 using HotelBookingAppWebApi.Controllers.SuperAdmin;
 using HotelBookingAppWebApi.Interfaces;
+using HotelBookingAppWebApi.Models.DTOs.Revenue;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 
@@ -20,7 +21,7 @@ public class SuperAdminRevenueControllerTests
     {
         // Arrange
         var dto = new RevenueQueryDto { Page = 1, PageSize = 10 };
-        _serviceMock.Setup(s => s.GetAllRevenueAsync(1, 10)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetAllRevenueAsync(1, 10)).ReturnsAsync(new PagedRevenueResponseDto());
 
         // Act
         var result = await _sut.GetList(dto);
@@ -33,7 +34,7 @@ public class SuperAdminRevenueControllerTests
     public async Task GetSummary_ReturnsOk()
     {
         // Arrange
-        _serviceMock.Setup(s => s.GetSummaryAsync()).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetSummaryAsync()).ReturnsAsync(new RevenueSummaryDto());
 
         // Act
         var result = await _sut.GetSummary();

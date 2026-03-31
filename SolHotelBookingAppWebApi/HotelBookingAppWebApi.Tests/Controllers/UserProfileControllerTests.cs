@@ -24,7 +24,7 @@ public class UserProfileControllerTests
     public async Task GetProfile_ValidRequest_ReturnsOk()
     {
         // Arrange
-        _serviceMock.Setup(s => s.GetProfileAsync(_userId)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetProfileAsync(_userId)).ReturnsAsync(new UserProfileResponseDto());
 
         // Act
         var result = await _sut.GetProfile();
@@ -52,7 +52,7 @@ public class UserProfileControllerTests
     {
         // Arrange
         var dto = new UpdateUserProfileDto { Name = "Updated Name" };
-        _serviceMock.Setup(s => s.UpdateProfileAsync(_userId, dto)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.UpdateProfileAsync(_userId, dto)).ReturnsAsync(new UserProfileResponseDto());
 
         // Act
         var result = await _sut.UpdateProfile(dto);
@@ -66,7 +66,7 @@ public class UserProfileControllerTests
     {
         // Arrange
         var dto = new PaginationDto { Page = 1, PageSize = 10 };
-        _serviceMock.Setup(s => s.GetBookingHistoryAsync(_userId, 1, 10)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetBookingHistoryAsync(_userId, 1, 10)).ReturnsAsync(new PagedBookingHistoryDto());
 
         // Act
         var result = await _sut.GetBookingHistory(dto);

@@ -21,7 +21,7 @@ public class SuperAdminAmenityControllerTests
     {
         // Arrange
         var dto = new CreateAmenityDto { Name = "Sauna", Category = "Services" };
-        _serviceMock.Setup(s => s.CreateAmenityAsync(dto)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.CreateAmenityAsync(dto)).ReturnsAsync(new AmenityResponseDto());
 
         // Act
         var result = await _sut.Create(dto);
@@ -49,7 +49,7 @@ public class SuperAdminAmenityControllerTests
     {
         // Arrange
         var dto = new UpdateAmenityDto { AmenityId = Guid.NewGuid(), Name = "Updated" };
-        _serviceMock.Setup(s => s.UpdateAmenityAsync(dto)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.UpdateAmenityAsync(dto)).ReturnsAsync(new AmenityResponseDto());
 
         // Act
         var result = await _sut.Update(dto);
@@ -62,7 +62,7 @@ public class SuperAdminAmenityControllerTests
     public async Task GetAll_ValidQuery_ReturnsOk()
     {
         // Arrange
-        _serviceMock.Setup(s => s.GetAllAmenitiesPagedAsync(1, 10, null, null)).ReturnsAsync(new object());
+        _serviceMock.Setup(s => s.GetAllAmenitiesPagedAsync(1, 10, null, null)).ReturnsAsync(new PagedAmenityResponseDto());
 
         // Act
         var result = await _sut.GetAll(1, 10, null, null);
@@ -90,7 +90,7 @@ public class SuperAdminAmenityControllerTests
     {
         // Arrange
         var id = Guid.NewGuid();
-        _serviceMock.Setup(s => s.DeleteAmenityAsync(id)).Returns(Task.CompletedTask);
+        _serviceMock.Setup(s => s.DeleteAmenityAsync(id)).ReturnsAsync(true);
 
         // Act
         var result = await _sut.Delete(id);
