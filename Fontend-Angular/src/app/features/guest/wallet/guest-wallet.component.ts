@@ -175,7 +175,7 @@ export class GuestWalletComponent implements OnInit {
       key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
+      name: '🏨 Thanush StayHub',
       description: `Wallet Top-up — ₹${amount}`,
       image: 'https://i.imgur.com/n5tjHFD.png',
       theme: { color: '#2d3a8c' },

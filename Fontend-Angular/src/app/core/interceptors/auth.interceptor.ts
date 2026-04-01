@@ -10,6 +10,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const router     = inject(Router);
   const toast      = inject(ToastService);
 
+  // Skip interceptor for external APIs (Gemini, Groq, etc.)
+  if (!req.url.includes('localhost') && !req.url.includes('127.0.0.1')) {
+    return next(req);
+  }
+
   const token  = authService.token();
   const cloned = token
     ? req.clone({ setHeaders: { Authorization: `Bearer ${token}` } })

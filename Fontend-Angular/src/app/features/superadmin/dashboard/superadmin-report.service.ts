@@ -38,7 +38,7 @@ export class SuperadminReportService {
       fill(C.primary); doc.rect(0, H - 10, W, 10, 'F');
       fill(C.accent);  doc.rect(0, H - 11, W, 1, 'F');
       doc.setFont('helvetica', 'normal'); doc.setFontSize(7); color(C.surface);
-      doc.text('StayHub Platform  -  SuperAdmin Report', M, H - 4);
+      doc.text('Thanush StayHub Platform  -  SuperAdmin Report', M, H - 4);
       color('#a0aad0');
       doc.text('Page ' + page + ' of ' + total, W - M, H - 4, { align: 'right' });
     };
@@ -55,7 +55,7 @@ export class SuperadminReportService {
     doc.text('SA', M + 10, 29.5, { align: 'center' });
 
     doc.setFont('helvetica', 'bold'); doc.setFontSize(19); color(C.surface);
-    doc.text('StayHub Platform', M + 24, 22);
+    doc.text('Thanush StayHub Platform', M + 24, 22);
     doc.setFont('helvetica', 'normal'); doc.setFontSize(9); color('#c8d0f0');
     doc.text('SuperAdmin Platform-Wide Analysis Report', M + 24, 30);
     doc.setFontSize(8); color('#a0aad0');
@@ -180,7 +180,7 @@ export class SuperadminReportService {
     fill(C.primary); doc.rect(0, 0, W, 18, 'F');
     fill(C.accent);  doc.rect(0, 18, W, 1.5, 'F');
     doc.setFont('helvetica', 'bold'); doc.setFontSize(10); color(C.surface);
-    doc.text('StayHub Platform  -  Charts & Visual Analysis', M, 12);
+    doc.text('Thanush StayHub Platform  -  Charts & Visual Analysis', M, 12);
     y = 28;
 
     // Bar chart: hotel status
@@ -237,10 +237,10 @@ export class SuperadminReportService {
     fill(C.surfaceAlt); draw(C.border); doc.roundedRect(M, y, CW, 14, 2, 2, 'FD');
     doc.setFont('helvetica', 'italic'); doc.setFontSize(7.5); color(C.textMuted);
     doc.text('This report is auto-generated from live platform data. All figures are cumulative lifetime totals.', M + 4, y + 5.5);
-    doc.text('Confidential - SuperAdmin use only. (c) ' + now.getFullYear() + ' StayHub Platform.', M + 4, y + 10.5);
+    doc.text('Confidential - SuperAdmin use only. (c) ' + now.getFullYear() + ' Thanush StayHub Platform.', M + 4, y + 10.5);
 
     footer(2, 2);
 
-    doc.save('StayHub_SuperAdmin_Report_' + now.toISOString().slice(0,10) + '.pdf');
+    doc.save('ThanushStayHub_SuperAdmin_Report_' + now.toISOString().slice(0,10) + '.pdf');
   }
 }

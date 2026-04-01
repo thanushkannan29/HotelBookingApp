@@ -436,7 +436,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
       key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
+      name: '🏨 Thanush StayHub',
       description: `Wallet Top-up — ₹${amount}`,
       image: 'https://i.imgur.com/n5tjHFD.png',
       theme: { color: '#2d3a8c' },
@@ -516,7 +516,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
     }
 
     const amountPaise = Math.round(res.finalAmount * 100);
-    const hotelName = this.hotel()?.name ?? 'StayHub';
+    const hotelName = this.hotel()?.name ?? 'Thanush StayHub';
     const upiId = this.qrPayment()?.upiId ?? '';
 
     // Map payment method to Razorpay method string
@@ -531,7 +531,7 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
       key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
+      name: '🏨 Thanush StayHub',
       description: `Booking: ${res.reservationCode} — ${hotelName}`,
       image: 'https://i.imgur.com/n5tjHFD.png',
       prefill: { name: '', email: '', contact: '' },

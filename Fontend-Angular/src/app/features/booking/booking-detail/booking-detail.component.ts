@@ -131,7 +131,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
+      name: '🏨 Thanush StayHub',
       description: `Booking: ${res.reservationCode} — ${res.hotelName}`,
       notes: { reservationCode: res.reservationCode },
       theme: { color: '#2d3a8c' },
@@ -219,7 +219,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       doc.rect(0, 0, W, 36, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-      doc.text('StayHub', margin, 16);
+      doc.text('Thanush StayHub', margin, 16);
       doc.setFontSize(10); doc.setFont('helvetica', 'normal');
       doc.text('Booking Confirmation', margin, 24);
       doc.setFontSize(9);
@@ -326,11 +326,11 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       doc.setFillColor(240, 242, 255);
       doc.rect(0, 277, W, 20, 'F');
       doc.setFontSize(8); doc.setTextColor(45, 58, 140);
-      doc.text('Thank you for choosing StayHub! For support: support@stayhub.in', W / 2, 285, { align: 'center' });
+      doc.text('Thank you for choosing Thanush StayHub! For support: support@thanushstayhub.in', W / 2, 285, { align: 'center' });
       doc.setTextColor(120,120,120);
       doc.text('This is a computer-generated document. No signature required.', W / 2, 291, { align: 'center' });
 
-      doc.save(`StayHub-Booking-${res.reservationCode}.pdf`);
+      doc.save(`ThanushStayHub-Booking-${res.reservationCode}.pdf`);
       this.toast.success('PDF downloaded!');
     } catch (e) {
       this.toast.error('PDF generation failed. Ensure jsPDF is installed: npm install jspdf');

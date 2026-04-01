@@ -8,8 +8,8 @@
 
 // ── Bubble button ──────────────────────────────────────────────────────────────
 .chatbot-bubble {
-  width: 56px;
-  height: 56px;
+  width: 58px;
+  height: 58px;
   border-radius: 50%;
   background: linear-gradient(135deg, #6c63ff, #4f46e5);
   border: none;
@@ -24,21 +24,25 @@
 
   &:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 24px rgba(99, 102, 241, 0.55);
+    box-shadow: 0 6px 28px rgba(99, 102, 241, 0.6);
+  }
+
+  // Pulse ring — only when closed (idle state)
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(99, 102, 241, 0.35);
+    animation: pulseRing 2.4s ease-out infinite;
+    pointer-events: none;
   }
 }
 
-.bubble-badge {
-  position: absolute;
-  top: -4px;
-  right: -4px;
-  background: #10b981;
-  color: #fff;
-  font-size: 9px;
-  font-weight: 700;
-  padding: 2px 5px;
-  border-radius: 8px;
-  letter-spacing: 0.5px;
+@keyframes pulseRing {
+  0%   { transform: scale(0.92); opacity: 0.7; }
+  60%  { transform: scale(1.12); opacity: 0; }
+  100% { transform: scale(1.12); opacity: 0; }
 }
 
 // ── Chat window ────────────────────────────────────────────────────────────────
@@ -93,6 +97,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+}
+
+.header-logo {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .header-title {

@@ -42,8 +42,11 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
 
   private get greeting(): string {
     const name = this.userName();
-    if (name) return `Hi ${name}! 👋 I'm StayHub AI. How can I help you today?`;
-    return `Hi there! 👋 I'm StayHub AI, your hotel booking assistant. How can I help you?`;
+    const role = this.role();
+    if (role === 'Admin') return `Hello ${name}, Hotel Admin! 👋 How can I help you today?`;
+    if (role === 'SuperAdmin') return `Hello ${name}, SuperAdmin! 👋 How can I help you today?`;
+    if (role === 'Guest') return `Hi ${name}! 👋 How can I help you today?`;
+    return `Hi there! 👋 I'm Thanush StayHub AI. How can I help you?`;
   }
 
   ngOnInit(): void {

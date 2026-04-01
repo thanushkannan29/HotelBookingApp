@@ -12,8 +12,8 @@ import { RouterLink } from '@angular/router';
         <!-- Brand -->
         <div class="footer-brand">
           <div class="brand-header">
-  <img src="assets/dark.png" alt="ThanushStayHub Logo" class="brand-icon" />
-  <span class="brand-name">ThanushStayHub</span>
+  <img src="assets/dark.png" alt="Thanush StayHub Logo" class="brand-icon" />
+  <span class="brand-name">Thanush StayHub</span>
 </div>
           <p class="brand-tagline">
             Smart Hotel Booking & Management Platform for guests and hotel admins.
@@ -58,7 +58,7 @@ import { RouterLink } from '@angular/router';
 
       <!-- Bottom -->
       <div class="footer-bottom">
-        <span>© {{ year }} ThanushStayHub. All rights reserved.</span>
+        <span>© {{ year }} Thanush StayHub. All rights reserved.</span>
       </div>
     </footer>
   `,
