@@ -4522,3 +4522,2311 @@ If an exception occurs at step 8:
 *End of Backend-Documentation.md*
 *This document covers: all 22 services with every function, Program.cs line by line,*
 *and all .NET Core competencies with examples from your actual project code.*
+
+---
+
+## 21. Collections — IEnumerable, ICollection, IList, List, IQueryable
+
+This is one of the most important things to understand in C#. Every service in this project uses these types constantly. Here is exactly what each one is and when we use it.
+
+### The Hierarchy
+
+```
+IEnumerable<T>          ← most basic, read-only forward loop
+  └── ICollection<T>    ← adds Count, Add, Remove, Contains
+        └── IList<T>    ← adds index access [0], Insert, RemoveAt
+              └── List<T>  ← concrete class, most commonly used
+```
+
+`IQueryable<T>` is separate — it is for database queries (LINQ-to-SQL).
+
+---
+
+### IEnumerable<T>
+
+The most basic collection interface. You can only loop through it with `foreach`. Nothing else.
+
+```csharp
+// IEnumerable — only supports foreach
+IEnumerable<ReservationDetailsDto> reservations = await sut.GetMyReservationsAsync(userId);
+
+foreach (var r in reservations)
+{
+    Console.WriteLine(r.ReservationCode);
+}
+```
+
+Used in this project as return types for service methods that return multiple items:
+
+```csharp
+// ReservationService
+public async Task<IEnumerable<ReservationDetailsDto>> GetMyReservationsAsync(Guid userId)
+{
+    var list = await _reservationRepo.GetQueryable()
+        .Where(r => r.UserId == userId)
+        .ToListAsync();
+    return list.Select(MapToDetailsDto); // Select returns IEnumerable
+}
+```
+
+Why use `IEnumerable` as return type instead of `List`? Because the caller only needs to loop — you don't need to expose Add/Remove. It keeps the API minimal.
+
+---
+
+### ICollection<T>
+
+Adds `Count`, `Add`, `Remove`, `Contains` on top of `IEnumerable`.
+
+```csharp
+ICollection<Review> reviews = hotel.Reviews!;
+
+int count = reviews.Count;           // how many reviews
+bool hasAny = reviews.Contains(r);   // check if item exists
+reviews.Add(newReview);              // add item
+reviews.Remove(oldReview);           // remove item
+```
+
+Used in this project as navigation property types on entities:
+
+```csharp
+// Hotel entity — navigation properties use ICollection
+public class Hotel
+{
+    public ICollection<RoomType>? RoomTypes { get; set; }
+    public ICollection<Review>? Reviews { get; set; }
+    public ICollection<Reservation>? Reservations { get; set; }
+}
+```
+
+EF Core uses `ICollection<T>` for navigation properties because it needs to be able to add/remove related entities. You cannot use `IEnumerable` here because EF Core needs `Add`.
+
+---
+
+### IList<T>
+
+Adds index access `[i]`, `Insert(index, item)`, `RemoveAt(index)` on top of `ICollection`.
+
+```csharp
+IList<DateOnly> dates = GetDateRange(checkIn, checkOut);
+
+DateOnly first = dates[0];           // access by index
+dates.Insert(0, someDate);           // insert at position
+dates.RemoveAt(2);                   // remove at position
+```
+
+Rarely used directly in this project. `List<T>` is preferred because it is the concrete implementation.
+
+---
+
+### List<T>
+
+The concrete class. Implements `IList<T>`, `ICollection<T>`, `IEnumerable<T>`. This is what you actually create and use in services.
+
+```csharp
+// From ReservationService — building a date range
+private static List<DateOnly> GetDateRange(DateOnly checkIn, DateOnly checkOut)
+{
+    var totalDays = checkOut.DayNumber - checkIn.DayNumber;
+    return Enumerable.Range(0, totalDays)
+        .Select(d => checkIn.AddDays(d))
+        .ToList(); // converts IEnumerable to List<DateOnly>
+}
+
+// From NoShowAutoCancelService
+var noShows = await reservationRepo.GetQueryable()
+    .Where(r => r.Status == ReservationStatus.Confirmed && ...)
+    .ToListAsync(); // returns List<Reservation>
+
+if (!noShows.Any()) return; // Any() from IEnumerable
+```
+
+Common `List<T>` methods used in this project:
+
+```csharp
+var rooms = new List<Room>();
+
+rooms.Add(room);                    // add one item
+rooms.AddRange(moreRooms);          // add many items
+rooms.Count;                        // number of items
+rooms.Any();                        // true if not empty
+rooms.First();                      // first item (throws if empty)
+rooms.FirstOrDefault();             // first item or null
+rooms.Where(r => r.IsActive);       // filter (returns IEnumerable)
+rooms.Select(r => r.RoomId);        // transform (returns IEnumerable)
+rooms.OrderBy(r => r.RoomNumber);   // sort
+rooms.ToList();                     // copy to new List
+rooms.Contains(room);               // check membership
+```
+
+---
+
+### IQueryable<T>
+
+This is completely different from the others. `IQueryable<T>` represents a **database query that has not been executed yet**. You build up the query with LINQ, and it only hits the database when you call `.ToListAsync()`, `.FirstOrDefaultAsync()`, `.CountAsync()`, etc.
+
+```csharp
+// GetQueryable() returns IQueryable<Reservation>
+// Nothing is sent to the database yet
+var query = _reservationRepo.GetQueryable();
+
+// Still no DB call — just adds a WHERE clause to the query
+query = query.Where(r => r.UserId == userId);
+
+// Still no DB call — adds ORDER BY
+query = query.OrderByDescending(r => r.CreatedDate);
+
+// NOW the SQL is sent to the database
+var results = await query.ToListAsync();
+// SQL: SELECT * FROM Reservations WHERE UserId = @userId ORDER BY CreatedDate DESC
+```
+
+This is called **deferred execution** — the query is built up lazily and only runs when you materialize it.
+
+Used everywhere in this project for filtering, sorting, and paging:
+
+```csharp
+// From ReservationService.GetAdminReservationsAsync
+var query = _reservationRepo.GetQueryable()
+    .Include(r => r.Hotel)
+    .Include(r => r.User)
+    .Where(r => r.HotelId == admin.HotelId)  // filter
+    .AsQueryable();
+
+// Conditionally add more filters
+if (status != "All")
+    query = query.Where(r => r.Status == statusEnum);
+
+if (!string.IsNullOrWhiteSpace(search))
+    query = query.Where(r => r.ReservationCode.Contains(search));
+
+// Count BEFORE paging (for TotalCount in response)
+var total = await query.CountAsync();
+
+// Apply paging and execute
+var items = await query
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```
+
+Key difference from `IEnumerable`: if you use `IEnumerable` for filtering, the data is loaded into memory first and then filtered in C#. If you use `IQueryable`, the filter is translated to SQL and runs in the database — much faster.
+
+```csharp
+// BAD — loads ALL reservations into memory, then filters in C#
+var all = await _reservationRepo.GetAllAsync(); // IEnumerable
+var filtered = all.Where(r => r.UserId == userId); // C# filter
+
+// GOOD — filter runs in SQL, only matching rows come back
+var filtered = await _reservationRepo.GetQueryable()
+    .Where(r => r.UserId == userId)
+    .ToListAsync(); // SQL filter
+```
+
+---
+
+### Quick Comparison Table
+
+| Type | Can Loop | Count | Add/Remove | Index [i] | DB Query |
+|---|---|---|---|---|---|
+| `IEnumerable<T>` | Yes | No | No | No | No |
+| `ICollection<T>` | Yes | Yes | Yes | No | No |
+| `IList<T>` | Yes | Yes | Yes | Yes | No |
+| `List<T>` | Yes | Yes | Yes | Yes | No |
+| `IQueryable<T>` | Yes* | Yes* | No | No | Yes |
+
+*Only after materializing with `.ToList()` / `.ToListAsync()`
+
+---
+
+### Where Each Is Used in This Project
+
+| Usage | Type Used | Why |
+|---|---|---|
+| Entity navigation properties | `ICollection<T>?` | EF Core needs Add/Remove |
+| Service method return types | `IEnumerable<T>` | Caller only needs to loop |
+| Local variables in services | `List<T>` | Need Add, Count, index access |
+| Database queries | `IQueryable<T>` | Deferred SQL execution |
+| `.ToListAsync()` result | `List<T>` | Materialized from DB |
+| `.Select(MapToDto)` result | `IEnumerable<T>` | Lazy transform |
+
+---
+
+## 22. Enums
+
+An enum is a named set of integer constants. Instead of using magic numbers like `1`, `2`, `3` in your code, you use readable names.
+
+### Enums in This Project
+
+```csharp
+// Models/User.cs
+public enum UserRole
+{
+    Guest = 1,
+    Admin = 2,
+    SuperAdmin = 3
+}
+
+// Models/Reservation.cs
+public enum ReservationStatus
+{
+    Pending = 1,
+    Confirmed = 2,
+    Cancelled = 3,
+    Completed = 4,
+    NoShow = 5
+}
+
+// Models/Transaction.cs
+public enum PaymentMethod
+{
+    CreditCard = 1,
+    DebitCard = 2,
+    UPI = 3,
+    NetBanking = 4,
+    Wallet = 5
+}
+
+public enum PaymentStatus
+{
+    Pending = 1,
+    Success = 2,
+    Failed = 3,
+    Refunded = 4
+}
+
+// Models/SupportRequest.cs
+public enum SupportRequestStatus
+{
+    Open,
+    Resolved,
+    Closed
+}
+```
+
+### How Enums Are Used
+
+**Comparing:**
+```csharp
+if (res.Status == ReservationStatus.Cancelled)
+    throw new ReservationFailedException("Already cancelled.");
+
+if (user.Role != UserRole.Admin)
+    throw new UnAuthorizedException("Admins only.");
+```
+
+**Stored as int in database:**
+```csharp
+// In OnModelCreating
+modelBuilder.Entity<User>()
+    .Property(u => u.Role)
+    .HasConversion<int>(); // stored as 1, 2, or 3 in SQL
+```
+
+**Parsing from string (for filter parameters):**
+```csharp
+// From ReservationService — status filter comes as string from Angular
+if (Enum.TryParse<ReservationStatus>(status, out var statusEnum))
+    query = query.Where(r => r.Status == statusEnum);
+```
+
+**Converting to string for DTOs:**
+```csharp
+// Entity has enum, DTO has string
+Status = r.Status.ToString() // "Pending", "Confirmed", etc.
+```
+
+**Switch expression on enum:**
+```csharp
+// From PromoCodeService
+private static decimal CalculateDiscountPercent(decimal totalAmount) => totalAmount switch
+{
+    <= 500  => 5,
+    <= 1000 => 10,
+    <= 2000 => 15,
+    <= 5000 => 20,
+    _       => 25
+};
+```
+
+---
+
+## 23. Generics
+
+Generics let you write code that works with any type. Instead of writing a separate repository for `Hotel`, `User`, `Reservation`, etc., you write one generic repository.
+
+### Generic Repository
+
+```csharp
+// One class handles ALL entity types
+public class Repository<TKey, TEntity> : IRepository<TKey, TEntity>
+    where TEntity : class  // constraint: TEntity must be a class
+{
+    public async Task<TEntity?> GetAsync(TKey key)
+        => await _context.FindAsync<TEntity>(key);
+
+    public async Task<TEntity?> AddAsync(TEntity entity)
+    {
+        await _context.Set<TEntity>().AddAsync(entity);
+        return entity;
+    }
+}
+```
+
+`TKey` and `TEntity` are type parameters — placeholders filled in when you use the class:
+
+```csharp
+// TKey = Guid, TEntity = Hotel
+IRepository<Guid, Hotel> _hotelRepo;
+
+// TKey = Guid, TEntity = Reservation
+IRepository<Guid, Reservation> _reservationRepo;
+```
+
+### Generic Interface
+
+```csharp
+public interface IRepository<TKey, TEntity> where TEntity : class
+{
+    Task<TEntity?> GetAsync(TKey key);
+    Task<TEntity?> AddAsync(TEntity entity);
+    Task<TEntity?> DeleteAsync(TKey key);
+    IQueryable<TEntity> GetQueryable();
+}
+```
+
+### Registration with Open Generics
+
+```csharp
+// Program.cs — one line registers for ALL types
+services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+// This means: whenever someone asks for IRepository<Guid, Hotel>,
+// give them Repository<Guid, Hotel>
+```
+
+---
+
+## 24. LINQ (Language Integrated Query)
+
+LINQ is how you query collections and databases in C#. It looks like SQL but written in C#.
+
+### Most Used LINQ Methods in This Project
+
+**Where — filter:**
+```csharp
+var active = hotels.Where(h => h.IsActive);
+// SQL: WHERE IsActive = 1
+```
+
+**Select — transform/project:**
+```csharp
+var names = hotels.Select(h => h.Name);
+var dtos = rooms.Select(r => new RoomSummaryDto { RoomId = r.RoomId, RoomNumber = r.RoomNumber });
+```
+
+**FirstOrDefault — get first match or null:**
+```csharp
+var hotel = await _hotelRepo.GetQueryable()
+    .FirstOrDefaultAsync(h => h.HotelId == id);
+// returns null if not found — no exception
+```
+
+**Any — check if anything matches:**
+```csharp
+var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
+if (!noShows.Any()) return;
+```
+
+**OrderBy / OrderByDescending — sort:**
+```csharp
+query = query.OrderByDescending(r => r.CreatedDate);
+query = query.OrderBy(r => r.RoomNumber);
+```
+
+**Skip + Take — pagination:**
+```csharp
+var page = await query.Skip((pageNum - 1) * pageSize).Take(pageSize).ToListAsync();
+```
+
+**Include + ThenInclude — load related data (EF Core):**
+```csharp
+var res = await _reservationRepo.GetQueryable()
+    .Include(r => r.ReservationRooms!)      // load ReservationRooms
+    .ThenInclude(rr => rr.Room)             // then load Room from each ReservationRoom
+    .Include(r => r.Hotel)                  // also load Hotel
+    .FirstOrDefaultAsync(r => r.ReservationCode == code);
+```
+
+**CountAsync — count matching rows:**
+```csharp
+var total = await query.CountAsync();
+```
+
+**SumAsync — aggregate:**
+```csharp
+var revenue = await _transactionRepo.GetQueryable()
+    .Where(t => t.Status == PaymentStatus.Success)
+    .SumAsync(t => (decimal?)t.Amount) ?? 0;
+```
+
+**Distinct — remove duplicates:**
+```csharp
+var bookedRoomIds = await _reservationRoomRepo.GetQueryable()
+    .Select(rr => rr.RoomId)
+    .Distinct()
+    .ToListAsync();
+```
+
+**Contains — check if value is in a list:**
+```csharp
+// Used for "WHERE Date IN (...)" style queries
+var inventories = await _inventoryRepo.GetQueryable()
+    .Where(i => dates.Contains(i.Date))
+    .ToListAsync();
+```
+
+**Enumerable.Range — generate a sequence:**
+```csharp
+// Generate [0, 1, 2, ..., totalDays-1]
+var dates = Enumerable.Range(0, totalDays)
+    .Select(d => checkIn.AddDays(d))
+    .ToList();
+```
+
+---
+
+## 25. async / await and Task
+
+Every database operation in this project is async. This is essential for a web API that handles many requests at the same time.
+
+### Why Async?
+
+When a request hits the database, the thread would normally sit and wait (blocking). With async, the thread is released to handle other requests while waiting for the DB. This makes the API handle more traffic with fewer threads.
+
+### Task vs Task<T>
+
+```csharp
+// Task — async method that returns nothing (void equivalent)
+public async Task CommitAsync()
+{
+    await _context.SaveChangesAsync();
+}
+
+// Task<T> — async method that returns a value
+public async Task<Hotel?> GetHotelAsync(Guid id)
+{
+    return await _hotelRepo.GetAsync(id);
+}
+```
+
+### async / await Pattern
+
+```csharp
+// Every method that calls an async method must itself be async
+public async Task<ReservationResponseDto> CreateReservationAsync(Guid userId, CreateReservationDto dto)
+{
+    // await pauses this method until the DB call completes
+    // but does NOT block the thread
+    var hotel = await _hotelRepo.GetAsync(dto.HotelId);
+
+    // continues here after DB responds
+    if (hotel == null) throw new NotFoundException("Hotel not found.");
+
+    await _unitOfWork.CommitAsync(); // another await
+    return MapToResponseDto(...);
+}
+```
+
+### ConfigureAwait
+
+Not used in this project (ASP.NET Core doesn't need it), but good to know: `await task.ConfigureAwait(false)` is used in library code to avoid deadlocks.
+
+### CancellationToken
+
+Background services pass a `CancellationToken` to async DB calls so they can be stopped cleanly:
+
+```csharp
+// NoShowAutoCancelService
+var noShows = await reservationRepo.GetQueryable()
+    .Where(r => r.Status == ReservationStatus.Confirmed && ...)
+    .ToListAsync(ct); // ct = CancellationToken — stops the query if service is shutting down
+```
+
+---
+
+## 26. Nullable Reference Types and Null Safety
+
+The project has `<Nullable>enable</Nullable>` in the `.csproj`. This means the compiler warns you about potential null dereferences.
+
+### Nullable vs Non-Nullable
+
+```csharp
+string name = "Alice";    // cannot be null — compiler error if you assign null
+string? name = null;      // can be null — the ? makes it nullable
+Guid? hotelId = null;     // nullable value type
+```
+
+### Null-Coalescing Operator ??
+
+Returns the left side if not null, otherwise the right side:
+
+```csharp
+var revenue = await query.SumAsync(t => (decimal?)t.Amount) ?? 0;
+// if SumAsync returns null (no rows), use 0
+
+var hotelName = reservation.Hotel?.Name ?? "Unknown Hotel";
+```
+
+### Null-Conditional Operator ?.
+
+Safely accesses a member — returns null instead of throwing NullReferenceException:
+
+```csharp
+var roomCount = res.ReservationRooms?.Count ?? 0;
+// if ReservationRooms is null, returns 0 instead of crashing
+
+var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
+```
+
+### Null-Forgiving Operator !
+
+Tells the compiler "I know this is not null, trust me":
+
+```csharp
+var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+// The ! says: FindFirstValue will not return null here (JWT is validated)
+
+.Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
+// The ! says: ReservationRooms will be loaded by Include, not null
+```
+
+### Null-Coalescing Throw
+
+Throw an exception if null, otherwise use the value:
+
+```csharp
+var hotel = await _hotelRepo.GetAsync(dto.HotelId)
+    ?? throw new NotFoundException("Hotel not found.");
+
+var hotelId = admin.HotelId
+    ?? throw new UnAuthorizedException("No hotel associated.");
+```
+
+---
+
+## 27. Static Classes and Methods
+
+Static means the method/class belongs to the type itself, not to an instance. No `new` needed.
+
+### Static Helper Classes
+
+```csharp
+// QrCodeHelper.cs — static class, no instance needed
+public static class QrCodeHelper
+{
+    public static string GenerateQrCodeBase64(string content)
+    {
+        // ...
+    }
+}
+
+// Usage — call directly on the class
+var qrCode = QrCodeHelper.GenerateQrCodeBase64("upi://pay?pa=hotel@upi&am=3000");
+```
+
+### Static Methods Inside Services
+
+Private static methods are used for pure calculations that don't need `this`:
+
+```csharp
+// ReservationService — static because it only uses its parameters, no fields
+private static List<DateOnly> GetDateRange(DateOnly checkIn, DateOnly checkOut)
+{
+    var totalDays = checkOut.DayNumber - checkIn.DayNumber;
+    return Enumerable.Range(0, totalDays).Select(d => checkIn.AddDays(d)).ToList();
+}
+
+private static string GenerateCode()
+    => $"RES-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+
+private static ReservationResponseDto MapToResponseDto(Reservation r, List<Room> rooms, PricingResult pricing)
+    => new() { ReservationCode = r.ReservationCode, ... };
+```
+
+### InventoryRestoreHelper — Static Utility Class
+
+```csharp
+// Used by all three background services
+public static class InventoryRestoreHelper
+{
+    public static async Task<Dictionary<(Guid, DateOnly), RoomTypeInventory>>
+        BuildInventoryLookupAsync(List<Reservation> reservations, ...) { ... }
+
+    public static void RestoreInventory(
+        Reservation reservation,
+        Dictionary<(Guid, DateOnly), RoomTypeInventory> lookup) { ... }
+}
+```
+
+---
+
+## 28. Records and Value Objects
+
+### PricingResult — Internal Record/Class
+
+Used inside `ReservationService` to pass pricing data between private methods without creating a DTO:
+
+```csharp
+// Internal result object — not exposed to controllers
+private class PricingResult
+{
+    public decimal TotalAmount { get; set; }
+    public decimal GstPercent { get; set; }
+    public decimal GstAmount { get; set; }
+    public decimal DiscountPercent { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal WalletAmountUsed { get; set; }
+    public decimal FinalAmount { get; set; }
+    public bool CancellationFeePaid { get; set; }
+    public decimal CancellationFeeAmount { get; set; }
+}
+```
+
+This keeps `CalculatePricingAsync` clean — it returns one object instead of 9 separate values.
+
+---
+
+## 29. Data Annotations
+
+Data annotations are attributes placed on DTO properties to validate input automatically. ASP.NET Core checks them before the controller action runs.
+
+```csharp
+public class CreateReservationDto
+{
+    [Required]                          // must be provided
+    public Guid HotelId { get; set; }
+
+    [Required]
+    public DateOnly CheckInDate { get; set; }
+
+    [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "At least 1 room required.")]
+    public int NumberOfRooms { get; set; }
+}
+
+public class LoginDto
+{
+    [Required]
+    [EmailAddress]                      // must be valid email format
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MinLength(6)]                      // minimum 6 characters
+    public string Password { get; set; } = string.Empty;
+}
+```
+
+If validation fails, ASP.NET Core automatically returns `400 Bad Request` with details — the controller action never runs.
+
+On entity models, `[Key]` and `[Required]` tell EF Core about the schema:
+
+```csharp
+public class Transaction
+{
+    [Key]
+    public Guid TransactionId { get; set; }  // primary key
+
+    [Required]
+    public decimal Amount { get; set; }       // NOT NULL in SQL
+}
+```
+
+---
+
+## 30. Dependency Injection Lifetimes
+
+Every service registered in `Program.cs` has a lifetime. This controls how long an instance lives.
+
+### Scoped (used for all services and repositories)
+
+One instance per HTTP request. All services in the same request share the same instance.
+
+```csharp
+services.AddScoped<IAuthService, AuthService>();
+services.AddScoped<IHotelService, HotelService>();
+services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+services.AddScoped<IUnitOfWork, UnitOfWork>();
+```
+
+This is critical for transactions: `ReservationService`, `WalletService`, and `UnitOfWork` all share the same `DbContext` instance within one request, so they all participate in the same transaction.
+
+### Singleton (used for background services)
+
+One instance for the entire application lifetime. Created once, never destroyed until the app stops.
+
+```csharp
+services.AddHostedService<ReservationCleanupService>();
+services.AddHostedService<HotelDeactivationRefundService>();
+services.AddHostedService<NoShowAutoCancelService>();
+```
+
+Background services are singletons. They cannot directly use Scoped services (like repositories) because Scoped services are tied to a request. That's why they use `IServiceScopeFactory` to create a new scope manually:
+
+```csharp
+// Background service creates its own scope to get Scoped services
+using var scope = _scopeFactory.CreateScope();
+var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+```
+
+### Transient
+
+A new instance every time it is requested. Not used in this project but good to know.
+
+---
+
+## 31. Extension Methods
+
+Extension methods add new methods to existing types without modifying them. They are static methods in a static class with `this` as the first parameter.
+
+Not written directly in this project, but used heavily via EF Core and LINQ:
+
+```csharp
+// These are all extension methods on IQueryable<T>
+query.Where(...)          // System.Linq
+query.OrderBy(...)        // System.Linq
+query.Include(...)        // Microsoft.EntityFrameworkCore
+query.ToListAsync()       // Microsoft.EntityFrameworkCore
+query.FirstOrDefaultAsync() // Microsoft.EntityFrameworkCore
+query.CountAsync()        // Microsoft.EntityFrameworkCore
+query.SumAsync(...)       // Microsoft.EntityFrameworkCore
+```
+
+And on `IEnumerable<T>`:
+```csharp
+list.Select(...)          // System.Linq
+list.Any()                // System.Linq
+list.First()              // System.Linq
+list.ToList()             // System.Linq
+```
+
+---
+
+## 32. String Interpolation and Formatting
+
+Used throughout services for generating codes, messages, and log entries.
+
+```csharp
+// String interpolation — $ prefix
+var code = $"RES-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+// e.g. "RES-A1B2C3D4"
+
+var message = $"Refund for reservation {reservation.ReservationCode} (hotel deactivated)";
+
+// Multi-line interpolation
+_logger.LogInformation(
+    "Hotel deactivation: processing {Count} confirmed reservations.",
+    affected.Count);
+
+// Null-conditional in interpolation
+var hotelName = $"Hotel: {reservation.Hotel?.Name ?? "Unknown"}";
+```
+
+---
+
+## 33. using Statement and IDisposable
+
+`using` ensures that objects implementing `IDisposable` are cleaned up after use, even if an exception occurs.
+
+### using for DbContext in tests
+
+```csharp
+// Automatically calls ctx.Dispose() when the block ends
+using var ctx = CreateContext(nameof(GetMyReservationsAsync_NoReservations_ReturnsEmpty));
+var sut = CreateSut(ctx);
+var result = await sut.GetMyReservationsAsync(Guid.NewGuid());
+```
+
+### using for IServiceScope in background services
+
+```csharp
+// Scope is disposed after the using block — releases all Scoped services
+using var scope = _scopeFactory.CreateScope();
+var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+// ... do work ...
+// scope.Dispose() called automatically here
+```
+
+### UnitOfWork implements IDisposable
+
+```csharp
+public class UnitOfWork : IUnitOfWork, IDisposable
+{
+    public void Dispose()
+    {
+        _transaction?.Dispose();
+        _transaction = null;
+    }
+}
+```
+
+---
+
+## 34. Dictionary<TKey, TValue>
+
+A dictionary stores key-value pairs for fast lookup by key. Used in background services for inventory lookups.
+
+```csharp
+// InventoryRestoreHelper — builds a lookup dictionary
+// Key = (RoomTypeId, Date), Value = RoomTypeInventory object
+var inventoryLookup = new Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory>();
+
+foreach (var inv in inventories)
+    inventoryLookup[(inv.RoomTypeId, inv.Date)] = inv;
+
+// Fast lookup — O(1) instead of O(n) linear search
+if (inventoryLookup.TryGetValue((roomTypeId, date), out var inventory))
+    inventory.ReservedInventory -= roomCount;
+```
+
+Why use a Dictionary instead of a List with `.FirstOrDefault()`? Because Dictionary lookup is O(1) — instant regardless of size. List search is O(n) — gets slower as the list grows.
+
+---
+
+## 35. Tuple and ValueTuple
+
+Tuples group multiple values without creating a class. Used as Dictionary keys in this project.
+
+```csharp
+// ValueTuple as dictionary key — groups RoomTypeId + Date together
+Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory> lookup;
+
+// Access tuple members by name
+var key = (RoomTypeId: roomTypeId, Date: date);
+if (lookup.TryGetValue(key, out var inv)) { ... }
+```
+
+Also used for returning multiple values from private methods:
+
+```csharp
+// Deconstruct tuple return
+var (hotel, roomType, room, guest) = await SeedBasicDataAsync(ctx, dbName);
+```
+
+---
+
+## 36. HashSet<T>
+
+A HashSet stores unique values with O(1) lookup. Used in `InventoryService` to skip duplicate dates:
+
+```csharp
+// Get all dates that already have inventory
+var existingDates = await _inventoryRepo.GetQueryable()
+    .Where(i => i.RoomTypeId == dto.RoomTypeId && i.Date >= dto.StartDate && i.Date <= dto.EndDate)
+    .Select(i => i.Date)
+    .ToHashSetAsync(); // HashSet for O(1) Contains check
+
+// Skip dates that already exist — idempotent operation
+for (var date = dto.StartDate; date <= dto.EndDate; date = date.AddDays(1))
+{
+    if (existingDates.Contains(date)) continue; // O(1) lookup
+    await _inventoryRepo.AddAsync(new RoomTypeInventory { Date = date, ... });
+}
+```
+
+---
+
+## 37. Expression<Func<T, bool>> — Lambda Predicates
+
+Used in repository methods for flexible filtering without exposing IQueryable.
+
+```csharp
+// IRepository interface
+Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+
+// Usage in AuthService
+var user = await _userRepo.FirstOrDefaultAsync(u => u.Email == dto.Email);
+// The lambda u => u.Email == dto.Email is an Expression
+// EF Core translates it to: WHERE Email = @email
+
+// Usage in HotelService
+var admin = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId && u.Role == UserRole.Admin);
+```
+
+`Expression<Func<T, bool>>` is different from `Func<T, bool>`:
+- `Func<T, bool>` — runs in C# memory (IEnumerable)
+- `Expression<Func<T, bool>>` — translated to SQL by EF Core (IQueryable)
+
+---
+
+## 38. Background Services (IHostedService / BackgroundService)
+
+Three background services run automatically when the app starts.
+
+### BackgroundService Base Class
+
+All three inherit from `BackgroundService` which implements `IHostedService`:
+
+```csharp
+public class NoShowAutoCancelService : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await RunSafeAsync(stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        }
+    }
+}
+```
+
+`ExecuteAsync` runs in a background thread. `stoppingToken` is cancelled when the app shuts down.
+
+### The Three Services
+
+| Service | Runs Every | What It Does |
+|---|---|---|
+| `ReservationCleanupService` | 1 minute | Cancels Pending reservations past their 10-min expiry |
+| `NoShowAutoCancelService` | 5 minutes | Marks Confirmed reservations as NoShow if checkout passed and guest never checked in |
+| `HotelDeactivationRefundService` | 5 minutes | Cancels all Confirmed reservations for deactivated hotels and refunds guests |
+
+### Why IServiceScopeFactory?
+
+Background services are Singletons. Repositories and UnitOfWork are Scoped. A Singleton cannot directly hold a Scoped service — it would keep the DbContext alive forever. The solution is to create a new scope for each iteration:
+
+```csharp
+using var scope = _scopeFactory.CreateScope();
+var repo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+// scope is disposed after the using block, releasing the DbContext
+```
+
+---
+
+## 39. Fluent API vs Data Annotations (EF Core Configuration)
+
+Two ways to configure EF Core. This project uses both.
+
+### Data Annotations (on the model class)
+
+```csharp
+public class Transaction
+{
+    [Key]
+    public Guid TransactionId { get; set; }
+
+    [Required]
+    public decimal Amount { get; set; }
+}
+```
+
+### Fluent API (in OnModelCreating — more powerful)
+
+```csharp
+// HotelBookingContext.OnModelCreating
+modelBuilder.Entity<Reservation>()
+    .Property(r => r.TotalAmount)
+    .HasPrecision(18, 2);  // cannot do this with annotations
+
+modelBuilder.Entity<RoomTypeAmenity>()
+    .HasKey(rta => new { rta.RoomTypeId, rta.AmenityId }); // composite key
+
+modelBuilder.Entity<User>()
+    .HasIndex(u => u.Email)
+    .IsUnique();  // unique constraint
+
+modelBuilder.Entity<RoomType>()
+    .HasMany(rt => rt.Rooms)
+    .WithOne(r => r.RoomType)
+    .HasForeignKey(r => r.RoomTypeId)
+    .OnDelete(DeleteBehavior.Restrict);
+```
+
+Fluent API wins when you need precision, composite keys, unique indexes, or cascade behavior.
+
+---
+
+## 40. Pattern Matching and Switch Expressions
+
+Modern C# features used throughout the project.
+
+### is pattern matching
+
+```csharp
+// Check type and cast in one step
+var statusCode = ex is AppException appEx ? appEx.StatusCode : 500;
+// if ex is AppException, cast it to appEx and use appEx.StatusCode
+// otherwise use 500
+```
+
+### switch expression (C# 8+)
+
+```csharp
+// PromoCodeService — cleaner than if/else chain
+private static decimal CalculateDiscountPercent(decimal totalAmount) => totalAmount switch
+{
+    <= 500  => 5,
+    <= 1000 => 10,
+    <= 2000 => 15,
+    <= 5000 => 20,
+    _       => 25   // _ is the default case
+};
+
+// ReservationService — dynamic sort field
+query = sortField?.ToLower() switch
+{
+    "guestname" => desc ? query.OrderByDescending(r => r.Hotel!.Name) : query.OrderBy(r => r.Hotel!.Name),
+    "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount) : query.OrderBy(r => r.FinalAmount),
+    _           => query.OrderByDescending(r => r.CreatedDate)
+};
+```
+
+### is null / is not null
+
+```csharp
+if (_transaction is not null) return; // guard against nested transactions
+if (payload.HotelId.HasValue)         // nullable check
+    claims.Add(new Claim("HotelId", payload.HotelId.ToString()!));
+```
+
+---
+
+## 41. Guid
+
+`Guid` (Globally Unique Identifier) is used as the primary key for every entity in this project instead of auto-increment integers.
+
+```csharp
+public Guid HotelId { get; set; }      // primary key
+public Guid? HotelId { get; set; }     // nullable foreign key (Admin may not have a hotel)
+```
+
+### Why Guid instead of int?
+
+- No sequential IDs that expose how many records exist
+- Safe to generate on the client or server without coordination
+- Works well in distributed systems
+
+### Generating a Guid
+
+```csharp
+var reservation = new Reservation
+{
+    ReservationId = Guid.NewGuid(),  // generates a new unique ID
+    // ...
+};
+```
+
+### Guid in JWT claims
+
+```csharp
+// Stored as string in JWT
+new Claim(ClaimTypes.NameIdentifier, payload.UserId.ToString())
+
+// Parsed back from string in controller
+var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+```
+
+---
+
+## 42. DateOnly vs DateTime
+
+This project uses both. Knowing the difference matters.
+
+### DateOnly (C# 10+)
+
+Represents just a date — no time component. Used for check-in/check-out dates and inventory dates.
+
+```csharp
+public DateOnly CheckInDate { get; set; }   // e.g. 2026-04-15
+public DateOnly CheckOutDate { get; set; }  // e.g. 2026-04-17
+public DateOnly Date { get; set; }          // inventory date
+```
+
+```csharp
+// Convert from DateTime
+var today = DateOnly.FromDateTime(DateTime.Now);  // local time (IST)
+var today = DateOnly.FromDateTime(DateTime.UtcNow); // UTC
+
+// Arithmetic
+var tomorrow = today.AddDays(1);
+var nights = checkOut.DayNumber - checkIn.DayNumber; // number of nights
+```
+
+### DateTime
+
+Represents date + time. Used for timestamps.
+
+```csharp
+public DateTime CreatedAt { get; set; }     // e.g. 2026-04-01 14:30:00 UTC
+public DateTime? ExpiryTime { get; set; }   // reservation payment window
+public DateTime? CancelledDate { get; set; }
+```
+
+```csharp
+// Always use UTC for stored timestamps
+CreatedAt = DateTime.UtcNow
+
+// Use local time for date comparisons (IST clients)
+var today = DateOnly.FromDateTime(DateTime.Now); // local
+```
+
+### Why the project uses DateTime.Now (not UtcNow) for date comparisons
+
+Check-in dates are entered by Indian users in IST (UTC+5:30). If you compare against UTC, a booking for "today" in IST might look like "yesterday" in UTC at midnight. So date comparisons use `DateTime.Now` (local) while timestamps use `DateTime.UtcNow`.
+
+---
+
+*End of additional topics — appended to Backend-Documentation.md*
+
+---
+
+## 21. Collections — IEnumerable, ICollection, IList, List, IQueryable
+
+This is one of the most important things to understand in C#. Every service in this project uses these types constantly. Here is exactly what each one is and when we use it.
+
+### The Hierarchy
+
+```
+IEnumerable<T>          ← most basic, read-only forward loop
+  └── ICollection<T>    ← adds Count, Add, Remove, Contains
+        └── IList<T>    ← adds index access [0], Insert, RemoveAt
+              └── List<T>  ← concrete class, most commonly used
+```
+
+`IQueryable<T>` is separate — it is for database queries (LINQ-to-SQL).
+
+---
+
+### IEnumerable<T>
+
+The most basic collection interface. You can only loop through it with `foreach`. Nothing else.
+
+```csharp
+// IEnumerable — only supports foreach
+IEnumerable<ReservationDetailsDto> reservations = await sut.GetMyReservationsAsync(userId);
+
+foreach (var r in reservations)
+{
+    Console.WriteLine(r.ReservationCode);
+}
+```
+
+Used in this project as return types for service methods that return multiple items:
+
+```csharp
+// ReservationService
+public async Task<IEnumerable<ReservationDetailsDto>> GetMyReservationsAsync(Guid userId)
+{
+    var list = await _reservationRepo.GetQueryable()
+        .Where(r => r.UserId == userId)
+        .ToListAsync();
+    return list.Select(MapToDetailsDto); // Select returns IEnumerable
+}
+```
+
+Why use `IEnumerable` as return type instead of `List`? Because the caller only needs to loop — you don't need to expose Add/Remove. It keeps the API minimal.
+
+---
+
+### ICollection<T>
+
+Adds `Count`, `Add`, `Remove`, `Contains` on top of `IEnumerable`.
+
+```csharp
+ICollection<Review> reviews = hotel.Reviews!;
+
+int count = reviews.Count;           // how many reviews
+bool hasAny = reviews.Contains(r);   // check if item exists
+reviews.Add(newReview);              // add item
+reviews.Remove(oldReview);           // remove item
+```
+
+Used in this project as navigation property types on entities:
+
+```csharp
+// Hotel entity — navigation properties use ICollection
+public class Hotel
+{
+    public ICollection<RoomType>? RoomTypes { get; set; }
+    public ICollection<Review>? Reviews { get; set; }
+    public ICollection<Reservation>? Reservations { get; set; }
+}
+```
+
+EF Core uses `ICollection<T>` for navigation properties because it needs to be able to add/remove related entities. You cannot use `IEnumerable` here because EF Core needs `Add`.
+
+---
+
+### IList<T>
+
+Adds index access `[i]`, `Insert(index, item)`, `RemoveAt(index)` on top of `ICollection`.
+
+```csharp
+IList<DateOnly> dates = GetDateRange(checkIn, checkOut);
+
+DateOnly first = dates[0];           // access by index
+dates.Insert(0, someDate);           // insert at position
+dates.RemoveAt(2);                   // remove at position
+```
+
+Rarely used directly in this project. `List<T>` is preferred because it is the concrete implementation.
+
+---
+
+### List<T>
+
+The concrete class. Implements `IList<T>`, `ICollection<T>`, `IEnumerable<T>`. This is what you actually create and use in services.
+
+```csharp
+// From ReservationService — building a date range
+private static List<DateOnly> GetDateRange(DateOnly checkIn, DateOnly checkOut)
+{
+    var totalDays = checkOut.DayNumber - checkIn.DayNumber;
+    return Enumerable.Range(0, totalDays)
+        .Select(d => checkIn.AddDays(d))
+        .ToList(); // converts IEnumerable to List<DateOnly>
+}
+
+// From NoShowAutoCancelService
+var noShows = await reservationRepo.GetQueryable()
+    .Where(r => r.Status == ReservationStatus.Confirmed && ...)
+    .ToListAsync(); // returns List<Reservation>
+
+if (!noShows.Any()) return; // Any() from IEnumerable
+```
+
+Common `List<T>` methods used in this project:
+
+```csharp
+var rooms = new List<Room>();
+
+rooms.Add(room);                    // add one item
+rooms.AddRange(moreRooms);          // add many items
+rooms.Count;                        // number of items
+rooms.Any();                        // true if not empty
+rooms.First();                      // first item (throws if empty)
+rooms.FirstOrDefault();             // first item or null
+rooms.Where(r => r.IsActive);       // filter (returns IEnumerable)
+rooms.Select(r => r.RoomId);        // transform (returns IEnumerable)
+rooms.OrderBy(r => r.RoomNumber);   // sort
+rooms.ToList();                     // copy to new List
+rooms.Contains(room);               // check membership
+```
+
+---
+
+### IQueryable<T>
+
+This is completely different from the others. `IQueryable<T>` represents a **database query that has not been executed yet**. You build up the query with LINQ, and it only hits the database when you call `.ToListAsync()`, `.FirstOrDefaultAsync()`, `.CountAsync()`, etc.
+
+```csharp
+// GetQueryable() returns IQueryable<Reservation>
+// Nothing is sent to the database yet
+var query = _reservationRepo.GetQueryable();
+
+// Still no DB call — just adds a WHERE clause to the query
+query = query.Where(r => r.UserId == userId);
+
+// Still no DB call — adds ORDER BY
+query = query.OrderByDescending(r => r.CreatedDate);
+
+// NOW the SQL is sent to the database
+var results = await query.ToListAsync();
+// SQL: SELECT * FROM Reservations WHERE UserId = @userId ORDER BY CreatedDate DESC
+```
+
+This is called **deferred execution** — the query is built up lazily and only runs when you materialize it.
+
+Used everywhere in this project for filtering, sorting, and paging:
+
+```csharp
+// From ReservationService.GetAdminReservationsAsync
+var query = _reservationRepo.GetQueryable()
+    .Include(r => r.Hotel)
+    .Include(r => r.User)
+    .Where(r => r.HotelId == admin.HotelId)  // filter
+    .AsQueryable();
+
+// Conditionally add more filters
+if (status != "All")
+    query = query.Where(r => r.Status == statusEnum);
+
+if (!string.IsNullOrWhiteSpace(search))
+    query = query.Where(r => r.ReservationCode.Contains(search));
+
+// Count BEFORE paging (for TotalCount in response)
+var total = await query.CountAsync();
+
+// Apply paging and execute
+var items = await query
+    .Skip((page - 1) * pageSize)
+    .Take(pageSize)
+    .ToListAsync();
+```
+
+Key difference from `IEnumerable`: if you use `IEnumerable` for filtering, the data is loaded into memory first and then filtered in C#. If you use `IQueryable`, the filter is translated to SQL and runs in the database — much faster.
+
+```csharp
+// BAD — loads ALL reservations into memory, then filters in C#
+var all = await _reservationRepo.GetAllAsync(); // IEnumerable
+var filtered = all.Where(r => r.UserId == userId); // C# filter
+
+// GOOD — filter runs in SQL, only matching rows come back
+var filtered = await _reservationRepo.GetQueryable()
+    .Where(r => r.UserId == userId)
+    .ToListAsync(); // SQL filter
+```
+
+---
+
+### Quick Comparison Table
+
+| Type | Can Loop | Count | Add/Remove | Index [i] | DB Query |
+|---|---|---|---|---|---|
+| `IEnumerable<T>` | Yes | No | No | No | No |
+| `ICollection<T>` | Yes | Yes | Yes | No | No |
+| `IList<T>` | Yes | Yes | Yes | Yes | No |
+| `List<T>` | Yes | Yes | Yes | Yes | No |
+| `IQueryable<T>` | Yes* | Yes* | No | No | Yes |
+
+*Only after materializing with `.ToList()` / `.ToListAsync()`
+
+---
+
+### Where Each Is Used in This Project
+
+| Usage | Type Used | Why |
+|---|---|---|
+| Entity navigation properties | `ICollection<T>?` | EF Core needs Add/Remove |
+| Service method return types | `IEnumerable<T>` | Caller only needs to loop |
+| Local variables in services | `List<T>` | Need Add, Count, index access |
+| Database queries | `IQueryable<T>` | Deferred SQL execution |
+| `.ToListAsync()` result | `List<T>` | Materialized from DB |
+| `.Select(MapToDto)` result | `IEnumerable<T>` | Lazy transform |
+
+---
+
+## 22. Enums
+
+An enum is a named set of integer constants. Instead of using magic numbers like `1`, `2`, `3` in your code, you use readable names.
+
+### Enums in This Project
+
+```csharp
+// Models/User.cs
+public enum UserRole
+{
+    Guest = 1,
+    Admin = 2,
+    SuperAdmin = 3
+}
+
+// Models/Reservation.cs
+public enum ReservationStatus
+{
+    Pending = 1,
+    Confirmed = 2,
+    Cancelled = 3,
+    Completed = 4,
+    NoShow = 5
+}
+
+// Models/Transaction.cs
+public enum PaymentMethod
+{
+    CreditCard = 1,
+    DebitCard = 2,
+    UPI = 3,
+    NetBanking = 4,
+    Wallet = 5
+}
+
+public enum PaymentStatus
+{
+    Pending = 1,
+    Success = 2,
+    Failed = 3,
+    Refunded = 4
+}
+
+// Models/SupportRequest.cs
+public enum SupportRequestStatus
+{
+    Open,
+    Resolved,
+    Closed
+}
+```
+
+### How Enums Are Used
+
+**Comparing:**
+```csharp
+if (res.Status == ReservationStatus.Cancelled)
+    throw new ReservationFailedException("Already cancelled.");
+
+if (user.Role != UserRole.Admin)
+    throw new UnAuthorizedException("Admins only.");
+```
+
+**Stored as int in database:**
+```csharp
+// In OnModelCreating
+modelBuilder.Entity<User>()
+    .Property(u => u.Role)
+    .HasConversion<int>(); // stored as 1, 2, or 3 in SQL
+```
+
+**Parsing from string (for filter parameters):**
+```csharp
+// From ReservationService — status filter comes as string from Angular
+if (Enum.TryParse<ReservationStatus>(status, out var statusEnum))
+    query = query.Where(r => r.Status == statusEnum);
+```
+
+**Converting to string for DTOs:**
+```csharp
+// Entity has enum, DTO has string
+Status = r.Status.ToString() // "Pending", "Confirmed", etc.
+```
+
+**Switch expression on enum:**
+```csharp
+// From PromoCodeService
+private static decimal CalculateDiscountPercent(decimal totalAmount) => totalAmount switch
+{
+    <= 500  => 5,
+    <= 1000 => 10,
+    <= 2000 => 15,
+    <= 5000 => 20,
+    _       => 25
+};
+```
+
+---
+
+## 23. Generics
+
+Generics let you write code that works with any type. Instead of writing a separate repository for `Hotel`, `User`, `Reservation`, etc., you write one generic repository.
+
+### Generic Repository
+
+```csharp
+// One class handles ALL entity types
+public class Repository<TKey, TEntity> : IRepository<TKey, TEntity>
+    where TEntity : class  // constraint: TEntity must be a class
+{
+    public async Task<TEntity?> GetAsync(TKey key)
+        => await _context.FindAsync<TEntity>(key);
+
+    public async Task<TEntity?> AddAsync(TEntity entity)
+    {
+        await _context.Set<TEntity>().AddAsync(entity);
+        return entity;
+    }
+}
+```
+
+`TKey` and `TEntity` are type parameters — placeholders filled in when you use the class:
+
+```csharp
+// TKey = Guid, TEntity = Hotel
+IRepository<Guid, Hotel> _hotelRepo;
+
+// TKey = Guid, TEntity = Reservation
+IRepository<Guid, Reservation> _reservationRepo;
+```
+
+### Generic Interface
+
+```csharp
+public interface IRepository<TKey, TEntity> where TEntity : class
+{
+    Task<TEntity?> GetAsync(TKey key);
+    Task<TEntity?> AddAsync(TEntity entity);
+    Task<TEntity?> DeleteAsync(TKey key);
+    IQueryable<TEntity> GetQueryable();
+}
+```
+
+### Registration with Open Generics
+
+```csharp
+// Program.cs — one line registers for ALL types
+services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+// This means: whenever someone asks for IRepository<Guid, Hotel>,
+// give them Repository<Guid, Hotel>
+```
+
+---
+
+## 24. LINQ (Language Integrated Query)
+
+LINQ is how you query collections and databases in C#. It looks like SQL but written in C#.
+
+### Most Used LINQ Methods in This Project
+
+**Where — filter:**
+```csharp
+var active = hotels.Where(h => h.IsActive);
+// SQL: WHERE IsActive = 1
+```
+
+**Select — transform/project:**
+```csharp
+var names = hotels.Select(h => h.Name);
+var dtos = rooms.Select(r => new RoomSummaryDto { RoomId = r.RoomId, RoomNumber = r.RoomNumber });
+```
+
+**FirstOrDefault — get first match or null:**
+```csharp
+var hotel = await _hotelRepo.GetQueryable()
+    .FirstOrDefaultAsync(h => h.HotelId == id);
+// returns null if not found — no exception
+```
+
+**Any — check if anything matches:**
+```csharp
+var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
+if (!noShows.Any()) return;
+```
+
+**OrderBy / OrderByDescending — sort:**
+```csharp
+query = query.OrderByDescending(r => r.CreatedDate);
+query = query.OrderBy(r => r.RoomNumber);
+```
+
+**Skip + Take — pagination:**
+```csharp
+var page = await query.Skip((pageNum - 1) * pageSize).Take(pageSize).ToListAsync();
+```
+
+**Include + ThenInclude — load related data (EF Core):**
+```csharp
+var res = await _reservationRepo.GetQueryable()
+    .Include(r => r.ReservationRooms!)      // load ReservationRooms
+    .ThenInclude(rr => rr.Room)             // then load Room from each ReservationRoom
+    .Include(r => r.Hotel)                  // also load Hotel
+    .FirstOrDefaultAsync(r => r.ReservationCode == code);
+```
+
+**CountAsync — count matching rows:**
+```csharp
+var total = await query.CountAsync();
+```
+
+**SumAsync — aggregate:**
+```csharp
+var revenue = await _transactionRepo.GetQueryable()
+    .Where(t => t.Status == PaymentStatus.Success)
+    .SumAsync(t => (decimal?)t.Amount) ?? 0;
+```
+
+**Distinct — remove duplicates:**
+```csharp
+var bookedRoomIds = await _reservationRoomRepo.GetQueryable()
+    .Select(rr => rr.RoomId)
+    .Distinct()
+    .ToListAsync();
+```
+
+**Contains — check if value is in a list:**
+```csharp
+// Used for "WHERE Date IN (...)" style queries
+var inventories = await _inventoryRepo.GetQueryable()
+    .Where(i => dates.Contains(i.Date))
+    .ToListAsync();
+```
+
+**Enumerable.Range — generate a sequence:**
+```csharp
+// Generate [0, 1, 2, ..., totalDays-1]
+var dates = Enumerable.Range(0, totalDays)
+    .Select(d => checkIn.AddDays(d))
+    .ToList();
+```
+
+---
+
+## 25. async / await and Task
+
+Every database operation in this project is async. This is essential for a web API that handles many requests at the same time.
+
+### Why Async?
+
+When a request hits the database, the thread would normally sit and wait (blocking). With async, the thread is released to handle other requests while waiting for the DB. This makes the API handle more traffic with fewer threads.
+
+### Task vs Task<T>
+
+```csharp
+// Task — async method that returns nothing (void equivalent)
+public async Task CommitAsync()
+{
+    await _context.SaveChangesAsync();
+}
+
+// Task<T> — async method that returns a value
+public async Task<Hotel?> GetHotelAsync(Guid id)
+{
+    return await _hotelRepo.GetAsync(id);
+}
+```
+
+### async / await Pattern
+
+```csharp
+// Every method that calls an async method must itself be async
+public async Task<ReservationResponseDto> CreateReservationAsync(Guid userId, CreateReservationDto dto)
+{
+    // await pauses this method until the DB call completes
+    // but does NOT block the thread
+    var hotel = await _hotelRepo.GetAsync(dto.HotelId);
+
+    // continues here after DB responds
+    if (hotel == null) throw new NotFoundException("Hotel not found.");
+
+    await _unitOfWork.CommitAsync(); // another await
+    return MapToResponseDto(...);
+}
+```
+
+### ConfigureAwait
+
+Not used in this project (ASP.NET Core doesn't need it), but good to know: `await task.ConfigureAwait(false)` is used in library code to avoid deadlocks.
+
+### CancellationToken
+
+Background services pass a `CancellationToken` to async DB calls so they can be stopped cleanly:
+
+```csharp
+// NoShowAutoCancelService
+var noShows = await reservationRepo.GetQueryable()
+    .Where(r => r.Status == ReservationStatus.Confirmed && ...)
+    .ToListAsync(ct); // ct = CancellationToken — stops the query if service is shutting down
+```
+
+---
+
+## 26. Nullable Reference Types and Null Safety
+
+The project has `<Nullable>enable</Nullable>` in the `.csproj`. This means the compiler warns you about potential null dereferences.
+
+### Nullable vs Non-Nullable
+
+```csharp
+string name = "Alice";    // cannot be null — compiler error if you assign null
+string? name = null;      // can be null — the ? makes it nullable
+Guid? hotelId = null;     // nullable value type
+```
+
+### Null-Coalescing Operator ??
+
+Returns the left side if not null, otherwise the right side:
+
+```csharp
+var revenue = await query.SumAsync(t => (decimal?)t.Amount) ?? 0;
+// if SumAsync returns null (no rows), use 0
+
+var hotelName = reservation.Hotel?.Name ?? "Unknown Hotel";
+```
+
+### Null-Conditional Operator ?.
+
+Safely accesses a member — returns null instead of throwing NullReferenceException:
+
+```csharp
+var roomCount = res.ReservationRooms?.Count ?? 0;
+// if ReservationRooms is null, returns 0 instead of crashing
+
+var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
+```
+
+### Null-Forgiving Operator !
+
+Tells the compiler "I know this is not null, trust me":
+
+```csharp
+var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+// The ! says: FindFirstValue will not return null here (JWT is validated)
+
+.Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
+// The ! says: ReservationRooms will be loaded by Include, not null
+```
+
+### Null-Coalescing Throw
+
+Throw an exception if null, otherwise use the value:
+
+```csharp
+var hotel = await _hotelRepo.GetAsync(dto.HotelId)
+    ?? throw new NotFoundException("Hotel not found.");
+
+var hotelId = admin.HotelId
+    ?? throw new UnAuthorizedException("No hotel associated.");
+```
+
+---
+
+## 27. Static Classes and Methods
+
+Static means the method/class belongs to the type itself, not to an instance. No `new` needed.
+
+### Static Helper Classes
+
+```csharp
+// QrCodeHelper.cs — static class, no instance needed
+public static class QrCodeHelper
+{
+    public static string GenerateQrCodeBase64(string content)
+    {
+        // ...
+    }
+}
+
+// Usage — call directly on the class
+var qrCode = QrCodeHelper.GenerateQrCodeBase64("upi://pay?pa=hotel@upi&am=3000");
+```
+
+### Static Methods Inside Services
+
+Private static methods are used for pure calculations that don't need `this`:
+
+```csharp
+// ReservationService — static because it only uses its parameters, no fields
+private static List<DateOnly> GetDateRange(DateOnly checkIn, DateOnly checkOut)
+{
+    var totalDays = checkOut.DayNumber - checkIn.DayNumber;
+    return Enumerable.Range(0, totalDays).Select(d => checkIn.AddDays(d)).ToList();
+}
+
+private static string GenerateCode()
+    => $"RES-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+
+private static ReservationResponseDto MapToResponseDto(Reservation r, List<Room> rooms, PricingResult pricing)
+    => new() { ReservationCode = r.ReservationCode, ... };
+```
+
+### InventoryRestoreHelper — Static Utility Class
+
+```csharp
+// Used by all three background services
+public static class InventoryRestoreHelper
+{
+    public static async Task<Dictionary<(Guid, DateOnly), RoomTypeInventory>>
+        BuildInventoryLookupAsync(List<Reservation> reservations, ...) { ... }
+
+    public static void RestoreInventory(
+        Reservation reservation,
+        Dictionary<(Guid, DateOnly), RoomTypeInventory> lookup) { ... }
+}
+```
+
+---
+
+## 28. Records and Value Objects
+
+### PricingResult — Internal Record/Class
+
+Used inside `ReservationService` to pass pricing data between private methods without creating a DTO:
+
+```csharp
+// Internal result object — not exposed to controllers
+private class PricingResult
+{
+    public decimal TotalAmount { get; set; }
+    public decimal GstPercent { get; set; }
+    public decimal GstAmount { get; set; }
+    public decimal DiscountPercent { get; set; }
+    public decimal DiscountAmount { get; set; }
+    public decimal WalletAmountUsed { get; set; }
+    public decimal FinalAmount { get; set; }
+    public bool CancellationFeePaid { get; set; }
+    public decimal CancellationFeeAmount { get; set; }
+}
+```
+
+This keeps `CalculatePricingAsync` clean — it returns one object instead of 9 separate values.
+
+---
+
+## 29. Data Annotations
+
+Data annotations are attributes placed on DTO properties to validate input automatically. ASP.NET Core checks them before the controller action runs.
+
+```csharp
+public class CreateReservationDto
+{
+    [Required]                          // must be provided
+    public Guid HotelId { get; set; }
+
+    [Required]
+    public DateOnly CheckInDate { get; set; }
+
+    [Required]
+    [Range(1, int.MaxValue, ErrorMessage = "At least 1 room required.")]
+    public int NumberOfRooms { get; set; }
+}
+
+public class LoginDto
+{
+    [Required]
+    [EmailAddress]                      // must be valid email format
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    [MinLength(6)]                      // minimum 6 characters
+    public string Password { get; set; } = string.Empty;
+}
+```
+
+If validation fails, ASP.NET Core automatically returns `400 Bad Request` with details — the controller action never runs.
+
+On entity models, `[Key]` and `[Required]` tell EF Core about the schema:
+
+```csharp
+public class Transaction
+{
+    [Key]
+    public Guid TransactionId { get; set; }  // primary key
+
+    [Required]
+    public decimal Amount { get; set; }       // NOT NULL in SQL
+}
+```
+
+---
+
+## 30. Dependency Injection Lifetimes
+
+Every service registered in `Program.cs` has a lifetime. This controls how long an instance lives.
+
+### Scoped (used for all services and repositories)
+
+One instance per HTTP request. All services in the same request share the same instance.
+
+```csharp
+services.AddScoped<IAuthService, AuthService>();
+services.AddScoped<IHotelService, HotelService>();
+services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
+services.AddScoped<IUnitOfWork, UnitOfWork>();
+```
+
+This is critical for transactions: `ReservationService`, `WalletService`, and `UnitOfWork` all share the same `DbContext` instance within one request, so they all participate in the same transaction.
+
+### Singleton (used for background services)
+
+One instance for the entire application lifetime. Created once, never destroyed until the app stops.
+
+```csharp
+services.AddHostedService<ReservationCleanupService>();
+services.AddHostedService<HotelDeactivationRefundService>();
+services.AddHostedService<NoShowAutoCancelService>();
+```
+
+Background services are singletons. They cannot directly use Scoped services (like repositories) because Scoped services are tied to a request. That's why they use `IServiceScopeFactory` to create a new scope manually:
+
+```csharp
+// Background service creates its own scope to get Scoped services
+using var scope = _scopeFactory.CreateScope();
+var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
+```
+
+### Transient
+
+A new instance every time it is requested. Not used in this project but good to know.
+
+---
+
+## 31. Extension Methods
+
+Extension methods add new methods to existing types without modifying them. They are static methods in a static class with `this` as the first parameter.
+
+Not written directly in this project, but used heavily via EF Core and LINQ:
+
+```csharp
+// These are all extension methods on IQueryable<T>
+query.Where(...)          // System.Linq
+query.OrderBy(...)        // System.Linq
+query.Include(...)        // Microsoft.EntityFrameworkCore
+query.ToListAsync()       // Microsoft.EntityFrameworkCore
+query.FirstOrDefaultAsync() // Microsoft.EntityFrameworkCore
+query.CountAsync()        // Microsoft.EntityFrameworkCore
+query.SumAsync(...)       // Microsoft.EntityFrameworkCore
+```
+
+And on `IEnumerable<T>`:
+```csharp
+list.Select(...)          // System.Linq
+list.Any()                // System.Linq
+list.First()              // System.Linq
+list.ToList()             // System.Linq
+```
+
+---
+
+## 32. String Interpolation and Formatting
+
+Used throughout services for generating codes, messages, and log entries.
+
+```csharp
+// String interpolation — $ prefix
+var code = $"RES-{Guid.NewGuid().ToString("N").Substring(0, 8).ToUpper()}";
+// e.g. "RES-A1B2C3D4"
+
+var message = $"Refund for reservation {reservation.ReservationCode} (hotel deactivated)";
+
+// Multi-line interpolation
+_logger.LogInformation(
+    "Hotel deactivation: processing {Count} confirmed reservations.",
+    affected.Count);
+
+// Null-conditional in interpolation
+var hotelName = $"Hotel: {reservation.Hotel?.Name ?? "Unknown"}";
+```
+
+---
+
+## 33. using Statement and IDisposable
+
+`using` ensures that objects implementing `IDisposable` are cleaned up after use, even if an exception occurs.
+
+### using for DbContext in tests
+
+```csharp
+// Automatically calls ctx.Dispose() when the block ends
+using var ctx = CreateContext(nameof(GetMyReservationsAsync_NoReservations_ReturnsEmpty));
+var sut = CreateSut(ctx);
+var result = await sut.GetMyReservationsAsync(Guid.NewGuid());
+```
+
+### using for IServiceScope in background services
+
+```csharp
+// Scope is disposed after the using block — releases all Scoped services
+using var scope = _scopeFactory.CreateScope();
+var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+// ... do work ...
+// scope.Dispose() called automatically here
+```
+
+### UnitOfWork implements IDisposable
+
+```csharp
+public class UnitOfWork : IUnitOfWork, IDisposable
+{
+    public void Dispose()
+    {
+        _transaction?.Dispose();
+        _transaction = null;
+    }
+}
+```
+
+---
+
+## 34. Dictionary<TKey, TValue>
+
+A dictionary stores key-value pairs for fast lookup by key. Used in background services for inventory lookups.
+
+```csharp
+// InventoryRestoreHelper — builds a lookup dictionary
+// Key = (RoomTypeId, Date), Value = RoomTypeInventory object
+var inventoryLookup = new Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory>();
+
+foreach (var inv in inventories)
+    inventoryLookup[(inv.RoomTypeId, inv.Date)] = inv;
+
+// Fast lookup — O(1) instead of O(n) linear search
+if (inventoryLookup.TryGetValue((roomTypeId, date), out var inventory))
+    inventory.ReservedInventory -= roomCount;
+```
+
+Why use a Dictionary instead of a List with `.FirstOrDefault()`? Because Dictionary lookup is O(1) — instant regardless of size. List search is O(n) — gets slower as the list grows.
+
+---
+
+## 35. Tuple and ValueTuple
+
+Tuples group multiple values without creating a class. Used as Dictionary keys in this project.
+
+```csharp
+// ValueTuple as dictionary key — groups RoomTypeId + Date together
+Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory> lookup;
+
+// Access tuple members by name
+var key = (RoomTypeId: roomTypeId, Date: date);
+if (lookup.TryGetValue(key, out var inv)) { ... }
+```
+
+Also used for returning multiple values from private methods:
+
+```csharp
+// Deconstruct tuple return
+var (hotel, roomType, room, guest) = await SeedBasicDataAsync(ctx, dbName);
+```
+
+---
+
+## 36. HashSet<T>
+
+A HashSet stores unique values with O(1) lookup. Used in `InventoryService` to skip duplicate dates:
+
+```csharp
+// Get all dates that already have inventory
+var existingDates = await _inventoryRepo.GetQueryable()
+    .Where(i => i.RoomTypeId == dto.RoomTypeId && i.Date >= dto.StartDate && i.Date <= dto.EndDate)
+    .Select(i => i.Date)
+    .ToHashSetAsync(); // HashSet for O(1) Contains check
+
+// Skip dates that already exist — idempotent operation
+for (var date = dto.StartDate; date <= dto.EndDate; date = date.AddDays(1))
+{
+    if (existingDates.Contains(date)) continue; // O(1) lookup
+    await _inventoryRepo.AddAsync(new RoomTypeInventory { Date = date, ... });
+}
+```
+
+---
+
+## 37. Expression<Func<T, bool>> — Lambda Predicates
+
+Used in repository methods for flexible filtering without exposing IQueryable.
+
+```csharp
+// IRepository interface
+Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate);
+
+// Usage in AuthService
+var user = await _userRepo.FirstOrDefaultAsync(u => u.Email == dto.Email);
+// The lambda u => u.Email == dto.Email is an Expression
+// EF Core translates it to: WHERE Email = @email
+
+// Usage in HotelService
+var admin = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId && u.Role == UserRole.Admin);
+```
+
+`Expression<Func<T, bool>>` is different from `Func<T, bool>`:
+- `Func<T, bool>` — runs in C# memory (IEnumerable)
+- `Expression<Func<T, bool>>` — translated to SQL by EF Core (IQueryable)
+
+---
+
+## 38. Background Services (IHostedService / BackgroundService)
+
+Three background services run automatically when the app starts.
+
+### BackgroundService Base Class
+
+All three inherit from `BackgroundService` which implements `IHostedService`:
+
+```csharp
+public class NoShowAutoCancelService : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        while (!stoppingToken.IsCancellationRequested)
+        {
+            await RunSafeAsync(stoppingToken);
+            await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        }
+    }
+}
+```
+
+`ExecuteAsync` runs in a background thread. `stoppingToken` is cancelled when the app shuts down.
+
+### The Three Services
+
+| Service | Runs Every | What It Does |
+|---|---|---|
+| `ReservationCleanupService` | 1 minute | Cancels Pending reservations past their 10-min expiry |
+| `NoShowAutoCancelService` | 5 minutes | Marks Confirmed reservations as NoShow if checkout passed and guest never checked in |
+| `HotelDeactivationRefundService` | 5 minutes | Cancels all Confirmed reservations for deactivated hotels and refunds guests |
+
+### Why IServiceScopeFactory?
+
+Background services are Singletons. Repositories and UnitOfWork are Scoped. A Singleton cannot directly hold a Scoped service — it would keep the DbContext alive forever. The solution is to create a new scope for each iteration:
+
+```csharp
+using var scope = _scopeFactory.CreateScope();
+var repo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
+// scope is disposed after the using block, releasing the DbContext
+```
+
+---
+
+## 39. Fluent API vs Data Annotations (EF Core Configuration)
+
+Two ways to configure EF Core. This project uses both.
+
+### Data Annotations (on the model class)
+
+```csharp
+public class Transaction
+{
+    [Key]
+    public Guid TransactionId { get; set; }
+
+    [Required]
+    public decimal Amount { get; set; }
+}
+```
+
+### Fluent API (in OnModelCreating — more powerful)
+
+```csharp
+// HotelBookingContext.OnModelCreating
+modelBuilder.Entity<Reservation>()
+    .Property(r => r.TotalAmount)
+    .HasPrecision(18, 2);  // cannot do this with annotations
+
+modelBuilder.Entity<RoomTypeAmenity>()
+    .HasKey(rta => new { rta.RoomTypeId, rta.AmenityId }); // composite key
+
+modelBuilder.Entity<User>()
+    .HasIndex(u => u.Email)
+    .IsUnique();  // unique constraint
+
+modelBuilder.Entity<RoomType>()
+    .HasMany(rt => rt.Rooms)
+    .WithOne(r => r.RoomType)
+    .HasForeignKey(r => r.RoomTypeId)
+    .OnDelete(DeleteBehavior.Restrict);
+```
+
+Fluent API wins when you need precision, composite keys, unique indexes, or cascade behavior.
+
+---
+
+## 40. Pattern Matching and Switch Expressions
+
+Modern C# features used throughout the project.
+
+### is pattern matching
+
+```csharp
+// Check type and cast in one step
+var statusCode = ex is AppException appEx ? appEx.StatusCode : 500;
+// if ex is AppException, cast it to appEx and use appEx.StatusCode
+// otherwise use 500
+```
+
+### switch expression (C# 8+)
+
+```csharp
+// PromoCodeService — cleaner than if/else chain
+private static decimal CalculateDiscountPercent(decimal totalAmount) => totalAmount switch
+{
+    <= 500  => 5,
+    <= 1000 => 10,
+    <= 2000 => 15,
+    <= 5000 => 20,
+    _       => 25   // _ is the default case
+};
+
+// ReservationService — dynamic sort field
+query = sortField?.ToLower() switch
+{
+    "guestname" => desc ? query.OrderByDescending(r => r.Hotel!.Name) : query.OrderBy(r => r.Hotel!.Name),
+    "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount) : query.OrderBy(r => r.FinalAmount),
+    _           => query.OrderByDescending(r => r.CreatedDate)
+};
+```
+
+### is null / is not null
+
+```csharp
+if (_transaction is not null) return; // guard against nested transactions
+if (payload.HotelId.HasValue)         // nullable check
+    claims.Add(new Claim("HotelId", payload.HotelId.ToString()!));
+```
+
+---
+
+## 41. Guid
+
+`Guid` (Globally Unique Identifier) is used as the primary key for every entity in this project instead of auto-increment integers.
+
+```csharp
+public Guid HotelId { get; set; }      // primary key
+public Guid? HotelId { get; set; }     // nullable foreign key (Admin may not have a hotel)
+```
+
+### Why Guid instead of int?
+
+- No sequential IDs that expose how many records exist
+- Safe to generate on the client or server without coordination
+- Works well in distributed systems
+
+### Generating a Guid
+
+```csharp
+var reservation = new Reservation
+{
+    ReservationId = Guid.NewGuid(),  // generates a new unique ID
+    // ...
+};
+```
+
+### Guid in JWT claims
+
+```csharp
+// Stored as string in JWT
+new Claim(ClaimTypes.NameIdentifier, payload.UserId.ToString())
+
+// Parsed back from string in controller
+var userId = Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+```
+
+---
+
+## 42. DateOnly vs DateTime
+
+This project uses both. Knowing the difference matters.
+
+### DateOnly (C# 10+)
+
+Represents just a date — no time component. Used for check-in/check-out dates and inventory dates.
+
+```csharp
+public DateOnly CheckInDate { get; set; }   // e.g. 2026-04-15
+public DateOnly CheckOutDate { get; set; }  // e.g. 2026-04-17
+public DateOnly Date { get; set; }          // inventory date
+```
+
+```csharp
+// Convert from DateTime
+var today = DateOnly.FromDateTime(DateTime.Now);  // local time (IST)
+var today = DateOnly.FromDateTime(DateTime.UtcNow); // UTC
+
+// Arithmetic
+var tomorrow = today.AddDays(1);
+var nights = checkOut.DayNumber - checkIn.DayNumber; // number of nights
+```
+
+### DateTime
+
+Represents date + time. Used for timestamps.
+
+```csharp
+public DateTime CreatedAt { get; set; }     // e.g. 2026-04-01 14:30:00 UTC
+public DateTime? ExpiryTime { get; set; }   // reservation payment window
+public DateTime? CancelledDate { get; set; }
+```
+
+```csharp
+// Always use UTC for stored timestamps
+CreatedAt = DateTime.UtcNow
+
+// Use local time for date comparisons (IST clients)
+var today = DateOnly.FromDateTime(DateTime.Now); // local
+```
+
+### Why the project uses DateTime.Now (not UtcNow) for date comparisons
+
+Check-in dates are entered by Indian users in IST (UTC+5:30). If you compare against UTC, a booking for "today" in IST might look like "yesterday" in UTC at midnight. So date comparisons use `DateTime.Now` (local) while timestamps use `DateTime.UtcNow`.
+
+---
+
+*End of additional topics — appended to Backend-Documentation.md*
