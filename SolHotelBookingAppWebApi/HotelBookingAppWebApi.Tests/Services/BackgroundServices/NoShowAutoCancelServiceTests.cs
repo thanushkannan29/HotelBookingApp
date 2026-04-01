@@ -110,9 +110,10 @@ public class NoShowAutoCancelServiceTests
     [Fact]
     public async Task ExecuteAsync_ProcessingThrows_LogsErrorAndContinues()
     {
-        // Arrange
-        _scopeFactoryMock.Setup(f => f.CreateScope()).Throws(new Exception("DB error"));
-        var sut = new NoShowAutoCancelService(_scopeFactoryMock.Object, _loggerMock.Object);
+        // Arrange — use local mocks to avoid polluting the shared class-level mock
+        var localScopeFactory = new Mock<IServiceScopeFactory>();
+        localScopeFactory.Setup(f => f.CreateScope()).Throws(new Exception("DB error"));
+        var sut = new NoShowAutoCancelService(localScopeFactory.Object, _loggerMock.Object);
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
 
         // Act — start the service and wait long enough for the loop to execute and log
