@@ -22,7 +22,9 @@ import { ChatbotComponent } from './shared/components/chatbot/chatbot.component'
     @if (showChrome()) {
       <app-footer />
     }
-    <app-chatbot />
+    @if (showChrome()) {
+      <app-chatbot />
+    }
   `,
   styles: [`
     main { min-height: calc(100vh - 64px - 80px); }

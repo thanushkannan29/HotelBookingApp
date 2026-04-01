@@ -1,9 +1,12 @@
 import {
   Component, inject, signal, computed, ViewChild,
-  ElementRef, AfterViewChecked, OnInit
+  ElementRef, AfterViewChecked, OnInit, OnDestroy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router, NavigationStart } from '@angular/router';
+import { Subscription } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../core/services/auth.service';
 import { ChatbotService, ChatMessage } from '../../../core/services/chatbot.service';
 import {
@@ -17,9 +20,10 @@ import {
   templateUrl: './chatbot.component.html',
   styleUrls: ['./chatbot.component.scss']
 })
-export class ChatbotComponent implements OnInit, AfterViewChecked {
+export class ChatbotComponent implements OnInit, AfterViewChecked, OnDestroy {
   private auth = inject(AuthService);
   private chatbotService = inject(ChatbotService);
+  private router = inject(Router);
 
   @ViewChild('messagesContainer') private messagesContainer!: ElementRef<HTMLDivElement>;
 
@@ -28,6 +32,7 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
   userInput = signal('');
   loading = signal(false);
   private shouldScroll = false;
+  private routerSub!: Subscription;
 
   readonly userName = computed(() => this.auth.currentUser()?.userName ?? null);
   readonly role = computed(() => this.auth.currentUser()?.role ?? null);
@@ -51,6 +56,17 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
 
   ngOnInit(): void {
     this.messages.set([{ role: 'model', text: this.greeting }]);
+
+    // Auto-close chatbot on any route navigation
+    this.routerSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationStart)
+    ).subscribe(() => {
+      if (this.isOpen()) this.isOpen.set(false);
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
   }
 
   ngAfterViewChecked(): void {
@@ -82,7 +98,6 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
     this.loading.set(true);
     this.shouldScroll = true;
 
-    // history = all messages except the initial greeting and the one just added
     const history = newMessages.slice(1, -1);
 
     this.chatbotService.send(history, text, this.systemPrompt).subscribe({
@@ -94,7 +109,7 @@ export class ChatbotComponent implements OnInit, AfterViewChecked {
       error: () => {
         this.messages.update(msgs => [
           ...msgs,
-          { role: 'model', text: 'Sorry, something went wrong. Please try again.' }
+          { role: 'model', text: 'I apologize, something went wrong on our end. Please try again in a moment.' }
         ]);
         this.loading.set(false);
         this.shouldScroll = true;
