@@ -5,11 +5,12 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { NavbarComponent } from './shared/components/navbar/navbar.component';
 import { FooterComponent } from './shared/components/footer/footer.component';
 import { SpinnerComponent } from './shared/components/spinner/spinner.component';
+import { ChatbotComponent } from './shared/components/chatbot/chatbot.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, SpinnerComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, SpinnerComponent, ChatbotComponent],
   template: `
     <app-spinner />
     @if (showChrome()) {
@@ -21,6 +22,7 @@ import { SpinnerComponent } from './shared/components/spinner/spinner.component'
     @if (showChrome()) {
       <app-footer />
     }
+    <app-chatbot />
   `,
   styles: [`
     main { min-height: calc(100vh - 64px - 80px); }
