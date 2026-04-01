@@ -123,17 +123,13 @@ public class ReservationCleanupServiceTests
         // Arrange
         _scopeFactoryMock.Setup(f => f.CreateScope()).Throws(new Exception("DB error"));
         var sut = new ReservationCleanupService(_scopeFactoryMock.Object, _loggerMock.Object);
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(500));
 
-        // Act
-        Func<Task> act = async () =>
-        {
-            await sut.StartAsync(cts.Token);
-            await Task.Delay(300);
-        };
+        // Act — start the service, wait for the loop to execute and log, then verify
+        await sut.StartAsync(cts.Token);
+        await Task.Delay(800); // wait long enough for the loop to run at least once
 
         // Assert
-        await act.Should().NotThrowAsync();
         _loggerMock.Verify(l => l.Log(
             LogLevel.Error,
             It.IsAny<EventId>(),

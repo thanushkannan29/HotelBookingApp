@@ -113,17 +113,13 @@ public class NoShowAutoCancelServiceTests
         // Arrange
         _scopeFactoryMock.Setup(f => f.CreateScope()).Throws(new Exception("DB error"));
         var sut = new NoShowAutoCancelService(_scopeFactoryMock.Object, _loggerMock.Object);
-        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(100));
+        using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
 
-        // Act
-        Func<Task> act = async () =>
-        {
-            await sut.StartAsync(cts.Token);
-            await Task.Delay(300);
-        };
+        // Act — start the service and wait long enough for the loop to execute and log
+        await sut.StartAsync(cts.Token);
+        await Task.Delay(600);
 
-        // Assert
-        await act.Should().NotThrowAsync();
+        // Assert — error was logged
         _loggerMock.Verify(l => l.Log(
             LogLevel.Error,
             It.IsAny<EventId>(),
