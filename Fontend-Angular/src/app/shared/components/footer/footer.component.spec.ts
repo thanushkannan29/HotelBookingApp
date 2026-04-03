@@ -38,9 +38,9 @@ describe('FooterComponent', () => {
 
   // ── TEMPLATE — BRAND ───────────────────────────────────────────────────────
 
-  it('should display the brand name "ThanushStayHub"', () => {
+  it('should display the brand name "Thanush StayHub"', () => {
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('ThanushStayHub');
+    expect(el.textContent).toContain('Thanush StayHub');
   });
 
   it('should display the brand tagline', () => {

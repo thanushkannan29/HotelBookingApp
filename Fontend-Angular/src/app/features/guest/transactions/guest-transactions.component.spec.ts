@@ -116,8 +116,9 @@ describe('GuestTransactionsComponent', () => {
     expect(component.txIcon(MOCK_TX[0] as any)).toBe('check_circle');
   });
 
-  it('txIcon — status 3 (Failed) → cancel', () => {
-    expect(component.txIcon(MOCK_TX[2] as any)).toBe('cancel');
+  it('txIcon — status 3 (Refunded) → cancel', () => {
+    const tx = makeTx('tx-x', 3, 'Payment');
+    expect(component.txIcon(tx as any)).toBe('cancel');
   });
 
   // ── amountColor ───────────────────────────────────────────────────────────
@@ -127,7 +128,8 @@ describe('GuestTransactionsComponent', () => {
   });
 
   it('amountColor — status 3 (Failed) → var(--color-error)', () => {
-    expect(component.amountColor(MOCK_TX[2] as any)).toBe('var(--color-error)');
+    const tx = makeTx('tx-x', 3, 'Payment');
+    expect(component.amountColor(tx as any)).toBe('var(--color-error)');
   });
 
   it('amountColor — normal success → var(--color-text-primary)', () => {
