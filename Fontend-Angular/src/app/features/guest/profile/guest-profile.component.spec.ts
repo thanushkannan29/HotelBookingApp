@@ -97,8 +97,11 @@ describe('GuestProfileComponent', () => {
     expect(component.form.get('phoneNumber')?.value).toBe('9840650390');
     expect(component.form.get('address')?.value).toBe('1 Anna Nagar');
     expect(component.form.get('state')?.value).toBe('Tamil Nadu');
-    expect(component.form.get('city')?.value).toBe('Chennai');
     expect(component.form.get('pincode')?.value).toBe('600040');
+  });
+
+  it('ngOnInit — should set cityControl value from profile', () => {
+    expect(component.cityControl.value).toBe('Chennai');
   });
 
   it('ngOnInit — should set profileImageUrl to empty string when undefined', () => {
@@ -151,7 +154,7 @@ describe('GuestProfileComponent', () => {
 
   it('form — all fields except phoneNumber have no validators', () => {
     component.form.patchValue({
-      name: '', address: '', state: '', city: '', pincode: ''
+      name: '', address: '', state: '', pincode: ''
     });
     expect(component.form.valid).toBeTrue();
   });
@@ -159,7 +162,8 @@ describe('GuestProfileComponent', () => {
   // ── save() — HAPPY PATH ────────────────────────────────────────────────────
 
   it('save() — should call updateProfile with current form values', () => {
-    component.form.patchValue({ name: 'Thanush Kumar', city: 'Coimbatore' });
+    component.form.patchValue({ name: 'Thanush Kumar' });
+    component.cityControl.setValue('Coimbatore');
 
     component.save();
 

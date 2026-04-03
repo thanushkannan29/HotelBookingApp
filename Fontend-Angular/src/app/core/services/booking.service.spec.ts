@@ -159,28 +159,28 @@ describe('BookingService', () => {
 
   // ── GUEST: getMyReservationsHistory ───────────────────────────────────────
 
-  it('getMyReservationsHistory() — should GET /guest/reservations/history with pagination params', () => {
+  it('getMyReservationsHistory() — should POST to /guest/reservations/history with body', () => {
     service.getMyReservationsHistory(1, 10).subscribe(result => {
       expect(result.totalCount).toBe(5);
       expect(result.reservations.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/guest/reservations/history`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/guest/reservations/history`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({
       success: true,
       data: { totalCount: 5, reservations: [MOCK_RESERVATION_DETAIL] }
     });
   });
 
-  it('getMyReservationsHistory() — page 2 should send correct page param', () => {
+  it('getMyReservationsHistory() — page 2 should send correct page in body', () => {
     service.getMyReservationsHistory(2, 5).subscribe();
 
-    const req = http.expectOne(r => r.url === `${BASE}/guest/reservations/history`);
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('5');
+    const req = http.expectOne(`${BASE}/guest/reservations/history`);
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(5);
     req.flush({ success: true, data: { totalCount: 10, reservations: [] } });
   });
 
@@ -266,28 +266,28 @@ describe('BookingService', () => {
 
   // ── ADMIN: getHotelReservations ────────────────────────────────────────────
 
-  it('getHotelReservations() — should GET /admin/reservations with pagination params', () => {
+  it('getHotelReservations() — should POST to /admin/reservations/list with body', () => {
     service.getHotelReservations(1, 15).subscribe(result => {
       expect(result.totalCount).toBe(42);
       expect(result.reservations.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/reservations`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('15');
+    const req = http.expectOne(`${BASE}/admin/reservations/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(15);
     req.flush({
       success: true,
       data: { totalCount: 42, reservations: [MOCK_RESERVATION_DETAIL] }
     });
   });
 
-  it('getHotelReservations() — page 3 should send correct page param', () => {
+  it('getHotelReservations() — page 3 should send correct page in body', () => {
     service.getHotelReservations(3, 10).subscribe();
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/reservations`);
-    expect(req.request.params.get('page')).toBe('3');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/admin/reservations/list`);
+    expect(req.request.body.page).toBe(3);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: { totalCount: 100, reservations: [] } });
   });
 

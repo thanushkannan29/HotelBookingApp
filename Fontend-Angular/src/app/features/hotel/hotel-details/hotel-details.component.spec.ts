@@ -18,19 +18,21 @@ const MOCK_HOTEL: HotelDetailsDto = {
   name:          'Grand Palace',
   address:       '1 MG Road',
   city:          'Chennai',
+  state:         'TN',
   description:   'A luxury hotel in the heart of the city.',
   imageUrl:      'https://example.com/img.jpg',
   contactNumber: '9840650390',
   averageRating: 4.5,
   reviewCount:   120,
+  gstPercent:    18,
   amenities:     ['WiFi', 'Pool', 'Gym'],
   reviews: [
     { userName: 'Thanush K', rating: 5, comment: 'Wonderful!', createdDate: '2025-01-10T10:00:00Z' },
     { userName: 'Ravi',      rating: 4, comment: 'Very good.', createdDate: '2025-01-05T10:00:00Z' },
   ],
   roomTypes: [
-    { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious', maxOccupancy: 2, amenityList: [{ amenityId: 'a1', name: 'WiFi', iconName: 'wifi' }, { amenityId: 'a2', name: 'AC', iconName: 'ac_unit' }] },
-    { roomTypeId: 'rt-002', name: 'Suite',  description: 'Luxury',   maxOccupancy: 4, amenityList: [{ amenityId: 'a1', name: 'WiFi', iconName: 'wifi' }] },
+    { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious', maxOccupancy: 2, amenities: ['WiFi', 'AC'], amenityList: [{ amenityId: 'a1', name: 'WiFi', category: 'Tech', iconName: 'wifi' }, { amenityId: 'a2', name: 'AC', category: 'Room', iconName: 'ac_unit' }] },
+    { roomTypeId: 'rt-002', name: 'Suite',  description: 'Luxury',   maxOccupancy: 4, amenities: ['WiFi'],       amenityList: [{ amenityId: 'a1', name: 'WiFi', category: 'Tech', iconName: 'wifi' }] },
   ]
 };
 

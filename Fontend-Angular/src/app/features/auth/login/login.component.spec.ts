@@ -138,33 +138,33 @@ describe('LoginComponent', () => {
   });
 
   it('submit() — should navigate to the URL returned by getRedirectUrl', () => {
-    const navigateSpy = spyOn(router, 'navigate');
+    const navigateSpy = spyOn(router, 'navigateByUrl');
     authSpy.getRedirectUrl.and.returnValue('/guest/dashboard');
     component.form.patchValue({ email: 'thanush@test.com', password: 'pass123' });
 
     component.submit();
 
-    expect(navigateSpy).toHaveBeenCalledOnceWith(['/guest/dashboard']);
+    expect(navigateSpy).toHaveBeenCalledOnceWith('/guest/dashboard');
   });
 
   it('submit() — should navigate to /admin/dashboard for Admin role', () => {
-    const navigateSpy = spyOn(router, 'navigate');
+    const navigateSpy = spyOn(router, 'navigateByUrl');
     authSpy.getRedirectUrl.and.returnValue('/admin/dashboard');
     component.form.patchValue({ email: 'admin@hotel.com', password: 'pass123' });
 
     component.submit();
 
-    expect(navigateSpy).toHaveBeenCalledOnceWith(['/admin/dashboard']);
+    expect(navigateSpy).toHaveBeenCalledOnceWith('/admin/dashboard');
   });
 
   it('submit() — should navigate to /superadmin/dashboard for SuperAdmin role', () => {
-    const navigateSpy = spyOn(router, 'navigate');
+    const navigateSpy = spyOn(router, 'navigateByUrl');
     authSpy.getRedirectUrl.and.returnValue('/superadmin/dashboard');
     component.form.patchValue({ email: 'sa@admin.com', password: 'pass123' });
 
     component.submit();
 
-    expect(navigateSpy).toHaveBeenCalledOnceWith(['/superadmin/dashboard']);
+    expect(navigateSpy).toHaveBeenCalledOnceWith('/superadmin/dashboard');
   });
 
   it('submit() — should reset isLoading to false on complete', () => {
@@ -213,7 +213,7 @@ describe('LoginComponent', () => {
   });
 
   it('submit() — should NOT navigate when form is invalid', () => {
-    const navigateSpy = spyOn(router, 'navigate');
+    const navigateSpy = spyOn(router, 'navigateByUrl');
 
     component.submit();
 
@@ -241,7 +241,7 @@ describe('LoginComponent', () => {
   });
 
   it('submit() — should NOT navigate on API error', () => {
-    const navigateSpy = spyOn(router, 'navigate');
+    const navigateSpy = spyOn(router, 'navigateByUrl');
     authSpy.login.and.returnValue(throwError(() => new Error('Invalid credentials')));
     component.form.patchValue({ email: 'wrong@test.com', password: 'wrongpass' });
 

@@ -1,4 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
 import { ContactComponent } from './contact.component';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
@@ -12,7 +14,9 @@ describe('ContactComponent', () => {
       imports: [ContactComponent],
       providers: [
         provideAnimationsAsync(),
-        provideRouter([]) // required by RouterLink
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([])
       ]
     }).compileComponents();
 
