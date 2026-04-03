@@ -262,6 +262,7 @@ describe('HotelService', () => {
       name: 'Grand Palace Updated',
       address: '2 MG Road',
       city: 'Chennai',
+      state: 'TN',
       description: 'Newly renovated luxury hotel.',
       contactNumber: '9840650390',
       imageUrl: 'https://example.com/new-img.jpg'

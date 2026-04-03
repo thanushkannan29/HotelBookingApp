@@ -21,6 +21,7 @@ const MOCK_PROFILE: UserProfileResponseDto = {
   city:        'Chennai',
   pincode:     '600040',
   createdAt:   '2024-01-01T00:00:00Z',
+  totalReviewPoints: 100,
 };
 
 const UPDATED_PROFILE: UserProfileResponseDto = {

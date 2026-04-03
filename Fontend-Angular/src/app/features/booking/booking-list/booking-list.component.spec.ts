@@ -1,224 +1,152 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { BookingListComponent } from './booking-list.component';
 import { BookingService } from '../../../core/services/booking.service';
-import { ReservationDetailsDto } from '../../../core/models/models';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-
-function makeReservation(code: string, status: string): ReservationDetailsDto {
+function makeRes(code: string, status: string) {
   return {
-    reservationCode: code,
-    reservationId:   `id-${code}`,
-    hotelId:         'hotel-001',
-    hotelName:       'Grand Palace',
-    roomTypeId:      'rt-001',
-    roomTypeName:    'Deluxe',
-    checkInDate:     '2025-06-01',
-    checkOutDate:    '2025-06-03',
-    numberOfRooms:   1,
-    totalAmount:     7000,
-    status,
-    isCheckedIn:     status === 'Completed',
-    createdDate:     '2025-05-01T10:00:00Z',
-    rooms:           [{ roomId: 'r-001', roomNumber: '101', floor: 1 }]
+    reservationCode: code, reservationId: `id-${code}`,
+    hotelId: 'hotel-001', hotelName: 'Grand Palace',
+    roomTypeId: 'rt-001', roomTypeName: 'Deluxe',
+    checkInDate: '2025-06-01', checkOutDate: '2025-06-03',
+    numberOfRooms: 1, totalAmount: 7000,
+    gstPercent: 18, gstAmount: 1260, discountPercent: 0, discountAmount: 0,
+    walletAmountUsed: 0, finalAmount: 7000,
+    status, isCheckedIn: status === 'Completed', createdDate: '2025-05-01T10:00:00Z',
+    rooms: [{ roomId: 'r-001', roomNumber: '101', floor: 1 }],
+    cancellationFeePaid: false, cancellationFeeAmount: 0, cancellationPolicyText: ''
   };
 }
 
-const MOCK_RESERVATIONS: ReservationDetailsDto[] = [
-  makeReservation('RES-0001', 'Confirmed'),
-  makeReservation('RES-0002', 'Pending'),
-  makeReservation('RES-0003', 'Completed'),
-  makeReservation('RES-0004', 'Cancelled'),
-  makeReservation('RES-0005', 'NoShow'),
-  makeReservation('RES-0006', 'Confirmed'),
+const MOCK_RESERVATIONS = [
+  makeRes('RES-0001', 'Confirmed'), makeRes('RES-0002', 'Pending'),
+  makeRes('RES-0003', 'Completed'), makeRes('RES-0004', 'Cancelled'),
+  makeRes('RES-0005', 'NoShow'),   makeRes('RES-0006', 'Confirmed'),
 ];
-
-// ─────────────────────────────────────────────────────────────────────────────
+const MOCK_PAGED = { totalCount: 6, reservations: MOCK_RESERVATIONS };
 
 describe('BookingListComponent', () => {
   let component: BookingListComponent;
-  let fixture:   ComponentFixture<BookingListComponent>;
+  let fixture: ComponentFixture<BookingListComponent>;
   let bookingSpy: jasmine.SpyObj<BookingService>;
 
   beforeEach(async () => {
-    bookingSpy = jasmine.createSpyObj('BookingService', ['getMyReservations']);
-    bookingSpy.getMyReservations.and.returnValue(of(MOCK_RESERVATIONS));
+    bookingSpy = jasmine.createSpyObj('BookingService', ['getMyReservationsHistory']);
+    bookingSpy.getMyReservationsHistory.and.returnValue(of(MOCK_PAGED as any));
 
     await TestBed.configureTestingModule({
       imports: [BookingListComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
         provideRouter([]),
         { provide: BookingService, useValue: bookingSpy },
       ]
     }).compileComponents();
 
-    fixture   = TestBed.createComponent(BookingListComponent);
+    fixture = TestBed.createComponent(BookingListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  // ── CREATION ───────────────────────────────────────────────────────────────
+  it('should create', () => expect(component).toBeTruthy());
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  // ── Initial state ─────────────────────────────────────────────────────────
+
+  it('pageSize — should be 10', () => expect(component.pageSize).toBe(10));
+  it('currentPage — should start at 1', () => expect(component.currentPage).toBe(1));
+  it('selectedStatus — should start as "All"', () => expect(component.selectedStatus).toBe('All'));
+  it('statusTabs — should contain all 6 tabs', () => {
+    expect(component.statusTabs).toEqual(['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow']);
   });
 
-  // ── CONSTANTS ──────────────────────────────────────────────────────────────
+  // ── ngOnInit ──────────────────────────────────────────────────────────────
 
-  it('filters — should contain all 6 filter values', () => {
-    expect(component.filters).toEqual([
-      'all', 'Pending', 'Confirmed', 'Completed', 'Cancelled', 'NoShow'
-    ]);
+  it('ngOnInit — should call getMyReservationsHistory', () => {
+    expect(bookingSpy.getMyReservationsHistory).toHaveBeenCalledWith(1, 10, 'All', '');
   });
 
-  // ── INITIAL SIGNAL STATE ───────────────────────────────────────────────────
-
-  it('filter — should start as "all"', () => {
-    expect(component.filter()).toBe('all');
-  });
-
-  // ── ngOnInit ───────────────────────────────────────────────────────────────
-
-  it('ngOnInit — should call getMyReservations on startup', () => {
-    expect(bookingSpy.getMyReservations).toHaveBeenCalledOnceWith();
-  });
-
-  it('ngOnInit — should populate reservations signal with all returned items', () => {
+  it('ngOnInit — should populate reservations signal', () => {
     expect(component.reservations().length).toBe(6);
   });
 
-  it('ngOnInit — should store correct reservation codes', () => {
-    const codes = component.reservations().map(r => r.reservationCode);
-    expect(codes).toContain('RES-0001');
-    expect(codes).toContain('RES-0005');
+  it('ngOnInit — should set totalCount', () => {
+    expect(component.totalCount()).toBe(6);
   });
 
-  it('ngOnInit — should handle empty reservations list', async () => {
-    bookingSpy.getMyReservations.and.returnValue(of([]));
-
-    await TestBed.resetTestingModule();
-    await TestBed.configureTestingModule({
-      imports: [BookingListComponent],
-      providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-        { provide: BookingService, useValue: bookingSpy },
-      ]
-    }).compileComponents();
-
-    const f   = TestBed.createComponent(BookingListComponent);
-    const cmp = f.componentInstance;
-    f.detectChanges();
-
-    expect(cmp.reservations().length).toBe(0);
+  it('loading — should be false after load', () => {
+    expect(component.loading()).toBeFalse();
   });
 
-  // ── filtered GETTER ────────────────────────────────────────────────────────
-
-  it('filtered — should return all 6 reservations when filter is "all"', () => {
-    component.filter.set('all');
-    expect(component.filtered.length).toBe(6);
+  it('load — should set loading to false on error', () => {
+    bookingSpy.getMyReservationsHistory.and.returnValue(throwError(() => new Error('fail')));
+    component.load();
+    expect(component.loading()).toBeFalse();
   });
 
-  it('filtered — should return only Confirmed reservations', () => {
-    component.filter.set('Confirmed');
-    expect(component.filtered.length).toBe(2);
-    expect(component.filtered.every(r => r.status === 'Confirmed')).toBeTrue();
+  // ── onTabChange ───────────────────────────────────────────────────────────
+
+  it('onTabChange — should set selectedStatus', () => {
+    component.onTabChange(2); // 'Confirmed'
+    expect(component.selectedStatus).toBe('Confirmed');
   });
 
-  it('filtered — should return only Pending reservations', () => {
-    component.filter.set('Pending');
-    expect(component.filtered.length).toBe(1);
-    expect(component.filtered[0].reservationCode).toBe('RES-0002');
+  it('onTabChange — should reset currentPage to 1', () => {
+    component.currentPage = 3;
+    component.onTabChange(1);
+    expect(component.currentPage).toBe(1);
   });
 
-  it('filtered — should return only Completed reservations', () => {
-    component.filter.set('Completed');
-    expect(component.filtered.length).toBe(1);
-    expect(component.filtered[0].isCheckedIn).toBeTrue();
+  it('onTabChange — should reload', () => {
+    bookingSpy.getMyReservationsHistory.calls.reset();
+    component.onTabChange(1);
+    expect(bookingSpy.getMyReservationsHistory).toHaveBeenCalled();
   });
 
-  it('filtered — should return only Cancelled reservations', () => {
-    component.filter.set('Cancelled');
-    expect(component.filtered.length).toBe(1);
-    expect(component.filtered[0].reservationCode).toBe('RES-0004');
+  // ── onPage ────────────────────────────────────────────────────────────────
+
+  it('onPage — should update currentPage and reload', () => {
+    bookingSpy.getMyReservationsHistory.calls.reset();
+    component.onPage({ pageIndex: 1, pageSize: 10, length: 20 } as any);
+    expect(component.currentPage).toBe(2);
+    expect(bookingSpy.getMyReservationsHistory).toHaveBeenCalled();
   });
 
-  it('filtered — should return only NoShow reservations', () => {
-    component.filter.set('NoShow');
-    expect(component.filtered.length).toBe(1);
-    expect(component.filtered[0].reservationCode).toBe('RES-0005');
+  // ── statusClass ───────────────────────────────────────────────────────────
+
+  it('statusClass — Pending → badge-warning',   () => expect(component.statusClass('Pending')).toBe('badge-warning'));
+  it('statusClass — Confirmed → badge-success', () => expect(component.statusClass('Confirmed')).toBe('badge-success'));
+  it('statusClass — Completed → badge-primary', () => expect(component.statusClass('Completed')).toBe('badge-primary'));
+  it('statusClass — Cancelled → badge-error',   () => expect(component.statusClass('Cancelled')).toBe('badge-error'));
+  it('statusClass — NoShow → badge-muted',      () => expect(component.statusClass('NoShow')).toBe('badge-muted'));
+  it('statusClass — unknown → badge-muted',     () => expect(component.statusClass('Unknown')).toBe('badge-muted'));
+
+  // ── canPayNow ─────────────────────────────────────────────────────────────
+
+  it('canPayNow — should return true for Pending with future expiryTime', () => {
+    const future = new Date(Date.now() + 600000).toISOString();
+    const res = { ...makeRes('RES-X', 'Pending'), expiryTime: future } as any;
+    expect(component.canPayNow(res)).toBeTrue();
   });
 
-  it('filtered — should return empty array when filter matches nothing', () => {
-    component.filter.set('Confirmed');
-    component.reservations.set([makeReservation('RES-X', 'Pending')]);
-    expect(component.filtered.length).toBe(0);
+  it('canPayNow — should return false for Confirmed', () => {
+    expect(component.canPayNow(makeRes('RES-X', 'Confirmed') as any)).toBeFalse();
   });
 
-  it('filtered — should react to filter signal changes', () => {
-    component.filter.set('Pending');
-    expect(component.filtered.length).toBe(1);
-
-    component.filter.set('all');
-    expect(component.filtered.length).toBe(6);
-
-    component.filter.set('Cancelled');
-    expect(component.filtered.length).toBe(1);
+  it('canPayNow — should return false for Pending without expiryTime', () => {
+    expect(component.canPayNow(makeRes('RES-X', 'Pending') as any)).toBeFalse();
   });
 
-  it('filtered — should reflect updated reservations signal', () => {
-    component.filter.set('Confirmed');
-    expect(component.filtered.length).toBe(2);
+  // ── onSearch debounce ─────────────────────────────────────────────────────
 
-    // Add another confirmed reservation
-    component.reservations.update(r => [
-      ...r, makeReservation('RES-0007', 'Confirmed')
-    ]);
-    expect(component.filtered.length).toBe(3);
-  });
-
-  // ── statusClass() ──────────────────────────────────────────────────────────
-
-  it('statusClass() — Pending → badge-warning', () => {
-    expect(component.statusClass('Pending')).toBe('badge-warning');
-  });
-
-  it('statusClass() — Confirmed → badge-success', () => {
-    expect(component.statusClass('Confirmed')).toBe('badge-success');
-  });
-
-  it('statusClass() — Completed → badge-primary', () => {
-    expect(component.statusClass('Completed')).toBe('badge-primary');
-  });
-
-  it('statusClass() — Cancelled → badge-error', () => {
-    expect(component.statusClass('Cancelled')).toBe('badge-error');
-  });
-
-  it('statusClass() — NoShow → badge-muted', () => {
-    expect(component.statusClass('NoShow')).toBe('badge-muted');
-  });
-
-  it('statusClass() — unknown status → badge-muted', () => {
-    expect(component.statusClass('Random')).toBe('badge-muted');
-    expect(component.statusClass('')).toBe('badge-muted');
-  });
-
-  it('statusClass() — all known statuses return distinct classes', () => {
-    const classes = ['Pending', 'Confirmed', 'Completed', 'Cancelled']
-      .map(s => component.statusClass(s));
-    const unique = new Set(classes);
-    expect(unique.size).toBe(4);
-  });
+  it('onSearch — should update searchTerm after debounce', fakeAsync(() => {
+    bookingSpy.getMyReservationsHistory.calls.reset();
+    component.onSearch('Grand');
+    tick(400);
+    expect(component.searchTerm).toBe('Grand');
+    expect(bookingSpy.getMyReservationsHistory).toHaveBeenCalled();
+  }));
 });

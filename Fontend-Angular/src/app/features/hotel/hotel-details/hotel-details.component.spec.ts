@@ -29,8 +29,8 @@ const MOCK_HOTEL: HotelDetailsDto = {
     { userName: 'Ravi',      rating: 4, comment: 'Very good.', createdDate: '2025-01-05T10:00:00Z' },
   ],
   roomTypes: [
-    { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious', maxOccupancy: 2, amenities: ['WiFi', 'AC'] },
-    { roomTypeId: 'rt-002', name: 'Suite',  description: 'Luxury',   maxOccupancy: 4, amenities: ['WiFi', 'AC', 'Jacuzzi'] },
+    { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious', maxOccupancy: 2, amenityList: [{ amenityId: 'a1', name: 'WiFi', iconName: 'wifi' }, { amenityId: 'a2', name: 'AC', iconName: 'ac_unit' }] },
+    { roomTypeId: 'rt-002', name: 'Suite',  description: 'Luxury',   maxOccupancy: 4, amenityList: [{ amenityId: 'a1', name: 'WiFi', iconName: 'wifi' }] },
   ]
 };
 

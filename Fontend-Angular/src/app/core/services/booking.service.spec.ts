@@ -21,6 +21,12 @@ const MOCK_RESERVATION_RESPONSE: ReservationResponseDto = {
   reservationCode: 'RES-ABCD1234',
   reservationId: 'res-001',
   totalAmount: 10000,
+  gstPercent: 18,
+  gstAmount: 1800,
+  discountPercent: 0,
+  discountAmount: 0,
+  walletAmountUsed: 0,
+  finalAmount: 10000,
   status: 'Pending',
   totalRooms: 1,
   rooms: [{ roomId: 'r-001', roomNumber: '101', floor: 1 }]
@@ -37,10 +43,19 @@ const MOCK_RESERVATION_DETAIL: ReservationDetailsDto = {
   checkOutDate: '2025-06-03',
   numberOfRooms: 1,
   totalAmount: 10000,
+  gstPercent: 18,
+  gstAmount: 1800,
+  discountPercent: 0,
+  discountAmount: 0,
+  walletAmountUsed: 0,
+  finalAmount: 10000,
   status: 'Confirmed',
   isCheckedIn: false,
   createdDate: '2025-05-15T10:00:00Z',
-  rooms: [{ roomId: 'r-001', roomNumber: '101', floor: 1 }]
+  rooms: [{ roomId: 'r-001', roomNumber: '101', floor: 1 }],
+  cancellationFeePaid: false,
+  cancellationFeeAmount: 0,
+  cancellationPolicyText: ''
 };
 
 // ─────────────────────────────────────────────────────────────────────────────

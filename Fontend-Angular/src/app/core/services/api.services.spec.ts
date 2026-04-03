@@ -175,13 +175,15 @@ describe('ReviewService', () => {
   it('addReview() — should POST to /reviews with rating and comment', () => {
     const dto: CreateReviewDto = {
       hotelId: 'hotel-001',
+      reservationId: 'res-001',
       rating: 5,
       comment: 'Wonderful experience, highly recommend!'
     };
     const mockReview = {
       reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001',
+      userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES-001',
       rating: 5, comment: 'Wonderful experience, highly recommend!',
-      createdDate: '2025-01-15T10:00:00Z'
+      createdDate: '2025-01-15T10:00:00Z', contributionPoints: 100
     };
 
     service.addReview(dto).subscribe(result => {
@@ -200,6 +202,7 @@ describe('ReviewService', () => {
   it('addReview() — should include optional imageUrl when provided', () => {
     const dto: CreateReviewDto = {
       hotelId: 'hotel-001',
+      reservationId: 'res-001',
       rating: 4,
       comment: 'Nice view from room',
       imageUrl: 'https://example.com/photo.jpg'
@@ -209,15 +212,16 @@ describe('ReviewService', () => {
 
     const req = http.expectOne(`${BASE}/reviews`);
     expect(req.request.body.imageUrl).toBe('https://example.com/photo.jpg');
-    req.flush({ success: true, data: { reviewId: 'rev-002', hotelId: 'hotel-001', userId: 'usr-001', rating: 4, comment: 'Nice view from room', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-15T10:00:00Z' } });
+    req.flush({ success: true, data: { reviewId: 'rev-002', hotelId: 'hotel-001', userId: 'usr-001', userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES-001', rating: 4, comment: 'Nice view from room', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-15T10:00:00Z', contributionPoints: 80 } });
   });
 
   it('updateReview() — should PUT to /reviews/{id}', () => {
     const dto: UpdateReviewDto = { rating: 4, comment: 'Updated: Good stay overall' };
     const mockReview = {
-      reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001',
+      reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001', userName: 'Alice',
+      reservationId: 'res-001', reservationCode: 'RES-001',
       rating: 4, comment: 'Updated: Good stay overall',
-      createdDate: '2025-01-15T10:00:00Z'
+      createdDate: '2025-01-15T10:00:00Z', contributionPoints: 80
     };
 
     service.updateReview('rev-001', dto).subscribe(result => {
@@ -531,7 +535,7 @@ describe('RoomTypeService', () => {
   it('addRoomType() — should POST to /admin/roomtypes and return void', () => {
     const dto: CreateRoomTypeDto = {
       name: 'Standard', description: 'Basic comfortable room',
-      maxOccupancy: 2, amenities: 'WiFi'
+      maxOccupancy: 2, amenityIds: []
     };
 
     service.addRoomType(dto).subscribe(result => {
@@ -548,7 +552,7 @@ describe('RoomTypeService', () => {
   it('updateRoomType() — should PUT to /admin/roomtypes with updated data', () => {
     const dto: UpdateRoomTypeDto = {
       roomTypeId: 'rt-001', name: 'Deluxe Plus',
-      description: 'Upgraded deluxe', maxOccupancy: 3, amenities: 'WiFi, AC, TV, Bathtub'
+      description: 'Upgraded deluxe', maxOccupancy: 3, amenityIds: ['a1', 'a2']
     };
 
     service.updateRoomType(dto).subscribe(result => {

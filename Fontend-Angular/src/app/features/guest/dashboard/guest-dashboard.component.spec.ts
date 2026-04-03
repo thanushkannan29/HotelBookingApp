@@ -17,7 +17,6 @@ const MOCK_DASHBOARD: GuestDashboardDto = {
   completedBookings: 5,
   cancelledBookings: 1,
   totalSpent:       40000,
-  pendingRefunds:   1,
 };
 
 const MOCK_PROFILE: UserProfileResponseDto = {
@@ -31,6 +30,7 @@ const MOCK_PROFILE: UserProfileResponseDto = {
   city:        'Chennai',
   pincode:     '600040',
   createdAt:   '2024-01-01T00:00:00Z',
+  totalReviewPoints: 100,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,7 +91,6 @@ describe('GuestDashboardComponent', () => {
     expect(component.data()).not.toBeNull();
     expect(component.data()?.totalBookings).toBe(8);
     expect(component.data()?.totalSpent).toBe(40000);
-    expect(component.data()?.pendingRefunds).toBe(1);
   });
 
   it('ngOnInit — should populate profile signal with user profile', () => {
