@@ -6,7 +6,6 @@ import { of, throwError } from 'rxjs';
 import { SuperadminAmenityManagementComponent } from './superadmin-amenity-management.component';
 import { AmenityService } from '../../../core/services/amenity.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { MatDialog } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 const MOCK_AMENITIES = [
@@ -20,12 +19,10 @@ describe('SuperadminAmenityManagementComponent', () => {
   let fixture: ComponentFixture<SuperadminAmenityManagementComponent>;
   let serviceSpy: jasmine.SpyObj<AmenityService>;
   let toastSpy: jasmine.SpyObj<ToastService>;
-  let dialogSpy: jasmine.SpyObj<MatDialog>;
 
   beforeEach(async () => {
     serviceSpy = jasmine.createSpyObj('AmenityService', ['getAllPaged', 'create', 'update', 'toggleStatus', 'delete']);
     toastSpy   = jasmine.createSpyObj('ToastService', ['success', 'error']);
-    dialogSpy  = jasmine.createSpyObj('MatDialog', ['open']);
 
     serviceSpy.getAllPaged.and.returnValue(of(MOCK_PAGED as any));
     serviceSpy.create.and.returnValue(of(MOCK_AMENITIES[0] as any));
@@ -40,7 +37,6 @@ describe('SuperadminAmenityManagementComponent', () => {
         provideRouter([]),
         { provide: AmenityService, useValue: serviceSpy },
         { provide: ToastService,   useValue: toastSpy },
-        { provide: MatDialog,      useValue: dialogSpy },
       ]
     }).compileComponents();
 

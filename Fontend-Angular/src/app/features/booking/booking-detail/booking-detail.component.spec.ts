@@ -237,7 +237,7 @@ describe('BookingDetailComponent', () => {
     component.cancel();
 
     expect(toastSpy.success).toHaveBeenCalledOnceWith(
-      'Reservation cancelled. Refund request created if applicable.'
+      'Reservation cancelled. Refund will be credited to your wallet if applicable.'
     );
   });
 

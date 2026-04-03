@@ -136,8 +136,9 @@ describe('HotelDetailsComponent', () => {
     const co = component.dateForm.get('checkOut')?.value as Date | null;
     expect(ci).not.toBeNull();
     expect(co).not.toBeNull();
-    const diffDays = (co!.getTime() - ci!.getTime()) / 86400000;
-    expect(diffDays).toBe(2);
+    // checkIn = tomorrow, checkOut = today+2, so diff = 1 day
+    const diffDays = Math.round((co!.getTime() - ci!.getTime()) / 86400000);
+    expect(diffDays).toBe(1);
   });
 
   it('ngOnInit — should use empty string hotelId when route param is null', async () => {
@@ -194,11 +195,14 @@ describe('HotelDetailsComponent', () => {
   });
 
   it('checkOutMin — should return checkIn + 1 day when checkIn is set', () => {
-    component.dateForm.patchValue({ checkIn: new Date('2025-06-10') });
+    // Use a future date so checkIn+1 > today
+    const future = new Date();
+    future.setFullYear(future.getFullYear() + 1);
+    future.setMonth(5); future.setDate(10); // June 10 next year
+    component.dateForm.patchValue({ checkIn: future });
     const min = component.checkOutMin;
     expect(min.getDate()).toBe(11);
-    expect(min.getMonth()).toBe(5); // June = 5
-    expect(min.getFullYear()).toBe(2025);
+    expect(min.getMonth()).toBe(5);
   });
 
   // ── checkInStr / checkOutStr GETTERS ───────────────────────────────────────

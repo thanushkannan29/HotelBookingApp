@@ -75,17 +75,17 @@ describe('AdminTransactionsComponent', () => {
 
   // ── statusLabel ───────────────────────────────────────────────────────────
 
-  it('statusLabel — 2 → Success', () => expect(component.statusLabel(2)).toBe('Success'));
-  it('statusLabel — 3 → Refunded', () => expect(component.statusLabel(3)).toBe('Refunded'));
-  it('statusLabel — 0 → Pending', () => expect(component.statusLabel(0)).toBe('Pending'));
-  it('statusLabel — 1 → Failed', () => expect(component.statusLabel(1)).toBe('Failed'));
+  it('statusLabel — 2 → Success',  () => expect(component.statusLabel(2)).toBe('Success'));
+  it('statusLabel — 3 → Failed',   () => expect(component.statusLabel(3)).toBe('Failed'));
+  it('statusLabel — 1 → Pending',  () => expect(component.statusLabel(1)).toBe('Pending'));
+  it('statusLabel — 4 → Refunded', () => expect(component.statusLabel(4)).toBe('Refunded'));
 
   // ── statusClass ───────────────────────────────────────────────────────────
 
   it('statusClass — 2 (Success) → badge-success',  () => expect(component.statusClass(2)).toBe('badge-success'));
-  it('statusClass — 3 (Refunded) → badge-warning', () => expect(component.statusClass(3)).toBe('badge-warning'));
-  it('statusClass — 1 (Failed) → badge-error',     () => expect(component.statusClass(1)).toBe('badge-error'));
-  it('statusClass — 0 (Pending) → badge-muted',    () => expect(component.statusClass(0)).toBe('badge-muted'));
+  it('statusClass — 4 (Refunded) → badge-warning', () => expect(component.statusClass(4)).toBe('badge-warning'));
+  it('statusClass — 3 (Failed) → badge-error',     () => expect(component.statusClass(3)).toBe('badge-error'));
+  it('statusClass — 1 (Pending) → badge-muted',    () => expect(component.statusClass(1)).toBe('badge-muted'));
 
   // ── txLabel ───────────────────────────────────────────────────────────────
 

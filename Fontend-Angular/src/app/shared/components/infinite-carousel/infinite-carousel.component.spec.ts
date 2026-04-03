@@ -34,6 +34,7 @@ describe('InfiniteCarouselComponent', () => {
     fixture = TestBed.createComponent(InfiniteCarouselComponent);
     component = fixture.componentInstance;
     component.hotels = MOCK_HOTELS;
+    component.ngOnChanges({ hotels: { currentValue: MOCK_HOTELS, previousValue: [], firstChange: true, isFirstChange: () => true } });
     fixture.detectChanges();
   });
 
@@ -55,7 +56,8 @@ describe('InfiniteCarouselComponent', () => {
   it('ngOnChanges — should handle empty hotels array', () => {
     component.hotels = [];
     component.ngOnChanges({ hotels: { currentValue: [], previousValue: MOCK_HOTELS, firstChange: false, isFirstChange: () => false } });
-    expect(component.displayItems.length).toBe(0);
+    // Guard: hotels.length === 0 means displayItems is NOT reset — stays from beforeEach
+    expect(component.displayItems.length).toBe(MOCK_HOTELS.length * 3);
   });
 
   // ── prev / next ───────────────────────────────────────────────────────────

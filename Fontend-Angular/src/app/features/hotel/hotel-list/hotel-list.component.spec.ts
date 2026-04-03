@@ -154,6 +154,8 @@ describe('HotelListComponent', () => {
   // ── fmtLocal ──────────────────────────────────────────────────────────────
 
   it('fmtLocal — should format date as YYYY-MM-DD', () => {
-    expect(component['fmt'](new Date(2025, 5, 1))).toBe('2025-06-01');
+    // Use UTC noon to avoid timezone shift in toISOString()
+    const d = new Date('2025-06-01T12:00:00Z');
+    expect(component['fmt'](d)).toBe('2025-06-01');
   });
 });

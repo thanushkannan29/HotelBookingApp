@@ -1,4 +1,4 @@
-import { ComponentFixture, TestBed, fakeAsync, tick } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
@@ -32,12 +32,11 @@ describe('HotelControlComponent', () => {
   let fixture: ComponentFixture<HotelControlComponent>;
   let hotelSpy: jasmine.SpyObj<HotelService>;
   let toastSpy: jasmine.SpyObj<ToastService>;
-  let dialogSpy: jasmine.SpyObj<MatDialog>;
+  let dialog: MatDialog;
 
   beforeEach(async () => {
     hotelSpy  = jasmine.createSpyObj('HotelService', ['getAllHotelsForSuperAdmin', 'blockHotel', 'unblockHotel']);
     toastSpy  = jasmine.createSpyObj('ToastService', ['success', 'error']);
-    dialogSpy = jasmine.createSpyObj('MatDialog', ['open']);
 
     hotelSpy.getAllHotelsForSuperAdmin.and.returnValue(of(MOCK_PAGED as any));
     hotelSpy.blockHotel.and.returnValue(of(undefined));
@@ -50,12 +49,12 @@ describe('HotelControlComponent', () => {
         provideRouter([]),
         { provide: HotelService,  useValue: hotelSpy },
         { provide: ToastService,  useValue: toastSpy },
-        { provide: MatDialog,     useValue: dialogSpy },
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(HotelControlComponent);
     component = fixture.componentInstance;
+    dialog = TestBed.inject(MatDialog);
     fixture.detectChanges();
   });
 
@@ -144,37 +143,42 @@ describe('HotelControlComponent', () => {
 
   // ── block ─────────────────────────────────────────────────────────────────
 
-  it('block — should open confirm dialog', async () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+  it('block — should open confirm dialog', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     await component.block(MOCK_HOTELS[0] as any);
-    expect(dialogSpy.open).toHaveBeenCalled();
-  });
+    flushMicrotasks();
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
+  }));
 
-  it('block — should call blockHotel when confirmed', async () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+  it('block — should call blockHotel when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     await component.block(MOCK_HOTELS[0] as any);
+    flushMicrotasks();
     expect(hotelSpy.blockHotel).toHaveBeenCalledWith('h-001');
-  });
+  }));
 
-  it('block — should NOT call blockHotel when cancelled', async () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(false) } as any);
+  it('block — should NOT call blockHotel when cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
     await component.block(MOCK_HOTELS[0] as any);
+    flushMicrotasks();
     expect(hotelSpy.blockHotel).not.toHaveBeenCalled();
-  });
+  }));
 
   // ── unblock ───────────────────────────────────────────────────────────────
 
-  it('unblock — should call unblockHotel when confirmed', async () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+  it('unblock — should call unblockHotel when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     await component.unblock(MOCK_HOTELS[3] as any);
+    flushMicrotasks();
     expect(hotelSpy.unblockHotel).toHaveBeenCalledWith('h-004');
-  });
+  }));
 
-  it('unblock — should NOT call unblockHotel when cancelled', async () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(false) } as any);
+  it('unblock — should NOT call unblockHotel when cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
     await component.unblock(MOCK_HOTELS[3] as any);
+    flushMicrotasks();
     expect(hotelSpy.unblockHotel).not.toHaveBeenCalled();
-  });
+  }));
 
   // ── onSearch debounce ─────────────────────────────────────────────────────
 

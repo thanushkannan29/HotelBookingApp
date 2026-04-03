@@ -46,7 +46,7 @@ describe('GuestDashboardComponent', () => {
   beforeEach(async () => {
     dashboardSpy = jasmine.createSpyObj('DashboardService', ['getGuestDashboard']);
     userSpy      = jasmine.createSpyObj('UserService',      ['getProfile']);
-    authSpy      = jasmine.createSpyObj('AuthService',      ['isAuthenticated'], {
+    authSpy      = jasmine.createSpyObj('AuthService',      ['isAuthenticated', 'updateUserName'], {
       currentUser: () => ({ userId: 'usr-001', userName: 'Thanush K', role: 'Guest' })
     });
 

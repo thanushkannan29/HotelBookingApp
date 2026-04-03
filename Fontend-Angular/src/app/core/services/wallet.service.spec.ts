@@ -22,16 +22,16 @@ describe('WalletService', () => {
 
   // ── getWallet ─────────────────────────────────────────────────────────────
 
-  it('getWallet — should GET /guest/wallet with page and pageSize params', () => {
+  it('getWallet — should POST /guest/wallet/list with page and pageSize in body', () => {
     service.getWallet(1, 10).subscribe(result => {
       expect(result.wallet.balance).toBe(500);
       expect(result.totalCount).toBe(3);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/guest/wallet`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/guest/wallet/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: {
       totalCount: 3,
       wallet: { walletId: 'w-001', balance: 500, updatedAt: '2025-01-10T10:00:00Z' },
@@ -39,11 +39,12 @@ describe('WalletService', () => {
     }});
   });
 
-  it('getWallet — page 2 should send correct page param', () => {
+  it('getWallet — page 2 should send correct page in body', () => {
     service.getWallet(2, 5).subscribe();
-    const req = http.expectOne(r => r.url === `${BASE}/guest/wallet`);
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('5');
+    const req = http.expectOne(`${BASE}/guest/wallet/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(5);
     req.flush({ success: true, data: { totalCount: 0, wallet: { walletId: 'w-001', balance: 0, updatedAt: '' }, transactions: [] }});
   });
 
@@ -53,7 +54,7 @@ describe('WalletService', () => {
       expect(result.transactions[0].type).toBe('Credit');
     });
 
-    http.expectOne(r => r.url === `${BASE}/guest/wallet`).flush({ success: true, data: {
+    http.expectOne(`${BASE}/guest/wallet/list`).flush({ success: true, data: {
       totalCount: 2,
       wallet: { walletId: 'w-001', balance: 300, updatedAt: '2025-01-10T10:00:00Z' },
       transactions: [

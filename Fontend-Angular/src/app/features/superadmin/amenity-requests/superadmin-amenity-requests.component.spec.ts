@@ -20,12 +20,11 @@ describe('SuperadminAmenityRequestsComponent', () => {
   let fixture: ComponentFixture<SuperadminAmenityRequestsComponent>;
   let serviceSpy: jasmine.SpyObj<AmenityRequestService>;
   let toastSpy: jasmine.SpyObj<ToastService>;
-  let dialogSpy: jasmine.SpyObj<MatDialog>;
+  let dialog: MatDialog;
 
   beforeEach(async () => {
     serviceSpy = jasmine.createSpyObj('AmenityRequestService', ['getAll', 'approve', 'reject']);
     toastSpy   = jasmine.createSpyObj('ToastService', ['success', 'error']);
-    dialogSpy  = jasmine.createSpyObj('MatDialog', ['open']);
 
     serviceSpy.getAll.and.returnValue(of(MOCK_PAGED as any));
     serviceSpy.approve.and.returnValue(of(MOCK_REQUESTS[0] as any));
@@ -38,12 +37,12 @@ describe('SuperadminAmenityRequestsComponent', () => {
         provideRouter([]),
         { provide: AmenityRequestService, useValue: serviceSpy },
         { provide: ToastService,          useValue: toastSpy },
-        { provide: MatDialog,             useValue: dialogSpy },
       ]
     }).compileComponents();
 
     fixture = TestBed.createComponent(SuperadminAmenityRequestsComponent);
     component = fixture.componentInstance;
+    dialog = TestBed.inject(MatDialog);
     fixture.detectChanges();
   });
 
@@ -106,25 +105,25 @@ describe('SuperadminAmenityRequestsComponent', () => {
   // ── approve ───────────────────────────────────────────────────────────────
 
   it('approve — should open confirm dialog', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     component.approve(MOCK_REQUESTS[0] as any);
-    expect(dialogSpy.open).toHaveBeenCalled();
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
   });
 
   it('approve — should call approve service when dialog confirmed', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     component.approve(MOCK_REQUESTS[0] as any);
     expect(serviceSpy.approve).toHaveBeenCalledWith('ar-001');
   });
 
   it('approve — should show success toast', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(true) } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
     component.approve(MOCK_REQUESTS[0] as any);
     expect(toastSpy.success).toHaveBeenCalledWith('Amenity approved and added!');
   });
 
   it('approve — should NOT call service when dialog cancelled', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(false) } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
     component.approve(MOCK_REQUESTS[0] as any);
     expect(serviceSpy.approve).not.toHaveBeenCalled();
   });
@@ -132,25 +131,25 @@ describe('SuperadminAmenityRequestsComponent', () => {
   // ── reject ────────────────────────────────────────────────────────────────
 
   it('reject — should open input dialog', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of('Not relevant') } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of('Not relevant') } as any);
     component.reject(MOCK_REQUESTS[0] as any);
-    expect(dialogSpy.open).toHaveBeenCalled();
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
   });
 
   it('reject — should call reject service with note', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of('Not relevant') } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of('Not relevant') } as any);
     component.reject(MOCK_REQUESTS[0] as any);
     expect(serviceSpy.reject).toHaveBeenCalledWith('ar-001', 'Not relevant');
   });
 
   it('reject — should show success toast', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of('Not relevant') } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of('Not relevant') } as any);
     component.reject(MOCK_REQUESTS[0] as any);
     expect(toastSpy.success).toHaveBeenCalledWith('Request rejected.');
   });
 
   it('reject — should NOT call service when dialog returns null', () => {
-    dialogSpy.open.and.returnValue({ afterClosed: () => of(null) } as any);
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(null) } as any);
     component.reject(MOCK_REQUESTS[0] as any);
     expect(serviceSpy.reject).not.toHaveBeenCalled();
   });

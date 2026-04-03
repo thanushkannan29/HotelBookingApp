@@ -125,16 +125,16 @@ describe('TransactionService', () => {
     req.flush({ success: true, data: mockTx });
   });
 
-  it('getTransactions() — should GET /transactions with page and pageSize params', () => {
+  it('getTransactions() — should POST to /transactions/list with page and pageSize in body', () => {
     service.getTransactions(1, 10).subscribe(result => {
       expect(result.totalCount).toBe(5);
       expect(result.transactions.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/transactions`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/transactions/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({
       success: true,
       data: {
@@ -144,12 +144,12 @@ describe('TransactionService', () => {
     });
   });
 
-  it('getTransactions() — page 2 should send correct page param', () => {
+  it('getTransactions() — page 2 should send correct page in body', () => {
     service.getTransactions(2, 5).subscribe();
 
-    const req = http.expectOne(r => r.url === `${BASE}/transactions`);
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('5');
+    const req = http.expectOne(`${BASE}/transactions/list`);
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(5);
     req.flush({ success: true, data: { totalCount: 10, transactions: [] } });
   });
 });
@@ -421,16 +421,16 @@ describe('AuditLogService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getAdminAuditLogs() — should GET /admin/audit-logs with pagination', () => {
+  it('getAdminAuditLogs() — should POST to /admin/audit-logs/list with body', () => {
     service.getAdminAuditLogs(1, 20).subscribe(result => {
       expect(result.totalCount).toBe(10);
       expect(result.logs.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/audit-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/admin/audit-logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({
       success: true,
       data: {
@@ -440,15 +440,15 @@ describe('AuditLogService', () => {
     });
   });
 
-  it('getAllAuditLogs() — should GET /superadmin/audit-logs for page 2', () => {
+  it('getAllAuditLogs() — should POST to /superadmin/audit-logs/list for page 2', () => {
     service.getAllAuditLogs(2, 20).subscribe(result => {
       expect(result.totalCount).toBe(200);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/superadmin/audit-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/superadmin/audit-logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({ success: true, data: { totalCount: 200, logs: [] } });
   });
 });
@@ -471,28 +471,28 @@ describe('LogService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getMyLogs() — should GET /logs/my-logs with pagination params', () => {
+  it('getMyLogs() — should POST to /logs/my-logs with body', () => {
     service.getMyLogs(1, 10).subscribe(result => {
       expect(result.totalCount).toBe(3);
       expect(result.logs.length).toBe(0);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/logs/my-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/logs/my-logs`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: { totalCount: 3, logs: [] } });
   });
 
-  it('getAllLogs() — should GET /logs (SuperAdmin) with pagination params', () => {
+  it('getAllLogs() — should POST to /logs/list with body', () => {
     service.getAllLogs(1, 20).subscribe(result => {
       expect(result.totalCount).toBe(50);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({ success: true, data: { totalCount: 50, logs: [] } });
   });
 });
@@ -515,7 +515,7 @@ describe('RoomTypeService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getRoomTypes() — should GET /admin/roomtypes and return list', () => {
+  it('getRoomTypes() — should POST /admin/roomtypes/list and return list', () => {
     const mockRoomTypes = [
       { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious deluxe room', maxOccupancy: 2, amenities: 'WiFi, AC, TV', isActive: true, roomCount: 5 },
       { roomTypeId: 'rt-002', name: 'Suite', description: 'Luxury suite', maxOccupancy: 4, amenities: 'WiFi, AC, Jacuzzi, Minibar', isActive: true, roomCount: 2 }
@@ -527,8 +527,8 @@ describe('RoomTypeService', () => {
       expect(result[1].maxOccupancy).toBe(4);
     });
 
-    const req = http.expectOne(`${BASE}/admin/roomtypes`);
-    expect(req.request.method).toBe('GET');
+    const req = http.expectOne(`${BASE}/admin/roomtypes/list`);
+    expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: mockRoomTypes });
   });
 
@@ -636,7 +636,7 @@ describe('RoomService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getRooms() — should GET /admin/rooms with pageNumber and pageSize params', () => {
+  it('getRooms() — should POST /admin/rooms/list with page and pageSize in body', () => {
     const mockRooms = [
       { roomId: 'r-001', roomNumber: '101', floor: 1, roomTypeId: 'rt-001', roomTypeName: 'Deluxe', isActive: true },
       { roomId: 'r-002', roomNumber: '102', floor: 1, roomTypeId: 'rt-001', roomTypeName: 'Deluxe', isActive: true }
@@ -648,10 +648,10 @@ describe('RoomService', () => {
       expect(result[1].floor).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/rooms`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('pageNumber')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/admin/rooms/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: mockRooms });
   });
 

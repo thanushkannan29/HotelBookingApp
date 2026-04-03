@@ -176,10 +176,14 @@ describe('BookingCreateComponent', () => {
   });
 
   it('checkOutMin — should return day after checkIn when set', () => {
-    component.checkInDate.set(new Date(2025, 5, 1));
+    // Use a future date so checkIn+1 > tomorrow
+    const futureDate = new Date();
+    futureDate.setFullYear(futureDate.getFullYear() + 1);
+    futureDate.setMonth(5); futureDate.setDate(1); // June 1 next year
+    component.checkInDate.set(futureDate);
     const min = component.checkOutMin;
-    expect(min.getDate()).toBe(2);
-    expect(min.getMonth()).toBe(5);
+    expect(min.getDate()).toBe(2);   // June 2
+    expect(min.getMonth()).toBe(5);  // June
   });
 
   // ── onRoomTypeChange ──────────────────────────────────────────────────────

@@ -15,11 +15,11 @@ describe('NavbarComponent', () => {
 
   function buildAuthSpy(role: 'Guest' | 'Admin' | 'SuperAdmin' | null) {
     const spy = jasmine.createSpyObj('AuthService', [
-      'isAuthenticated', 'isGuest', 'isAdmin', 'isSuperAdmin', 'logout'
+      'isAuthenticated', 'isGuest', 'isAdmin', 'isSuperAdmin', 'logout', 'updateProfileImage'
     ], {
-      currentUser: () => role
-        ? { userId: 'usr-001', userName: 'Thanush K', role }
-        : null
+      currentUser: () => role ? { userId: 'usr-001', userName: 'Thanush K', role } : null,
+      profileImageUrl: jasmine.createSpy('profileImageUrl').and.returnValue(null),
+      hotelImageUrl: jasmine.createSpy('hotelImageUrl').and.returnValue(null),
     });
     spy.isAuthenticated.and.returnValue(role !== null);
     spy.isGuest.and.returnValue(role === 'Guest');
@@ -105,7 +105,7 @@ describe('NavbarComponent', () => {
 
   it('should display brand name "ThanushStayHub" in the template', () => {
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('ThanushStayHub');
+    expect(el.textContent).toContain('Thanush StayHub');
   });
 
   it('should show Sign In link when not authenticated', async () => {
@@ -131,7 +131,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Payments');
+    expect(el.textContent).toContain('Wallet');
   });
 
   it('should show Dashboard link for Guest role', async () => {
@@ -173,7 +173,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).not.toContain('Payments');
+    expect(el.textContent).not.toContain('Wallet');
   });
 
   // ── TEMPLATE — SUPERADMIN ──────────────────────────────────────────────────
@@ -183,7 +183,8 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Error Logs');
+    // Desktop nav shows "Logs", mobile menu shows "Error Logs"
+    expect(el.textContent).toContain('Logs');
   });
 
   it('should show Hotels link for SuperAdmin role', async () => {
@@ -199,7 +200,7 @@ describe('NavbarComponent', () => {
     fixture.detectChanges();
     await fixture.whenStable();
     const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).not.toContain('Payments');
+    expect(el.textContent).not.toContain('Wallet');
   });
 
   // ── TEMPLATE — USER MENU ───────────────────────────────────────────────────
@@ -248,6 +249,7 @@ describe('NavbarComponent', () => {
   });
 
   it('should render Support link in mobile menu when open', async () => {
+    await setup('Guest');
     component.mobileOpen.set(true);
     fixture.detectChanges();
     await fixture.whenStable();
