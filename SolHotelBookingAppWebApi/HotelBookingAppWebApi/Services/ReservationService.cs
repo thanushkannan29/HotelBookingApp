@@ -5,6 +5,8 @@ using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
 using HotelBookingAppWebApi.Models.DTOs.Room;
+using Humanizer;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
@@ -547,10 +549,14 @@ namespace HotelBookingAppWebApi.Services
 
             if (res.Status != ReservationStatus.Confirmed)
                 throw new ValidationException("Only confirmed reservations can be marked as completed.");
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (today != res.CheckInDate)
+                throw new ValidationException("Check-in can only be completed on the check-in date.");
 
             res.Status = ReservationStatus.Completed;
             res.IsCheckedIn = true;
             await _unitOfWork.SaveChangesAsync();
+            
 
             // Generate promo code for the guest
             await _promoCodeService.GeneratePromoForCompletedReservationAsync(res.ReservationId);

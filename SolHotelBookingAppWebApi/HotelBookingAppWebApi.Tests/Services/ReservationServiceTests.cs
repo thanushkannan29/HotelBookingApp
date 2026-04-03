@@ -290,8 +290,8 @@ public class ReservationServiceTests
         {
             ReservationId = Guid.NewGuid(), ReservationCode = "R001",
             UserId = guest.UserId, HotelId = hotel.HotelId,
-            CheckInDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
-            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
+            CheckInDate = DateOnly.FromDateTime(DateTime.Today),   // must be today
+            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(2)),
             TotalAmount = 2000, Status = ReservationStatus.Confirmed, CreatedDate = DateTime.UtcNow
         };
         ctx.Reservations.Add(reservation);
@@ -304,6 +304,7 @@ public class ReservationServiceTests
         // Assert
         result.Should().BeTrue();
         reservation.Status.Should().Be(ReservationStatus.Completed);
+        reservation.IsCheckedIn.Should().BeTrue();
     }
 
     [Fact]
@@ -317,8 +318,8 @@ public class ReservationServiceTests
         {
             ReservationId = Guid.NewGuid(), ReservationCode = "R001",
             UserId = guest.UserId, HotelId = hotel.HotelId,
-            CheckInDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
-            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(7)),
+            CheckInDate = DateOnly.FromDateTime(DateTime.Today),
+            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(2)),
             TotalAmount = 2000, Status = ReservationStatus.Pending, CreatedDate = DateTime.UtcNow
         });
         await ctx.SaveChangesAsync();
@@ -329,6 +330,32 @@ public class ReservationServiceTests
 
         // Assert
         await act.Should().ThrowAsync<ValidationException>();
+    }
+
+    [Fact]
+    public async Task CompleteReservationAsync_NotOnCheckinDate_ThrowsValidationException()
+    {
+        // Arrange
+        var dbName = nameof(CompleteReservationAsync_NotOnCheckinDate_ThrowsValidationException);
+        using var ctx = CreateContext(dbName);
+        var (hotel, _, _, guest) = await SeedBasicDataAsync(ctx, dbName);
+        ctx.Reservations.Add(new Reservation
+        {
+            ReservationId = Guid.NewGuid(), ReservationCode = "R001",
+            UserId = guest.UserId, HotelId = hotel.HotelId,
+            CheckInDate = DateOnly.FromDateTime(DateTime.Today.AddDays(3)), // future date — not today
+            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(5)),
+            TotalAmount = 2000, Status = ReservationStatus.Confirmed, CreatedDate = DateTime.UtcNow
+        });
+        await ctx.SaveChangesAsync();
+        var sut = CreateSut(ctx);
+
+        // Act
+        var act = async () => await sut.CompleteReservationAsync("R001");
+
+        // Assert
+        await act.Should().ThrowAsync<ValidationException>()
+            .WithMessage("*check-in date*");
     }
 
     // ── GetAdminReservationsAsync ─────────────────────────────────────────────
