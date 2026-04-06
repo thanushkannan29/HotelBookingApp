@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
@@ -34,9 +34,20 @@ import { InfiniteCarouselComponent } from '../../../shared/components/infinite-c
   templateUrl: './hotel-list.component.html',
   styleUrl: './hotel-list.component.scss'
 })
-export class HotelListComponent implements OnInit {
+export class HotelListComponent implements OnInit, OnDestroy {
   private hotelService = inject(HotelService);
   private fb = inject(FormBuilder);
+
+  // ── Hero slideshow ────────────────────────────────────────────────────────
+  readonly heroSlides = [
+    { url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1600&q=80&auto=format&fit=crop' },
+  ];
+  activeSlide = signal(0);
+  private slideInterval?: ReturnType<typeof setInterval>;
 
   topHotels     = signal<HotelListItemDto[]>([]);
   searchResults = signal<HotelListItemDto[] | null>(null);
@@ -74,6 +85,15 @@ export class HotelListComponent implements OnInit {
     this.hotelService.getTopHotels().subscribe(hotels => this.topHotels.set(hotels));
     this.hotelService.getAmenities().subscribe(a => this.amenityObjects.set(a));
     this.loadStateGroups();
+
+    // Start hero slideshow — rotate every 5 seconds
+    this.slideInterval = setInterval(() => {
+      this.activeSlide.update(i => (i + 1) % this.heroSlides.length);
+    }, 5000);
+  }
+
+  ngOnDestroy() {
+    clearInterval(this.slideInterval);
   }
 
   private loadStateGroups() {

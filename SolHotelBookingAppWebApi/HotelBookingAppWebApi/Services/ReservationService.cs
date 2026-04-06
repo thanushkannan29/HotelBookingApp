@@ -469,8 +469,7 @@ namespace HotelBookingAppWebApi.Services
                 res.CancelledDate = DateTime.UtcNow;
                 res.CancellationReason = reason;
 
-                await _unitOfWork.CommitAsync();
-
+                // Calculate and apply refund BEFORE commit so cancellation + refund are atomic
                 var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
                 if (hasPaid)
                 {
@@ -536,6 +535,7 @@ namespace HotelBookingAppWebApi.Services
                     }
                 }
 
+                await _unitOfWork.CommitAsync();
                 return true;
             }
             catch { await _unitOfWork.RollbackAsync(); throw; }

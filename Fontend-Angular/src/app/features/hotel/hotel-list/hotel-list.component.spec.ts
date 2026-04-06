@@ -158,4 +158,30 @@ describe('HotelListComponent', () => {
     const d = new Date('2025-06-01T12:00:00Z');
     expect(component['fmt'](d)).toBe('2025-06-01');
   });
+
+  // ── Hero slideshow ────────────────────────────────────────────────────────
+
+  it('heroSlides — should have 5 slides', () => {
+    expect(component.heroSlides.length).toBe(5);
+  });
+
+  it('activeSlide — should start at 0', () => {
+    expect(component.activeSlide()).toBe(0);
+  });
+
+  it('ngOnDestroy — should clear the slide interval without error', () => {
+    expect(() => component.ngOnDestroy()).not.toThrow();
+  });
+
+  it('activeSlide — should advance to next slide index', () => {
+    component.activeSlide.set(0);
+    component.activeSlide.update(i => (i + 1) % component.heroSlides.length);
+    expect(component.activeSlide()).toBe(1);
+  });
+
+  it('activeSlide — should wrap back to 0 after last slide', () => {
+    component.activeSlide.set(component.heroSlides.length - 1);
+    component.activeSlide.update(i => (i + 1) % component.heroSlides.length);
+    expect(component.activeSlide()).toBe(0);
+  });
 });

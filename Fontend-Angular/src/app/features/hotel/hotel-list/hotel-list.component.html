@@ -2,6 +2,14 @@
 
   <!-- Hero Search -->
   <section class="hero">
+    <!-- Background slideshow layers -->
+    @for (slide of heroSlides; track slide.url; let i = $index) {
+      <div class="hero-slide"
+           [class.active]="activeSlide() === i"
+           [style.background-image]="'url(' + slide.url + ')'">
+      </div>
+    }
+
     <div class="hero-content">
       <h1 class="hero-title">Where will you go next?</h1>
       <p class="hero-sub">Discover exceptional hotels across India. Real prices. Instant booking.</p>
@@ -46,6 +54,14 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Trust signals -->
+    <div class="trust-strip">
+      <div class="trust-item"><mat-icon>bolt</mat-icon> Instant Booking</div>
+      <div class="trust-item"><mat-icon>verified</mat-icon> Verified Hotels</div>
+      <div class="trust-item"><mat-icon>currency_rupee</mat-icon> Best Price Guarantee</div>
+      <div class="trust-item"><mat-icon>support_agent</mat-icon> 24/7 Support</div>
     </div>
   </section>
 
