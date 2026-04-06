@@ -11,6 +11,7 @@ import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/p
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
+import { MatDialogModule, MatDialog } from '@angular/material/dialog';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { BookingService } from '../../../core/services/booking.service';
@@ -24,7 +25,7 @@ import { ReservationDetailsDto } from '../../../core/models/models';
     CommonModule, RouterLink, ReactiveFormsModule, DatePipe, DecimalPipe,
     MatButtonModule, MatIconModule, MatFormFieldModule, MatInputModule,
     MatTableModule, MatPaginatorModule,
-    MatTabsModule, MatProgressSpinnerModule, MatChipsModule,
+    MatTabsModule, MatProgressSpinnerModule, MatChipsModule, MatDialogModule,
   ],
   templateUrl: './reservation-management.component.html',
   styleUrl: './reservation-management.component.scss'
@@ -32,6 +33,7 @@ import { ReservationDetailsDto } from '../../../core/models/models';
 export class ReservationManagementComponent implements OnInit {
   private bookingService = inject(BookingService);
   private toast          = inject(ToastService);
+  private dialog         = inject(MatDialog);
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
@@ -104,19 +106,31 @@ export class ReservationManagementComponent implements OnInit {
     this.load();
   }
 
-  complete(code: string) {
-    if (!confirm(`Mark reservation ${code} as Completed?`)) return;
-    this.bookingService.completeReservation(code).subscribe(() => {
-      this.toast.success('Reservation marked as completed.');
-      this.load();
+  async complete(code: string) {
+    const { ConfirmDialogComponent } = await import('../../../shared/components/confirm-dialog/confirm-dialog.component');
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Complete Reservation', message: `Mark reservation ${code} as Completed?`, confirmLabel: 'Complete', confirmColor: 'primary', icon: 'check_circle' }
+    });
+    ref.afterClosed().subscribe(ok => {
+      if (!ok) return;
+      this.bookingService.completeReservation(code).subscribe(() => {
+        this.toast.success('Reservation marked as completed.');
+        this.load();
+      });
     });
   }
 
-  confirm(code: string) {
-    if (!confirm(`Confirm reservation ${code}?`)) return;
-    this.bookingService.confirmReservation(code).subscribe(() => {
-      this.toast.success('Reservation confirmed.');
-      this.load();
+  async confirm(code: string) {
+    const { ConfirmDialogComponent } = await import('../../../shared/components/confirm-dialog/confirm-dialog.component');
+    const ref = this.dialog.open(ConfirmDialogComponent, {
+      data: { title: 'Confirm Reservation', message: `Confirm reservation ${code}?`, confirmLabel: 'Confirm', confirmColor: 'primary', icon: 'check' }
+    });
+    ref.afterClosed().subscribe(ok => {
+      if (!ok) return;
+      this.bookingService.confirmReservation(code).subscribe(() => {
+        this.toast.success('Reservation confirmed.');
+        this.load();
+      });
     });
   }
 

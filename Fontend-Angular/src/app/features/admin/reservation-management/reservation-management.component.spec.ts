@@ -6,6 +6,7 @@ import { of, throwError } from 'rxjs';
 import { ReservationManagementComponent } from './reservation-management.component';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
+import { MatDialog } from '@angular/material/dialog';
 import { ReservationDetailsDto } from '../../../core/models/models';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
@@ -36,6 +37,7 @@ describe('ReservationManagementComponent', () => {
   let fixture: ComponentFixture<ReservationManagementComponent>;
   let bookingSpy: jasmine.SpyObj<BookingService>;
   let toastSpy: jasmine.SpyObj<ToastService>;
+  let dialog: MatDialog;
 
   beforeEach(async () => {
     bookingSpy = jasmine.createSpyObj('BookingService', [
@@ -59,6 +61,7 @@ describe('ReservationManagementComponent', () => {
 
     fixture = TestBed.createComponent(ReservationManagementComponent);
     component = fixture.componentInstance;
+    dialog = TestBed.inject(MatDialog);
     fixture.detectChanges();
   });
 
@@ -153,43 +156,55 @@ describe('ReservationManagementComponent', () => {
 
   // ── complete ──────────────────────────────────────────────────────────────
 
-  it('complete — should call completeReservation when confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.complete('RES-0001');
+  it('complete — should open confirm dialog', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.complete('RES-0001');
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
+  }));
+
+  it('complete — should call completeReservation when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.complete('RES-0001');
     expect(bookingSpy.completeReservation).toHaveBeenCalledWith('RES-0001');
-  });
+  }));
 
-  it('complete — should show success toast', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.complete('RES-0001');
+  it('complete — should show success toast', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.complete('RES-0001');
     expect(toastSpy.success).toHaveBeenCalledWith('Reservation marked as completed.');
-  });
+  }));
 
-  it('complete — should NOT call service when confirm is cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-    component.complete('RES-0001');
+  it('complete — should NOT call service when dialog cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+    await component.complete('RES-0001');
     expect(bookingSpy.completeReservation).not.toHaveBeenCalled();
-  });
+  }));
 
   // ── confirm ───────────────────────────────────────────────────────────────
 
-  it('confirm — should call confirmReservation when confirmed', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.confirm('RES-0002');
+  it('confirm — should open confirm dialog', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.confirm('RES-0002');
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
+  }));
+
+  it('confirm — should call confirmReservation when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.confirm('RES-0002');
     expect(bookingSpy.confirmReservation).toHaveBeenCalledWith('RES-0002');
-  });
+  }));
 
-  it('confirm — should show success toast', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.confirm('RES-0002');
+  it('confirm — should show success toast', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.confirm('RES-0002');
     expect(toastSpy.success).toHaveBeenCalledWith('Reservation confirmed.');
-  });
+  }));
 
-  it('confirm — should NOT call service when confirm is cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-    component.confirm('RES-0002');
+  it('confirm — should NOT call service when dialog cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+    await component.confirm('RES-0002');
     expect(bookingSpy.confirmReservation).not.toHaveBeenCalled();
-  });
+  }));
 
   // ── statusClass ───────────────────────────────────────────────────────────
 
