@@ -5,27 +5,28 @@
         <h1 class="section-title">My Reviews</h1>
         <p class="section-subtitle">Share your experience with hotels you've stayed at</p>
         @if (reviews().length > 0) {
-          <p class="contribution-summary">🏆 Your Review Contribution: {{ reviews().length * 100 }} pts</p>
+          <span class="contribution-summary">
+            🏆 Total Contribution: {{ reviews().length * reviewRewardPoints }} pts
+          </span>
         }
       </div>
       @if (reviewableStays.length > 0 && !showAddForm()) {
-        <button mat-flat-button color="primary" (click)="showAddForm.set(true)">
+        <button mat-flat-button color="primary" (click)="showAddForm.set(true)" aria-label="Write a new review">
           <mat-icon>rate_review</mat-icon> Write a Review
         </button>
       }
     </div>
 
-    <!-- F6: Add Review Form — per reservation -->
+    <!-- Add Review Form -->
     @if (showAddForm()) {
       <div class="review-form-card animate-slide-in">
         <h3 class="form-card-title">New Review</h3>
         <form [formGroup]="addForm" (ngSubmit)="addReview()">
 
-          <!-- F6A: Select by reservation, not hotel -->
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Which stay are you reviewing?</mat-label>
-            <mat-icon matPrefix>hotel</mat-icon>
-            <mat-select formControlName="reservationId">
+            <mat-icon matPrefix aria-hidden="true">hotel</mat-icon>
+            <mat-select formControlName="reservationId" aria-label="Select stay to review">
               @for (stay of reviewableStays; track stay.reservationId) {
                 <mat-option [value]="stay.reservationId">{{ stayLabel(stay) }}</mat-option>
               }
@@ -36,16 +37,18 @@
           </mat-form-field>
 
           <div class="rating-row">
-            <label class="rating-label">Your Rating</label>
-            <div class="star-picker">
+            <label class="rating-label" id="add-rating-label">Your Rating</label>
+            <div class="star-picker" role="group" aria-labelledby="add-rating-label">
               @for (s of stars; track s) {
                 <button type="button" class="star-btn"
                         [class.active]="s <= (addForm.get('rating')?.value ?? 0)"
-                        (click)="addForm.patchValue({rating: s})">
-                  <mat-icon>star</mat-icon>
+                        (click)="addForm.patchValue({rating: s})"
+                        [attr.aria-label]="s + ' star' + (s > 1 ? 's' : '')"
+                        [attr.aria-pressed]="s <= (addForm.get('rating')?.value ?? 0)">
+                  <mat-icon aria-hidden="true">star</mat-icon>
                 </button>
               }
-              <span class="rating-text">{{ addForm.get('rating')?.value }}/5</span>
+              <span class="rating-text" aria-live="polite">{{ addForm.get('rating')?.value }}/5</span>
             </div>
           </div>
 
@@ -57,13 +60,13 @@
               <mat-error>Please write a review</mat-error>
             }
             @if (addForm.get('comment')?.hasError('minlength') && addForm.get('comment')?.touched) {
-              <mat-error>At least 10 characters</mat-error>
+              <mat-error>At least 10 characters required</mat-error>
             }
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="w-full">
             <mat-label>Photo URL (optional)</mat-label>
-            <mat-icon matPrefix>image</mat-icon>
+            <mat-icon matPrefix aria-hidden="true">image</mat-icon>
             <input matInput formControlName="imageUrl" placeholder="https://…" />
             <mat-hint>Add a photo from your stay</mat-hint>
           </mat-form-field>
@@ -81,13 +84,14 @@
     <!-- Empty state -->
     @if (reviewableStays.length === 0 && reviews().length === 0) {
       <div class="empty-state">
-        <mat-icon class="empty-icon">hotel</mat-icon>
+        <mat-icon class="empty-icon" aria-hidden="true">hotel</mat-icon>
         <h3>No reviews yet</h3>
         <p>Complete a stay to write your first review</p>
         <a mat-flat-button color="primary" routerLink="/hotels">Find Hotels</a>
       </div>
     }
 
+<<<<<<< Updated upstream
     <!-- F5: Reviews MatTable -->
     @if (reviews().length > 0) {
       <div class="table-toolbar" style="margin-top:24px;">
@@ -100,8 +104,17 @@
 
       <div class="mat-elevation-z1 table-card">
         <table mat-table [dataSource]="dataSource" matSort>
+=======
+    <!-- Reviews Table -->
+    <div style="margin-top:24px;">
+      <div class="table-card">
+        @if (loading()) {
+          <div class="spinner-wrap"><mat-spinner diameter="40" aria-label="Loading reviews" /></div>
+        }
 
-          <!-- Hotel -->
+        <mat-table [dataSource]="reviews()" [class.hidden]="loading()" aria-label="My reviews">
+>>>>>>> Stashed changes
+
           <ng-container matColumnDef="hotel">
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Hotel</th>
             <td mat-cell *matCellDef="let r"><strong>{{ r.hotelName }}</strong></td>
@@ -117,11 +130,17 @@
 
           <!-- Rating -->
           <ng-container matColumnDef="rating">
+<<<<<<< Updated upstream
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Rating</th>
             <td mat-cell *matCellDef="let r">
               <div class="star-display-inline">
+=======
+            <mat-header-cell *matHeaderCellDef>Rating</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <div class="star-display-inline" role="img" [attr.aria-label]="r.rating + ' out of 5 stars'">
+>>>>>>> Stashed changes
                 @for (s of stars; track s) {
-                  <mat-icon class="star-icon-sm" [class.filled]="s <= r.rating">star</mat-icon>
+                  <mat-icon class="star-icon-sm" [class.filled]="s <= r.rating" aria-hidden="true">star</mat-icon>
                 }
                 <span class="rating-num">{{ r.rating }}/5</span>
               </div>
@@ -143,12 +162,18 @@
             <th mat-header-cell *matHeaderCellDef mat-sort-header>Date</th>
             <td mat-cell *matCellDef="let r">
               {{ r.createdDate | date:'MMM d, y' }}
+<<<<<<< Updated upstream
               <span class="contribution-badge">🏆 +100 pts</span>
             </td>
+=======
+              <span class="contribution-badge">🏆 +{{ reviewRewardPoints }} pts</span>
+            </mat-cell>
+>>>>>>> Stashed changes
           </ng-container>
 
           <!-- Actions -->
           <ng-container matColumnDef="actions">
+<<<<<<< Updated upstream
             <th mat-header-cell *matHeaderCellDef></th>
             <td mat-cell *matCellDef="let r">
               <button mat-icon-button (click)="startEdit(r)" matTooltip="Edit review">
@@ -156,6 +181,16 @@
               </button>
               <button mat-icon-button color="warn" (click)="deleteReview(r.reviewId)"
                       matTooltip="Delete review">
+=======
+            <mat-header-cell *matHeaderCellDef></mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <button mat-icon-button (click)="startEdit(r)" matTooltip="Edit review"
+                      [attr.aria-label]="'Edit review for ' + r.hotelName">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteReview(r.reviewId)" matTooltip="Delete review"
+                      [attr.aria-label]="'Delete review for ' + r.hotelName">
+>>>>>>> Stashed changes
                 <mat-icon>delete</mat-icon>
               </button>
             </td>
@@ -167,23 +202,38 @@
           <tr class="mat-row" *matNoDataRow>
             <td class="mat-cell empty-cell" [attr.colspan]="displayedColumns.length">No reviews match</td>
           </tr>
+<<<<<<< Updated upstream
         </table>
         <mat-paginator [pageSizeOptions]="[5, 10, 25]" showFirstLastButtons />
+=======
+        </mat-table>
+
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize"
+          [pageSizeOptions]="[5, 10, 25]"
+          showFirstLastButtons
+          (page)="onPage($event)"
+          aria-label="Reviews pagination"
+        />
+>>>>>>> Stashed changes
       </div>
 
-      <!-- Inline edit form (shown below table) -->
+      <!-- Inline Edit Form -->
       @if (editingId(); as reviewId) {
         <div class="review-form-card animate-slide-in" style="margin-top:16px;">
           <h3 class="form-card-title">Edit Review</h3>
           <form [formGroup]="editForm">
             <div class="rating-row">
-              <label class="rating-label">Rating</label>
-              <div class="star-picker">
+              <label class="rating-label" id="edit-rating-label">Rating</label>
+              <div class="star-picker" role="group" aria-labelledby="edit-rating-label">
                 @for (s of stars; track s) {
                   <button type="button" class="star-btn"
                           [class.active]="s <= (editForm.get('rating')?.value ?? 0)"
-                          (click)="editForm.patchValue({rating: s})">
-                    <mat-icon>star</mat-icon>
+                          (click)="editForm.patchValue({rating: s})"
+                          [attr.aria-label]="s + ' star' + (s > 1 ? 's' : '')"
+                          [attr.aria-pressed]="s <= (editForm.get('rating')?.value ?? 0)">
+                    <mat-icon aria-hidden="true">star</mat-icon>
                   </button>
                 }
               </div>
@@ -191,6 +241,9 @@
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Comment</mat-label>
               <textarea matInput formControlName="comment" rows="3"></textarea>
+              @if (editForm.get('comment')?.hasError('required') && editForm.get('comment')?.touched) {
+                <mat-error>Comment is required</mat-error>
+              }
             </mat-form-field>
             <mat-form-field appearance="outline" class="w-full">
               <mat-label>Photo URL (optional)</mat-label>

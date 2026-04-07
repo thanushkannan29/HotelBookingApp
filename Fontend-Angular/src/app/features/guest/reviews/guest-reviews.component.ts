@@ -16,7 +16,11 @@ import { ReviewService } from '../../../core/services/api.services';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MyReviewsResponseDto, ReservationDetailsDto } from '../../../core/models/models';
+<<<<<<< Updated upstream
 import { SlicePipe } from '@angular/common';
+=======
+import { environment } from '../../../../environments/environment';
+>>>>>>> Stashed changes
 
 @Component({
   selector: 'app-guest-reviews',
@@ -45,6 +49,11 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
   // F5: MatTable for reviews list
   dataSource = new MatTableDataSource<MyReviewsResponseDto>([]);
   displayedColumns = ['hotel', 'stay', 'rating', 'comment', 'date', 'actions'];
+<<<<<<< Updated upstream
+=======
+  stars = [1, 2, 3, 4, 5];
+  readonly reviewRewardPoints = environment.reviewRewardPoints;
+>>>>>>> Stashed changes
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;

@@ -35,6 +35,7 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
 
             // Extract user info from JWT claims
             var user = context.User;
+<<<<<<< Updated upstream
             var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Guid? userId = Guid.TryParse(userIdClaim, out var uid) ? uid : null;
             var userName = user?.Identity?.Name ?? "Anonymous";
@@ -42,6 +43,21 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
 
             var controller = context.Request.RouteValues["controller"]?.ToString() ?? string.Empty;
             var action = context.Request.RouteValues["action"]?.ToString() ?? string.Empty;
+=======
+            var userIdClaim = user?.FindFirst("nameid")?.Value;
+
+            return new RequestInfo
+            {
+                UserId = Guid.TryParse(userIdClaim, out var uid) ? uid : null,
+                UserName = user?.Identity?.Name ?? "Anonymous",
+                Role = user?.FindFirst("role")?.Value ?? "Anonymous",
+                Controller = context.Request.RouteValues["controller"]?.ToString() ?? string.Empty,
+                Action = context.Request.RouteValues["action"]?.ToString() ?? string.Empty,
+                HttpMethod = context.Request.Method,
+                RequestPath = context.Request.Path
+            };
+        }
+>>>>>>> Stashed changes
 
             // ILogger — structured logging
             _logger.LogError(ex,

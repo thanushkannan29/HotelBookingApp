@@ -13,6 +13,7 @@ import { provideAnimationsAsync } from '@angular/platform-browser/animations/asy
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const MOCK_REVIEWS: MyReviewsResponseDto[] = [
+<<<<<<< Updated upstream
   {
     reviewId:    'rev-001',
     hotelId:     'hotel-001',
@@ -30,6 +31,10 @@ const MOCK_REVIEWS: MyReviewsResponseDto[] = [
     imageUrl:    'https://example.com/photo.jpg',
     createdDate: '2025-01-05T10:00:00Z',
   },
+=======
+  { reviewId: 'rev-001', hotelId: 'hotel-001', hotelName: 'Grand Palace', reservationId: 'id-RES-0001', reservationCode: 'RES-0001', rating: 5, comment: 'Absolutely wonderful stay!', createdDate: '2025-01-10T10:00:00Z', contributionPoints: 10 },
+  { reviewId: 'rev-002', hotelId: 'hotel-002', hotelName: 'Sea View Inn',  reservationId: 'id-RES-0002', reservationCode: 'RES-0002', rating: 4, comment: 'Great location, good service.', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-05T10:00:00Z', contributionPoints: 10 },
+>>>>>>> Stashed changes
 ];
 
 function makeReservation(code: string, hotelId: string, status: string): ReservationDetailsDto {
@@ -59,7 +64,15 @@ const MOCK_RESERVATIONS: ReservationDetailsDto[] = [
   makeReservation('RES-0005', 'hotel-005', 'Pending'),   // not completed
 ];
 
+<<<<<<< Updated upstream
 // ─────────────────────────────────────────────────────────────────────────────
+=======
+const MOCK_REVIEW_RESPONSE = {
+  reviewId: 'rev-003', hotelId: 'hotel-003', userId: 'usr-001', userName: 'Alice',
+  reservationId: 'id-RES-0003', reservationCode: 'RES-0003',
+  rating: 5, comment: 'Fantastic!', createdDate: '2025-02-01T10:00:00Z', contributionPoints: 10
+};
+>>>>>>> Stashed changes
 
 describe('GuestReviewsComponent', () => {
   let component: GuestReviewsComponent;
