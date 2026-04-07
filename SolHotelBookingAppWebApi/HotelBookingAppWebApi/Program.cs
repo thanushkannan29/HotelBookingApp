@@ -98,6 +98,7 @@ builder.Services.AddScoped<IWalletService, WalletService>();
 builder.Services.AddScoped<IPromoCodeService, PromoCodeService>();
 builder.Services.AddScoped<IAmenityRequestService, AmenityRequestService>();
 builder.Services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
+builder.Services.AddScoped<ISupportRequestService, SupportRequestService>();
 
 // ── BACKGROUND SERVICES ────────────────────────────────────────────────────────
 builder.Services.AddHostedService<ReservationCleanupService>();          // cancels expired pending reservations
@@ -144,112 +145,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-<<<<<<< Updated upstream
 app.Run();
-=======
-static void RegisterDatabase(IServiceCollection services, IConfiguration config)
-{
-    services.AddDbContext<HotelBookingContext>(options =>
-        options.UseSqlServer(
-            config.GetConnectionString("Developer"),
-            sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
-        ));
-}
 
-static void RegisterCors(IServiceCollection services)
-{
-    services.AddCors(options =>
-    {
-        options.AddPolicy("AngularClient", policy =>
-            policy.WithOrigins("http://localhost:4200")
-                  .AllowAnyMethod()
-                  .AllowAnyHeader()
-                  .AllowCredentials());
-    });
-}
-
-static void RegisterRepositories(IServiceCollection services)
-{
-    services.AddScoped(typeof(IRepository<,>), typeof(Repository<,>));
-    services.AddScoped<IUnitOfWork, UnitOfWork>();
-}
-
-static void RegisterApplicationServices(IServiceCollection services)
-{
-    services.AddScoped<IPasswordService, PasswordService>();
-    services.AddScoped<ITokenService, TokenService>();
-    services.AddScoped<IAuthService, AuthService>();
-    services.AddScoped<IUserService, UserService>();
-    services.AddScoped<IHotelService, HotelService>();
-    services.AddScoped<IRoomTypeService, RoomTypeService>();
-    services.AddScoped<IRoomService, RoomService>();
-    services.AddScoped<IInventoryService, InventoryService>();
-    services.AddScoped<IReservationService, ReservationService>();
-    services.AddScoped<ITransactionService, TransactionService>();
-    services.AddScoped<IReviewService, ReviewService>();
-    services.AddScoped<ILogService, LogService>();
-    services.AddScoped<IAuditLogService, AuditLogService>();
-    services.AddScoped<IDashboardService, DashboardService>();
-    services.AddScoped<IAmenityService, AmenityService>();
-    services.AddScoped<IWalletService, WalletService>();
-    services.AddScoped<IPromoCodeService, PromoCodeService>();
-    services.AddScoped<IAmenityRequestService, AmenityRequestService>();
-    services.AddScoped<ISuperAdminRevenueService, SuperAdminRevenueService>();
-    services.AddScoped<ISupportRequestService, SupportRequestService>();
-}
-
-static void RegisterBackgroundServices(IServiceCollection services)
-{
-    services.AddHostedService<ReservationCleanupService>();       // cancels expired pending reservations
-    services.AddHostedService<HotelDeactivationRefundService>();  // auto-refunds when hotel deactivated
-    services.AddHostedService<NoShowAutoCancelService>();          // marks no-shows after checkout
-}
-
-static void RegisterAuthentication(IServiceCollection services, IConfiguration config)
-{
-    var jwtKey = config["Keys:Jwt"]
-        ?? throw new InvalidOperationException("JWT Key not found in configuration.");
-
-    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
-        {
-            // MapInboundClaims = false keeps claim names exactly as written in the token.
-            // We write short names ("nameid", "unique_name", "role") so they match
-            // what the Angular frontend reads via jwtDecode.
-            options.MapInboundClaims = false;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = false,
-                ValidateAudience = false,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-                NameClaimType = "nameid",
-                RoleClaimType = "role"
-            };
-        });
-
-    services.AddAuthorization();
-}
-
-// ── PIPELINE CONFIGURATION ────────────────────────────────────────────────────
-
-static void ConfigurePipeline(WebApplication app)
-{
-    if (app.Environment.IsDevelopment())
-    {
-        app.UseSwagger();
-        app.UseSwaggerUI();
-    }
-
-    // Global exception handler first — catches everything including auth errors
-    app.UseMiddleware<GlobalExceptionMiddleware>();
-
-    app.UseCors("AngularClient");
-    app.UseIpRateLimiting();
-    app.UseRouting();
-    app.UseAuthentication();
-    app.UseAuthorization();
-    app.MapControllers();
-}
->>>>>>> Stashed changes

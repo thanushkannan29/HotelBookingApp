@@ -12,33 +12,22 @@ namespace HotelBookingAppWebApi.Services
     /// Handles guest registration, hotel-admin registration, and login.
     /// Follows SRP — each public method delegates to focused private helpers.
     /// </summary>
-    public class AuthService : IAuthService
+    public class AuthService(
+        IRepository<Guid, User> userRepository,
+        IRepository<Guid, Hotel> hotelRepository,
+        IRepository<Guid, UserProfileDetails> userProfileRepository,
+        IPasswordService passwordService,
+        ITokenService tokenService,
+        IWalletService walletService,
+        IUnitOfWork unitOfWork) : IAuthService
     {
-        private readonly IRepository<Guid, User> _userRepository;
-        private readonly IRepository<Guid, Hotel> _hotelRepository;
-        private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository;
-        private readonly IPasswordService _passwordService;
-        private readonly ITokenService _tokenService;
-        private readonly IWalletService _walletService;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public AuthService(
-            IRepository<Guid, User> userRepository,
-            IRepository<Guid, Hotel> hotelRepository,
-            IRepository<Guid, UserProfileDetails> userProfileRepository,
-            IPasswordService passwordService,
-            ITokenService tokenService,
-            IWalletService walletService,
-            IUnitOfWork unitOfWork)
-        {
-            _userRepository = userRepository;
-            _hotelRepository = hotelRepository;
-            _userProfileRepository = userProfileRepository;
-            _passwordService = passwordService;
-            _tokenService = tokenService;
-            _walletService = walletService;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IRepository<Guid, User> _userRepository = userRepository;
+        private readonly IRepository<Guid, Hotel> _hotelRepository = hotelRepository;
+        private readonly IRepository<Guid, UserProfileDetails> _userProfileRepository = userProfileRepository;
+        private readonly IPasswordService _passwordService = passwordService;
+        private readonly ITokenService _tokenService = tokenService;
+        private readonly IWalletService _walletService = walletService;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         // ── REGISTER GUEST ────────────────────────────────────────────────────
 

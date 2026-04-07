@@ -7,16 +7,12 @@ namespace HotelBookingAppWebApi.Interfaces
     {
         /// <summary>Persists a single audit log entry. Safe to call from within an existing transaction.</summary>
         Task LogAsync(Guid? userId, string action, string entityName, Guid? entityId, string changes);
-<<<<<<< Updated upstream
-        Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(Guid adminUserId, int page, int pageSize);
-=======
 
         /// <summary>Admin: returns paged audit logs scoped to their user id and hotel.</summary>
         Task<PagedAuditLogResponseDto> GetAdminAuditLogsAsync(
             Guid adminUserId, int page, int pageSize, string? search = null);
 
         /// <summary>SuperAdmin: returns all audit logs with optional hotel, user, action, and date filters.</summary>
->>>>>>> Stashed changes
         Task<PagedAuditLogResponseDto> GetAllAuditLogsAsync(
             int page, int pageSize,
             Guid? hotelId = null, Guid? userId = null,

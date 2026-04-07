@@ -41,6 +41,7 @@
     "typescript": "~5.9.3"
   },
   "overrides": {
+    "vite": "^7.3.2",
     "tar": "^7.5.11",
     "tmp": "^0.2.4",
     "dompurify": "^3.3.2"

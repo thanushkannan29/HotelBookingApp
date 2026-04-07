@@ -44,20 +44,10 @@ namespace HotelBookingAppWebApi.Services
             return promos.Select(MapToDto);
         }
 
-<<<<<<< Updated upstream
-        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize)
-        {
-            var query = _promoRepo.GetQueryable()
-                .Include(p => p.Hotel)
-                .Where(p => p.UserId == userId)
-                .OrderByDescending(p => p.CreatedAt);
-
-=======
         public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(
             Guid userId, int page, int pageSize, string? status = null)
         {
             var query = BuildGuestPromoQuery(userId, status);
->>>>>>> Stashed changes
             var total = await query.CountAsync();
             var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 

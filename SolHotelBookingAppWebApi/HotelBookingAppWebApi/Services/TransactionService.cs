@@ -8,42 +8,28 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
-    public class TransactionService : ITransactionService
+    public class TransactionService(
+        IRepository<Guid, Transaction> transactionRepo,
+        IRepository<Guid, Reservation> reservationRepo,
+        IRepository<Guid, RoomTypeInventory> inventoryRepo,
+        IRepository<Guid, ReservationRoom> reservationRoomRepo,
+        IRepository<Guid, User> userRepo,
+        IRepository<Guid, Hotel> hotelRepo,
+        IRepository<Guid, Wallet> walletRepo,
+        IRepository<Guid, WalletTransaction> walletTxRepo,
+        IRepository<Guid, SuperAdminRevenue> revenueRepo,
+        IUnitOfWork unitOfWork) : ITransactionService
     {
-        private readonly IRepository<Guid, Transaction> _transactionRepo;
-        private readonly IRepository<Guid, Reservation> _reservationRepo;
-        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo;
-        private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo;
-        private readonly IRepository<Guid, User> _userRepo;
-        private readonly IRepository<Guid, Hotel> _hotelRepo;
-        private readonly IRepository<Guid, Wallet> _walletRepo;
-        private readonly IRepository<Guid, WalletTransaction> _walletTxRepo;
-        private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo;
-        private readonly IUnitOfWork _unitOfWork;
-
-        public TransactionService(
-            IRepository<Guid, Transaction> transactionRepo,
-            IRepository<Guid, Reservation> reservationRepo,
-            IRepository<Guid, RoomTypeInventory> inventoryRepo,
-            IRepository<Guid, ReservationRoom> reservationRoomRepo,
-            IRepository<Guid, User> userRepo,
-            IRepository<Guid, Hotel> hotelRepo,
-            IRepository<Guid, Wallet> walletRepo,
-            IRepository<Guid, WalletTransaction> walletTxRepo,
-            IRepository<Guid, SuperAdminRevenue> revenueRepo,
-            IUnitOfWork unitOfWork)
-        {
-            _transactionRepo = transactionRepo;
-            _reservationRepo = reservationRepo;
-            _inventoryRepo = inventoryRepo;
-            _reservationRoomRepo = reservationRoomRepo;
-            _userRepo = userRepo;
-            _hotelRepo = hotelRepo;
-            _walletRepo = walletRepo;
-            _walletTxRepo = walletTxRepo;
-            _revenueRepo = revenueRepo;
-            _unitOfWork = unitOfWork;
-        }
+        private readonly IRepository<Guid, Transaction> _transactionRepo = transactionRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo = reservationRepo;
+        private readonly IRepository<Guid, RoomTypeInventory> _inventoryRepo = inventoryRepo;
+        private readonly IRepository<Guid, ReservationRoom> _reservationRoomRepo = reservationRoomRepo;
+        private readonly IRepository<Guid, User> _userRepo = userRepo;
+        private readonly IRepository<Guid, Hotel> _hotelRepo = hotelRepo;
+        private readonly IRepository<Guid, Wallet> _walletRepo = walletRepo;
+        private readonly IRepository<Guid, WalletTransaction> _walletTxRepo = walletTxRepo;
+        private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo = revenueRepo;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         // ── CREATE PAYMENT ────────────────────────────────────────────────────
         public async Task<TransactionResponseDto> CreatePaymentAsync(CreatePaymentDto dto)
@@ -119,17 +105,24 @@ namespace HotelBookingAppWebApi.Services
             reservation.CancelledDate = DateTime.UtcNow;
             reservation.CancellationReason = dto.Reason;
 
-            var roomTypeId = reservation.ReservationRooms!.First().RoomTypeId;
-            var roomCount = reservation.ReservationRooms.Count;
-            var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-            var dates = Enumerable.Range(0, totalDays).Select(d => reservation.CheckInDate.AddDays(d)).ToList();
-
-            var inventories = await _inventoryRepo.GetQueryable()
-                .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
+            var reservationRooms = await _reservationRoomRepo.GetQueryable()
+                .Where(rr => rr.ReservationId == reservation.ReservationId)
                 .ToListAsync();
 
-            foreach (var inv in inventories)
-                inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
+            if (reservationRooms.Count > 0)
+            {
+                var roomTypeId = reservationRooms.First().RoomTypeId;
+                var roomCount = reservationRooms.Count;
+                var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
+                var dates = Enumerable.Range(0, totalDays).Select(d => reservation.CheckInDate.AddDays(d)).ToList();
+
+                var inventories = await _inventoryRepo.GetQueryable()
+                    .Where(i => i.RoomTypeId == roomTypeId && dates.Contains(i.Date))
+                    .ToListAsync();
+
+                foreach (var inv in inventories)
+                    inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
+            }
 
             await _unitOfWork.SaveChangesAsync();
             return MapToDto(transaction);
@@ -139,7 +132,8 @@ namespace HotelBookingAppWebApi.Services
         // NOTE (Correction 10C): Admin branch has NO status filter — returns all statuses
         // (Success, Refunded, Failed) for the hotel. This is intentional.
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
-            Guid userId, string role, int page, int pageSize)
+            Guid userId, string role, int page, int pageSize,
+            string? sortField = null, string? sortDir = null)
         {
             var query = _transactionRepo.GetQueryable().AsQueryable();
 
@@ -152,10 +146,8 @@ namespace HotelBookingAppWebApi.Services
                 var hotelId = await _userRepo.GetQueryable()
                     .Where(u => u.UserId == userId)
                     .Select(u => u.HotelId)
-                    .FirstOrDefaultAsync();
-
-                if (hotelId == null)
-                    throw new NotFoundException("Admin hotel not found.");
+                    .FirstOrDefaultAsync()
+                    ?? throw new NotFoundException("Admin hotel not found.");
 
                 // No status filter — Admin sees ALL transaction statuses for their hotel
                 query = query.Where(t => t.Reservation!.HotelId == hotelId);
@@ -182,7 +174,7 @@ namespace HotelBookingAppWebApi.Services
                 var wallet = await _walletRepo.GetQueryable()
                     .FirstOrDefaultAsync(w => w.UserId == userId);
 
-                if (wallet != null)
+                if (wallet is not null)
                 {
                     var refundEntries = await _walletTxRepo.GetQueryable()
                         .Where(wt => wt.WalletId == wallet.WalletId &&
@@ -191,26 +183,22 @@ namespace HotelBookingAppWebApi.Services
                         .OrderByDescending(wt => wt.CreatedAt)
                         .ToListAsync();
 
-                    foreach (var wt in refundEntries)
+                    txList.AddRange(refundEntries.Select(wt => new TransactionResponseDto
                     {
-                        txList.Add(new TransactionResponseDto
-                        {
-                            TransactionId = wt.WalletTransactionId,
-                            ReservationId = Guid.Empty,
-                            ReservationCode = string.Empty,
-                            HotelName = string.Empty,
-                            GuestName = string.Empty,
-                            Amount = wt.Amount,
-                            PaymentMethod = PaymentMethod.Wallet,
-                            Status = PaymentStatus.Refunded,
-                            TransactionDate = wt.CreatedAt,
-                            TransactionType = "WalletRefund",
-                            Description = wt.Description
-                        });
-                    }
+                        TransactionId = wt.WalletTransactionId,
+                        ReservationId = Guid.Empty,
+                        ReservationCode = string.Empty,
+                        HotelName = string.Empty,
+                        GuestName = string.Empty,
+                        Amount = wt.Amount,
+                        PaymentMethod = PaymentMethod.Wallet,
+                        Status = PaymentStatus.Refunded,
+                        TransactionDate = wt.CreatedAt,
+                        TransactionType = "WalletRefund",
+                        Description = wt.Description
+                    }));
 
-                    // re-sort combined list
-                    txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
+                    txList = [.. txList.OrderByDescending(t => t.TransactionDate)];
                     total += refundEntries.Count;
                 }
             }
@@ -223,32 +211,28 @@ namespace HotelBookingAppWebApi.Services
                     .Select(u => u.HotelId)
                     .FirstOrDefaultAsync();
 
-                if (adminHotelId != null)
+                if (adminHotelId is not null)
                 {
-                    // Commission entries sent to superadmin
                     var commissions = await _revenueRepo.GetQueryable()
                         .Include(r => r.Reservation)
                         .Where(r => r.HotelId == adminHotelId)
                         .OrderByDescending(r => r.CreatedAt)
                         .ToListAsync();
 
-                    foreach (var c in commissions)
+                    txList.AddRange(commissions.Select(c => new TransactionResponseDto
                     {
-                        txList.Add(new TransactionResponseDto
-                        {
-                            TransactionId = c.SuperAdminRevenueId,
-                            ReservationId = c.ReservationId,
-                            ReservationCode = c.Reservation?.ReservationCode ?? string.Empty,
-                            HotelName = string.Empty,
-                            GuestName = string.Empty,
-                            Amount = c.CommissionAmount,
-                            PaymentMethod = PaymentMethod.UPI,
-                            Status = PaymentStatus.Success,
-                            TransactionDate = c.CreatedAt,
-                            TransactionType = "CommissionSent",
-                            Description = $"2% commission sent to SuperAdmin for reservation {c.Reservation?.ReservationCode}"
-                        });
-                    }
+                        TransactionId = c.SuperAdminRevenueId,
+                        ReservationId = c.ReservationId,
+                        ReservationCode = c.Reservation?.ReservationCode ?? string.Empty,
+                        HotelName = string.Empty,
+                        GuestName = string.Empty,
+                        Amount = c.CommissionAmount,
+                        PaymentMethod = PaymentMethod.UPI,
+                        Status = PaymentStatus.Success,
+                        TransactionDate = c.CreatedAt,
+                        TransactionType = "CommissionSent",
+                        Description = $"2% commission sent to SuperAdmin for reservation {c.Reservation?.ReservationCode}"
+                    }));
 
                     // Auto-refunds sent to guests (wallet credits with "Refund" in description for this hotel's reservations)
                     var hotelReservationIds = await _reservationRepo.GetQueryable()
@@ -346,7 +330,7 @@ namespace HotelBookingAppWebApi.Services
             var admin = await _userRepo.GetAsync(adminUserId)
                 ?? throw new UnAuthorizedException("Unauthorized.");
 
-            if (admin.HotelId == null)
+            if (admin.HotelId is null)
                 throw new UnAuthorizedException("Unauthorized.");
 
             var transaction = await _transactionRepo.GetQueryable()
@@ -363,12 +347,11 @@ namespace HotelBookingAppWebApi.Services
             transaction.Status = PaymentStatus.Failed;
             transaction.Reservation.Status = ReservationStatus.Pending;
 
-            // Restore inventory when transaction is marked failed
             var reservationRooms = await _reservationRoomRepo.GetQueryable()
                 .Where(rr => rr.ReservationId == transaction.ReservationId)
                 .ToListAsync();
 
-            if (reservationRooms.Any())
+            if (reservationRooms.Count > 0)
             {
                 var roomTypeId = reservationRooms.First().RoomTypeId;
                 var reservation = transaction.Reservation!;
@@ -384,20 +367,6 @@ namespace HotelBookingAppWebApi.Services
 
             await _unitOfWork.SaveChangesAsync();
         }
-
-        private static TransactionResponseDto MapToDto(Transaction t) => new()
-        {
-            TransactionId = t.TransactionId,
-            ReservationId = t.ReservationId,
-            ReservationCode = t.Reservation?.ReservationCode ?? string.Empty,
-            HotelName = t.Reservation?.Hotel?.Name ?? string.Empty,
-            GuestName = t.Reservation?.User?.Name ?? string.Empty,
-            Amount = t.Amount,
-            PaymentMethod = t.PaymentMethod,
-            Status = t.Status,
-            TransactionDate = t.TransactionDate,
-            TransactionType = "Payment"
-        };
 
         // ── RECORD FAILED PAYMENT (Razorpay failure) ──────────────────────────
         public async Task RecordFailedPaymentAsync(Guid reservationId, Guid userId)
@@ -420,8 +389,6 @@ namespace HotelBookingAppWebApi.Services
             await _transactionRepo.AddAsync(transaction);
             await _unitOfWork.SaveChangesAsync();
         }
-<<<<<<< Updated upstream
-=======
 
         // ── PRIVATE: FETCH HELPERS ────────────────────────────────────────────
 
@@ -492,7 +459,7 @@ namespace HotelBookingAppWebApi.Services
         }
 
         private async Task<List<WalletTransaction>> FetchWalletRefundsAsync(Guid walletId)
-            => await _walletTransactionRepo.GetQueryable()
+            => await _walletTxRepo.GetQueryable()
                 .Where(wt => wt.WalletId == walletId &&
                              wt.Type == "Credit" &&
                              wt.Description.Contains("Refund"))
@@ -527,9 +494,9 @@ namespace HotelBookingAppWebApi.Services
             Guid hotelId, List<TransactionResponseDto> combined)
         {
             var (walletIds, userNameMap, reservationCodes) = await LoadGuestWalletDataAsync(hotelId);
-            if (!walletIds.Any()) return;
+            if (walletIds.Count == 0) return;
 
-            var autoRefunds = await _walletTransactionRepo.GetQueryable()
+            var autoRefunds = await _walletTxRepo.GetQueryable()
                 .Where(wt => walletIds.Keys.Contains(wt.WalletId) &&
                              wt.Type == "Credit" &&
                              wt.Description.Contains("Refund") &&
@@ -618,7 +585,7 @@ namespace HotelBookingAppWebApi.Services
                 .Where(rr => rr.ReservationId == reservation.ReservationId)
                 .ToListAsync();
 
-            if (!rooms.Any()) return;
+            if (rooms.Count == 0) return;
 
             var roomTypeId = rooms.First().RoomTypeId;
             var roomCount = rooms.Count;
@@ -719,6 +686,5 @@ namespace HotelBookingAppWebApi.Services
             TransactionType = "AutoRefund",
             Description = wt.Description
         };
->>>>>>> Stashed changes
     }
 }

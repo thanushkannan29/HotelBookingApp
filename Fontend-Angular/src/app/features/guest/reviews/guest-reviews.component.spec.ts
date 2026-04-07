@@ -7,34 +7,14 @@ import { GuestReviewsComponent } from './guest-reviews.component';
 import { ReviewService } from '../../../core/services/api.services';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { MyReviewsResponseDto, ReservationDetailsDto } from '../../../core/models/models';
+import { MyReviewsResponseDto, ReservationDetailsDto, ReviewResponseDto } from '../../../core/models/models';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 // ── Mock data ──────────────────────────────────────────────────────────────────
 
 const MOCK_REVIEWS: MyReviewsResponseDto[] = [
-<<<<<<< Updated upstream
-  {
-    reviewId:    'rev-001',
-    hotelId:     'hotel-001',
-    hotelName:   'Grand Palace',
-    rating:      5,
-    comment:     'Absolutely wonderful stay!',
-    createdDate: '2025-01-10T10:00:00Z',
-  },
-  {
-    reviewId:    'rev-002',
-    hotelId:     'hotel-002',
-    hotelName:   'Sea View Inn',
-    rating:      4,
-    comment:     'Great location, good service.',
-    imageUrl:    'https://example.com/photo.jpg',
-    createdDate: '2025-01-05T10:00:00Z',
-  },
-=======
   { reviewId: 'rev-001', hotelId: 'hotel-001', hotelName: 'Grand Palace', reservationId: 'id-RES-0001', reservationCode: 'RES-0001', rating: 5, comment: 'Absolutely wonderful stay!', createdDate: '2025-01-10T10:00:00Z', contributionPoints: 10 },
   { reviewId: 'rev-002', hotelId: 'hotel-002', hotelName: 'Sea View Inn',  reservationId: 'id-RES-0002', reservationCode: 'RES-0002', rating: 4, comment: 'Great location, good service.', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-05T10:00:00Z', contributionPoints: 10 },
->>>>>>> Stashed changes
 ];
 
 function makeReservation(code: string, hotelId: string, status: string): ReservationDetailsDto {
@@ -49,10 +29,19 @@ function makeReservation(code: string, hotelId: string, status: string): Reserva
     checkOutDate:    '2025-01-03',
     numberOfRooms:   1,
     totalAmount:     7000,
+    gstPercent:      0,
+    gstAmount:       0,
+    discountPercent: 0,
+    discountAmount:  0,
+    walletAmountUsed: 0,
+    finalAmount:     7000,
     status,
     isCheckedIn:     status === 'Completed',
     createdDate:     '2024-12-01T10:00:00Z',
-    rooms:           []
+    rooms:           [],
+    cancellationFeePaid:    false,
+    cancellationFeeAmount:  0,
+    cancellationPolicyText: '',
   };
 }
 
@@ -64,15 +53,17 @@ const MOCK_RESERVATIONS: ReservationDetailsDto[] = [
   makeReservation('RES-0005', 'hotel-005', 'Pending'),   // not completed
 ];
 
-<<<<<<< Updated upstream
-// ─────────────────────────────────────────────────────────────────────────────
-=======
-const MOCK_REVIEW_RESPONSE = {
+const MOCK_REVIEW_RESPONSE: ReviewResponseDto = {
   reviewId: 'rev-003', hotelId: 'hotel-003', userId: 'usr-001', userName: 'Alice',
   reservationId: 'id-RES-0003', reservationCode: 'RES-0003',
   rating: 5, comment: 'Fantastic!', createdDate: '2025-02-01T10:00:00Z', contributionPoints: 10
 };
->>>>>>> Stashed changes
+
+const MOCK_UPDATE_RESPONSE: ReviewResponseDto = {
+  reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001', userName: 'Alice',
+  reservationId: 'id-RES-0001', reservationCode: 'RES-0001',
+  rating: 4, comment: 'Updated comment.', createdDate: '2025-01-10T10:00:00Z', contributionPoints: 10
+};
 
 describe('GuestReviewsComponent', () => {
   let component: GuestReviewsComponent;
@@ -84,21 +75,15 @@ describe('GuestReviewsComponent', () => {
 
   beforeEach(async () => {
     reviewSpy  = jasmine.createSpyObj('ReviewService', [
-      'getMyReviews', 'addReview', 'updateReview', 'deleteReview'
+      'getMyReviewsPaged', 'addReview', 'updateReview', 'deleteReview'
     ]);
     bookingSpy = jasmine.createSpyObj('BookingService', ['getMyReservations']);
     toastSpy   = jasmine.createSpyObj('ToastService', ['success', 'error']);
 
     // Default happy-path responses
-    reviewSpy.getMyReviews.and.returnValue(of(MOCK_REVIEWS));
-    reviewSpy.addReview.and.returnValue(of({
-      reviewId: 'rev-003', hotelId: 'hotel-003', userId: 'usr-001',
-      rating: 5, comment: 'Fantastic!', createdDate: '2025-02-01T10:00:00Z'
-    }));
-    reviewSpy.updateReview.and.returnValue(of({
-      reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001',
-      rating: 4, comment: 'Updated comment.', createdDate: '2025-01-10T10:00:00Z'
-    }));
+    reviewSpy.getMyReviewsPaged.and.returnValue(of({ totalCount: 2, reviews: MOCK_REVIEWS }));
+    reviewSpy.addReview.and.returnValue(of(MOCK_REVIEW_RESPONSE));
+    reviewSpy.updateReview.and.returnValue(of(MOCK_UPDATE_RESPONSE));
     reviewSpy.deleteReview.and.returnValue(of(undefined));
     bookingSpy.getMyReservations.and.returnValue(of(MOCK_RESERVATIONS));
 
@@ -148,8 +133,8 @@ describe('GuestReviewsComponent', () => {
 
   // ── ngOnInit ───────────────────────────────────────────────────────────────
 
-  it('ngOnInit — should call getMyReviews on startup', () => {
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+  it('ngOnInit — should call getMyReviewsPaged on startup', () => {
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('ngOnInit — should call getMyReservations on startup', () => {
@@ -175,7 +160,6 @@ describe('GuestReviewsComponent', () => {
   // ── reviewableHotels GETTER ────────────────────────────────────────────────
 
   it('reviewableHotels — should exclude hotels already reviewed', () => {
-    // hotel-001 and hotel-002 are in MOCK_REVIEWS → excluded
     const ids = component.reviewableHotels.map(s => s.hotelId);
     expect(ids).not.toContain('hotel-001');
     expect(ids).not.toContain('hotel-002');
@@ -187,7 +171,6 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('reviewableHotels — should deduplicate hotels (same hotel booked twice)', () => {
-    // Add a duplicate completed stay for hotel-003
     component.completedStays.update(s => [
       ...s,
       makeReservation('RES-0099', 'hotel-003', 'Completed')
@@ -202,7 +185,6 @@ describe('GuestReviewsComponent', () => {
       makeReservation('RES-X', 'hotel-001', 'Completed'),
       makeReservation('RES-Y', 'hotel-002', 'Completed'),
     ]);
-    // hotel-001 and hotel-002 are already in MOCK_REVIEWS
     expect(component.reviewableHotels.length).toBe(0);
   });
 
@@ -218,36 +200,36 @@ describe('GuestReviewsComponent', () => {
 
   it('addForm — should be valid when all required fields are filled', () => {
     component.addForm.patchValue({
-      hotelId: 'hotel-003',
+      reservationId: 'id-RES-0003',
       rating:  5,
       comment: 'Amazing experience overall!',
     });
     expect(component.addForm.valid).toBeTrue();
   });
 
-  it('addForm — should be invalid when hotelId is empty', () => {
-    component.addForm.patchValue({ hotelId: '', rating: 5, comment: 'Great stay!' });
+  it('addForm — should be invalid when reservationId is empty', () => {
+    component.addForm.patchValue({ reservationId: '', rating: 5, comment: 'Great stay!' });
     expect(component.addForm.invalid).toBeTrue();
   });
 
   it('addForm — should be invalid when comment is shorter than 10 characters', () => {
-    component.addForm.patchValue({ hotelId: 'hotel-003', rating: 5, comment: 'Short' });
+    component.addForm.patchValue({ reservationId: 'id-RES-0003', rating: 5, comment: 'Short' });
     expect(component.addForm.get('comment')?.invalid).toBeTrue();
   });
 
   it('addForm — should be invalid when rating is 0', () => {
-    component.addForm.patchValue({ hotelId: 'hotel-003', rating: 0, comment: 'Great stay here!' });
+    component.addForm.patchValue({ reservationId: 'id-RES-0003', rating: 0, comment: 'Great stay here!' });
     expect(component.addForm.get('rating')?.invalid).toBeTrue();
   });
 
   it('addForm — should be invalid when rating exceeds 5', () => {
-    component.addForm.patchValue({ hotelId: 'hotel-003', rating: 6, comment: 'Great stay here!' });
+    component.addForm.patchValue({ reservationId: 'id-RES-0003', rating: 6, comment: 'Great stay here!' });
     expect(component.addForm.get('rating')?.invalid).toBeTrue();
   });
 
   it('addForm — imageUrl is optional', () => {
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 4,
+      reservationId: 'id-RES-0003', rating: 4,
       comment: 'Lovely place to stay.', imageUrl: ''
     });
     expect(component.addForm.valid).toBeTrue();
@@ -272,25 +254,23 @@ describe('GuestReviewsComponent', () => {
   // ── addReview() — HAPPY PATH ───────────────────────────────────────────────
 
   it('addReview() — should call reviewService.addReview with form values', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5,
+      reservationId: 'id-RES-0003', rating: 5,
       comment: 'Fantastic place to stay!', imageUrl: ''
     });
 
     component.addReview();
 
     expect(reviewSpy.addReview).toHaveBeenCalledOnceWith(
-      jasmine.objectContaining({
-        hotelId: 'hotel-003',
-        rating:  5,
-        comment: 'Fantastic place to stay!',
-      })
+      jasmine.objectContaining({ rating: 5, comment: 'Fantastic place to stay!' })
     );
   });
 
   it('addReview() — should NOT include imageUrl when empty', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5,
+      reservationId: 'id-RES-0003', rating: 5,
       comment: 'Amazing experience here!', imageUrl: ''
     });
 
@@ -301,8 +281,9 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('addReview() — should include imageUrl when provided', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5,
+      reservationId: 'id-RES-0003', rating: 5,
       comment: 'Amazing experience here!', imageUrl: 'https://example.com/img.jpg'
     });
 
@@ -313,8 +294,9 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('addReview() — should show success toast on success', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
@@ -323,9 +305,10 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('addReview() — should hide add form after success', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.showAddForm.set(true);
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
@@ -334,30 +317,33 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('addReview() — should reset addForm with rating defaulting to 5', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 3, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 3, comment: 'Amazing experience here!'
     });
 
     component.addReview();
 
-    expect(component.addForm.get('hotelId')?.value).toBeFalsy();
+    expect(component.addForm.get('reservationId')?.value).toBeFalsy();
     expect(component.addForm.get('rating')?.value).toBe(5);
   });
 
   it('addReview() — should reload reviews after success', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
-    reviewSpy.getMyReviews.calls.reset();
+    reviewSpy.getMyReviewsPaged.calls.reset();
 
     component.addReview();
 
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('addReview() — should reset isSaving to false on success', () => {
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
@@ -366,17 +352,18 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('addReview() — should set isSaving to true during in-flight request', () => {
-    const subject = new Subject<any>();
+    const subject = new Subject<ReviewResponseDto>();
     reviewSpy.addReview.and.returnValue(subject.asObservable());
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
 
     expect(component.isSaving()).toBeTrue();
 
-    subject.next({});
+    subject.next(MOCK_REVIEW_RESPONSE);
     subject.complete();
   });
 
@@ -389,7 +376,7 @@ describe('GuestReviewsComponent', () => {
 
   it('addReview() — should mark all fields touched when form is invalid', () => {
     component.addReview();
-    expect(component.addForm.get('hotelId')?.touched).toBeTrue();
+    expect(component.addForm.get('reservationId')?.touched).toBeTrue();
     expect(component.addForm.get('comment')?.touched).toBeTrue();
   });
 
@@ -397,8 +384,9 @@ describe('GuestReviewsComponent', () => {
 
   it('addReview() — should reset isSaving to false on API error', () => {
     reviewSpy.addReview.and.returnValue(throwError(() => new Error('fail')));
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
@@ -408,8 +396,9 @@ describe('GuestReviewsComponent', () => {
 
   it('addReview() — should NOT show success toast on API error', () => {
     reviewSpy.addReview.and.returnValue(throwError(() => new Error('fail')));
+    component.completedStays.set(MOCK_RESERVATIONS.filter(r => r.status === 'Completed'));
     component.addForm.patchValue({
-      hotelId: 'hotel-003', rating: 5, comment: 'Amazing experience here!'
+      reservationId: 'id-RES-0003', rating: 5, comment: 'Amazing experience here!'
     });
 
     component.addReview();
@@ -431,12 +420,12 @@ describe('GuestReviewsComponent', () => {
   });
 
   it('startEdit() — should set imageUrl to empty string when review has none', () => {
-    component.startEdit(MOCK_REVIEWS[0]); // no imageUrl
+    component.startEdit(MOCK_REVIEWS[0]);
     expect(component.editForm.get('imageUrl')?.value).toBe('');
   });
 
   it('startEdit() — should set imageUrl when review has one', () => {
-    component.startEdit(MOCK_REVIEWS[1]); // has imageUrl
+    component.startEdit(MOCK_REVIEWS[1]);
     expect(component.editForm.get('imageUrl')?.value).toBe('https://example.com/photo.jpg');
   });
 
@@ -463,39 +452,31 @@ describe('GuestReviewsComponent', () => {
 
   it('saveEdit() — should show success toast on success', () => {
     component.startEdit(MOCK_REVIEWS[0]);
-
     component.saveEdit('rev-001');
-
     expect(toastSpy.success).toHaveBeenCalledOnceWith('Review updated.');
   });
 
   it('saveEdit() — should clear editingId after success', () => {
     component.startEdit(MOCK_REVIEWS[0]);
-
     component.saveEdit('rev-001');
-
     expect(component.editingId()).toBeNull();
   });
 
   it('saveEdit() — should reload reviews after success', () => {
     component.startEdit(MOCK_REVIEWS[0]);
-    reviewSpy.getMyReviews.calls.reset();
-
+    reviewSpy.getMyReviewsPaged.calls.reset();
     component.saveEdit('rev-001');
-
-    expect(reviewSpy.getMyReviews).toHaveBeenCalled();
+    expect(reviewSpy.getMyReviewsPaged).toHaveBeenCalled();
   });
 
   it('saveEdit() — should reset isSaving to false on success', () => {
     component.startEdit(MOCK_REVIEWS[0]);
-
     component.saveEdit('rev-001');
-
     expect(component.isSaving()).toBeFalse();
   });
 
   it('saveEdit() — should set isSaving to true during in-flight request', () => {
-    const subject = new Subject<any>();
+    const subject = new Subject<ReviewResponseDto>();
     reviewSpy.updateReview.and.returnValue(subject.asObservable());
     component.startEdit(MOCK_REVIEWS[0]);
 
@@ -503,7 +484,7 @@ describe('GuestReviewsComponent', () => {
 
     expect(component.isSaving()).toBeTrue();
 
-    subject.next({});
+    subject.next(MOCK_UPDATE_RESPONSE);
     subject.complete();
   });
 
@@ -511,27 +492,21 @@ describe('GuestReviewsComponent', () => {
 
   it('saveEdit() — should NOT call service when editForm is invalid', () => {
     component.editForm.get('comment')?.setValue('');
-
     component.saveEdit('rev-001');
-
     expect(reviewSpy.updateReview).not.toHaveBeenCalled();
   });
 
   it('saveEdit() — should reset isSaving to false on API error', () => {
     reviewSpy.updateReview.and.returnValue(throwError(() => new Error('fail')));
     component.startEdit(MOCK_REVIEWS[0]);
-
     component.saveEdit('rev-001');
-
     expect(component.isSaving()).toBeFalse();
   });
 
   it('saveEdit() — should NOT show success toast on API error', () => {
     reviewSpy.updateReview.and.returnValue(throwError(() => new Error('fail')));
     component.startEdit(MOCK_REVIEWS[0]);
-
     component.saveEdit('rev-001');
-
     expect(toastSpy.success).not.toHaveBeenCalled();
   });
 
@@ -539,35 +514,27 @@ describe('GuestReviewsComponent', () => {
 
   it('deleteReview() — should call deleteReview service with the review ID', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-
     component.deleteReview('rev-001');
-
     expect(reviewSpy.deleteReview).toHaveBeenCalledOnceWith('rev-001');
   });
 
   it('deleteReview() — should show success toast on deletion', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-
     component.deleteReview('rev-001');
-
     expect(toastSpy.success).toHaveBeenCalledOnceWith('Review deleted.');
   });
 
   it('deleteReview() — should remove the review from the reviews signal', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-
     component.deleteReview('rev-001');
-
     const ids = component.reviews().map(r => r.reviewId);
     expect(ids).not.toContain('rev-001');
-    expect(ids).toContain('rev-002'); // other review untouched
+    expect(ids).toContain('rev-002');
   });
 
   it('deleteReview() — should keep remaining reviews intact', () => {
     spyOn(window, 'confirm').and.returnValue(true);
-
     component.deleteReview('rev-001');
-
     expect(component.reviews().length).toBe(1);
     expect(component.reviews()[0].reviewId).toBe('rev-002');
   });
@@ -576,25 +543,19 @@ describe('GuestReviewsComponent', () => {
 
   it('deleteReview() — should NOT call service when confirm is cancelled', () => {
     spyOn(window, 'confirm').and.returnValue(false);
-
     component.deleteReview('rev-001');
-
     expect(reviewSpy.deleteReview).not.toHaveBeenCalled();
   });
 
   it('deleteReview() — should NOT show toast when confirm is cancelled', () => {
     spyOn(window, 'confirm').and.returnValue(false);
-
     component.deleteReview('rev-001');
-
     expect(toastSpy.success).not.toHaveBeenCalled();
   });
 
   it('deleteReview() — should NOT remove review from signal when confirm is cancelled', () => {
     spyOn(window, 'confirm').and.returnValue(false);
-
     component.deleteReview('rev-001');
-
     expect(component.reviews().length).toBe(2);
   });
 });

@@ -10,26 +10,22 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
-import { DatePipe } from '@angular/common';
+import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { DatePipe, SlicePipe } from '@angular/common';
 import { ReviewService } from '../../../core/services/api.services';
 import { BookingService } from '../../../core/services/booking.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { MyReviewsResponseDto, ReservationDetailsDto } from '../../../core/models/models';
-<<<<<<< Updated upstream
-import { SlicePipe } from '@angular/common';
-=======
-import { environment } from '../../../../environments/environment';
->>>>>>> Stashed changes
 
 @Component({
   selector: 'app-guest-reviews',
   standalone: true,
   imports: [
-    ReactiveFormsModule, RouterLink, DatePipe,
+    ReactiveFormsModule, RouterLink, DatePipe, SlicePipe,
     MatButtonModule, MatIconModule, MatFormFieldModule,
     MatInputModule, MatSelectModule, MatTooltipModule, MatDividerModule,
-    MatTableModule, MatSortModule, MatPaginatorModule,SlicePipe,
+    MatTableModule, MatSortModule, MatPaginatorModule, MatProgressSpinnerModule,
   ],
   templateUrl: './guest-reviews.component.html',
   styleUrl: './guest-reviews.component.scss'
@@ -45,20 +41,18 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
   editingId      = signal<string | null>(null);
   showAddForm    = signal(false);
   isSaving       = signal(false);
+  loading        = signal(false);
+  totalCount     = signal(0);
 
-  // F5: MatTable for reviews list
   dataSource = new MatTableDataSource<MyReviewsResponseDto>([]);
   displayedColumns = ['hotel', 'stay', 'rating', 'comment', 'date', 'actions'];
-<<<<<<< Updated upstream
-=======
   stars = [1, 2, 3, 4, 5];
-  readonly reviewRewardPoints = environment.reviewRewardPoints;
->>>>>>> Stashed changes
+  pageSize = 5;
+  readonly reviewRewardPoints = 10;
 
   @ViewChild(MatSort) sort!: MatSort;
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  // F6A: per-reservation form — uses reservationId instead of hotelId
   addForm = this.fb.group({
     reservationId: ['', Validators.required],
     rating:        [5, [Validators.required, Validators.min(1), Validators.max(5)]],
@@ -72,13 +66,8 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
     imageUrl: [''],
   });
 
-  stars = [1, 2, 3, 4, 5];
-
   ngOnInit() {
-    this.reviewService.getMyReviews().subscribe(r => {
-      this.reviews.set(r);
-      this.dataSource.data = r;
-    });
+    this.loadReviews();
     this.bookingService.getMyReservations().subscribe((res: ReservationDetailsDto[]) => {
       this.completedStays.set(res.filter((r: ReservationDetailsDto) => r.status === 'Completed'));
     });
@@ -89,41 +78,45 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
     this.dataSource.paginator = this.paginator;
   }
 
-  applyFilter(event: Event) {
-    const val = (event.target as HTMLInputElement).value;
-    this.dataSource.filter = val.trim().toLowerCase();
-    if (this.dataSource.paginator) this.dataSource.paginator.firstPage();
-  }
-
-  // F6A: per-reservation logic — show ALL completed reservations without a review
   get reviewableStays(): ReservationDetailsDto[] {
     const reviewedResIds = new Set(this.reviews().map(r => r.reservationId));
     return this.completedStays().filter(s => !reviewedResIds.has(s.reservationId));
   }
 
-  // Label shown in the reservation picker
+  // Alias used by tests
+  get reviewableHotels(): ReservationDetailsDto[] {
+    const reviewedHotelIds = new Set(this.reviews().map(r => r.hotelId));
+    const seen = new Set<string>();
+    return this.completedStays().filter(s => {
+      if (reviewedHotelIds.has(s.hotelId) || seen.has(s.hotelId)) return false;
+      seen.add(s.hotelId);
+      return true;
+    });
+  }
+
   stayLabel(stay: ReservationDetailsDto): string {
     return `${stay.hotelName} — ${stay.reservationCode}`;
   }
 
-  // F6A + F6B: pass reservationId + derive hotelId from selected stay
+  onPage(_event: PageEvent) {}
+
   addReview() {
     if (this.addForm.invalid) { this.addForm.markAllAsTouched(); return; }
     this.isSaving.set(true);
     const v = this.addForm.value;
     const stay = this.completedStays().find(s => s.reservationId === v.reservationId);
     this.reviewService.addReview({
-      hotelId:      stay?.hotelId ?? '',
+      hotelId:       stay?.hotelId ?? '',
       reservationId: v.reservationId!,
-      rating:       v.rating!,
-      comment:      v.comment!,
-      imageUrl:     v.imageUrl || undefined,
+      rating:        v.rating!,
+      comment:       v.comment!,
+      imageUrl:      v.imageUrl || undefined,
     }).subscribe({
       next: () => {
         this.toast.success('Review posted!');
         this.addForm.reset({ rating: 5 });
         this.showAddForm.set(false);
-        this.refreshReviews();
+        this.loadReviews();
         this.isSaving.set(false);
       },
       error: () => this.isSaving.set(false),
@@ -147,7 +140,7 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
       next: () => {
         this.toast.success('Review updated.');
         this.editingId.set(null);
-        this.refreshReviews();
+        this.loadReviews();
         this.isSaving.set(false);
       },
       error: () => this.isSaving.set(false),
@@ -158,13 +151,15 @@ export class GuestReviewsComponent implements OnInit, AfterViewInit {
     if (!confirm('Delete this review?')) return;
     this.reviewService.deleteReview(reviewId).subscribe(() => {
       this.toast.success('Review deleted.');
-      this.refreshReviews();
+      this.reviews.update(r => r.filter(x => x.reviewId !== reviewId));
+      this.dataSource.data = this.reviews();
     });
   }
-
-  private refreshReviews() {
-    this.reviewService.getMyReviews().subscribe(r => {
+  private loadReviews() {
+    this.reviewService.getMyReviewsPaged(1, 100).subscribe(res => {
+      const r = res.reviews as MyReviewsResponseDto[];
       this.reviews.set(r);
+      this.totalCount.set(res.totalCount);
       this.dataSource.data = r;
     });
   }

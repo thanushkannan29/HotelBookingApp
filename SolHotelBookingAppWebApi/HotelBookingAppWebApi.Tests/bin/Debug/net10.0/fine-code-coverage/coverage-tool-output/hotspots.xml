@@ -45,4 +45,34 @@
       </Metric>
     </Metrics>
   </Hotspot>
+  <Hotspot>
+    <Assembly>HotelBookingAppWebApi</Assembly>
+    <Class>HotelBookingAppWebApi.Services.TransactionService</Class>
+    <MethodName>MoveNext()</MethodName>
+    <ShortName />
+    <Line>137</Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>38</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
+  <Hotspot>
+    <Assembly>HotelBookingAppWebApi</Assembly>
+    <Class>HotelBookingAppWebApi.Exceptions.Middleware.GlobalExceptionMiddleware</Class>
+    <MethodName>MoveNext()</MethodName>
+    <ShortName />
+    <Line>31</Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>32</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
 </Hotspots>

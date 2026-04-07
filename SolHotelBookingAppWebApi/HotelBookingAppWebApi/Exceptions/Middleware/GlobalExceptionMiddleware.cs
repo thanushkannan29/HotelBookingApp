@@ -1,7 +1,6 @@
 using HotelBookingAppWebApi.Contexts;
 using HotelBookingAppWebApi.Exceptions;
 using HotelBookingAppWebApi.Models;
-using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Exceptions.Middleware
 {
@@ -33,38 +32,19 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
             var statusCode = ex is AppException appEx ? appEx.StatusCode : 500;
             var message = ex is AppException ? ex.Message : "An unexpected error occurred.";
 
-            // Extract user info from JWT claims
             var user = context.User;
-<<<<<<< Updated upstream
-            var userIdClaim = user?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var userIdClaim = user?.FindFirst("nameid")?.Value;
             Guid? userId = Guid.TryParse(userIdClaim, out var uid) ? uid : null;
             var userName = user?.Identity?.Name ?? "Anonymous";
-            var role = user?.FindFirst(ClaimTypes.Role)?.Value ?? "Anonymous";
+            var role = user?.FindFirst("role")?.Value ?? "Anonymous";
 
             var controller = context.Request.RouteValues["controller"]?.ToString() ?? string.Empty;
             var action = context.Request.RouteValues["action"]?.ToString() ?? string.Empty;
-=======
-            var userIdClaim = user?.FindFirst("nameid")?.Value;
 
-            return new RequestInfo
-            {
-                UserId = Guid.TryParse(userIdClaim, out var uid) ? uid : null,
-                UserName = user?.Identity?.Name ?? "Anonymous",
-                Role = user?.FindFirst("role")?.Value ?? "Anonymous",
-                Controller = context.Request.RouteValues["controller"]?.ToString() ?? string.Empty,
-                Action = context.Request.RouteValues["action"]?.ToString() ?? string.Empty,
-                HttpMethod = context.Request.Method,
-                RequestPath = context.Request.Path
-            };
-        }
->>>>>>> Stashed changes
-
-            // ILogger — structured logging
             _logger.LogError(ex,
                 "Exception | Status:{StatusCode} | User:{User} | Role:{Role} | {Controller}/{Action} | {Message}",
                 statusCode, userName, role, controller, action, message);
 
-            // Persist to DB log
             try
             {
                 using var scope = context.RequestServices.CreateScope();
@@ -94,7 +74,6 @@ namespace HotelBookingAppWebApi.Exceptions.Middleware
                 _logger.LogCritical(logEx, "CRITICAL: Failed to persist exception log to database.");
             }
 
-            // API Response
             context.Response.StatusCode = statusCode;
             context.Response.ContentType = "application/json";
 
