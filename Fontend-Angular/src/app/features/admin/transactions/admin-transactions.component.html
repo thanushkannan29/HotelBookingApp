@@ -1,52 +1,79 @@
 <div class="page-wrapper">
-  <div class="container" style="max-width:960px;">
+  <div class="container">
     <div class="page-header-row">
       <div>
         <h1 class="section-title">🧾 Transactions</h1>
-        <p class="section-subtitle">All payment transactions for your hotel</p>
+        <p class="section-subtitle">{{ totalCount() }} total transactions</p>
       </div>
       <button mat-stroked-button (click)="load()"><mat-icon>refresh</mat-icon> Refresh</button>
     </div>
 
-    @if (loading()) {
-      <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
-    } @else if (transactions().length === 0) {
-      <div class="empty-state">
-        <mat-icon class="empty-icon">receipt_long</mat-icon>
-        <h3>No transactions yet</h3>
-      </div>
-    } @else {
-      <div class="tx-list">
-        @for (tx of transactions(); track tx.transactionId) {
-          <div class="tx-card">
-            <div class="tx-main">
-              <div class="tx-icon" [class]="txIconClass(tx)">
-                <mat-icon>{{ txIcon(tx) }}</mat-icon>
-              </div>
-              <div class="tx-info">
-                <div class="tx-method">{{ txLabel(tx) }}</div>
-                @if (tx.guestName) {
-                  <div class="tx-guest">👤 {{ tx.guestName }}</div>
-                }
-                @if (tx.reservationCode) {
-                  <div class="tx-code">Reservation: {{ tx.reservationCode }}</div>
-                }
-                @if (tx.description) {
-                  <div class="tx-code">{{ tx.description }}</div>
-                }
-                <div class="tx-date">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</div>
-              </div>
-              <div class="tx-right">
-                <div class="tx-amount" [style.color]="amountColor(tx)">
-                  {{ tx.transactionType === 'AutoRefund' ? '-' : tx.transactionType === 'CommissionSent' ? '-' : '' }}₹{{ tx.amount | number:'1.0-0' }}
-                </div>
-                <span class="badge {{ txBadgeClass(tx) }}">{{ txBadgeLabel(tx) }}</span>
-              </div>
-            </div>
-          </div>
-        }
-      </div>
+    <div class="table-card">
+      @if (loading()) {
+        <div class="spinner-wrap"><mat-spinner diameter="40" /></div>
+      }
 
+      <mat-table [dataSource]="transactions()" [class.hidden]="loading()">
+
+        <ng-container matColumnDef="type">
+          <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+          <mat-cell *matCellDef="let tx">
+            <div class="tx-type-cell">
+              <span class="tx-dot {{ txBadgeClass(tx) }}"></span>
+              {{ txLabel(tx) }}
+            </div>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="guest">
+          <mat-header-cell *matHeaderCellDef>Guest</mat-header-cell>
+          <mat-cell *matCellDef="let tx">{{ tx.guestName || '—' }}</mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="reservation">
+          <mat-header-cell *matHeaderCellDef>Reservation</mat-header-cell>
+          <mat-cell *matCellDef="let tx">
+            @if (tx.reservationCode) {
+              <span class="code-tag">{{ tx.reservationCode }}</span>
+            } @else {
+              <span class="text-muted">—</span>
+            }
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+          <mat-header-cell *matHeaderCellDef>💰 Amount</mat-header-cell>
+          <mat-cell *matCellDef="let tx">
+            <span [style.color]="amountColor(tx)" style="font-weight:600;">
+              ₹{{ tx.amount | number:'1.0-0' }}
+            </span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="status">
+          <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+          <mat-cell *matCellDef="let tx">
+            <span class="badge {{ txBadgeClass(tx) }}">{{ txBadgeLabel(tx) }}</span>
+          </mat-cell>
+        </ng-container>
+
+        <ng-container matColumnDef="date">
+          <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
+          <mat-cell *matCellDef="let tx">{{ tx.transactionDate | date:'MMM d, y · HH:mm' }}</mat-cell>
+        </ng-container>
+
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" class="empty-cell">
+            <mat-icon>receipt_long</mat-icon>
+            <p>No transactions yet</p>
+          </td>
+        </tr>
+      </mat-table>
+
+      <!-- Always in DOM — never destroyed -->
       <mat-paginator
         [length]="totalCount()"
         [pageSize]="pageSize"
@@ -54,6 +81,6 @@
         showFirstLastButtons
         (page)="onPage($event)"
       />
-    }
+    </div>
   </div>
 </div>

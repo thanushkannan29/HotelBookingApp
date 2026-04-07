@@ -1,0 +1,132 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/superadmin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">🎫 Support Requests</h1>
+        <p class="section-subtitle">{{ totalCount() }} total requests from guests, hotel admins, and public</p>
+      </div>
+    </div>
+
+    <!-- Role Filter Tabs -->
+    <mat-tab-group (selectedIndexChange)="onRoleTab($event)" class="mb-2">
+      @for (tab of roleTabs; track tab) {
+        <mat-tab [label]="tab" />
+      }
+    </mat-tab-group>
+
+    <!-- Status Filter Tabs -->
+    <mat-tab-group (selectedIndexChange)="onStatusTab($event)" class="mb-3">
+      @for (tab of statusTabs; track tab) {
+        <mat-tab [label]="tab" />
+      }
+    </mat-tab-group>
+
+    <!-- Search -->
+    <mat-form-field appearance="outline" class="w-100 mb-3">
+      <mat-label>🔍 Search by subject, name, or category</mat-label>
+      <input matInput (input)="onSearch($event)" placeholder="Search…" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+      } @else if (requests().length === 0) {
+        <div class="empty-state">
+          <mat-icon>support_agent</mat-icon>
+          <p>No support requests found.</p>
+        </div>
+      } @else {
+        <mat-accordion>
+          @for (r of requests(); track r.supportRequestId) {
+            <mat-expansion-panel class="request-panel">
+              <mat-expansion-panel-header>
+                <mat-panel-title class="panel-title">
+                  <mat-icon class="role-icon">{{ roleIcon(r.submitterRole) }}</mat-icon>
+                  <span class="subject-text">{{ r.subject }}</span>
+                </mat-panel-title>
+                <mat-panel-description class="panel-desc">
+                  <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+                  <span class="badge {{ roleClass(r.submitterRole) }}">{{ r.submitterRole }}</span>
+                  <span class="cat-tag">{{ r.category }}</span>
+                  <span class="date-tag">{{ r.createdAt | date:'MMM d, y' }}</span>
+                </mat-panel-description>
+              </mat-expansion-panel-header>
+
+              <div class="panel-body">
+                <div class="submitter-info">
+                  <div class="info-item">
+                    <span class="info-label">From</span>
+                    <span class="info-value">{{ r.submitterName }}</span>
+                  </div>
+                  <div class="info-item">
+                    <span class="info-label">Email</span>
+                    <a [href]="'mailto:' + r.submitterEmail" class="info-value link">{{ r.submitterEmail }}</a>
+                  </div>
+                  @if (r.reservationCode) {
+                    <div class="info-item">
+                      <span class="info-label">Reservation</span>
+                      <span class="info-value code-tag">{{ r.reservationCode }}</span>
+                    </div>
+                  }
+                  @if (r.hotelName) {
+                    <div class="info-item">
+                      <span class="info-label">Hotel</span>
+                      <span class="info-value">{{ r.hotelName }}</span>
+                    </div>
+                  }
+                </div>
+
+                <div class="detail-row">
+                  <span class="detail-label">Message</span>
+                  <p class="detail-value">{{ r.message }}</p>
+                </div>
+
+                @if (r.status === 'Resolved') {
+                  <div class="response-block">
+                    <div class="response-header">
+                      <mat-icon>check_circle</mat-icon>
+                      <span>Response Sent</span>
+                      @if (r.respondedAt) {
+                        <span class="response-date">{{ r.respondedAt | date:'MMM d, y' }}</span>
+                      }
+                    </div>
+                    <p class="response-text">{{ r.adminResponse }}</p>
+                    <button mat-stroked-button color="primary" (click)="respond(r)" class="mt-2">
+                      <mat-icon>edit</mat-icon> Update Response
+                    </button>
+                  </div>
+                } @else if (r.status === 'InProgress') {
+                  <div class="action-row">
+                    <button mat-flat-button color="primary" (click)="respond(r)">
+                      <mat-icon>reply</mat-icon> Send Response & Resolve
+                    </button>
+                  </div>
+                } @else {
+                  <!-- Open -->
+                  <div class="action-row">
+                    <button mat-stroked-button (click)="markInProgress(r)">
+                      <mat-icon>pending</mat-icon> Mark In Progress
+                    </button>
+                    <button mat-flat-button color="primary" (click)="respond(r)">
+                      <mat-icon>reply</mat-icon> Respond & Resolve
+                    </button>
+                  </div>
+                }
+              </div>
+            </mat-expansion-panel>
+          }
+        </mat-accordion>
+      }
+
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20, 50]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>

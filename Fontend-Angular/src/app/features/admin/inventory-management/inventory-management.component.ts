@@ -1,4 +1,4 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,7 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { RouterLink } from '@angular/router';
@@ -38,13 +38,19 @@ export class InventoryManagementComponent implements OnInit {
   private toast            = inject(ToastService);
   private fb               = inject(FormBuilder);
 
-  roomTypes    = signal<RoomTypeListDto[]>([]);
-  inventories  = signal<InventoryResponseDto[]>([]);
-  isLoading    = signal(false);
-  isSaving     = signal(false);
-  editingId    = signal<string | null>(null);
-  editValue    = signal(0);
-  today        = new Date();
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+  roomTypes       = signal<RoomTypeListDto[]>([]);
+  allInventories  = signal<InventoryResponseDto[]>([]);  // full list from API
+  inventories     = signal<InventoryResponseDto[]>([]);  // current page slice
+  totalCount      = signal(0);
+  isLoading       = signal(false);
+  isSaving        = signal(false);
+  editingId       = signal<string | null>(null);
+  editValue       = signal(0);
+  today           = new Date();
+  pageSize        = 10;
+  currentPage     = 1;
   displayedColumns = ['date', 'totalInventory', 'reservedInventory', 'available', 'actions'];
 
   addForm = this.fb.group({
@@ -66,19 +72,42 @@ export class InventoryManagementComponent implements OnInit {
     });
   }
 
-  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
+  private fmt(d: Date): string {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}-${m}-${day}`;
+  }
+
+  private applyPage() {
+    const all = this.allInventories();
+    const start = (this.currentPage - 1) * this.pageSize;
+    this.inventories.set(all.slice(start, start + this.pageSize));
+    this.totalCount.set(all.length);
+  }
 
   loadInventory() {
     const { roomTypeId, start, end } = this.viewForm.value;
     if (!roomTypeId || !start || !end) return;
     this.isLoading.set(true);
+    this.currentPage = 1;
+    this.paginator?.firstPage();
     this.inventoryService.getInventory(roomTypeId, this.fmt(start), this.fmt(end)).subscribe({
       next: (res: any) => {
-        this.inventories.set(Array.isArray(res) ? res : (res.inventory ?? []));
+        const all: InventoryResponseDto[] = Array.isArray(res) ? res : (res.inventory ?? []);
+        this.allInventories.set(all);
+        this.applyPage();
         this.isLoading.set(false);
       },
       error: () => this.isLoading.set(false)
     });
+  }
+
+  onPage(e: PageEvent) {
+    this.currentPage = e.pageIndex + 1;
+    this.pageSize    = e.pageSize;
+    this.applyPage();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   addInventory() {
@@ -92,7 +121,7 @@ export class InventoryManagementComponent implements OnInit {
       totalInventory: totalInventory!,
     }).subscribe({
       next: () => {
-        this.toast.success('Inventory added.');
+        this.toast.success('Inventory set successfully.');
         this.addForm.patchValue({ startDate: null, endDate: null });
         this.isSaving.set(false);
         this.loadInventory();

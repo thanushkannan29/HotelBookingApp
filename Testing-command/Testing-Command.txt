@@ -1,0 +1,21 @@
+dotnet test --collect "XPlat Code Coverage"
+dotnet tool install -g dotnet-reportgenerator-globaltool
+reportgenerator -reports:"**/coverage.cobertura.xml" -targetdir:"coverage-report" -reporttypes:Html
+
+
+
+cd hotel-booking-app
+ng test
+
+# Run once and exit (no watch mode) — good for CI
+ng test --watch=false
+
+# Run with code coverage report
+ng test --watch=false --code-coverage
+
+# Run a single specific spec file
+ng test --include="**/auth.service.spec.ts"
+
+# Run without opening browser (headless)
+ng test --watch=false --browsers=ChromeHeadless
+```

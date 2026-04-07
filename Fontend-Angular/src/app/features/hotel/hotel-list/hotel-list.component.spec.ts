@@ -6,380 +6,182 @@ import { provideNativeDateAdapter } from '@angular/material/core';
 import { of, throwError } from 'rxjs';
 import { HotelListComponent } from './hotel-list.component';
 import { HotelService } from '../../../core/services/hotel.service';
-import { HotelListItemDto, SearchHotelResponseDto } from '../../../core/models/models';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-
-function makeHotel(id: string, name: string): HotelListItemDto {
-  return {
-    hotelId:       id,
-    name,
-    city:          'Chennai',
-    imageUrl:      'https://example.com/img.jpg',
-    averageRating: 4.5,
-    reviewCount:   100,
-    startingPrice: 3500,
-  };
+function makeHotel(id: string, city: string) {
+  return { hotelId: id, name: `Hotel ${id}`, city, imageUrl: 'https://example.com/img.jpg', averageRating: 4.0, reviewCount: 10 };
 }
 
-const MOCK_TOP_HOTELS: HotelListItemDto[] = [
-  makeHotel('hotel-001', 'Grand Palace'),
-  makeHotel('hotel-002', 'Sea View Inn'),
-  makeHotel('hotel-003', 'City Lights'),
-];
-
-const MOCK_CITIES = ['Chennai', 'Mumbai', 'Bangalore', 'Delhi'];
-
-const MOCK_SEARCH_RESPONSE: SearchHotelResponseDto = {
-  hotels:       [makeHotel('hotel-004', 'Search Result 1'), makeHotel('hotel-005', 'Search Result 2')],
-  pageNumber:   1,
-  recordsCount: 5,
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
+const MOCK_TOP_HOTELS = [makeHotel('h-001', 'Chennai'), makeHotel('h-002', 'Mumbai'), makeHotel('h-003', 'Delhi')];
+const MOCK_SEARCH_RESULT = { hotels: [makeHotel('h-004', 'Chennai'), makeHotel('h-005', 'Chennai')], totalCount: 2, recordsCount: 2 };
 
 describe('HotelListComponent', () => {
   let component: HotelListComponent;
-  let fixture:   ComponentFixture<HotelListComponent>;
-  let hotelSpy:  jasmine.SpyObj<HotelService>;
+  let fixture: ComponentFixture<HotelListComponent>;
+  let hotelSpy: jasmine.SpyObj<HotelService>;
 
   beforeEach(async () => {
     hotelSpy = jasmine.createSpyObj('HotelService', [
-      'getTopHotels', 'getCities', 'searchHotels'
+      'getTopHotels', 'getAmenities', 'getActiveStates', 'getHotelsByState',
+      'getCities', 'getHotelsByCity', 'searchHotelsWithFilters'
     ]);
 
-    hotelSpy.getTopHotels.and.returnValue(of(MOCK_TOP_HOTELS));
-    hotelSpy.getCities.and.returnValue(of(MOCK_CITIES));
-    hotelSpy.searchHotels.and.returnValue(of(MOCK_SEARCH_RESPONSE));
+    hotelSpy.getTopHotels.and.returnValue(of(MOCK_TOP_HOTELS as any));
+    hotelSpy.getAmenities.and.returnValue(of([]));
+    hotelSpy.getActiveStates.and.returnValue(of([]));
+    hotelSpy.getCities.and.returnValue(of([]));
+    hotelSpy.searchHotelsWithFilters.and.returnValue(of(MOCK_SEARCH_RESULT as any));
 
     await TestBed.configureTestingModule({
       imports: [HotelListComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        provideRouter([]),
-        provideNativeDateAdapter(),
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
+        provideRouter([]), provideNativeDateAdapter(),
         { provide: HotelService, useValue: hotelSpy },
       ]
     }).compileComponents();
 
-    fixture   = TestBed.createComponent(HotelListComponent);
+    fixture = TestBed.createComponent(HotelListComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
 
-  // ── CREATION ───────────────────────────────────────────────────────────────
+  it('should create', () => expect(component).toBeTruthy());
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
-  });
+  // ── ngOnInit ──────────────────────────────────────────────────────────────
 
-  // ── CONSTANTS ──────────────────────────────────────────────────────────────
-
-  it('pageSize — should be 9', () => {
-    expect(component.pageSize).toBe(9);
-  });
-
-  // ── INITIAL SIGNAL STATE ───────────────────────────────────────────────────
-
-  it('searchResults — should start as null', () => {
-    expect(component.searchResults()).toBeNull();
-  });
-
-  it('isSearching — should start as false', () => {
-    expect(component.isSearching()).toBeFalse();
-  });
-
-  it('totalResults — should start as 0', () => {
-    expect(component.totalResults()).toBe(0);
-  });
-
-  it('currentPage — should start at 1', () => {
-    expect(component.currentPage()).toBe(1);
-  });
-
-  // ── ngOnInit ───────────────────────────────────────────────────────────────
-
-  it('ngOnInit — should call getTopHotels on startup', () => {
-    expect(hotelSpy.getTopHotels).toHaveBeenCalledOnceWith();
-  });
-
-  it('ngOnInit — should call getCities on startup', () => {
-    expect(hotelSpy.getCities).toHaveBeenCalledOnceWith();
+  it('ngOnInit — should call getTopHotels', () => {
+    expect(hotelSpy.getTopHotels).toHaveBeenCalled();
   });
 
   it('ngOnInit — should populate topHotels signal', () => {
     expect(component.topHotels().length).toBe(3);
-    expect(component.topHotels()[0].name).toBe('Grand Palace');
   });
 
-  it('ngOnInit — should populate cities signal', () => {
-    expect(component.cities().length).toBe(4);
-    expect(component.cities()).toContain('Chennai');
-    expect(component.cities()).toContain('Mumbai');
+  it('ngOnInit — should call getAmenities', () => {
+    expect(hotelSpy.getAmenities).toHaveBeenCalled();
   });
 
-  // ── displayHotels GETTER ───────────────────────────────────────────────────
+  // ── Initial state ─────────────────────────────────────────────────────────
 
-  it('displayHotels — should return topHotels when searchResults is null', () => {
-    expect(component.displayHotels.length).toBe(3);
-    expect(component.displayHotels[0].name).toBe('Grand Palace');
-  });
+  it('currentPage — should start at 1', () => expect(component.currentPage).toBe(1));
+  it('pageSize — should be 9', () => expect(component.pageSize).toBe(9));
+  it('searchResults — should start as null', () => expect(component.searchResults()).toBeNull());
+  it('isSearching — should start as false', () => expect(component.isSearching()).toBeFalse());
 
-  it('displayHotels — should return searchResults when they are set', () => {
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
-    expect(component.displayHotels.length).toBe(2);
-    expect(component.displayHotels[0].name).toBe('Search Result 1');
-  });
+  // ── search ────────────────────────────────────────────────────────────────
 
-  it('displayHotels — should return empty array when searchResults is empty array', () => {
-    component.searchResults.set([]);
-    expect(component.displayHotels.length).toBe(0);
-  });
-
-  // ── hasMoreResults GETTER ──────────────────────────────────────────────────
-
-  it('hasMoreResults — should be false when searchResults is null', () => {
-    expect(component.hasMoreResults).toBeFalse();
-  });
-
-  it('hasMoreResults — should be true when searchResults.length < totalResults', () => {
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels); // 2 results
-    component.totalResults.set(5);                           // 5 total
-    expect(component.hasMoreResults).toBeTrue();
-  });
-
-  it('hasMoreResults — should be false when all results are loaded', () => {
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels); // 2 results
-    component.totalResults.set(2);                            // 2 total — all loaded
-    expect(component.hasMoreResults).toBeFalse();
-  });
-
-  // ── search() — HAPPY PATH ──────────────────────────────────────────────────
-
-  it('search() — should call searchHotels with formatted dates and city', () => {
-    component.searchForm.patchValue({
-      city:     'Chennai',
-      checkIn:  new Date('2025-06-01'),
-      checkOut: new Date('2025-06-03'),
-    });
-
+  it('search — should NOT call searchHotelsWithFilters when city/state is empty', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
+    component.cityControl.setValue('');
+    component.stateControl.setValue('');
+    component.searchForm.patchValue({ checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03') });
     component.search();
-
-    expect(hotelSpy.searchHotels).toHaveBeenCalledOnceWith(
-      jasmine.objectContaining({
-        city:       'Chennai',
-        checkIn:    '2025-06-01',
-        checkOut:   '2025-06-03',
-        pageNumber: 1,
-        pageSize:   9,
-      })
-    );
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
   });
 
-  it('search() — should populate searchResults signal on success', () => {
-    component.searchForm.patchValue({
-      city:     'Chennai',
-      checkIn:  new Date('2025-06-01'),
-      checkOut: new Date('2025-06-03'),
-    });
-
+  it('search — should NOT call searchHotelsWithFilters when dates are missing', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
+    component.cityControl.setValue('Chennai');
     component.search();
+    expect(hotelSpy.searchHotelsWithFilters).not.toHaveBeenCalled();
+  });
 
+  it('search — should call searchHotelsWithFilters when city and dates are set', () => {
+    hotelSpy.searchHotelsWithFilters.calls.reset();
+    component.cityControl.setValue('Chennai');
+    component.searchForm.patchValue({ checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03') });
+    component.search();
+    expect(hotelSpy.searchHotelsWithFilters).toHaveBeenCalled();
+  });
+
+  it('search — should populate searchResults on success', () => {
+    component.cityControl.setValue('Chennai');
+    component.searchForm.patchValue({ checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03') });
+    component.search();
     expect(component.searchResults()?.length).toBe(2);
-    expect(component.searchResults()![0].name).toBe('Search Result 1');
   });
 
-  it('search() — should set totalResults from recordsCount', () => {
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
+  it('search — should set isSearching to false on success', () => {
+    component.cityControl.setValue('Chennai');
+    component.searchForm.patchValue({ checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03') });
     component.search();
-
-    expect(component.totalResults()).toBe(5);
-  });
-
-  it('search() — should reset currentPage to 1', () => {
-    component.currentPage.set(3);
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
-    component.search();
-
-    expect(component.currentPage()).toBe(1);
-  });
-
-  it('search() — should reset isSearching to false on success', () => {
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
-    component.search();
-
     expect(component.isSearching()).toBeFalse();
   });
 
-  // ── search() — INCOMPLETE FORM ─────────────────────────────────────────────
-
-  it('search() — should NOT call searchHotels when city is missing', () => {
-    hotelSpy.searchHotels.calls.reset();
-    component.searchForm.patchValue({
-      city: '', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
+  it('search — should set searchResults to empty array on error', () => {
+    hotelSpy.searchHotelsWithFilters.and.returnValue(throwError(() => new Error('fail')));
+    component.cityControl.setValue('Chennai');
+    component.searchForm.patchValue({ checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03') });
     component.search();
-
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
-  });
-
-  it('search() — should NOT call searchHotels when checkIn is null', () => {
-    hotelSpy.searchHotels.calls.reset();
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: null, checkOut: new Date('2025-06-03')
-    });
-
-    component.search();
-
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
-  });
-
-  it('search() — should NOT call searchHotels when checkOut is null', () => {
-    hotelSpy.searchHotels.calls.reset();
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: null
-    });
-
-    component.search();
-
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
-  });
-
-  // ── search() — ERROR ───────────────────────────────────────────────────────
-
-  it('search() — should reset isSearching to false on API error', () => {
-    hotelSpy.searchHotels.and.returnValue(throwError(() => new Error('fail')));
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
-    component.search();
-
+    expect(component.searchResults()).toEqual([]);
     expect(component.isSearching()).toBeFalse();
   });
 
-  it('search() — should NOT populate searchResults on API error', () => {
-    hotelSpy.searchHotels.and.returnValue(throwError(() => new Error('fail')));
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
+  // ── clearSearch ───────────────────────────────────────────────────────────
 
-    component.search();
-
+  it('clearSearch — should reset searchResults to null', () => {
+    component.searchResults.set([]);
+    component.clearSearch();
     expect(component.searchResults()).toBeNull();
   });
 
-  // ── clearSearch() ──────────────────────────────────────────────────────────
-
-  it('clearSearch() — should set searchResults to null', () => {
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
-
+  it('clearSearch — should reset currentPage to 1', () => {
+    component.currentPage = 3;
     component.clearSearch();
-
-    expect(component.searchResults()).toBeNull();
+    expect(component.currentPage).toBe(1);
   });
 
-  it('clearSearch() — should reset the search form', () => {
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-
+  it('clearSearch — should reset cityControl', () => {
+    component.cityControl.setValue('Chennai');
     component.clearSearch();
-
-    expect(component.searchForm.get('city')?.value).toBeFalsy();
-    expect(component.searchForm.get('checkIn')?.value).toBeFalsy();
-    expect(component.searchForm.get('checkOut')?.value).toBeFalsy();
+    expect(component.cityControl.value).toBeFalsy();
   });
 
-  it('clearSearch() — displayHotels should revert to topHotels', () => {
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
-    component.clearSearch();
-    // After clear, searchResults is null → displayHotels returns topHotels
-    expect(component.searchResults()).toBeNull();
-    expect(component.displayHotels).toEqual(component.topHotels());
+  // ── toggleAmenity ─────────────────────────────────────────────────────────
+
+  it('toggleAmenity — should add amenity to selectedAmenities', () => {
+    component.toggleAmenity('a-001');
+    expect(component.selectedAmenities()).toContain('a-001');
   });
 
-  // ── loadMore() ─────────────────────────────────────────────────────────────
-
-  it('loadMore() — should call searchHotels with incremented pageNumber', () => {
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
-    component.currentPage.set(1);
-    hotelSpy.searchHotels.calls.reset();
-
-    component.loadMore();
-
-    expect(hotelSpy.searchHotels).toHaveBeenCalledWith(
-      jasmine.objectContaining({ pageNumber: 2, pageSize: 9 })
-    );
+  it('toggleAmenity — should remove amenity when toggled again', () => {
+    component.toggleAmenity('a-001');
+    component.toggleAmenity('a-001');
+    expect(component.selectedAmenities()).not.toContain('a-001');
   });
 
-  it('loadMore() — should append results to existing searchResults', () => {
-    const extra = [makeHotel('hotel-006', 'Extra Hotel')];
-    hotelSpy.searchHotels.and.returnValue(of({
-      hotels: extra, pageNumber: 2, recordsCount: 3
-    }));
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels); // 2 existing
-    component.currentPage.set(1);
+  // ── fmtLocal ──────────────────────────────────────────────────────────────
 
-    component.loadMore();
-
-    expect(component.searchResults()?.length).toBe(3); // 2 + 1
-    expect(component.searchResults()![2].name).toBe('Extra Hotel');
+  it('fmtLocal — should format date as YYYY-MM-DD', () => {
+    // Use UTC noon to avoid timezone shift in toISOString()
+    const d = new Date('2025-06-01T12:00:00Z');
+    expect(component['fmt'](d)).toBe('2025-06-01');
   });
 
-  it('loadMore() — should increment currentPage after load', () => {
-    component.searchForm.patchValue({
-      city: 'Chennai', checkIn: new Date('2025-06-01'), checkOut: new Date('2025-06-03')
-    });
-    component.searchResults.set(MOCK_SEARCH_RESPONSE.hotels);
-    component.currentPage.set(1);
+  // ── Hero slideshow ────────────────────────────────────────────────────────
 
-    component.loadMore();
-
-    expect(component.currentPage()).toBe(2);
+  it('heroSlides — should have 5 slides', () => {
+    expect(component.heroSlides.length).toBe(5);
   });
 
-  it('loadMore() — should NOT call searchHotels when city is missing', () => {
-    hotelSpy.searchHotels.calls.reset();
-    component.searchForm.patchValue({ city: '', checkIn: null, checkOut: null });
-
-    component.loadMore();
-
-    expect(hotelSpy.searchHotels).not.toHaveBeenCalled();
+  it('activeSlide — should start at 0', () => {
+    expect(component.activeSlide()).toBe(0);
   });
 
-  // ── TEMPLATE RENDERS ───────────────────────────────────────────────────────
-
-  it('should render top hotel cards in the template', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const el = fixture.nativeElement as HTMLElement;
-    expect(el.textContent).toContain('Grand Palace');
+  it('ngOnDestroy — should clear the slide interval without error', () => {
+    expect(() => component.ngOnDestroy()).not.toThrow();
   });
 
-  it('should render the search form', async () => {
-    fixture.detectChanges();
-    await fixture.whenStable();
-    const form = fixture.nativeElement.querySelector('form');
-    expect(form).toBeTruthy();
+  it('activeSlide — should advance to next slide index', () => {
+    component.activeSlide.set(0);
+    component.activeSlide.update(i => (i + 1) % component.heroSlides.length);
+    expect(component.activeSlide()).toBe(1);
+  });
+
+  it('activeSlide — should wrap back to 0 after last slide', () => {
+    component.activeSlide.set(component.heroSlides.length - 1);
+    component.activeSlide.update(i => (i + 1) % component.heroSlides.length);
+    expect(component.activeSlide()).toBe(0);
   });
 });

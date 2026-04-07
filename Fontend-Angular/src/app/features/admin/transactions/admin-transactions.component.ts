@@ -1,8 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatTableModule } from '@angular/material/table';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TransactionService } from '../../../core/services/api.services';
@@ -13,7 +14,7 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
   standalone: true,
   imports: [
     CommonModule, DatePipe, DecimalPipe,
-    MatButtonModule, MatIconModule,
+    MatButtonModule, MatIconModule, MatTableModule,
     MatPaginatorModule, MatProgressSpinnerModule,
   ],
   templateUrl: './admin-transactions.component.html',
@@ -22,13 +23,15 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
 export class AdminTransactionsComponent implements OnInit {
   private txService = inject(TransactionService);
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   loading      = signal(false);
   transactions = signal<TransactionResponseDto[]>([]);
   totalCount   = signal(0);
   pageSize     = 10;
   currentPage  = 1;
-  displayedColumns = ['transactionId', 'amount', 'paymentMethod', 'status', 'date'];
 
+  displayedColumns = ['type', 'guest', 'reservation', 'amount', 'status', 'date'];
   readonly paymentMethodMap = PaymentMethod;
 
   ngOnInit() { this.load(); }
@@ -45,15 +48,18 @@ export class AdminTransactionsComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) {
+    this.currentPage = e.pageIndex + 1;
+    this.pageSize    = e.pageSize;
+    this.load();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   getPaymentMethodLabel(method: number): string {
     return this.paymentMethodMap[method as keyof typeof this.paymentMethodMap] ?? 'N/A';
   }
 
-  statusLabel(status: number): string {
-    return PaymentStatus[status] ?? 'Unknown';
-  }
+  statusLabel(status: number): string { return PaymentStatus[status] ?? 'Unknown'; }
 
   statusClass(status: number): string {
     const map: Record<string, string> = {
@@ -63,46 +69,29 @@ export class AdminTransactionsComponent implements OnInit {
     return map[this.statusLabel(status)] ?? 'badge-muted';
   }
 
-  txIcon(tx: TransactionResponseDto): string {
-    if (tx.transactionType === 'CommissionSent') return 'send';
-    if (tx.transactionType === 'AutoRefund') return 'account_balance_wallet';
-    if (tx.status === 4) return 'replay';
-    if (tx.status === 2) return 'check_circle';
-    if (tx.status === 3) return 'cancel';
-    return 'schedule';
-  }
-
-  txIconClass(tx: TransactionResponseDto): string {
-    if (tx.transactionType === 'CommissionSent') return 'badge-muted';
-    if (tx.transactionType === 'AutoRefund') return 'badge-warning';
-    return this.statusClass(tx.status);
-  }
-
   txLabel(tx: TransactionResponseDto): string {
-    if (tx.transactionType === 'CommissionSent') return '📤 Commission Sent to SuperAdmin (2%)';
-    if (tx.transactionType === 'AutoRefund') return '💰 Auto Refund Sent to Guest';
+    if (tx.transactionType === 'CommissionSent') return '📤 Commission (2%)';
+    if (tx.transactionType === 'AutoRefund')     return '💰 Auto Refund';
+    if (tx.transactionType === 'WalletRefund')   return '💳 Wallet Refund';
     return this.getPaymentMethodLabel(tx.paymentMethod);
   }
 
   txBadgeClass(tx: TransactionResponseDto): string {
     if (tx.transactionType === 'CommissionSent') return 'badge-muted';
-    if (tx.transactionType === 'AutoRefund') return 'badge-warning';
+    if (tx.transactionType === 'AutoRefund')     return 'badge-warning';
+    if (tx.transactionType === 'WalletRefund')   return 'badge-warning';
     return this.statusClass(tx.status);
   }
 
   txBadgeLabel(tx: TransactionResponseDto): string {
     if (tx.transactionType === 'CommissionSent') return 'Commission';
-    if (tx.transactionType === 'AutoRefund') return 'Refunded';
+    if (tx.transactionType === 'AutoRefund')     return 'Refunded';
+    if (tx.transactionType === 'WalletRefund')   return 'Refunded';
     return this.statusLabel(tx.status);
   }
 
   amountColor(tx: TransactionResponseDto): string {
-    if (tx.transactionType === 'CommissionSent') return 'var(--color-error)';
-    if (tx.transactionType === 'AutoRefund') return 'var(--color-error)';
-    return 'var(--color-text-primary)';
-  }
-
-  shortId(id: string): string {
-    return id ? id.substring(0, 8).toUpperCase() + '…' : '—';
+    return (tx.transactionType === 'CommissionSent' || tx.transactionType === 'AutoRefund')
+      ? 'var(--color-error)' : 'inherit';
   }
 }

@@ -34,5 +34,9 @@ export const SUPERADMIN_ROUTES: Routes = [
     path: 'profile',
     loadComponent: () => import('./profile/superadmin-profile.component').then(m => m.SuperAdminProfileComponent),
   },
+  {
+    path: 'support',
+    loadComponent: () => import('./support-requests/superadmin-support-requests.component').then(m => m.SuperadminSupportRequestsComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

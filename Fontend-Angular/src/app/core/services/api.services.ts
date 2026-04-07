@@ -5,15 +5,15 @@ import { environment } from '../../../environments/environment';
 import {
   ApiResponse, CreatePaymentDto, RefundRequestDto, TransactionResponseDto,
   PagedTransactionResponseDto, CreateReviewDto, UpdateReviewDto,
-  ReviewResponseDto, MyReviewsResponseDto, PagedReviewResponseDto,
+  ReviewResponseDto, PagedReviewResponseDto,
   PagedMyReviewsResponseDto, GetHotelReviewsRequestDto,
-  UserProfileResponseDto, UpdateUserProfileDto, PagedBookingHistoryDto,
-  PaginationDto, AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
+  UserProfileResponseDto, UpdateUserProfileDto,
+  AdminDashboardDto, GuestDashboardDto, SuperAdminDashboardDto,
   PagedAuditLogResponseDto, PagedLogResponseDto,
   CreateRoomTypeDto, UpdateRoomTypeDto, RoomTypeListDto, CreateRoomTypeRateDto,
   UpdateRoomTypeRateDto, GetRateByDateRequestDto, CreateRoomDto, UpdateRoomDto,
   RoomListResponseDto, CreateInventoryDto, UpdateInventoryDto, InventoryResponseDto,
-  PaymentIntentDto, RoomOccupancyDto, AmenityResponseDto,
+  RoomOccupancyDto, AmenityResponseDto,
 } from '../models/models';
 
 // ─── TRANSACTION SERVICE ──────────────────────────────────────────────────────
@@ -34,25 +34,10 @@ export class TransactionService {
     ).pipe(map(r => r.data!));
   }
 
-  getTransactions(page: number, pageSize: number): Observable<PagedTransactionResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedTransactionResponseDto>>(
-      `${this.base}/transactions`, { params }
+  getTransactions(page: number, pageSize: number, sortField?: string, sortDir?: string): Observable<PagedTransactionResponseDto> {
+    return this.http.post<ApiResponse<PagedTransactionResponseDto>>(
+      `${this.base}/transactions/list`, { page, pageSize, sortField, sortDir }
     ).pipe(map(r => r.data!));
-  }
-
-  // F9B: Payment intent for UPI flow
-  getPaymentIntent(reservationId: string): Observable<PaymentIntentDto> {
-    return this.http.get<ApiResponse<PaymentIntentDto>>(
-      `${this.base}/transactions/payment-intent/${reservationId}`
-    ).pipe(map(r => r.data!));
-  }
-
-  // F7E via Admin: mark transaction as failed
-  markTransactionFailed(transactionId: string): Observable<void> {
-    return this.http.patch<any>(
-      `${this.base}/admin/transactions/${transactionId}/mark-failed`, {}
-    ).pipe(map(() => undefined));
   }
 }
 
@@ -84,25 +69,18 @@ export class ReviewService {
     ).pipe(map(r => r.data!));
   }
 
-  getMyReviews(): Observable<MyReviewsResponseDto[]> {
-    return this.http.get<ApiResponse<MyReviewsResponseDto[]>>(`${this.base}/reviews/my-reviews`)
-      .pipe(map(r => r.data!));
-  }
-
   getMyReviewsPaged(page: number, pageSize: number): Observable<PagedMyReviewsResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedMyReviewsResponseDto>>(
-      `${this.base}/reviews/my-reviews/paged`, { params }
+    return this.http.post<ApiResponse<PagedMyReviewsResponseDto>>(
+      `${this.base}/reviews/my-reviews/paged`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
   // F9D: Admin view of hotel reviews
-  getHotelReviewsAdmin(page: number, pageSize: number): Observable<PagedReviewResponseDto> {
+  getHotelReviewsAdmin(page: number, pageSize: number, minRating?: number, maxRating?: number, sortDir?: string): Observable<PagedReviewResponseDto> {
     return this.http.post<ApiResponse<PagedReviewResponseDto>>(
-      `${this.base}/admin/reviews`, { page, pageSize }
+      `${this.base}/admin/reviews`, { page, pageSize, minRating, maxRating, sortDir }
     ).pipe(map(r => r.data!));
   }
-
   replyToReview(reviewId: string, adminReply: string): Observable<void> {
     return this.http.patch<any>(
       `${this.base}/admin/reviews/${reviewId}/reply`, { adminReply }
@@ -124,12 +102,6 @@ export class UserService {
   updateProfile(dto: UpdateUserProfileDto): Observable<UserProfileResponseDto> {
     return this.http.put<ApiResponse<UserProfileResponseDto>>(
       `${this.base}/user-profile`, dto
-    ).pipe(map(r => r.data!));
-  }
-
-  getBookingHistory(dto: PaginationDto): Observable<PagedBookingHistoryDto> {
-    return this.http.post<ApiResponse<PagedBookingHistoryDto>>(
-      `${this.base}/user-profile/booking-history`, dto
     ).pipe(map(r => r.data!));
   }
 }
@@ -162,10 +134,9 @@ export class AuditLogService {
   private http = inject(HttpClient);
   private base = `${environment.apiUrl}`;
 
-  getAdminAuditLogs(page: number, pageSize: number): Observable<PagedAuditLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
-      `${this.base}/admin/audit-logs`, { params }
+  getAdminAuditLogs(page: number, pageSize: number, search?: string): Observable<PagedAuditLogResponseDto> {
+    return this.http.post<ApiResponse<PagedAuditLogResponseDto>>(
+      `${this.base}/admin/audit-logs/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 
@@ -174,14 +145,8 @@ export class AuditLogService {
     hotelId?: string, userId?: string,
     action?: string, dateFrom?: string, dateTo?: string
   ): Observable<PagedAuditLogResponseDto> {
-    let params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    if (hotelId)   params = params.set('hotelId', hotelId);
-    if (userId)    params = params.set('userId', userId);
-    if (action)    params = params.set('action', action);
-    if (dateFrom)  params = params.set('dateFrom', dateFrom);
-    if (dateTo)    params = params.set('dateTo', dateTo);
-    return this.http.get<ApiResponse<PagedAuditLogResponseDto>>(
-      `${this.base}/superadmin/audit-logs`, { params }
+    return this.http.post<ApiResponse<PagedAuditLogResponseDto>>(
+      `${this.base}/superadmin/audit-logs/list`, { page, pageSize, hotelId, userId, action, dateFrom, dateTo }
     ).pipe(map(r => r.data!));
   }
 }
@@ -193,16 +158,14 @@ export class LogService {
   private base = `${environment.apiUrl}`;
 
   getMyLogs(page: number, pageSize: number): Observable<PagedLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedLogResponseDto>>(
-      `${this.base}/logs/my-logs`, { params }
+    return this.http.post<ApiResponse<PagedLogResponseDto>>(
+      `${this.base}/logs/my-logs`, { page, pageSize }
     ).pipe(map(r => r.data!));
   }
 
-  getAllLogs(page: number, pageSize: number): Observable<PagedLogResponseDto> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedLogResponseDto>>(
-      `${this.base}/logs`, { params }
+  getAllLogs(page: number, pageSize: number, search?: string): Observable<PagedLogResponseDto> {
+    return this.http.post<ApiResponse<PagedLogResponseDto>>(
+      `${this.base}/logs/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 }
@@ -214,8 +177,7 @@ export class RoomTypeService {
   private base = `${environment.apiUrl}`;
 
   getRoomTypes(page = 1, pageSize = 100): Observable<any> {
-    const params = new HttpParams().set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<any>>(`${this.base}/admin/roomtypes`, { params })
+    return this.http.post<ApiResponse<any>>(`${this.base}/admin/roomtypes/list`, { page, pageSize })
       .pipe(map(r => r.data!));
   }
 
@@ -264,9 +226,8 @@ export class RoomService {
   private base = `${environment.apiUrl}`;
 
   getRooms(pageNumber: number, pageSize: number): Observable<any> {
-    const params = new HttpParams().set('pageNumber', pageNumber).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<any>>(
-      `${this.base}/admin/rooms`, { params }
+    return this.http.post<ApiResponse<any>>(
+      `${this.base}/admin/rooms/list`, { page: pageNumber, pageSize }
     ).pipe(map(r => r.data!));
   }
 
@@ -324,11 +285,5 @@ export class AmenityService {
   getAmenities(): Observable<AmenityResponseDto[]> {
     return this.http.get<ApiResponse<AmenityResponseDto[]>>(`${this.base}/public/amenities`)
       .pipe(map(r => r.data ?? []));
-  }
-
-  searchAmenities(query: string): Observable<AmenityResponseDto[]> {
-    return this.http.get<ApiResponse<AmenityResponseDto[]>>(
-      `${this.base}/public/amenities/search`, { params: { query } }
-    ).pipe(map(r => r.data ?? []));
   }
 }

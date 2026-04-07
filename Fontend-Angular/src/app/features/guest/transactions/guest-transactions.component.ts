@@ -1,8 +1,9 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatPaginator, MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { DatePipe, DecimalPipe } from '@angular/common';
 import { TransactionService } from '../../../core/services/api.services';
 import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../core/models/models';
@@ -10,14 +11,20 @@ import { TransactionResponseDto, PaymentMethod, PaymentStatus } from '../../../c
 @Component({
   selector: 'app-guest-transactions',
   standalone: true,
-  imports: [CommonModule, DatePipe, DecimalPipe, MatButtonModule, MatIconModule, MatProgressSpinnerModule],
+  imports: [
+    CommonModule, DatePipe, DecimalPipe,
+    MatButtonModule, MatIconModule, MatProgressSpinnerModule, MatPaginatorModule,
+  ],
   templateUrl: './guest-transactions.component.html',
   styleUrl: './guest-transactions.component.scss'
 })
 export class GuestTransactionsComponent implements OnInit {
   private txService = inject(TransactionService);
 
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   transactions = signal<TransactionResponseDto[]>([]);
+  totalCount   = signal(0);
   loading      = signal(false);
   pageSize     = 10;
   currentPage  = 1;
@@ -46,7 +53,7 @@ export class GuestTransactionsComponent implements OnInit {
   }
 
   txLabel(tx: TransactionResponseDto): string {
-    if (tx.transactionType === 'WalletRefund') return '💰 Hotel Refund (Wallet Credit)';
+    if (tx.transactionType === 'WalletRefund') return 'Hotel Refund (Wallet Credit)';
     return this.paymentMethodLabel(tx.paymentMethod);
   }
 
@@ -61,8 +68,19 @@ export class GuestTransactionsComponent implements OnInit {
   load() {
     this.loading.set(true);
     this.txService.getTransactions(this.currentPage, this.pageSize).subscribe({
-      next: r => { this.transactions.set(r.transactions ?? []); this.loading.set(false); },
+      next: r => {
+        this.transactions.set(r.transactions ?? []);
+        this.totalCount.set(r.totalCount ?? 0);
+        this.loading.set(false);
+      },
       error: () => this.loading.set(false)
     });
+  }
+
+  onPage(e: PageEvent) {
+    this.currentPage = e.pageIndex + 1;
+    this.pageSize    = e.pageSize;
+    this.load();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }

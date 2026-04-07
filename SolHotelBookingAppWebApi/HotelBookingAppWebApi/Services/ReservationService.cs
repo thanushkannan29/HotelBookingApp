@@ -5,6 +5,8 @@ using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Reservation;
 using HotelBookingAppWebApi.Models.DTOs.Room;
+using Humanizer;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
@@ -398,27 +400,10 @@ namespace HotelBookingAppWebApi.Services
             return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
         }
 
-        // ── GET HOTEL RESERVATIONS (ADMIN, PAGED + FILTER) ────────────────────
-        public async Task<PagedReservationResponseDto> GetHotelReservationsAsync(Guid userId, int page, int pageSize)
-        {
-            var admin = await _userRepo.GetAsync(userId) ?? throw new UnAuthorizedException("Unauthorized.");
-            if (admin.HotelId == null) throw new UnAuthorizedException("No hotel associated with this admin.");
-
-            var query = _reservationRepo.GetQueryable()
-                .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.Room)
-                .Include(r => r.ReservationRooms!).ThenInclude(rr => rr.RoomType)
-                .Include(r => r.Hotel).Include(r => r.User)
-                .Where(r => r.HotelId == admin.HotelId)
-                .OrderByDescending(r => r.CreatedDate);
-
-            var total = await query.CountAsync();
-            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
-            return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
-        }
-
         // ── GET ADMIN RESERVATIONS (WITH STATUS + SEARCH FILTER) ─────────────
         public async Task<PagedReservationResponseDto> GetAdminReservationsAsync(
-            Guid adminUserId, string? status, string? search, int page, int pageSize)
+            Guid adminUserId, string? status, string? search, int page, int pageSize,
+            string? sortField = null, string? sortDir = null)
         {
             var admin = await _userRepo.GetAsync(adminUserId) ?? throw new UnAuthorizedException("Unauthorized.");
             if (admin.HotelId == null) throw new UnAuthorizedException("No hotel associated with this admin.");
@@ -439,8 +424,16 @@ namespace HotelBookingAppWebApi.Services
                     (r.User != null && r.User.Name.Contains(search)));
 
             var total = await query.CountAsync();
-            var items = await query.OrderByDescending(r => r.CreatedDate)
-                .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            bool desc = string.IsNullOrWhiteSpace(sortDir) || sortDir.ToLower() == "desc";
+            query = sortField?.ToLower() switch
+            {
+                "guestname" => desc ? query.OrderByDescending(r => r.Hotel!.Name) : query.OrderBy(r => r.Hotel!.Name),
+                "amount"    => desc ? query.OrderByDescending(r => r.FinalAmount) : query.OrderBy(r => r.FinalAmount),
+                _           => query.OrderByDescending(r => r.CreatedDate)
+            };
+
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
             return new PagedReservationResponseDto { TotalCount = total, Reservations = items.Select(MapToDetailsDto) };
         }
@@ -476,45 +469,62 @@ namespace HotelBookingAppWebApi.Services
                 res.CancelledDate = DateTime.UtcNow;
                 res.CancellationReason = reason;
 
-                await _unitOfWork.CommitAsync();
-
+                // Calculate and apply refund BEFORE commit so cancellation + refund are atomic
                 var hasPaid = res.Transactions?.Any(t => t.Status == PaymentStatus.Success) ?? false;
                 if (hasPaid)
                 {
-                    var today = DateOnly.FromDateTime(DateTime.UtcNow);
+                    var today = DateOnly.FromDateTime(DateTime.Now); // local date (IST)
                     var daysUntilCheckIn = res.CheckInDate.DayNumber - today.DayNumber;
 
                     decimal refundPercent;
                     string refundNote;
 
-                    if (res.CancellationFeePaid)
+                    // ── AFTER CHECK-IN: no refund regardless of protection ──────────────
+                    if (res.IsCheckedIn || daysUntilCheckIn < 0)
                     {
-                        // With protection: full refund if cancelled at least 1 day before check-in
-                        if (daysUntilCheckIn >= 1)
+                        refundPercent = 0;
+                        refundNote = "No refund — reservation already checked in or stay has passed.";
+                    }
+                    // ── WITH CANCELLATION PROTECTION ────────────────────────────────────
+                    else if (res.CancellationFeePaid)
+                    {
+                        if (daysUntilCheckIn > 0)
                         {
+                            // Before check-in day: full refund (protection covers this)
                             refundPercent = 100;
-                            refundNote = "Full refund — cancellation protection active, cancelled 1+ day before check-in.";
+                            refundNote = "Full refund — cancellation protection active, cancelled before check-in day.";
                         }
                         else
                         {
-                            refundPercent = 0;
-                            refundNote = "No refund — cancelled on check-in day (protection does not cover same-day cancellation).";
+                            // On check-in day: 50% refund (protection gives partial benefit)
+                            refundPercent = 50;
+                            refundNote = "50% refund — cancelled on check-in day (protection provides partial refund).";
                         }
                     }
-                    else if (daysUntilCheckIn >= 5)
-                    {
-                        refundPercent = 50;
-                        refundNote = "50% refund — cancelled 5+ days before check-in.";
-                    }
-                    else if (daysUntilCheckIn >= 3)
-                    {
-                        refundPercent = 25;
-                        refundNote = "25% refund — cancelled 3–4 days before check-in.";
-                    }
+                    // ── WITHOUT PROTECTION: standard tiered policy ───────────────────────
                     else
                     {
-                        refundPercent = 0;
-                        refundNote = "No refund — cancelled within 2 days of check-in.";
+                        if (daysUntilCheckIn >= 7)
+                        {
+                            refundPercent = 100;
+                            refundNote = "Full refund — cancelled 7+ days before check-in.";
+                        }
+                        else if (daysUntilCheckIn >= 3)
+                        {
+                            refundPercent = 50;
+                            refundNote = "50% refund — cancelled 3–6 days before check-in.";
+                        }
+                        else if (daysUntilCheckIn >= 1)
+                        {
+                            refundPercent = 25;
+                            refundNote = "25% refund — cancelled 1–2 days before check-in.";
+                        }
+                        else
+                        {
+                            // Same day (daysUntilCheckIn == 0)
+                            refundPercent = 0;
+                            refundNote = "No refund — cancelled on check-in day.";
+                        }
                     }
 
                     // Mark the success transaction as Refunded only on full refund.
@@ -526,12 +536,12 @@ namespace HotelBookingAppWebApi.Services
                     if (refundPercent > 0)
                     {
                         var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);
-                        // Auto-credit wallet directly — no manual admin approval needed
                         await _walletService.CreditAsync(userId, refundAmount,
-                            $"Auto-refund ({refundNote}) for {res.ReservationCode}");
+                            $"Refund ({refundNote}) for {res.ReservationCode}");
                     }
                 }
 
+                await _unitOfWork.CommitAsync();
                 return true;
             }
             catch { await _unitOfWork.RollbackAsync(); throw; }
@@ -545,10 +555,14 @@ namespace HotelBookingAppWebApi.Services
 
             if (res.Status != ReservationStatus.Confirmed)
                 throw new ValidationException("Only confirmed reservations can be marked as completed.");
+            var today = DateOnly.FromDateTime(DateTime.Now);
+            if (today != res.CheckInDate)
+                throw new ValidationException("Check-in can only be completed on the check-in date.");
 
             res.Status = ReservationStatus.Completed;
             res.IsCheckedIn = true;
             await _unitOfWork.SaveChangesAsync();
+            
 
             // Generate promo code for the guest
             await _promoCodeService.GeneratePromoForCompletedReservationAsync(res.ReservationId);
@@ -668,9 +682,9 @@ namespace HotelBookingAppWebApi.Services
             var firstRoomType = r.ReservationRooms?.FirstOrDefault()?.RoomType;
             string policyText;
             if (r.CancellationFeePaid)
-                policyText = "Full refund anytime (protection fee paid)";
+                policyText = "Full refund before check-in day · 50% on check-in day · No refund after check-in (protection fee paid)";
             else
-                policyText = "50% refund if 5+ days before check-in, 25% if 3–4 days, no refund within 2 days";
+                policyText = "Free cancellation 7+ days before · 50% refund 3–6 days before · 25% refund 1–2 days before · No refund on check-in day or after";
 
             return new ReservationDetailsDto
             {

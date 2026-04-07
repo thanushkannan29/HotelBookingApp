@@ -34,6 +34,9 @@
             <mat-icon>{{ d.isActive ? 'toggle_off' : 'toggle_on' }}</mat-icon>
             {{ d.isActive ? 'Deactivate' : 'Activate' }} Hotel
           </button>
+          <button mat-stroked-button (click)="downloadReport()">
+            <mat-icon>download</mat-icon> Download Report
+          </button>
           <a mat-flat-button color="primary" routerLink="/admin/hotel">
             <mat-icon>edit</mat-icon> Edit Hotel
           </a>
@@ -128,8 +131,20 @@
             <a class="nav-item" routerLink="/admin/reservations">
               <mat-icon>event_note</mat-icon><span>Reservations</span>
             </a>
+            <a class="nav-item" routerLink="/admin/reviews">
+              <mat-icon>star</mat-icon><span>Reviews</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/transactions">
+              <mat-icon>receipt_long</mat-icon><span>Transactions</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/amenity-requests">
+              <mat-icon>add_circle_outline</mat-icon><span>Amenity Requests</span>
+            </a>
             <a class="nav-item" routerLink="/admin/audit-logs">
               <mat-icon>history</mat-icon><span>Audit Logs</span>
+            </a>
+            <a class="nav-item" routerLink="/admin/support">
+              <mat-icon>bug_report</mat-icon><span>Bug Reports</span>
             </a>
           </div>
         </div>

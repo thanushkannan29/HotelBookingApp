@@ -29,5 +29,9 @@ export const GUEST_ROUTES: Routes = [
     path: 'promo-codes',
     loadComponent: () => import('./promo-codes/guest-promo-codes.component').then(m => m.GuestPromoCodesComponent),
   },
+  {
+    path: 'support',
+    loadComponent: () => import('./support-requests/guest-support-requests.component').then(m => m.GuestSupportRequestsComponent),
+  },
   { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
 ];

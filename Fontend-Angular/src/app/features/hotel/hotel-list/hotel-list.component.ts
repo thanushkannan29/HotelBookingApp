@@ -1,6 +1,5 @@
-import { Component, inject, signal, computed, OnInit, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,7 +11,8 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSelectModule } from '@angular/material/select';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatPaginatorModule, MatPaginator, PageEvent } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DatePipe } from '@angular/common';
 import { AmenityResponseDto, HotelListItemDto } from '../../../core/models/models';
 import { HotelService } from '../../../core/services/hotel.service';
@@ -27,46 +27,51 @@ import { InfiniteCarouselComponent } from '../../../shared/components/infinite-c
     ReactiveFormsModule,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatDatepickerModule, MatNativeDateModule,
-    MatSliderModule, MatCheckboxModule, MatPaginatorModule,
+    MatSliderModule, MatCheckboxModule, MatPaginatorModule, MatProgressSpinnerModule,
     HotelCardComponent, CityAutocompleteComponent, DatePipe,
     InfiniteCarouselComponent,
   ],
   templateUrl: './hotel-list.component.html',
   styleUrl: './hotel-list.component.scss'
 })
-export class HotelListComponent implements OnInit, AfterViewInit {
+export class HotelListComponent implements OnInit, OnDestroy {
   private hotelService = inject(HotelService);
   private fb = inject(FormBuilder);
 
-  topHotels = signal<HotelListItemDto[]>([]);
+  // ── Hero slideshow ────────────────────────────────────────────────────────
+  readonly heroSlides = [
+    { url: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1520250497591-112f2f40a3f4?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1551882547-ff40c63fe5fa?w=1600&q=80&auto=format&fit=crop' },
+    { url: 'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?w=1600&q=80&auto=format&fit=crop' },
+  ];
+  activeSlide = signal(0);
+  private slideInterval?: ReturnType<typeof setInterval>;
+
+  topHotels     = signal<HotelListItemDto[]>([]);
   searchResults = signal<HotelListItemDto[] | null>(null);
-  cityGroups = signal<{ cityName: string; hotels: HotelListItemDto[] }[]>([]);
-  stateGroups = signal<{ stateName: string; hotels: HotelListItemDto[] }[]>([]);
-  isSearching = signal(false);
-  totalResults = signal(0);
-  currentPage = signal(1);
+  cityGroups    = signal<{ cityName: string; hotels: HotelListItemDto[] }[]>([]);
+  stateGroups   = signal<{ stateName: string; hotels: HotelListItemDto[] }[]>([]);
+  isSearching   = signal(false);
+  totalResults  = signal(0);
   readonly pageSize = 9;
+  currentPage   = 1;
 
-  // F3E: Filter signals
-  minPrice = signal(0);
-  maxPrice = signal(50000);
-  minRating = signal(0);
+  // Filters
+  minPrice          = signal(0);
+  maxPrice          = signal(50000);
   selectedAmenities = signal<string[]>([]);
-  amenities = signal<string[]>([]);
-  sortBy = signal('');
-  amenityObjects = signal<any[]>([]);
-
-  // Paginated results
-  paginatedResults = signal<HotelListItemDto[]>([]);
+  amenityObjects    = signal<AmenityResponseDto[]>([]);
+  sortBy            = signal('');
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
-  // City and State controls for search
-  cityControl = new FormControl('');
+  cityControl  = new FormControl('');
   stateControl = new FormControl('');
 
   searchForm = this.fb.group({
-    checkIn: [null as Date | null],
+    checkIn:  [null as Date | null],
     checkOut: [null as Date | null],
   });
 
@@ -76,31 +81,19 @@ export class HotelListComponent implements OnInit, AfterViewInit {
     const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + 1); return d;
   }
 
-  // F3E: client-side filtered results
-  filteredResults = computed(() => {
-    const results = this.searchResults() ?? [];
-    return results.filter(h =>
-      (h.startingPrice ?? 0) >= this.minPrice() &&
-      (h.startingPrice ?? 0) <= this.maxPrice() &&
-      h.averageRating >= this.minRating()
-    );
-  });
-
   ngOnInit() {
     this.hotelService.getTopHotels().subscribe(hotels => this.topHotels.set(hotels));
-    this.hotelService.getAmenities().subscribe(a => {
-      this.amenities.set(a.map(x => x.name));
-      this.amenityObjects.set(a);
-    });
+    this.hotelService.getAmenities().subscribe(a => this.amenityObjects.set(a));
     this.loadStateGroups();
+
+    // Start hero slideshow — rotate every 5 seconds
+    this.slideInterval = setInterval(() => {
+      this.activeSlide.update(i => (i + 1) % this.heroSlides.length);
+    }, 5000);
   }
 
-  ngAfterViewInit() {
-    if (this.paginator) {
-      this.paginator.page.subscribe(() => {
-        this.updatePaginatedResults();
-      });
-    }
+  ngOnDestroy() {
+    clearInterval(this.slideInterval);
   }
 
   private loadStateGroups() {
@@ -117,11 +110,8 @@ export class HotelListComponent implements OnInit, AfterViewInit {
             .map((state, i) => ({ stateName: state, hotels: results[i] as HotelListItemDto[] }))
             .filter(g => g.hotels.length > 0)
             .sort((a, b) => a.stateName.localeCompare(b.stateName));
-          if (groups.length === 0) {
-            this.loadCityGroups();
-          } else {
-            this.stateGroups.set(groups);
-          }
+          if (groups.length === 0) this.loadCityGroups();
+          else this.stateGroups.set(groups);
         });
       },
       error: () => this.loadCityGroups()
@@ -144,73 +134,71 @@ export class HotelListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  search() {
-    const city = this.cityControl.value?.trim();
+  // ── SEARCH ────────────────────────────────────────────────────────────────
+  search(page = 1) {
+    const city  = this.cityControl.value?.trim();
     const state = this.stateControl.value?.trim();
     const { checkIn, checkOut } = this.searchForm.value;
     if ((!city && !state) || !checkIn || !checkOut) return;
 
     this.isSearching.set(true);
-    this.currentPage.set(1);
+    this.currentPage = page;
 
     this.hotelService.searchHotelsWithFilters({
-      city: city || undefined,
-      state: state || undefined,
-      checkIn: this.formatDate(checkIn!),
-      checkOut: this.formatDate(checkOut!),
-      pageNumber: 1,
-      pageSize: 100,
+      city:       city  || undefined,
+      state:      state || undefined,
+      checkIn:    this.fmt(checkIn!),
+      checkOut:   this.fmt(checkOut!),
+      pageNumber: page,
+      pageSize:   this.pageSize,
       amenityIds: this.selectedAmenities().length > 0 ? this.selectedAmenities() : undefined,
-      minPrice: this.minPrice() > 0 ? this.minPrice() : undefined,
-      maxPrice: this.maxPrice() < 50000 ? this.maxPrice() : undefined,
-      sortBy: this.sortBy() || undefined,
+      minPrice:   this.minPrice() > 0       ? this.minPrice() : undefined,
+      maxPrice:   this.maxPrice() < 50000   ? this.maxPrice() : undefined,
+      sortBy:     this.sortBy() || undefined,
     }).subscribe({
       next: res => {
         this.searchResults.set(res.hotels);
-        this.totalResults.set(res.recordsCount);
+        this.totalResults.set(res.totalCount ?? res.recordsCount);
         this.isSearching.set(false);
-        this.updatePaginatedResults();
       },
-      error: () => this.isSearching.set(false),
+      error: () => { this.isSearching.set(false); this.searchResults.set([]); },
     });
   }
 
-   updatePaginatedResults() {
-    const all = this.filteredResults();
-    const start = (this.paginator?.pageIndex ?? 0) * this.pageSize;
-    this.paginatedResults.set(all.slice(start, start + this.pageSize));
+  onPage(e: PageEvent) {
+    this.search(e.pageIndex + 1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   applyFilters() {
-    if (this.paginator) this.paginator.firstPage();
-    this.updatePaginatedResults();
+    this.paginator?.firstPage();
+    this.search(1);
+  }
+
+  toggleAmenity(amenityId: string) {
+    const current = this.selectedAmenities();
+    this.selectedAmenities.set(
+      current.includes(amenityId)
+        ? current.filter(a => a !== amenityId)
+        : [...current, amenityId]
+    );
+    this.paginator?.firstPage();
+    this.search(1);
   }
 
   clearSearch() {
     this.searchResults.set(null);
+    this.totalResults.set(0);
+    this.currentPage = 1;
     this.cityControl.reset();
     this.stateControl.reset();
     this.searchForm.reset();
     this.minPrice.set(0);
     this.maxPrice.set(50000);
-    this.minRating.set(0);
+    this.selectedAmenities.set([]);
+    this.sortBy.set('');
+    this.paginator?.firstPage();
   }
 
-  toggleAmenity(amenityId: string) {
-    const current = this.selectedAmenities();
-    if (current.includes(amenityId)) {
-      this.selectedAmenities.set(current.filter(a => a !== amenityId));
-    } else {
-      this.selectedAmenities.set([...current, amenityId]);
-    }
-    this.search();
-  }
-
-  private formatDate(d: Date): string {
-    return d.toISOString().split('T')[0];
-  }
-
-  get hasMoreResults(): boolean {
-    return (this.searchResults()?.length ?? 0) < this.totalResults();
-  }
+  private fmt(d: Date): string { return d.toISOString().split('T')[0]; }
 }

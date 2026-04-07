@@ -15,23 +15,17 @@
         <div class="cc-body">
           <h3>Email Support</h3>
           <p>For hotel issues, bugs, or general enquiries</p>
-          <a href="mailto:thanush@superadmin.com" class="cc-link">
-            thanush&#64;superadmin.com
-          </a>
+          <a href="mailto:thanush@superadmin.com" class="cc-link">thanush&#64;superadmin.com</a>
         </div>
       </div>
-
       <div class="contact-card">
         <div class="cc-icon phone"><mat-icon>phone</mat-icon></div>
         <div class="cc-body">
           <h3>Call Support</h3>
           <p>Available Monday – Saturday, 9 AM – 7 PM</p>
-          <a href="tel:+919840650390" class="cc-link">
-            +91 98406 50390
-          </a>
+          <a href="tel:+919840650390" class="cc-link">+91 98406 50390</a>
         </div>
       </div>
-
       <div class="contact-card">
         <div class="cc-icon hours"><mat-icon>schedule</mat-icon></div>
         <div class="cc-body">
@@ -42,80 +36,191 @@
       </div>
     </div>
 
-    <!-- Detailed Sections -->
+    <!-- ── SUCCESS STATE ─────────────────────────────────────────────────── -->
+    @if (submitted()) {
+      <div class="success-card">
+        <mat-icon class="success-icon">check_circle</mat-icon>
+        <h2>Request Submitted</h2>
+        <p>Thank you! We've received your message and will respond within 24 hours on business days.</p>
+        @if (auth.isGuest()) {
+          <a mat-flat-button color="primary" routerLink="/guest/support">View My Requests</a>
+        } @else if (auth.isAdmin()) {
+          <a mat-flat-button color="primary" routerLink="/admin/support">View My Reports</a>
+        }
+        <button mat-stroked-button (click)="reset()" style="margin-left:12px;">Submit Another</button>
+      </div>
+    }
+
+    <!-- ── FORMS ─────────────────────────────────────────────────────────── -->
+    @if (!submitted()) {
+
+      <!-- PUBLIC FORM (unauthenticated) -->
+      @if (!auth.isAuthenticated()) {
+        <div class="form-section">
+          <h2 class="cs-title"><mat-icon>support_agent</mat-icon> Send Us a Message</h2>
+          <p class="cs-desc">Fill in the form below and our team will get back to you shortly. Already have an account? <a routerLink="/auth/login">Sign in</a> for faster support.</p>
+          <div class="form-card">
+            <form [formGroup]="publicForm" (ngSubmit)="submitPublic()" class="support-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Your Name</mat-label>
+                  <input matInput formControlName="name" />
+                  @if (publicForm.get('name')?.hasError('required') && publicForm.get('name')?.touched) {
+                    <mat-error>Name is required</mat-error>
+                  }
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Email Address</mat-label>
+                  <input matInput formControlName="email" type="email" />
+                  @if (publicForm.get('email')?.invalid && publicForm.get('email')?.touched) {
+                    <mat-error>Valid email required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    @for (c of publicCategories; track c) {
+                      <mat-option [value]="c">{{ c }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Subject</mat-label>
+                  <input matInput formControlName="subject" />
+                  @if (publicForm.get('subject')?.hasError('required') && publicForm.get('subject')?.touched) {
+                    <mat-error>Subject is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Message</mat-label>
+                <textarea matInput formControlName="message" rows="5" placeholder="Describe your issue or question in detail…"></textarea>
+                @if (publicForm.get('message')?.hasError('required') && publicForm.get('message')?.touched) {
+                  <mat-error>Message is required</mat-error>
+                }
+              </mat-form-field>
+              <div class="form-actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+                  <mat-icon>send</mat-icon>
+                  {{ submitting() ? 'Sending…' : 'Send Message' }}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- GUEST FORM -->
+      @if (auth.isGuest()) {
+        <div class="form-section">
+          <h2 class="cs-title"><mat-icon>person</mat-icon> Submit a Complaint or Support Request</h2>
+          <p class="cs-desc">Having an issue with a hotel stay, payment, or booking? Submit a request and our team will review it. You can track your requests from your <a routerLink="/guest/support">Support Requests</a> page.</p>
+          <div class="form-card">
+            <form [formGroup]="guestForm" (ngSubmit)="submitGuest()" class="support-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    @for (c of guestCategories; track c) {
+                      <mat-option [value]="c">{{ c }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Subject</mat-label>
+                  <input matInput formControlName="subject" />
+                  @if (guestForm.get('subject')?.hasError('required') && guestForm.get('subject')?.touched) {
+                    <mat-error>Subject is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Reservation Code (optional)</mat-label>
+                <input matInput formControlName="reservationCode" placeholder="e.g. RES-XXXXXX" />
+                <mat-icon matSuffix>confirmation_number</mat-icon>
+              </mat-form-field>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Message</mat-label>
+                <textarea matInput formControlName="message" rows="5" placeholder="Describe your issue in detail…"></textarea>
+                @if (guestForm.get('message')?.hasError('required') && guestForm.get('message')?.touched) {
+                  <mat-error>Message is required</mat-error>
+                }
+              </mat-form-field>
+              <div class="form-actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+                  <mat-icon>send</mat-icon>
+                  {{ submitting() ? 'Submitting…' : 'Submit Request' }}
+                </button>
+                <a mat-stroked-button routerLink="/guest/support">View My Requests</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- ADMIN FORM -->
+      @if (auth.isAdmin()) {
+        <div class="form-section">
+          <h2 class="cs-title"><mat-icon>bug_report</mat-icon> Report a Bug or Platform Issue</h2>
+          <p class="cs-desc">Experiencing a problem with your dashboard, room management, payments, or any platform feature? Report it here and our platform team will investigate. Track your reports from <a routerLink="/admin/support">My Reports</a>.</p>
+          <div class="form-card">
+            <form [formGroup]="adminForm" (ngSubmit)="submitAdmin()" class="support-form">
+              <div class="form-row">
+                <mat-form-field appearance="outline">
+                  <mat-label>Category</mat-label>
+                  <mat-select formControlName="category">
+                    @for (c of adminCategories; track c) {
+                      <mat-option [value]="c">{{ c }}</mat-option>
+                    }
+                  </mat-select>
+                </mat-form-field>
+                <mat-form-field appearance="outline">
+                  <mat-label>Subject</mat-label>
+                  <input matInput formControlName="subject" />
+                  @if (adminForm.get('subject')?.hasError('required') && adminForm.get('subject')?.touched) {
+                    <mat-error>Subject is required</mat-error>
+                  }
+                </mat-form-field>
+              </div>
+              <mat-form-field appearance="outline" class="full-width">
+                <mat-label>Describe the Issue</mat-label>
+                <textarea matInput formControlName="message" rows="5" placeholder="Which page, what you did, what happened, any error messages…"></textarea>
+                @if (adminForm.get('message')?.hasError('required') && adminForm.get('message')?.touched) {
+                  <mat-error>Description is required</mat-error>
+                }
+              </mat-form-field>
+              <div class="form-actions">
+                <button mat-flat-button color="primary" type="submit" [disabled]="submitting()">
+                  <mat-icon>send</mat-icon>
+                  {{ submitting() ? 'Submitting…' : 'Submit Report' }}
+                </button>
+                <a mat-stroked-button routerLink="/admin/support">View My Reports</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      }
+
+      <!-- SuperAdmin: no form, just info -->
+      @if (auth.isSuperAdmin()) {
+        <div class="form-section">
+          <h2 class="cs-title"><mat-icon>admin_panel_settings</mat-icon> Platform Support Management</h2>
+          <p class="cs-desc">As a SuperAdmin, you manage all support requests from guests and hotel admins. Review and respond to requests from your dashboard.</p>
+          <div class="cs-actions">
+            <a mat-flat-button color="primary" routerLink="/superadmin/support">
+              <mat-icon>support</mat-icon> Manage Support Requests
+            </a>
+          </div>
+        </div>
+      }
+    }
+
+    <div class="cs-divider"></div>
+
+    <!-- FAQ -->
     <div class="contact-sections">
-
-      <!-- Hotel Partner Support -->
-      <div class="cs-section">
-        <h2 class="cs-title">
-          <mat-icon>hotel</mat-icon> Hotel Partner Support
-        </h2>
-        <p class="cs-desc">Are you a hotel owner experiencing issues with your dashboard, room management, or payments? Our dedicated partner support team is here to help.</p>
-        <div class="cs-actions">
-          <a href="mailto:thanush@superadmin.com?subject=Hotel Partner Issue" mat-flat-button color="primary">
-            <mat-icon>email</mat-icon> Email Hotel Support
-          </a>
-          <a href="tel:+919840650390" mat-stroked-button>
-            <mat-icon>phone</mat-icon> Call Now
-          </a>
-        </div>
-      </div>
-
-      <div class="cs-divider"></div>
-
-      <!-- Bug Reports -->
-      <div class="cs-section">
-        <h2 class="cs-title">
-          <mat-icon>bug_report</mat-icon> Report a Bug
-        </h2>
-        <p class="cs-desc">Found something broken? Please describe the issue clearly — which page, what you did, and what happened — and send it to our support email.</p>
-        <div class="cs-info-grid">
-          <div class="cs-info-item">
-            <span class="label">Bug Report Email</span>
-            <a href="mailto:thanush@superadmin.com?subject=Bug Report" class="value link">thanush&#64;superadmin.com</a>
-          </div>
-          <div class="cs-info-item">
-            <span class="label">Subject Line</span>
-            <span class="value">Bug Report: [brief description]</span>
-          </div>
-          <div class="cs-info-item">
-            <span class="label">Include In Email</span>
-            <span class="value">Page URL, steps to reproduce, screenshot if possible</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="cs-divider"></div>
-
-      <!-- Guest Support -->
-      <div class="cs-section">
-        <h2 class="cs-title">
-          <mat-icon>person</mat-icon> Guest Support
-        </h2>
-        <p class="cs-desc">Having trouble with a booking, payment, or refund? Our guest support team responds within 24 hours on business days.</p>
-        <div class="cs-info-grid">
-          <div class="cs-info-item">
-            <span class="label">Email</span>
-            <a href="mailto:thanush@superadmin.com?subject=Guest Support" class="value link">thanush&#64;superadmin.com</a>
-          </div>
-          <div class="cs-info-item">
-            <span class="label">Phone</span>
-            <a href="tel:+919840650390" class="value link">+91 98406 50390</a>
-          </div>
-          <div class="cs-info-item">
-            <span class="label">Response Time</span>
-            <span class="value">Within 24 hours on weekdays</span>
-          </div>
-        </div>
-        <div class="cs-actions" style="margin-top:16px;">
-          <a routerLink="/guest/bookings" mat-stroked-button>View My Bookings</a>
-          <a routerLink="/guest/refunds" mat-stroked-button>Refund Requests</a>
-        </div>
-      </div>
-
-      <div class="cs-divider"></div>
-
-      <!-- FAQ -->
       <div class="cs-section">
         <h2 class="cs-title"><mat-icon>help_outline</mat-icon> Quick FAQ</h2>
         <div class="faq-list">

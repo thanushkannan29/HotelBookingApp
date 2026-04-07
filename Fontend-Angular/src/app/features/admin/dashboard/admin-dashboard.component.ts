@@ -8,6 +8,7 @@ import { HotelService } from '../../../core/services/hotel.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { AdminDashboardDto } from '../../../core/models/models';
+import { ReportService } from './report.service';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -20,6 +21,7 @@ export class AdminDashboardComponent implements OnInit {
   private dashboardService = inject(DashboardService);
   private hotelService     = inject(HotelService);
   private toast            = inject(ToastService);
+  private reportService    = inject(ReportService);
   auth                     = inject(AuthService);
 
   data             = signal<AdminDashboardDto | null>(null);
@@ -45,5 +47,10 @@ export class AdminDashboardComponent implements OnInit {
       },
       error: () => this.isTogglingStatus.set(false),
     });
+  }
+
+  downloadReport() {
+    const d = this.data();
+    if (d) this.reportService.downloadReport(d);
   }
 }

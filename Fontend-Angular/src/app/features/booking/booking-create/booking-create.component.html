@@ -256,16 +256,18 @@
                         <div class="policy-box" [class.policy-active]="!payCancellationFee()">
                           <strong>Without Protection</strong>
                           <ul style="margin:6px 0 0;padding-left:16px;font-size:13px;">
-                            <li>5+ days before: 50% refund</li>
-                            <li>3–4 days before: 25% refund</li>
-                            <li>Within 2 days: No refund</li>
+                            <li>7+ days before: Full refund</li>
+                            <li>3–6 days before: 50% refund</li>
+                            <li>1–2 days before: 25% refund</li>
+                            <li>Same day / after check-in: No refund</li>
                           </ul>
                         </div>
                         <div class="policy-box" [class.policy-active]="payCancellationFee()">
                           <strong style="color:#2e7d32">✅ With Protection (₹{{ cancellationFeeAmount() | number:'1.2-2' }} extra)</strong>
                           <ul style="margin:6px 0 0;padding-left:16px;font-size:13px;color:#2e7d32">
-                            <li>Cancel up to 1 day before check-in — full refund</li>
-                            <li>Cancel on check-in day: No refund</li>
+                            <li>Before check-in day: Full refund</li>
+                            <li>On check-in day: 50% refund</li>
+                            <li>After check-in: No refund</li>
                           </ul>
                         </div>
                       </div>

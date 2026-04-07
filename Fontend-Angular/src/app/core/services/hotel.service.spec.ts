@@ -40,14 +40,6 @@ const MOCK_HOTEL_DETAILS = {
   roomTypes: []
 };
 
-const MOCK_ROOM_TYPE = {
-  roomTypeId: 'rt-001',
-  name: 'Deluxe',
-  description: 'Spacious room with city view',
-  maxOccupancy: 2,
-  amenities: ['WiFi', 'AC', 'TV']
-};
-
 const MOCK_AVAILABILITY = {
   roomTypeId: 'rt-001',
   roomTypeName: 'Deluxe',
@@ -157,9 +149,9 @@ describe('HotelService', () => {
     req.flush({ success: true, data: [] });
   });
 
-  // ── PUBLIC: searchHotels ───────────────────────────────────────────────────
+  // ── PUBLIC: searchHotelsWithFilters ───────────────────────────────────────
 
-  it('searchHotels() — should POST to /public/hotels/search with full request body', () => {
+  it('searchHotelsWithFilters() — should POST to /public/hotels/search with full request body', () => {
     const searchReq: SearchHotelRequestDto = {
       city: 'Chennai',
       checkIn: '2025-06-01',
@@ -168,7 +160,7 @@ describe('HotelService', () => {
       pageSize: 10
     };
 
-    service.searchHotels(searchReq).subscribe(result => {
+    service.searchHotelsWithFilters(searchReq).subscribe(result => {
       expect(result.hotels.length).toBe(1);
       expect(result.recordsCount).toBe(1);
       expect(result.pageNumber).toBe(1);
@@ -186,7 +178,7 @@ describe('HotelService', () => {
     });
   });
 
-  it('searchHotels() — should pass pageNumber and pageSize in body', () => {
+  it('searchHotelsWithFilters() — should pass pageNumber and pageSize in body', () => {
     const searchReq: SearchHotelRequestDto = {
       city: 'Mumbai',
       checkIn: '2025-07-10',
@@ -195,7 +187,7 @@ describe('HotelService', () => {
       pageSize: 5
     };
 
-    service.searchHotels(searchReq).subscribe();
+    service.searchHotelsWithFilters(searchReq).subscribe();
 
     const req = http.expectOne(`${BASE}/public/hotels/search`);
     expect(req.request.body.pageNumber).toBe(2);
@@ -224,26 +216,6 @@ describe('HotelService', () => {
     const req = http.expectOne(`${BASE}/public/hotels/hotel-999/full-details`);
     expect(req.request.method).toBe('GET');
     req.flush({ success: true, data: { ...MOCK_HOTEL_DETAILS, hotelId: 'hotel-999' } });
-  });
-
-  // ── PUBLIC: getRoomTypes ───────────────────────────────────────────────────
-
-  it('getRoomTypes() — should GET /public/hotels/{id}/roomtypes', () => {
-    service.getRoomTypes('hotel-001').subscribe(result => {
-      expect(result.length).toBe(2);
-      expect(result[0].name).toBe('Deluxe');
-      expect(result[1].maxOccupancy).toBe(4);
-    });
-
-    const req = http.expectOne(`${BASE}/public/hotels/hotel-001/roomtypes`);
-    expect(req.request.method).toBe('GET');
-    req.flush({
-      success: true,
-      data: [
-        MOCK_ROOM_TYPE,
-        { ...MOCK_ROOM_TYPE, roomTypeId: 'rt-002', name: 'Suite', maxOccupancy: 4 }
-      ]
-    });
   });
 
   // ── PUBLIC: getAvailability ────────────────────────────────────────────────
@@ -291,6 +263,7 @@ describe('HotelService', () => {
       name: 'Grand Palace Updated',
       address: '2 MG Road',
       city: 'Chennai',
+      state: 'TN',
       description: 'Newly renovated luxury hotel.',
       contactNumber: '9840650390',
       imageUrl: 'https://example.com/new-img.jpg'
@@ -332,22 +305,25 @@ describe('HotelService', () => {
 
   // ── SUPERADMIN: getAllHotelsForSuperAdmin ──────────────────────────────────
 
-  it('getAllHotelsForSuperAdmin() — should GET /superadmin/hotels and return list with stats', () => {
+  it('getAllHotelsForSuperAdmin() — should POST /superadmin/hotels/list and return paged list', () => {
     service.getAllHotelsForSuperAdmin().subscribe(result => {
-      expect(result.length).toBe(2);
-      expect(result[0].name).toBe('Grand Palace');
-      expect(result[0].totalRevenue).toBe(700000);
-      expect(result[1].isBlockedBySuperAdmin).toBeTrue();
+      expect(result.hotels.length).toBe(2);
+      expect(result.hotels[0].name).toBe('Grand Palace');
+      expect(result.hotels[0].totalRevenue).toBe(700000);
+      expect(result.hotels[1].isBlockedBySuperAdmin).toBeTrue();
     });
 
-    const req = http.expectOne(`${BASE}/superadmin/hotels`);
-    expect(req.request.method).toBe('GET');
+    const req = http.expectOne(`${BASE}/superadmin/hotels/list`);
+    expect(req.request.method).toBe('POST');
     req.flush({
       success: true,
-      data: [
-        MOCK_SA_HOTEL,
-        { ...MOCK_SA_HOTEL, hotelId: 'hotel-002', name: 'Blocked Inn', isActive: false, isBlockedBySuperAdmin: true }
-      ]
+      data: {
+        totalCount: 2,
+        hotels: [
+          MOCK_SA_HOTEL,
+          { ...MOCK_SA_HOTEL, hotelId: 'hotel-002', name: 'Blocked Inn', isActive: false, isBlockedBySuperAdmin: true }
+        ]
+      }
     });
   });
 

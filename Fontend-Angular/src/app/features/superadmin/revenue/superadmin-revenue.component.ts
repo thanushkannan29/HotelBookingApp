@@ -36,10 +36,10 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
 
       @if (loading()) {
         <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-      } @else {
-        <mat-card>
-          <mat-card-content>
-            <table mat-table [dataSource]="items()" class="w-100">
+      }
+      <mat-card>
+        <mat-card-content>
+          <table mat-table [dataSource]="items()" class="w-100" [style.display]="loading() ? 'none' : ''">
               <ng-container matColumnDef="reservationCode">
                 <th mat-header-cell *matHeaderCellDef>Reservation</th>
                 <td mat-cell *matCellDef="let r">{{ r.reservationCode }}</td>
@@ -62,7 +62,11 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
               </ng-container>
               <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
               <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" colspan="5" style="text-align:center;padding:32px;">No revenue records yet</td>
+              </tr>
             </table>
+            <!-- Always in DOM -->
             <mat-paginator
               [length]="totalCount()"
               [pageSize]="pageSize"
@@ -70,9 +74,8 @@ import { SuperAdminRevenueDto, RevenueSummaryDto } from '../../../core/models/mo
               showFirstLastButtons
               (page)="onPage($event)"
             />
-          </mat-card-content>
-        </mat-card>
-      }
+        </mat-card-content>
+      </mat-card>
     </div>
   `,
   styles: [`
@@ -111,5 +114,5 @@ export class SuperadminRevenueComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.load(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 }

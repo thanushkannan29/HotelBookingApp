@@ -403,14 +403,6 @@ export interface PagedTransactionResponseDto {
   transactions: TransactionResponseDto[];
 }
 
-// F8A: New interface
-export interface PaymentIntentDto {
-  upiId?: string;
-  amount: number;
-  paymentRef: string;
-  hotelName: string;
-}
-
 export const PaymentMethod: Record<number, string> = {
   1: 'Credit Card',
   2: 'Debit Card',
@@ -486,6 +478,9 @@ export interface GetHotelReviewsRequestDto {
   hotelId: string;
   page: number;
   pageSize: number;
+  minRating?: number;
+  maxRating?: number;
+  sortDir?: string; // 'asc' | 'desc' | undefined (newest first)
 }
 
 // ─── USER PROFILE ─────────────────────────────────────────────────────────────
@@ -514,22 +509,6 @@ export interface UpdateUserProfileDto {
   profileImageUrl?: string;
 }
 
-export interface BookingHistoryDto {
-  reservationId: string;
-  reservationCode: string;
-  hotelName: string;
-  checkInDate: string;
-  checkOutDate: string;
-  totalAmount: number;
-  status: string;
-  createdDate: string;
-}
-
-export interface PagedBookingHistoryDto {
-  totalCount: number;
-  bookings: BookingHistoryDto[];
-}
-
 export interface PaginationDto {
   page: number;
   pageSize: number;
@@ -553,7 +532,6 @@ export interface AdminDashboardDto {
   totalRevenue: number;
   totalReviews: number;
   averageRating: number;
-  pendingRefundRequests: number; // kept for backward compat, always 0
 }
 
 export interface GuestDashboardDto {
@@ -728,15 +706,53 @@ export interface QrPaymentResponseDto {
   hotelName: string;
 }
 
-// ─── RESERVATION (updated with GST/promo/wallet fields) ──────────────────────
-export interface ReservationPricingFields {
-  gstPercent: number;
-  gstAmount: number;
-  discountPercent: number;
-  discountAmount: number;
-  walletAmountUsed: number;
-  finalAmount: number;
-  promoCodeUsed?: string;
+// ─── SUPPORT REQUEST ──────────────────────────────────────────────────────────
+export interface PublicSupportRequestDto {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  category: string;
+}
+
+export interface GuestSupportRequestDto {
+  subject: string;
+  message: string;
+  category: string;
+  reservationCode?: string;
+  hotelId?: string;
+}
+
+export interface AdminSupportRequestDto {
+  subject: string;
+  message: string;
+  category: string;
+}
+
+export interface SupportRequestResponseDto {
+  supportRequestId: string;
+  subject: string;
+  message: string;
+  category: string;
+  status: 'Open' | 'InProgress' | 'Resolved';
+  adminResponse?: string;
+  submitterRole: string;
+  submitterName: string;
+  submitterEmail: string;
+  reservationCode?: string;
+  hotelName?: string;
+  createdAt: string;
+  respondedAt?: string;
+}
+
+export interface PagedSupportRequestResponseDto {
+  totalCount: number;
+  requests: SupportRequestResponseDto[];
+}
+
+export interface RespondSupportRequestDto {
+  response: string;
+  status: 'InProgress' | 'Resolved';
 }
 
 // ─── ROOM TYPE RATE ───────────────────────────────────────────────────────────

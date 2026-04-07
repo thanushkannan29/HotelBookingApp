@@ -1,29 +1,38 @@
 using HotelBookingAppWebApi.Interfaces;
 using System.Security.Cryptography;
+using System.Text;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// HMAC-SHA256 password hashing.
+    /// Pass <c>null</c> for <paramref name="existingSalt"/> on registration to generate a new salt.
+    /// Pass the stored salt on login to reproduce the same hash for comparison.
+    /// </summary>
     public class PasswordService : IPasswordService
     {
-        public byte[] HashPassword(string password, byte[]? dbHashKey, out byte[]? hashkey)
+        /// <inheritdoc/>
+        public byte[] HashPassword(string password, byte[]? existingSalt, out byte[]? newSalt)
         {
-            if (string.IsNullOrEmpty(password))
-                throw new ArgumentException("Password cannot be null or empty.", nameof(password));
+            ArgumentException.ThrowIfNullOrEmpty(password);
 
-            HMACSHA256 hmac;
-            if (dbHashKey == null)
+            using var hmac = CreateHmac(existingSalt, out newSalt);
+            return hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
+        }
+
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private static HMACSHA256 CreateHmac(byte[]? existingSalt, out byte[]? newSalt)
+        {
+            if (existingSalt is null)
             {
-                hmac = new HMACSHA256();
-                hashkey = hmac.Key;
-            }
-            else
-            {
-                hmac = new HMACSHA256(dbHashKey);
-                hashkey = null;
+                var hmac = new HMACSHA256();
+                newSalt = hmac.Key;
+                return hmac;
             }
 
-            var passwordBytes = System.Text.Encoding.UTF8.GetBytes(password);
-            return hmac.ComputeHash(passwordBytes);
+            newSalt = null;
+            return new HMACSHA256(existingSalt);
         }
     }
 }

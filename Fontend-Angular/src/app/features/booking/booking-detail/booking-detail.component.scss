@@ -209,6 +209,14 @@
   font-size: 14px;
 }
 
+.refund-preview-warn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #c62828;
+  font-size: 14px;
+}
+
 .inline-pay-panel {
   margin: 0 24px 16px;
   border: 2px solid var(--color-primary);

@@ -4,12 +4,12 @@
     <!-- Brand -->
     <a routerLink="/hotels" class="nav-brand" (click)="closeMobile()">
       <img src="assets/logo1.png" alt="StayHub" class="brand-icon" />
-      <span class="brand-name">StayHub</span>
+      <span class="brand-name">Thanush StayHub</span>
     </a>
 
     <!-- Desktop Links -->
     <div class="nav-links">
-      <a routerLink="/hotels" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-link">🏨 Hotels</a>
+      <a routerLink="/hotels" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" class="nav-link"> Home</a>
 
       @if (auth.isAuthenticated()) {
 
@@ -17,10 +17,10 @@
         @if (auth.isGuest()) {
           <a routerLink="/guest/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
           <a routerLink="/booking/list" routerLinkActive="active" class="nav-link">My Bookings</a>
-          <a routerLink="/guest/wallet" routerLinkActive="active" class="nav-link">💰 Wallet</a>
-          <a routerLink="/guest/promo-codes" routerLinkActive="active" class="nav-link">🎫 Promos</a>
+          <a routerLink="/guest/wallet" routerLinkActive="active" class="nav-link"> Wallet</a>
+          <a routerLink="/guest/promo-codes" routerLinkActive="active" class="nav-link"> Promos</a>
           <a routerLink="/guest/reviews" routerLinkActive="active" class="nav-link">Reviews</a>
-          <a routerLink="/guest/profile" routerLinkActive="active" class="nav-link">Profile</a>
+          
         }
 
         <!-- ADMIN LINKS -->
@@ -32,19 +32,23 @@
           <a routerLink="/admin/reviews" routerLinkActive="active" class="nav-link">Reviews</a>
           <a routerLink="/admin/transactions" routerLinkActive="active" class="nav-link">Transactions</a>
           <a routerLink="/admin/amenity-requests" routerLinkActive="active" class="nav-link">Amenities</a>
+          
         }
 
         <!-- SUPERADMIN LINKS -->
         @if (auth.isSuperAdmin()) {
           <a routerLink="/superadmin/dashboard" routerLinkActive="active" class="nav-link">Dashboard</a>
           <a routerLink="/superadmin/hotels" routerLinkActive="active" class="nav-link">Hotels</a>
-          <a routerLink="/superadmin/revenue" routerLinkActive="active" class="nav-link">💰 Revenue</a>
-          <a routerLink="/superadmin/amenities" routerLinkActive="active" class="nav-link">Amenities</a>
-          <a routerLink="/superadmin/amenity-requests" routerLinkActive="active" class="nav-link">Requests</a>
+          <a routerLink="/superadmin/revenue" routerLinkActive="active" class="nav-link">Revenue</a>
+          <a routerLink="/superadmin/amenity-requests" routerLinkActive="active" class="nav-link">Amenities</a>
+          <a routerLink="/superadmin/support" routerLinkActive="active" class="nav-link">Support </a>
           <a routerLink="/superadmin/audit-logs" routerLinkActive="active" class="nav-link">Audit</a>
           <a routerLink="/superadmin/error-logs" routerLinkActive="active" class="nav-link">Logs</a>
         }
       }
+
+      <!-- Contact always visible -->
+      <a routerLink="/contact" routerLinkActive="active" class="nav-link">Contact</a>
     </div>
 
     <!-- Desktop Actions -->
@@ -79,13 +83,16 @@
           @if (auth.isGuest()) {
             <a mat-menu-item routerLink="/guest/profile"><mat-icon>person</mat-icon> Profile</a>
             <a mat-menu-item routerLink="/guest/transactions"><mat-icon>receipt</mat-icon> Transactions</a>
+            <a mat-menu-item routerLink="/guest/support"><mat-icon>support_agent</mat-icon> My Support Requests</a>
           }
           @if (auth.isAdmin()) {
-            <a mat-menu-item routerLink="/admin/hotel"><mat-icon>hotel</mat-icon> My Hotel</a>
+            <a mat-menu-item routerLink="/admin/hotel"><mat-icon>hotel</mat-icon> Edit My Hotel</a>
             <a mat-menu-item routerLink="/admin/audit-logs"><mat-icon>history</mat-icon> Audit Logs</a>
+            <a mat-menu-item routerLink="/admin/support"><mat-icon>bug_report</mat-icon> My Bug Reports</a>
           }
           @if (auth.isSuperAdmin()) {
             <a mat-menu-item routerLink="/superadmin/profile"><mat-icon>person</mat-icon> Profile</a>
+            
           }
           <mat-divider />
           <button mat-menu-item class="logout-btn" (click)="auth.logout()">
@@ -105,7 +112,7 @@
   <!-- Mobile Menu -->
   @if (mobileOpen()) {
     <div class="mobile-menu">
-      <a routerLink="/hotels" class="mobile-link" (click)="closeMobile()">🏨 Hotels</a>
+      <a routerLink="/hotels" class="mobile-link" (click)="closeMobile()">Hotels</a>
 
       @if (auth.isAuthenticated()) {
         <div class="mobile-divider"></div>
@@ -113,10 +120,11 @@
         @if (auth.isGuest()) {
           <a routerLink="/guest/dashboard" class="mobile-link" (click)="closeMobile()">Dashboard</a>
           <a routerLink="/booking/list" class="mobile-link" (click)="closeMobile()">My Bookings</a>
-          <a routerLink="/guest/wallet" class="mobile-link" (click)="closeMobile()">💰 Wallet</a>
-          <a routerLink="/guest/promo-codes" class="mobile-link" (click)="closeMobile()">🎫 Promos</a>
+          <a routerLink="/guest/wallet" class="mobile-link" (click)="closeMobile()"> Wallet</a>
+          <a routerLink="/guest/promo-codes" class="mobile-link" (click)="closeMobile()"> Promos</a>
           <a routerLink="/guest/reviews" class="mobile-link" (click)="closeMobile()">Reviews</a>
           <a routerLink="/guest/transactions" class="mobile-link" (click)="closeMobile()">Transactions</a>
+          <a routerLink="/guest/support" class="mobile-link" (click)="closeMobile()">Support Requests</a>
           <a routerLink="/guest/profile" class="mobile-link" (click)="closeMobile()">Profile</a>
         }
 
@@ -129,6 +137,7 @@
           <a routerLink="/admin/reviews" class="mobile-link" (click)="closeMobile()">Reviews</a>
           <a routerLink="/admin/transactions" class="mobile-link" (click)="closeMobile()">Transactions</a>
           <a routerLink="/admin/amenity-requests" class="mobile-link" (click)="closeMobile()">Amenity Requests</a>
+          <a routerLink="/admin/support" class="mobile-link" (click)="closeMobile()"> Bug Reports</a>
           <a routerLink="/admin/hotel" class="mobile-link" (click)="closeMobile()">My Hotel</a>
           <a routerLink="/admin/audit-logs" class="mobile-link" (click)="closeMobile()">Audit Logs</a>
         }
@@ -136,16 +145,19 @@
         @if (auth.isSuperAdmin()) {
           <a routerLink="/superadmin/dashboard" class="mobile-link" (click)="closeMobile()">Dashboard</a>
           <a routerLink="/superadmin/hotels" class="mobile-link" (click)="closeMobile()">Hotels</a>
-          <a routerLink="/superadmin/revenue" class="mobile-link" (click)="closeMobile()">💰 Revenue</a>
+          <a routerLink="/superadmin/revenue" class="mobile-link" (click)="closeMobile()"> Revenue</a>
           <a routerLink="/superadmin/amenities" class="mobile-link" (click)="closeMobile()">Amenities</a>
-          <a routerLink="/superadmin/amenity-requests" class="mobile-link" (click)="closeMobile()">Requests</a>
+          <a routerLink="/superadmin/amenity-requests" class="mobile-link" (click)="closeMobile()">Amenity Requests</a>
+          <a routerLink="/superadmin/support" class="mobile-link" (click)="closeMobile()">Support Requests</a>
           <a routerLink="/superadmin/audit-logs" class="mobile-link" (click)="closeMobile()">Audit Logs</a>
           <a routerLink="/superadmin/error-logs" class="mobile-link" (click)="closeMobile()">Error Logs</a>
         }
 
         <div class="mobile-divider"></div>
+        <a routerLink="/contact" class="mobile-link" (click)="closeMobile()">Contact & Support</a>
         <button class="mobile-link logout" (click)="auth.logout(); closeMobile()">Sign Out</button>
       } @else {
+        <a routerLink="/contact" class="mobile-link" (click)="closeMobile()">Contact</a>
         <a routerLink="/auth/login" class="mobile-link mobile-cta" (click)="closeMobile()">Sign In</a>
       }
     </div>

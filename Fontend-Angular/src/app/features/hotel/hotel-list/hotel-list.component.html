@@ -2,18 +2,24 @@
 
   <!-- Hero Search -->
   <section class="hero">
+    <!-- Background slideshow layers -->
+    @for (slide of heroSlides; track slide.url; let i = $index) {
+      <div class="hero-slide"
+           [class.active]="activeSlide() === i"
+           [style.background-image]="'url(' + slide.url + ')'">
+      </div>
+    }
+
     <div class="hero-content">
       <h1 class="hero-title">Where will you go next?</h1>
       <p class="hero-sub">Discover exceptional hotels across India. Real prices. Instant booking.</p>
 
       <div class="search-card">
         <div class="search-form">
-          <!-- City autocomplete — auto-fills state -->
           <div class="search-field">
             <app-city-autocomplete [control]="cityControl" [stateControl]="stateControl" />
           </div>
 
-          <!-- State field (auto-filled, editable) -->
           <div class="search-field">
             <mat-form-field appearance="outline" style="width:100%">
               <mat-label>🗺️ State</mat-label>
@@ -42,12 +48,20 @@
           </form>
 
           <button mat-flat-button color="primary" class="search-btn"
-                  (click)="search()" [disabled]="isSearching()">
+                  (click)="search(1)" [disabled]="isSearching()">
             <mat-icon>search</mat-icon>
             {{ isSearching() ? 'Searching…' : 'Search' }}
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- Trust signals -->
+    <div class="trust-strip">
+      <div class="trust-item"><mat-icon>bolt</mat-icon> Instant Booking</div>
+      <div class="trust-item"><mat-icon>verified</mat-icon> Verified Hotels</div>
+      <div class="trust-item"><mat-icon>currency_rupee</mat-icon> Best Price Guarantee</div>
+      <div class="trust-item"><mat-icon>support_agent</mat-icon> 24/7 Support</div>
     </div>
   </section>
 
@@ -56,9 +70,7 @@
     <div class="container">
 
       @if (searchResults() === null) {
-        <!-- ── BROWSE MODE: Netflix rows ── -->
-
-        <!-- Top 10 Hotels Row -->
+        <!-- BROWSE MODE -->
         @if (topHotels().length > 0) {
           <section class="netflix-row">
             <h2 class="row-title">⭐ Top 10 Hotels</h2>
@@ -66,7 +78,6 @@
           </section>
         }
 
-        <!-- State Group Rows (or City fallback) -->
         @for (group of stateGroups(); track group.stateName) {
           <section class="netflix-row">
             <h2 class="row-title">
@@ -87,11 +98,11 @@
         }
 
       } @else {
-        <!-- ── SEARCH RESULTS MODE ── -->
+        <!-- SEARCH RESULTS MODE -->
         <div class="results-header">
           <div>
             <h2 class="section-title">
-              {{ filteredResults().length }} hotels found
+              {{ totalResults() }} hotels found
               @if (cityControl.value) { in {{ cityControl.value }} }
               @else if (stateControl.value) { in {{ stateControl.value }} }
             </h2>
@@ -106,7 +117,7 @@
         </div>
 
         <div class="search-layout">
-          <!-- LEFT: Filter Sidebar -->
+          <!-- Filter Sidebar -->
           <aside class="filter-sidebar">
             <h3 class="filter-title">Filters</h3>
 
@@ -114,7 +125,7 @@
             <div class="filter-group">
               <label class="filter-label">Sort By</label>
               <mat-form-field appearance="outline" style="width:100%">
-                <mat-select [value]="sortBy()" (selectionChange)="sortBy.set($event.value); search()">
+                <mat-select [value]="sortBy()" (selectionChange)="sortBy.set($event.value); search(1); paginator.firstPage()">
                   <mat-option value="">Default</mat-option>
                   <mat-option value="price_asc">💰 Price: Low → High</mat-option>
                   <mat-option value="price_desc">💰 Price: High → Low</mat-option>
@@ -130,28 +141,15 @@
                 <mat-form-field appearance="outline" style="width:100px;">
                   <mat-label>Min ₹</mat-label>
                   <input matInput type="number" [value]="minPrice()"
-                         (change)="minPrice.set(+$any($event.target).value); search()" />
+                         (change)="minPrice.set(+$any($event.target).value); applyFilters()" />
                 </mat-form-field>
                 <span>–</span>
                 <mat-form-field appearance="outline" style="width:110px;">
                   <mat-label>Max ₹</mat-label>
                   <input matInput type="number" [value]="maxPrice()"
-                         (change)="maxPrice.set(+$any($event.target).value); search()" />
+                         (change)="maxPrice.set(+$any($event.target).value); applyFilters()" />
                 </mat-form-field>
               </div>
-            </div>
-
-            <!-- Min Rating -->
-            <div class="filter-group">
-              <label class="filter-label">⭐ Minimum Rating</label>
-              <mat-form-field appearance="outline" style="width:100%">
-                <mat-select [value]="minRating()" (selectionChange)="minRating.set($event.value); applyFilters()">
-                  <mat-option [value]="0">Any</mat-option>
-                  <mat-option [value]="3">3+ ⭐</mat-option>
-                  <mat-option [value]="4">4+ ⭐</mat-option>
-                  <mat-option [value]="4.5">4.5+ ⭐</mat-option>
-                </mat-select>
-              </mat-form-field>
             </div>
 
             <!-- Amenities -->
@@ -174,32 +172,30 @@
             </button>
           </aside>
 
-          <!-- RIGHT: Results Grid -->
+          <!-- Results Grid -->
           <div class="results-area">
-            @if (filteredResults().length === 0) {
+            @if (isSearching()) {
+              <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+            } @else if (searchResults()!.length === 0) {
               <div class="empty-state">
                 <mat-icon class="empty-icon">hotel</mat-icon>
                 <h3>No hotels match your filters</h3>
-                <button mat-stroked-button (click)="minPrice.set(0); maxPrice.set(50000); minRating.set(0); applyFilters()">
-                  Reset Filters
-                </button>
+                <button mat-stroked-button (click)="clearSearch()">Reset Filters</button>
               </div>
             } @else {
               <div class="hotel-grid">
-                @for (hotel of filteredResults().slice(0, pageSize); track hotel.hotelId) {
+                @for (hotel of searchResults()!; track hotel.hotelId) {
                   <app-hotel-card [hotel]="hotel" />
                 }
               </div>
 
-              @if (filteredResults().length > pageSize) {
-                <mat-paginator
-                  [length]="filteredResults().length"
-                  [pageSize]="pageSize"
-                  [pageSizeOptions]="[9, 18, 27]"
-                  showFirstLastButtons
-                  (page)="updatePaginatedResults()">
-                </mat-paginator>
-              }
+              <mat-paginator
+                [length]="totalResults()"
+                [pageSize]="pageSize"
+                [pageSizeOptions]="[9, 18, 27]"
+                showFirstLastButtons
+                (page)="onPage($event)"
+              />
             }
           </div>
         </div>

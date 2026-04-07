@@ -24,10 +24,19 @@ function makeReservation(status: string, overrides?: Partial<ReservationDetailsD
     checkOutDate:    '2025-06-03',
     numberOfRooms:   1,
     totalAmount:     7000,
+    gstPercent:      18,
+    gstAmount:       1260,
+    discountPercent: 0,
+    discountAmount:  0,
+    walletAmountUsed: 0,
+    finalAmount:     7000,
     status,
     isCheckedIn:     false,
     createdDate:     '2025-05-01T10:00:00Z',
     rooms:           [{ roomId: 'r-001', roomNumber: '101', floor: 1 }],
+    cancellationFeePaid: false,
+    cancellationFeeAmount: 0,
+    cancellationPolicyText: '',
     ...overrides
   };
 }
@@ -228,7 +237,7 @@ describe('BookingDetailComponent', () => {
     component.cancel();
 
     expect(toastSpy.success).toHaveBeenCalledOnceWith(
-      'Reservation cancelled. Refund request created if applicable.'
+      'Reservation cancelled. Refund will be credited to your wallet if applicable.'
     );
   });
 

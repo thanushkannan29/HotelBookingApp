@@ -9,7 +9,6 @@ import { environment } from '../../../environments/environment';
 import {
   TransactionService,
   ReviewService,
-  RefundService,
   UserService,
   DashboardService,
   AuditLogService,
@@ -25,9 +24,7 @@ import {
   CreateReviewDto,
   UpdateReviewDto,
   GetHotelReviewsRequestDto,
-  ProcessRefundDto,
   UpdateUserProfileDto,
-  PaginationDto,
   CreateRoomTypeDto,
   UpdateRoomTypeDto,
   CreateRoomTypeRateDto,
@@ -128,16 +125,16 @@ describe('TransactionService', () => {
     req.flush({ success: true, data: mockTx });
   });
 
-  it('getTransactions() — should GET /transactions with page and pageSize params', () => {
+  it('getTransactions() — should POST to /transactions/list with page and pageSize in body', () => {
     service.getTransactions(1, 10).subscribe(result => {
       expect(result.totalCount).toBe(5);
       expect(result.transactions.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/transactions`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/transactions/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({
       success: true,
       data: {
@@ -147,12 +144,12 @@ describe('TransactionService', () => {
     });
   });
 
-  it('getTransactions() — page 2 should send correct page param', () => {
+  it('getTransactions() — page 2 should send correct page in body', () => {
     service.getTransactions(2, 5).subscribe();
 
-    const req = http.expectOne(r => r.url === `${BASE}/transactions`);
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('5');
+    const req = http.expectOne(`${BASE}/transactions/list`);
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(5);
     req.flush({ success: true, data: { totalCount: 10, transactions: [] } });
   });
 });
@@ -178,13 +175,15 @@ describe('ReviewService', () => {
   it('addReview() — should POST to /reviews with rating and comment', () => {
     const dto: CreateReviewDto = {
       hotelId: 'hotel-001',
+      reservationId: 'res-001',
       rating: 5,
       comment: 'Wonderful experience, highly recommend!'
     };
     const mockReview = {
       reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001',
+      userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES-001',
       rating: 5, comment: 'Wonderful experience, highly recommend!',
-      createdDate: '2025-01-15T10:00:00Z'
+      createdDate: '2025-01-15T10:00:00Z', contributionPoints: 100
     };
 
     service.addReview(dto).subscribe(result => {
@@ -203,6 +202,7 @@ describe('ReviewService', () => {
   it('addReview() — should include optional imageUrl when provided', () => {
     const dto: CreateReviewDto = {
       hotelId: 'hotel-001',
+      reservationId: 'res-001',
       rating: 4,
       comment: 'Nice view from room',
       imageUrl: 'https://example.com/photo.jpg'
@@ -212,15 +212,16 @@ describe('ReviewService', () => {
 
     const req = http.expectOne(`${BASE}/reviews`);
     expect(req.request.body.imageUrl).toBe('https://example.com/photo.jpg');
-    req.flush({ success: true, data: { reviewId: 'rev-002', hotelId: 'hotel-001', userId: 'usr-001', rating: 4, comment: 'Nice view from room', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-15T10:00:00Z' } });
+    req.flush({ success: true, data: { reviewId: 'rev-002', hotelId: 'hotel-001', userId: 'usr-001', userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES-001', rating: 4, comment: 'Nice view from room', imageUrl: 'https://example.com/photo.jpg', createdDate: '2025-01-15T10:00:00Z', contributionPoints: 80 } });
   });
 
   it('updateReview() — should PUT to /reviews/{id}', () => {
     const dto: UpdateReviewDto = { rating: 4, comment: 'Updated: Good stay overall' };
     const mockReview = {
-      reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001',
+      reviewId: 'rev-001', hotelId: 'hotel-001', userId: 'usr-001', userName: 'Alice',
+      reservationId: 'res-001', reservationCode: 'RES-001',
       rating: 4, comment: 'Updated: Good stay overall',
-      createdDate: '2025-01-15T10:00:00Z'
+      createdDate: '2025-01-15T10:00:00Z', contributionPoints: 80
     };
 
     service.updateReview('rev-001', dto).subscribe(result => {
@@ -257,107 +258,6 @@ describe('ReviewService', () => {
     expect(req.request.body.hotelId).toBe('hotel-001');
     expect(req.request.body.page).toBe(1);
     req.flush({ success: true, data: { totalCount: 25, reviews: [] } });
-  });
-
-  it('getMyReviews() — should GET /reviews/my-reviews and return array', () => {
-    const mockReviews = [
-      { reviewId: 'rev-001', hotelId: 'hotel-001', hotelName: 'Grand Palace', rating: 5, comment: 'Excellent!', createdDate: '2025-01-10T10:00:00Z' },
-      { reviewId: 'rev-002', hotelId: 'hotel-002', hotelName: 'Sea View Inn', rating: 4, comment: 'Good stay', createdDate: '2024-12-20T10:00:00Z' }
-    ];
-
-    service.getMyReviews().subscribe(result => {
-      expect(result.length).toBe(2);
-      expect(result[0].hotelName).toBe('Grand Palace');
-      expect(result[1].rating).toBe(4);
-    });
-
-    const req = http.expectOne(`${BASE}/reviews/my-reviews`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: mockReviews });
-  });
-});
-
-// ─────────────────────────────────────────────────────────────────────────────
-// RefundService
-// ─────────────────────────────────────────────────────────────────────────────
-describe('RefundService', () => {
-  let service: RefundService;
-  let http: HttpTestingController;
-
-  beforeEach(() => {
-    ({ http } = setupTestBed());
-    service = TestBed.inject(RefundService);
-  });
-
-  afterEach(() => http.verify());
-
-  it('should be created', () => {
-    expect(service).toBeTruthy();
-  });
-
-  it('getGuestRefundRequests() — should GET /guest/refund-requests', () => {
-    const mockRefunds = [
-      { refundRequestId: 'rf-001', reservationId: 'res-001', reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Trip cancelled', status: 'Pending', refundAmount: 5000, createdAt: '2025-01-10T10:00:00Z' }
-    ];
-
-    service.getGuestRefundRequests().subscribe(result => {
-      expect(result.length).toBe(1);
-      expect(result[0].status).toBe('Pending');
-      expect(result[0].refundAmount).toBe(5000);
-    });
-
-    const req = http.expectOne(`${BASE}/guest/refund-requests`);
-    expect(req.request.method).toBe('GET');
-    req.flush({ success: true, data: mockRefunds });
-  });
-
-  it('getHotelRefundRequests() — should GET /admin/refund-requests', () => {
-    service.getHotelRefundRequests().subscribe(result => {
-      expect(result.length).toBe(2);
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests`);
-    expect(req.request.method).toBe('GET');
-    req.flush({
-      success: true,
-      data: [
-        { refundRequestId: 'rf-001', status: 'Pending', refundAmount: 5000, reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Cancelled', createdAt: '2025-01-10T10:00:00Z' },
-        { refundRequestId: 'rf-002', status: 'Pending', refundAmount: 2600, reservationCode: 'RES-WXYZ5678', userId: 'usr-002', guestName: 'Ravi', reason: 'No show', createdAt: '2025-01-11T10:00:00Z' }
-      ]
-    });
-  });
-
-  it('approveRefund() — should POST to /admin/refund-requests/{id}/approve', () => {
-    const dto: ProcessRefundDto = { adminResponse: 'Refund approved. Amount credited within 5 days.' };
-
-    service.approveRefund('rf-001', dto).subscribe(result => {
-      expect(result.status).toBe('Approved');
-      expect(result.adminResponse).toBe('Refund approved. Amount credited within 5 days.');
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests/rf-001/approve`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.adminResponse).toBe('Refund approved. Amount credited within 5 days.');
-    req.flush({
-      success: true,
-      data: { refundRequestId: 'rf-001', status: 'Approved', adminResponse: 'Refund approved. Amount credited within 5 days.', refundAmount: 5000, reservationCode: 'RES-ABCD1234', userId: 'usr-001', guestName: 'Thanush', reason: 'Cancelled', createdAt: '2025-01-10T10:00:00Z', processedAt: '2025-01-12T10:00:00Z' }
-    });
-  });
-
-  it('rejectRefund() — should POST to /admin/refund-requests/{id}/reject', () => {
-    const dto: ProcessRefundDto = { adminResponse: 'Outside the cancellation window. No refund applicable.' };
-
-    service.rejectRefund('rf-002', dto).subscribe(result => {
-      expect(result.status).toBe('Rejected');
-    });
-
-    const req = http.expectOne(`${BASE}/admin/refund-requests/rf-002/reject`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.adminResponse).toContain('cancellation window');
-    req.flush({
-      success: true,
-      data: { refundRequestId: 'rf-002', status: 'Rejected', adminResponse: 'Outside the cancellation window. No refund applicable.', refundAmount: 2600, reservationCode: 'RES-WXYZ5678', userId: 'usr-002', guestName: 'Ravi', reason: 'No show', createdAt: '2025-01-11T10:00:00Z', processedAt: '2025-01-12T10:00:00Z' }
-    });
   });
 });
 
@@ -425,27 +325,6 @@ describe('UserService', () => {
     expect(req.request.body.city).toBe('Coimbatore');
     req.flush({ success: true, data: mockUpdated });
   });
-
-  it('getBookingHistory() — should POST /user-profile/booking-history with pagination dto', () => {
-    const dto: PaginationDto = { page: 1, pageSize: 10 };
-
-    service.getBookingHistory(dto).subscribe(result => {
-      expect(result.totalCount).toBe(8);
-      expect(result.bookings.length).toBe(1);
-    });
-
-    const req = http.expectOne(`${BASE}/user-profile/booking-history`);
-    expect(req.request.method).toBe('POST');
-    expect(req.request.body.page).toBe(1);
-    expect(req.request.body.pageSize).toBe(10);
-    req.flush({
-      success: true,
-      data: {
-        totalCount: 8,
-        bookings: [{ reservationId: 'res-001', reservationCode: 'RES-ABCD1234', hotelName: 'Grand Palace', checkInDate: '2025-01-10', checkOutDate: '2025-01-12', totalAmount: 10000, status: 'Completed', createdDate: '2025-01-05T10:00:00Z' }]
-      }
-    });
-  });
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -473,8 +352,7 @@ describe('DashboardService', () => {
       totalRooms: 20, activeRooms: 18, totalRoomTypes: 3,
       totalReservations: 120, pendingReservations: 5,
       activeReservations: 10, completedReservations: 100, cancelledReservations: 5,
-      totalRevenue: 600000, totalReviews: 45, averageRating: 4.3,
-      pendingRefundRequests: 2
+      totalRevenue: 600000, totalReviews: 45, averageRating: 4.3
     };
 
     service.getAdminDashboard().subscribe(result => {
@@ -493,13 +371,12 @@ describe('DashboardService', () => {
     const mockDashboard = {
       totalBookings: 8, activeBookings: 2,
       completedBookings: 5, cancelledBookings: 1,
-      totalSpent: 40000, pendingRefunds: 1
+      totalSpent: 40000
     };
 
     service.getGuestDashboard().subscribe(result => {
       expect(result.totalBookings).toBe(8);
       expect(result.totalSpent).toBe(40000);
-      expect(result.pendingRefunds).toBe(1);
     });
 
     const req = http.expectOne(`${BASE}/dashboard/guest`);
@@ -511,8 +388,7 @@ describe('DashboardService', () => {
     const mockDashboard = {
       totalHotels: 50, activeHotels: 46, blockedHotels: 4,
       totalUsers: 1200, totalReservations: 5000,
-      totalRevenue: 25000000, totalReviews: 800,
-      pendingRefundRequests: 12
+      totalRevenue: 25000000, totalReviews: 800
     };
 
     service.getSuperAdminDashboard().subscribe(result => {
@@ -545,16 +421,16 @@ describe('AuditLogService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getAdminAuditLogs() — should GET /admin/audit-logs with pagination', () => {
+  it('getAdminAuditLogs() — should POST to /admin/audit-logs/list with body', () => {
     service.getAdminAuditLogs(1, 20).subscribe(result => {
       expect(result.totalCount).toBe(10);
       expect(result.logs.length).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/audit-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/admin/audit-logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({
       success: true,
       data: {
@@ -564,15 +440,15 @@ describe('AuditLogService', () => {
     });
   });
 
-  it('getAllAuditLogs() — should GET /superadmin/audit-logs for page 2', () => {
+  it('getAllAuditLogs() — should POST to /superadmin/audit-logs/list for page 2', () => {
     service.getAllAuditLogs(2, 20).subscribe(result => {
       expect(result.totalCount).toBe(200);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/superadmin/audit-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('2');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/superadmin/audit-logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(2);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({ success: true, data: { totalCount: 200, logs: [] } });
   });
 });
@@ -595,28 +471,28 @@ describe('LogService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getMyLogs() — should GET /logs/my-logs with pagination params', () => {
+  it('getMyLogs() — should POST to /logs/my-logs with body', () => {
     service.getMyLogs(1, 10).subscribe(result => {
       expect(result.totalCount).toBe(3);
       expect(result.logs.length).toBe(0);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/logs/my-logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/logs/my-logs`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: { totalCount: 3, logs: [] } });
   });
 
-  it('getAllLogs() — should GET /logs (SuperAdmin) with pagination params', () => {
+  it('getAllLogs() — should POST to /logs/list with body', () => {
     service.getAllLogs(1, 20).subscribe(result => {
       expect(result.totalCount).toBe(50);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/logs`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('page')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('20');
+    const req = http.expectOne(`${BASE}/logs/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(20);
     req.flush({ success: true, data: { totalCount: 50, logs: [] } });
   });
 });
@@ -639,7 +515,7 @@ describe('RoomTypeService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getRoomTypes() — should GET /admin/roomtypes and return list', () => {
+  it('getRoomTypes() — should POST /admin/roomtypes/list and return list', () => {
     const mockRoomTypes = [
       { roomTypeId: 'rt-001', name: 'Deluxe', description: 'Spacious deluxe room', maxOccupancy: 2, amenities: 'WiFi, AC, TV', isActive: true, roomCount: 5 },
       { roomTypeId: 'rt-002', name: 'Suite', description: 'Luxury suite', maxOccupancy: 4, amenities: 'WiFi, AC, Jacuzzi, Minibar', isActive: true, roomCount: 2 }
@@ -651,15 +527,15 @@ describe('RoomTypeService', () => {
       expect(result[1].maxOccupancy).toBe(4);
     });
 
-    const req = http.expectOne(`${BASE}/admin/roomtypes`);
-    expect(req.request.method).toBe('GET');
+    const req = http.expectOne(`${BASE}/admin/roomtypes/list`);
+    expect(req.request.method).toBe('POST');
     req.flush({ success: true, data: mockRoomTypes });
   });
 
   it('addRoomType() — should POST to /admin/roomtypes and return void', () => {
     const dto: CreateRoomTypeDto = {
       name: 'Standard', description: 'Basic comfortable room',
-      maxOccupancy: 2, amenities: 'WiFi'
+      maxOccupancy: 2, amenityIds: []
     };
 
     service.addRoomType(dto).subscribe(result => {
@@ -676,7 +552,7 @@ describe('RoomTypeService', () => {
   it('updateRoomType() — should PUT to /admin/roomtypes with updated data', () => {
     const dto: UpdateRoomTypeDto = {
       roomTypeId: 'rt-001', name: 'Deluxe Plus',
-      description: 'Upgraded deluxe', maxOccupancy: 3, amenities: 'WiFi, AC, TV, Bathtub'
+      description: 'Upgraded deluxe', maxOccupancy: 3, amenityIds: ['a1', 'a2']
     };
 
     service.updateRoomType(dto).subscribe(result => {
@@ -760,7 +636,7 @@ describe('RoomService', () => {
     expect(service).toBeTruthy();
   });
 
-  it('getRooms() — should GET /admin/rooms with pageNumber and pageSize params', () => {
+  it('getRooms() — should POST /admin/rooms/list with page and pageSize in body', () => {
     const mockRooms = [
       { roomId: 'r-001', roomNumber: '101', floor: 1, roomTypeId: 'rt-001', roomTypeName: 'Deluxe', isActive: true },
       { roomId: 'r-002', roomNumber: '102', floor: 1, roomTypeId: 'rt-001', roomTypeName: 'Deluxe', isActive: true }
@@ -772,10 +648,10 @@ describe('RoomService', () => {
       expect(result[1].floor).toBe(1);
     });
 
-    const req = http.expectOne(r => r.url === `${BASE}/admin/rooms`);
-    expect(req.request.method).toBe('GET');
-    expect(req.request.params.get('pageNumber')).toBe('1');
-    expect(req.request.params.get('pageSize')).toBe('10');
+    const req = http.expectOne(`${BASE}/admin/rooms/list`);
+    expect(req.request.method).toBe('POST');
+    expect(req.request.body.page).toBe(1);
+    expect(req.request.body.pageSize).toBe(10);
     req.flush({ success: true, data: mockRooms });
   });
 

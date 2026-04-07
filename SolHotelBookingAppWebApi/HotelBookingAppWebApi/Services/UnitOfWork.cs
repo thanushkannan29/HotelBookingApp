@@ -4,6 +4,10 @@ using Microsoft.EntityFrameworkCore.Storage;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// Wraps EF Core's DbContext transaction lifecycle.
+    /// Prevents nested transactions and provides a safe commit/rollback pattern.
+    /// </summary>
     public class UnitOfWork : IUnitOfWork, IDisposable
     {
         private readonly HotelBookingContext _context;
@@ -14,19 +18,19 @@ namespace HotelBookingAppWebApi.Services
             _context = context;
         }
 
+        /// <inheritdoc/>
         public async Task BeginTransactionAsync()
         {
-            // Guard: don't start a nested transaction
-            if (_transaction != null) return;
+            if (_transaction is not null) return; // guard against nested transactions
             _transaction = await _context.Database.BeginTransactionAsync();
         }
 
+        /// <inheritdoc/>
         public async Task CommitAsync()
         {
-            if (_transaction == null)
+            if (_transaction is null)
             {
-                // No explicit transaction — just save changes (safe fallback)
-                await _context.SaveChangesAsync();
+                await _context.SaveChangesAsync(); // safe fallback — no explicit transaction
                 return;
             }
 
@@ -37,14 +41,14 @@ namespace HotelBookingAppWebApi.Services
             }
             finally
             {
-                await _transaction.DisposeAsync();
-                _transaction = null;
+                await DisposeTransactionAsync();
             }
         }
 
+        /// <inheritdoc/>
         public async Task RollbackAsync()
         {
-            if (_transaction == null) return;
+            if (_transaction is null) return;
 
             try
             {
@@ -52,17 +56,26 @@ namespace HotelBookingAppWebApi.Services
             }
             finally
             {
-                await _transaction.DisposeAsync();
-                _transaction = null;
+                await DisposeTransactionAsync();
             }
         }
 
+        /// <inheritdoc/>
         public async Task SaveChangesAsync()
             => await _context.SaveChangesAsync();
 
         public void Dispose()
         {
             _transaction?.Dispose();
+            _transaction = null;
+        }
+
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private async Task DisposeTransactionAsync()
+        {
+            if (_transaction is null) return;
+            await _transaction.DisposeAsync();
             _transaction = null;
         }
     }

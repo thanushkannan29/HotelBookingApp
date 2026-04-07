@@ -42,3 +42,7 @@ __screenshots__/
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment secrets — copy environment.example.ts → environment.ts and fill in keys
+/src/environments/environment.ts
+/src/environments/environment.prod.ts

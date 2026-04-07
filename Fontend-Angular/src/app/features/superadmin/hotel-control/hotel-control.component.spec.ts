@@ -1,290 +1,192 @@
-import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, fakeAsync, tick, flushMicrotasks } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter } from '@angular/router';
-import { of } from 'rxjs';
+import { of, throwError } from 'rxjs';
 import { HotelControlComponent } from './hotel-control.component';
 import { HotelService } from '../../../core/services/hotel.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { SuperAdminHotelListDto } from '../../../core/models/models';
+import { MatDialog } from '@angular/material/dialog';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
-// ── Mock data ──────────────────────────────────────────────────────────────────
-
-function makeHotel(id: string, name: string, isActive: boolean, isBlocked: boolean): SuperAdminHotelListDto {
+function makeHotel(id: string, isActive: boolean, isBlocked: boolean) {
   return {
-    hotelId:               id,
-    name,
-    city:                  'Chennai',
-    contactNumber:         '9840650390',
-    isActive,
-    isBlockedBySuperAdmin: isBlocked,
-    createdAt:             '2024-01-01T00:00:00Z',
-    totalReservations:     100,
-    totalRevenue:          500000,
+    hotelId: id, name: `Hotel ${id}`, city: 'Chennai', state: 'TN',
+    isActive, isBlockedBySuperAdmin: isBlocked,
+    totalReservations: 10, totalRevenue: 50000,
+    contactNumber: '9840650390', createdAt: '2025-01-01T00:00:00Z'
   };
 }
 
-const HOTEL_ACTIVE_1  = makeHotel('hotel-001', 'Grand Palace',   true,  false);
-const HOTEL_ACTIVE_2  = makeHotel('hotel-002', 'Sea View Inn',   true,  false);
-const HOTEL_INACTIVE  = makeHotel('hotel-003', 'City Lights',    false, false);
-const HOTEL_BLOCKED   = makeHotel('hotel-004', 'Blocked Hotel',  false, true);
-const HOTEL_BLOCKED_2 = makeHotel('hotel-005', 'Blocked Hotel 2',false, true);
-
-const ALL_HOTELS = [HOTEL_ACTIVE_1, HOTEL_ACTIVE_2, HOTEL_INACTIVE, HOTEL_BLOCKED, HOTEL_BLOCKED_2];
-
-// ─────────────────────────────────────────────────────────────────────────────
+const MOCK_HOTELS = [
+  makeHotel('h-001', true,  false),
+  makeHotel('h-002', true,  false),
+  makeHotel('h-003', false, false),
+  makeHotel('h-004', false, true),
+  makeHotel('h-005', true,  true),
+];
+const MOCK_PAGED = { totalCount: 5, hotels: MOCK_HOTELS };
 
 describe('HotelControlComponent', () => {
   let component: HotelControlComponent;
-  let fixture:   ComponentFixture<HotelControlComponent>;
-
+  let fixture: ComponentFixture<HotelControlComponent>;
   let hotelSpy: jasmine.SpyObj<HotelService>;
   let toastSpy: jasmine.SpyObj<ToastService>;
+  let dialog: MatDialog;
 
   beforeEach(async () => {
-    hotelSpy = jasmine.createSpyObj('HotelService', [
-      'getAllHotelsForSuperAdmin', 'blockHotel', 'unblockHotel'
-    ]);
-    toastSpy = jasmine.createSpyObj('ToastService', ['success', 'error']);
+    hotelSpy  = jasmine.createSpyObj('HotelService', ['getAllHotelsForSuperAdmin', 'blockHotel', 'unblockHotel']);
+    toastSpy  = jasmine.createSpyObj('ToastService', ['success', 'error']);
 
-    hotelSpy.getAllHotelsForSuperAdmin.and.returnValue(of(ALL_HOTELS));
+    hotelSpy.getAllHotelsForSuperAdmin.and.returnValue(of(MOCK_PAGED as any));
     hotelSpy.blockHotel.and.returnValue(of(undefined));
     hotelSpy.unblockHotel.and.returnValue(of(undefined));
 
     await TestBed.configureTestingModule({
       imports: [HotelControlComponent],
       providers: [
-        provideAnimationsAsync(),
-        provideHttpClient(),
-        provideHttpClientTesting(),
+        provideAnimationsAsync(), provideHttpClient(), provideHttpClientTesting(),
         provideRouter([]),
-        { provide: HotelService, useValue: hotelSpy },
-        { provide: ToastService, useValue: toastSpy },
+        { provide: HotelService,  useValue: hotelSpy },
+        { provide: ToastService,  useValue: toastSpy },
       ]
     }).compileComponents();
 
-    fixture   = TestBed.createComponent(HotelControlComponent);
+    fixture = TestBed.createComponent(HotelControlComponent);
     component = fixture.componentInstance;
+    dialog = TestBed.inject(MatDialog);
     fixture.detectChanges();
   });
 
-  // ── CREATION ───────────────────────────────────────────────────────────────
+  it('should create', () => expect(component).toBeTruthy());
 
-  it('should create', () => {
-    expect(component).toBeTruthy();
+  // ── Initial state ─────────────────────────────────────────────────────────
+
+  it('pageSize — should be 10', () => expect(component.pageSize).toBe(10));
+  it('currentPage — should start at 1', () => expect(component.currentPage).toBe(1));
+  it('selectedStatus — should start as "All"', () => expect(component.selectedStatus).toBe('All'));
+  it('statusTabs — should contain All, Active, Inactive, Blocked', () => {
+    expect(component.statusTabs).toEqual(['All', 'Active', 'Inactive', 'Blocked']);
   });
 
-  // ── INITIAL SIGNAL STATE ───────────────────────────────────────────────────
+  // ── ngOnInit ──────────────────────────────────────────────────────────────
 
-  it('filterMode — should start as "all"', () => {
-    expect(component.filterMode()).toBe('all');
+  it('ngOnInit — should call getAllHotelsForSuperAdmin', () => {
+    expect(hotelSpy.getAllHotelsForSuperAdmin).toHaveBeenCalledWith(1, 10, undefined, 'All');
   });
 
-  // ── ngOnInit ───────────────────────────────────────────────────────────────
-
-  it('ngOnInit — should call getAllHotelsForSuperAdmin on startup', () => {
-    expect(hotelSpy.getAllHotelsForSuperAdmin).toHaveBeenCalledOnceWith();
-  });
-
-  it('ngOnInit — should populate hotels signal with all returned hotels', () => {
+  it('ngOnInit — should populate hotels signal', () => {
     expect(component.hotels().length).toBe(5);
   });
 
-  it('ngOnInit — should store correct hotel names', () => {
-    const names = component.hotels().map(h => h.name);
-    expect(names).toContain('Grand Palace');
-    expect(names).toContain('Blocked Hotel');
+  it('ngOnInit — should set totalCount', () => {
+    expect(component.totalCount()).toBe(5);
   });
 
-  // ── filtered GETTER ────────────────────────────────────────────────────────
-
-  it('filtered — should return all 5 hotels when filterMode is "all"', () => {
-    component.filterMode.set('all');
-    expect(component.filtered.length).toBe(5);
+  it('loading — should be false after load', () => {
+    expect(component.loading()).toBeFalse();
   });
 
-  it('filtered — should return only active non-blocked hotels when filterMode is "active"', () => {
-    component.filterMode.set('active');
-    expect(component.filtered.length).toBe(2);
-    expect(component.filtered.every(h => h.isActive && !h.isBlockedBySuperAdmin)).toBeTrue();
+  it('load — should set loading to false on error', () => {
+    hotelSpy.getAllHotelsForSuperAdmin.and.returnValue(throwError(() => new Error('fail')));
+    component.load();
+    expect(component.loading()).toBeFalse();
   });
 
-  it('filtered — active filter should NOT include inactive hotels', () => {
-    component.filterMode.set('active');
-    const names = component.filtered.map(h => h.name);
-    expect(names).not.toContain('City Lights');   // inactive, not blocked
-    expect(names).not.toContain('Blocked Hotel'); // blocked
+  // ── onTabChange ───────────────────────────────────────────────────────────
+
+  it('onTabChange — should set selectedStatus', () => {
+    component.onTabChange(1); // 'Active'
+    expect(component.selectedStatus).toBe('Active');
   });
 
-  it('filtered — should return only blocked hotels when filterMode is "blocked"', () => {
-    component.filterMode.set('blocked');
-    expect(component.filtered.length).toBe(2);
-    expect(component.filtered.every(h => h.isBlockedBySuperAdmin)).toBeTrue();
+  it('onTabChange — should reset currentPage to 1', () => {
+    component.currentPage = 3;
+    component.onTabChange(2);
+    expect(component.currentPage).toBe(1);
   });
 
-  it('filtered — blocked filter should contain correct hotel names', () => {
-    component.filterMode.set('blocked');
-    const names = component.filtered.map(h => h.name);
-    expect(names).toContain('Blocked Hotel');
-    expect(names).toContain('Blocked Hotel 2');
+  it('onTabChange — should reload', () => {
+    hotelSpy.getAllHotelsForSuperAdmin.calls.reset();
+    component.onTabChange(3); // 'Blocked'
+    expect(hotelSpy.getAllHotelsForSuperAdmin).toHaveBeenCalled();
   });
 
-  it('filtered — should react to filterMode signal changes', () => {
-    component.filterMode.set('active');
-    expect(component.filtered.length).toBe(2);
+  // ── onPage ────────────────────────────────────────────────────────────────
 
-    component.filterMode.set('blocked');
-    expect(component.filtered.length).toBe(2);
-
-    component.filterMode.set('all');
-    expect(component.filtered.length).toBe(5);
+  it('onPage — should update currentPage and reload', () => {
+    hotelSpy.getAllHotelsForSuperAdmin.calls.reset();
+    component.onPage({ pageIndex: 1, pageSize: 10, length: 20 } as any);
+    expect(component.currentPage).toBe(2);
+    expect(hotelSpy.getAllHotelsForSuperAdmin).toHaveBeenCalled();
   });
 
-  it('filtered — should return empty when no hotels match filter', () => {
-    component.hotels.set([HOTEL_ACTIVE_1, HOTEL_ACTIVE_2]); // no blocked hotels
-    component.filterMode.set('blocked');
-    expect(component.filtered.length).toBe(0);
+  // ── statusClass ───────────────────────────────────────────────────────────
+
+  it('statusClass — blocked → badge-error', () => {
+    expect(component.statusClass(MOCK_HOTELS[3] as any)).toBe('badge-error');
   });
 
-  // ── block() — HAPPY PATH ───────────────────────────────────────────────────
-
-  it('block() — should call blockHotel with the hotel ID', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-
-    component.block(HOTEL_ACTIVE_1);
-
-    expect(hotelSpy.blockHotel).toHaveBeenCalledOnceWith('hotel-001');
+  it('statusClass — active → badge-success', () => {
+    expect(component.statusClass(MOCK_HOTELS[0] as any)).toBe('badge-success');
   });
 
-  it('block() — should show success toast with hotel name', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-
-    component.block(HOTEL_ACTIVE_1);
-
-    expect(toastSpy.success).toHaveBeenCalledOnceWith('Grand Palace blocked.');
+  it('statusClass — inactive → badge-warning', () => {
+    expect(component.statusClass(MOCK_HOTELS[2] as any)).toBe('badge-warning');
   });
 
-  it('block() — should set isBlockedBySuperAdmin to true in hotels signal', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+  // ── statusLabel ───────────────────────────────────────────────────────────
 
-    component.block(HOTEL_ACTIVE_1);
+  it('statusLabel — blocked → Blocked',   () => expect(component.statusLabel(MOCK_HOTELS[3] as any)).toBe('Blocked'));
+  it('statusLabel — active → Active',     () => expect(component.statusLabel(MOCK_HOTELS[0] as any)).toBe('Active'));
+  it('statusLabel — inactive → Inactive', () => expect(component.statusLabel(MOCK_HOTELS[2] as any)).toBe('Inactive'));
 
-    const updated = component.hotels().find(h => h.hotelId === 'hotel-001');
-    expect(updated?.isBlockedBySuperAdmin).toBeTrue();
-  });
+  // ── block ─────────────────────────────────────────────────────────────────
 
-  it('block() — should set isActive to false in hotels signal', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
+  it('block — should open confirm dialog', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.block(MOCK_HOTELS[0] as any);
+    flushMicrotasks();
+    expect(MatDialog.prototype.open).toHaveBeenCalled();
+  }));
 
-    component.block(HOTEL_ACTIVE_1);
+  it('block — should call blockHotel when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.block(MOCK_HOTELS[0] as any);
+    flushMicrotasks();
+    expect(hotelSpy.blockHotel).toHaveBeenCalledWith('h-001');
+  }));
 
-    const updated = component.hotels().find(h => h.hotelId === 'hotel-001');
-    expect(updated?.isActive).toBeFalse();
-  });
-
-  it('block() — should NOT change other hotels in the signal', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-
-    component.block(HOTEL_ACTIVE_1);
-
-    const other = component.hotels().find(h => h.hotelId === 'hotel-002');
-    expect(other?.isBlockedBySuperAdmin).toBe(HOTEL_ACTIVE_2.isBlockedBySuperAdmin);
-    expect(other?.isActive).toBe(HOTEL_ACTIVE_2.isActive);
-  });
-
-  // ── block() — CONFIRM CANCELLED ────────────────────────────────────────────
-
-  it('block() — should NOT call blockHotel when confirm is cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-
-    component.block(HOTEL_ACTIVE_1);
-
+  it('block — should NOT call blockHotel when cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+    await component.block(MOCK_HOTELS[0] as any);
+    flushMicrotasks();
     expect(hotelSpy.blockHotel).not.toHaveBeenCalled();
-  });
+  }));
 
-  it('block() — should NOT show toast when confirm is cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
+  // ── unblock ───────────────────────────────────────────────────────────────
 
-    component.block(HOTEL_ACTIVE_1);
+  it('unblock — should call unblockHotel when confirmed', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(true) } as any);
+    await component.unblock(MOCK_HOTELS[3] as any);
+    flushMicrotasks();
+    expect(hotelSpy.unblockHotel).toHaveBeenCalledWith('h-004');
+  }));
 
-    expect(toastSpy.success).not.toHaveBeenCalled();
-  });
+  it('unblock — should NOT call unblockHotel when cancelled', fakeAsync(async () => {
+    spyOn(MatDialog.prototype, 'open').and.returnValue({ afterClosed: () => of(false) } as any);
+    await component.unblock(MOCK_HOTELS[3] as any);
+    flushMicrotasks();
+    expect(hotelSpy.unblockHotel).not.toHaveBeenCalled();
+  }));
 
-  it('block() — should NOT update hotels signal when confirm is cancelled', () => {
-    spyOn(window, 'confirm').and.returnValue(false);
-    const originalBlocked = component.hotels()
-      .find(h => h.hotelId === 'hotel-001')?.isBlockedBySuperAdmin;
+  // ── onSearch debounce ─────────────────────────────────────────────────────
 
-    component.block(HOTEL_ACTIVE_1);
-
-    const afterBlocked = component.hotels()
-      .find(h => h.hotelId === 'hotel-001')?.isBlockedBySuperAdmin;
-    expect(afterBlocked).toBe(originalBlocked);
-  });
-
-  // ── unblock() — HAPPY PATH ─────────────────────────────────────────────────
-
-  it('unblock() — should call unblockHotel with the hotel ID', () => {
-    component.unblock(HOTEL_BLOCKED);
-
-    expect(hotelSpy.unblockHotel).toHaveBeenCalledOnceWith('hotel-004');
-  });
-
-  it('unblock() — should show success toast with hotel name', () => {
-    component.unblock(HOTEL_BLOCKED);
-
-    expect(toastSpy.success).toHaveBeenCalledOnceWith('Blocked Hotel unblocked.');
-  });
-
-  it('unblock() — should set isBlockedBySuperAdmin to false in hotels signal', () => {
-    component.unblock(HOTEL_BLOCKED);
-
-    const updated = component.hotels().find(h => h.hotelId === 'hotel-004');
-    expect(updated?.isBlockedBySuperAdmin).toBeFalse();
-  });
-
-  it('unblock() — should NOT change isActive when unblocking', () => {
-    // Unblocking only removes the block — admin must re-activate separately
-    component.unblock(HOTEL_BLOCKED);
-
-    const updated = component.hotels().find(h => h.hotelId === 'hotel-004');
-    expect(updated?.isActive).toBe(HOTEL_BLOCKED.isActive); // unchanged
-  });
-
-  it('unblock() — should NOT require confirm dialog', () => {
-    const confirmSpy = spyOn(window, 'confirm');
-
-    component.unblock(HOTEL_BLOCKED);
-
-    expect(confirmSpy).not.toHaveBeenCalled();
-  });
-
-  it('unblock() — should NOT change other hotels in the signal', () => {
-    component.unblock(HOTEL_BLOCKED);
-
-    const other = component.hotels().find(h => h.hotelId === 'hotel-005');
-    expect(other?.isBlockedBySuperAdmin).toBe(HOTEL_BLOCKED_2.isBlockedBySuperAdmin);
-  });
-
-  // ── FILTER + SIGNAL INTERACTION ────────────────────────────────────────────
-
-  it('blocked filter count should decrease after unblocking a hotel', () => {
-    component.filterMode.set('blocked');
-    expect(component.filtered.length).toBe(2);
-
-    component.unblock(HOTEL_BLOCKED);
-
-    expect(component.filtered.length).toBe(1);
-  });
-
-  it('blocked filter count should increase after blocking an active hotel', () => {
-    spyOn(window, 'confirm').and.returnValue(true);
-    component.filterMode.set('blocked');
-    expect(component.filtered.length).toBe(2);
-
-    component.block(HOTEL_ACTIVE_1);
-
-    expect(component.filtered.length).toBe(3);
-  });
+  it('onSearch — should update searchTerm after debounce', fakeAsync(() => {
+    hotelSpy.getAllHotelsForSuperAdmin.calls.reset();
+    component.onSearch({ target: { value: 'Grand' } } as any);
+    tick(400);
+    expect(component.searchTerm).toBe('Grand');
+    expect(hotelSpy.getAllHotelsForSuperAdmin).toHaveBeenCalled();
+  }));
 });

@@ -100,7 +100,7 @@ export class RoomManagementComponent implements OnInit {
     });
   }
 
-  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.loadRooms(); }
+  onPage(e: PageEvent) { this.currentPage = e.pageIndex + 1; this.pageSize = e.pageSize; this.loadRooms(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 
   addRoom() {
     if (this.addForm.invalid) { this.addForm.markAllAsTouched(); return; }
@@ -146,7 +146,10 @@ export class RoomManagementComponent implements OnInit {
   onOccupancyDateChange(date: Date | null) {
     if (!date) return;
     this.occupancyDate.set(date);
-    const dateStr = date.toISOString().split('T')[0];
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${d}`;
     this.roomService.getRoomOccupancy(dateStr).subscribe(data => this.occupancyRooms.set(data));
   }
 }

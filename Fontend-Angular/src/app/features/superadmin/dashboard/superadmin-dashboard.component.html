@@ -6,6 +6,9 @@
         <p class="section-subtitle">SuperAdmin Dashboard — Platform-wide metrics</p>
       </div>
       <div class="sa-nav">
+        <button mat-stroked-button (click)="downloadReport()">
+          <mat-icon>download</mat-icon> Download Report
+        </button>
         <a mat-stroked-button routerLink="/superadmin/hotels">
           <mat-icon>domain</mat-icon> Manage Hotels
         </a>
@@ -89,6 +92,14 @@
           <div>
             <strong>System Error Logs</strong>
             <span>API errors, exceptions and stack traces</span>
+          </div>
+          <mat-icon class="arrow">chevron_right</mat-icon>
+        </a>
+        <a class="quick-link-card" routerLink="/superadmin/support">
+          <mat-icon>support_agent</mat-icon>
+          <div>
+            <strong>Support Requests</strong>
+            <span>Guest complaints and admin bug reports</span>
           </div>
           <mat-icon class="arrow">chevron_right</mat-icon>
         </a>

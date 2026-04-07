@@ -8,10 +8,12 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
 {
     /// <summary>
     /// Runs every 5 minutes. Cancels Pending reservations whose payment window has expired,
-    /// restores inventory, and refunds any wallet amount that was pre-deducted at booking time.
+    /// restores inventory, and refunds any wallet amount pre-deducted at booking time.
     /// </summary>
     public class ReservationCleanupService : BackgroundService
     {
+        private static readonly TimeSpan PollingInterval = TimeSpan.FromMinutes(5);
+
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<ReservationCleanupService> _logger;
 
@@ -23,124 +25,129 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
             _logger = logger;
         }
 
+        // ── BACKGROUND LOOP ───────────────────────────────────────────────────
+
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("ReservationCleanupService started.");
+            _logger.LogInformation("{Service} started.", nameof(ReservationCleanupService));
 
             while (!stoppingToken.IsCancellationRequested)
             {
-                try
-                {
-                    await ProcessExpiredReservationsAsync(stoppingToken);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error in ReservationCleanupService.");
-                }
+                await RunSafeAsync(stoppingToken);
+                await Task.Delay(PollingInterval, stoppingToken);
+            }
+        }
 
-                await Task.Delay(TimeSpan.FromMinutes(5), stoppingToken);
+        // ── PROCESSING ────────────────────────────────────────────────────────
+
+        private async Task RunSafeAsync(CancellationToken ct)
+        {
+            try
+            {
+                await ProcessExpiredReservationsAsync(ct);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error in {Service}.", nameof(ReservationCleanupService));
             }
         }
 
         private async Task ProcessExpiredReservationsAsync(CancellationToken ct)
         {
             using var scope = _scopeFactory.CreateScope();
-
             var reservationRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, Reservation>>();
             var inventoryRepo = scope.ServiceProvider.GetRequiredService<IRepository<Guid, RoomTypeInventory>>();
             var unitOfWork = scope.ServiceProvider.GetRequiredService<IUnitOfWork>();
 
-            var now = DateTime.UtcNow;
+            var expired = await FetchExpiredReservationsAsync(reservationRepo, ct);
+            if (!expired.Any()) return;
 
-            var expired = await reservationRepo.GetQueryable()
+            _logger.LogInformation("Cleaning up {Count} expired reservations.", expired.Count);
+
+            var inventoryLookup = await InventoryRestoreHelper
+                .BuildInventoryLookupAsync(expired, inventoryRepo, ct);
+
+            await CommitCancellationsAsync(expired, inventoryLookup, unitOfWork);
+
+            var walletService = scope.ServiceProvider.GetRequiredService<IWalletService>();
+            await RefundWalletDeductionsAsync(expired, walletService);
+        }
+
+        private static async Task<List<Reservation>> FetchExpiredReservationsAsync(
+            IRepository<Guid, Reservation> reservationRepo, CancellationToken ct)
+        {
+            var now = DateTime.UtcNow;
+            return await reservationRepo.GetQueryable()
                 .Include(r => r.ReservationRooms)
                 .Where(r =>
                     r.Status == ReservationStatus.Pending &&
                     r.ExpiryTime != null &&
                     r.ExpiryTime < now)
                 .ToListAsync(ct);
+        }
 
-            if (!expired.Any()) return;
-
-            _logger.LogInformation("Cleaning up {Count} expired reservations.", expired.Count);
-
-            var roomTypeIds = expired
-                .SelectMany(r => r.ReservationRooms!)
-                .Select(rr => rr.RoomTypeId)
-                .Distinct().ToList();
-
-            var allDates = expired
-                .SelectMany(r => Enumerable.Range(0,
-                    r.CheckOutDate.DayNumber - r.CheckInDate.DayNumber)
-                    .Select(d => r.CheckInDate.AddDays(d)))
-                .Distinct().ToList();
-
-            var inventories = await inventoryRepo.GetQueryable()
-                .Where(i => roomTypeIds.Contains(i.RoomTypeId) && allDates.Contains(i.Date))
-                .ToListAsync(ct);
-
-            var invLookup = inventories
-                .GroupBy(i => new { i.RoomTypeId, i.Date })
-                .ToDictionary(g => g.Key, g => g.First());
-
+        private async Task CommitCancellationsAsync(
+            List<Reservation> expired,
+            Dictionary<(Guid RoomTypeId, DateOnly Date), RoomTypeInventory> inventoryLookup,
+            IUnitOfWork unitOfWork)
+        {
+            var now = DateTime.UtcNow;
             await unitOfWork.BeginTransactionAsync();
             try
             {
                 foreach (var reservation in expired)
                 {
-                    if (!(reservation.ReservationRooms?.Any() ?? false)) continue;
-
-                    var roomTypeId = reservation.ReservationRooms.First().RoomTypeId;
-                    var roomCount = reservation.ReservationRooms.Count;
-                    var totalDays = reservation.CheckOutDate.DayNumber - reservation.CheckInDate.DayNumber;
-
-                    for (int d = 0; d < totalDays; d++)
-                    {
-                        var date = reservation.CheckInDate.AddDays(d);
-                        var key = new { RoomTypeId = roomTypeId, Date = date };
-
-                        if (invLookup.TryGetValue(key, out var inv))
-                            inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
-                    }
-
-                    reservation.Status = ReservationStatus.Cancelled;
-                    reservation.CancellationReason = "Payment timeout — reservation expired automatically.";
-                    reservation.CancelledDate = now;
+                    InventoryRestoreHelper.RestoreInventory(reservation, inventoryLookup);
+                    CancelExpiredReservation(reservation, now);
                 }
 
                 await unitOfWork.CommitAsync();
                 _logger.LogInformation("Expired reservation cleanup committed.");
-
-                // Refund wallet for any reservation that had wallet pre-deducted at booking time.
-                // This runs AFTER commit so the cancellation is persisted even if a refund fails.
-                var walletService = scope.ServiceProvider.GetRequiredService<IWalletService>();
-                foreach (var reservation in expired)
-                {
-                    if (reservation.WalletAmountUsed > 0)
-                    {
-                        try
-                        {
-                            await walletService.CreditAsync(
-                                reservation.UserId,
-                                reservation.WalletAmountUsed,
-                                $"Wallet refund — reservation {reservation.ReservationCode} expired without payment.");
-                            _logger.LogInformation(
-                                "Refunded ₹{Amount} to user {UserId} for expired reservation {Code}.",
-                                reservation.WalletAmountUsed, reservation.UserId, reservation.ReservationCode);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex,
-                                "Failed to refund wallet for expired reservation {Code}.",
-                                reservation.ReservationCode);
-                        }
-                    }
-                }
             }
             catch (Exception ex)
             {
                 await unitOfWork.RollbackAsync();
-                _logger.LogError(ex, "Rollback during ReservationCleanup.");
+                _logger.LogError(ex, "Rollback during {Service}.", nameof(ReservationCleanupService));
+            }
+        }
+
+        private static void CancelExpiredReservation(Reservation reservation, DateTime now)
+        {
+            reservation.Status = ReservationStatus.Cancelled;
+            reservation.CancellationReason = "Payment timeout — reservation expired automatically.";
+            reservation.CancelledDate = now;
+        }
+
+        /// <summary>
+        /// Runs AFTER commit so the cancellation is persisted even if a refund fails.
+        /// </summary>
+        private async Task RefundWalletDeductionsAsync(
+            List<Reservation> expired, IWalletService walletService)
+        {
+            foreach (var reservation in expired.Where(r => r.WalletAmountUsed > 0))
+            {
+                await TryRefundWalletAsync(reservation, walletService);
+            }
+        }
+
+        private async Task TryRefundWalletAsync(Reservation reservation, IWalletService walletService)
+        {
+            try
+            {
+                await walletService.CreditAsync(
+                    reservation.UserId,
+                    reservation.WalletAmountUsed,
+                    $"Wallet refund — reservation {reservation.ReservationCode} expired without payment.");
+
+                _logger.LogInformation(
+                    "Refunded ₹{Amount} to user {UserId} for expired reservation {Code}.",
+                    reservation.WalletAmountUsed, reservation.UserId, reservation.ReservationCode);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex,
+                    "Failed to refund wallet for expired reservation {Code}.",
+                    reservation.ReservationCode);
             }
         }
     }

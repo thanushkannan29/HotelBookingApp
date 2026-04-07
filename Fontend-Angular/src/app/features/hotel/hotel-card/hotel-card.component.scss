@@ -4,24 +4,25 @@
   border: 1px solid var(--color-border);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease;
+  transition: transform 250ms ease, box-shadow 250ms ease, border-color 250ms ease;
   display: flex;
   flex-direction: column;
   height: 100%;
 
   &:hover {
-    transform: translateY(-4px);
+    transform: translateY(-6px);
     box-shadow: var(--shadow-lg);
+    border-color: rgba(45, 58, 140, 0.2);
 
     .hotel-name { color: var(--color-primary); }
-    img { transform: scale(1.04); }
+    img { transform: scale(1.06); }
   }
 }
 
 // ─── IMAGE ─────────────────────────────────────────────────────────────────
 .card-image {
   position: relative;
-  height: 200px;
+  height: 220px;
   overflow: hidden;
   flex-shrink: 0;
 
@@ -29,7 +30,19 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 400ms ease;
+    transition: transform 500ms ease;
+  }
+
+  // Subtle gradient overlay at bottom of image
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 60px;
+    background: linear-gradient(to top, rgba(0,0,0,0.35), transparent);
+    pointer-events: none;
   }
 }
 
@@ -168,9 +181,9 @@
 
   .price {
     font-family: var(--font-display);
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--color-text-primary);
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--color-primary);
   }
 
   .price-per {
@@ -185,8 +198,10 @@
 }
 
 .view-btn {
-  height: 36px;
+  height: 38px;
   font-size: 0.85rem;
+  font-weight: 600;
   border-radius: 8px !important;
-  padding: 0 16px;
+  padding: 0 20px;
+  letter-spacing: 0.02em;
 }

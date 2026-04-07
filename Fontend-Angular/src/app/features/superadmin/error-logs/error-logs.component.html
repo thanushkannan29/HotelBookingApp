@@ -13,83 +13,115 @@
       </button>
     </div>
 
-    @if (loading()) {
-      <div class="text-center py-5"><mat-spinner diameter="48" /></div>
-    } @else {
-      <div class="table-card">
-        <mat-table [dataSource]="logs()">
+    <mat-form-field appearance="outline" class="w-100 mb-3">
+      <mat-label>🔍 Search by path, user, or exception</mat-label>
+      <input matInput (input)="onSearch($event)" placeholder="e.g. /api/reservations or NullReference" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
 
-          <ng-container matColumnDef="statusCode">
-            <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
-            <mat-cell *matCellDef="let log">
-              <span class="badge {{ statusClass(log.statusCode) }}">{{ log.statusCode }}</span>
-            </mat-cell>
-          </ng-container>
+    <div class="table-card">
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="48" /></div>
+      }
 
-          <ng-container matColumnDef="method">
-            <mat-header-cell *matHeaderCellDef>Method</mat-header-cell>
-            <mat-cell *matCellDef="let log">{{ log.httpMethod }}</mat-cell>
-          </ng-container>
+      <mat-table [dataSource]="logs()" multiTemplateDataRows [class.hidden]="loading()">
 
-          <ng-container matColumnDef="path">
-            <mat-header-cell *matHeaderCellDef>Path</mat-header-cell>
-            <mat-cell *matCellDef="let log">{{ log.requestPath }}</mat-cell>
-          </ng-container>
+        <ng-container matColumnDef="statusCode">
+          <mat-header-cell *matHeaderCellDef>Code</mat-header-cell>
+          <mat-cell *matCellDef="let log">
+            <span class="badge {{ statusClass(log.statusCode) }}">{{ log.statusCode }}</span>
+          </mat-cell>
+        </ng-container>
 
-          <ng-container matColumnDef="user">
-            <mat-header-cell *matHeaderCellDef>User</mat-header-cell>
-            <mat-cell *matCellDef="let log">{{ log.userName }}</mat-cell>
-          </ng-container>
+        <ng-container matColumnDef="method">
+          <mat-header-cell *matHeaderCellDef>Method</mat-header-cell>
+          <mat-cell *matCellDef="let log">{{ log.httpMethod }}</mat-cell>
+        </ng-container>
 
-          <ng-container matColumnDef="role">
-            <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
-            <mat-cell *matCellDef="let log">{{ log.role }}</mat-cell>
-          </ng-container>
+        <ng-container matColumnDef="path">
+          <mat-header-cell *matHeaderCellDef>Path</mat-header-cell>
+          <mat-cell *matCellDef="let log" class="path-cell">{{ log.requestPath }}</mat-cell>
+        </ng-container>
 
-          <ng-container matColumnDef="timestamp">
-            <mat-header-cell *matHeaderCellDef>📅 Time</mat-header-cell>
-            <mat-cell *matCellDef="let log">{{ log.createdAt | date:'MMM d, HH:mm' }}</mat-cell>
-          </ng-container>
+        <ng-container matColumnDef="user">
+          <mat-header-cell *matHeaderCellDef>User</mat-header-cell>
+          <mat-cell *matCellDef="let log">{{ log.userName }}</mat-cell>
+        </ng-container>
 
-          <ng-container matColumnDef="expand">
-            <mat-header-cell *matHeaderCellDef></mat-header-cell>
-            <mat-cell *matCellDef="let log">
-              <button mat-icon-button (click)="toggleRow(log)">
-                <mat-icon>{{ expandedRow()?.logId === log.logId ? 'expand_less' : 'expand_more' }}</mat-icon>
-              </button>
-            </mat-cell>
-          </ng-container>
+        <ng-container matColumnDef="role">
+          <mat-header-cell *matHeaderCellDef>Role</mat-header-cell>
+          <mat-cell *matCellDef="let log">{{ log.role }}</mat-cell>
+        </ng-container>
 
-          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
-          <mat-row *matRowDef="let row; columns: displayedColumns;" (click)="toggleRow(row)"></mat-row>
+        <ng-container matColumnDef="timestamp">
+          <mat-header-cell *matHeaderCellDef>Time</mat-header-cell>
+          <mat-cell *matCellDef="let log">{{ log.createdAt | date:'MMM d, HH:mm' }}</mat-cell>
+        </ng-container>
 
-          <tr class="mat-row" *matNoDataRow>
-            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
-              ✅ No errors logged
-            </td>
-          </tr>
-        </mat-table>
+        <ng-container matColumnDef="expand">
+          <mat-header-cell *matHeaderCellDef></mat-header-cell>
+          <mat-cell *matCellDef="let log">
+            <button mat-icon-button (click)="toggleRow(log); $event.stopPropagation()">
+              <mat-icon>{{ expandedRow()?.logId === log.logId ? 'expand_less' : 'expand_more' }}</mat-icon>
+            </button>
+          </mat-cell>
+        </ng-container>
 
-        <!-- Expanded detail -->
-        @if (expandedRow(); as log) {
-          <div class="log-detail-panel">
-            <p><strong>Message:</strong> {{ log.message }}</p>
-            <p><strong>Exception:</strong> {{ log.exceptionType }}</p>
-            <p><strong>Controller/Action:</strong> {{ log.controller }} / {{ log.action }}</p>
-            @if (log.stackTrace) {
-              <pre class="stack-trace">{{ log.stackTrace }}</pre>
+        <!-- Inline detail row -->
+        <ng-container matColumnDef="expandedDetail">
+          <mat-cell *matCellDef="let log" [attr.colspan]="displayedColumns.length" class="detail-cell">
+            @if (expandedRow()?.logId === log.logId) {
+              <div class="log-detail-panel">
+                <div class="log-detail-grid">
+                  <div>
+                    <span class="ld-label">Message</span>
+                    <span class="ld-value">{{ log.message }}</span>
+                  </div>
+                  <div>
+                    <span class="ld-label">Exception</span>
+                    <span class="ld-value exception">{{ log.exceptionType }}</span>
+                  </div>
+                  <div>
+                    <span class="ld-label">Controller / Action</span>
+                    <span class="ld-value">{{ log.controller }} / {{ log.action }}</span>
+                  </div>
+                </div>
+                @if (log.stackTrace) {
+                  <div class="stacktrace">
+                    <div class="st-label">Stack Trace</div>
+                    <pre class="st-content">{{ log.stackTrace }}</pre>
+                  </div>
+                }
+              </div>
             }
-          </div>
-        }
+          </mat-cell>
+        </ng-container>
 
-        <mat-paginator
-          [length]="totalCount()"
-          [pageSize]="pageSize"
-          [pageSizeOptions]="[20, 50, 100]"
-          showFirstLastButtons
-          (page)="onPage($event)"
-        />
-      </div>
-    }
+        <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+        <mat-row *matRowDef="let row; columns: displayedColumns;"
+                 (click)="toggleRow(row)"
+                 style="cursor:pointer;"
+                 [class.expanded-row]="expandedRow()?.logId === row.logId">
+        </mat-row>
+        <mat-row *matRowDef="let row; columns: ['expandedDetail']"
+                 class="detail-row"
+                 [class.collapsed]="expandedRow()?.logId !== row.logId">
+        </mat-row>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;">
+            ✅ No errors logged
+          </td>
+        </tr>
+      </mat-table>
+
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[20, 50, 100]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
   </div>
 </div>

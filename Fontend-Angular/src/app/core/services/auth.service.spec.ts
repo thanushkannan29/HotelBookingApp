@@ -210,7 +210,7 @@ describe('AuthService', () => {
     const dto: RegisterHotelAdminDto = {
       name: 'Admin User', email: 'admin@hotel.com', password: 'pass123',
       hotelName: 'Grand Palace', address: '1 MG Road',
-      city: 'Chennai', description: 'Luxury hotel',
+      city: 'Chennai', state: 'TN', description: 'Luxury hotel',
       contactNumber: '9840650390'
     };
 
@@ -227,7 +227,7 @@ describe('AuthService', () => {
     service.registerHotelAdmin({
       name: 'Admin', email: 'admin@hotel.com', password: 'pass123',
       hotelName: 'Grand Palace', address: '1 MG Road',
-      city: 'Chennai', description: '', contactNumber: '9840650390'
+      city: 'Chennai', state: 'TN', description: '', contactNumber: '9840650390'
     }).subscribe();
 
     http.expectOne(`${environment.apiUrl}/auth/register-hotel-admin`)

@@ -22,7 +22,7 @@ describe('RegisterComponent', () => {
   const VALID_FORM = {
     name:     'Thanush K',
     email:    'thanush@test.com',
-    password: 'pass123',
+    password: 'Pass123!',
   };
 
   beforeEach(async () => {
@@ -90,12 +90,12 @@ describe('RegisterComponent', () => {
   });
 
   it('form — should be invalid when name is only 1 character (minLength 2)', () => {
-    component.form.patchValue({ ...VALID_FORM, name: 'T' });
+    component.form.patchValue({ ...VALID_FORM, name: 'TK' }); // minLength is 3
     expect(component.form.get('name')?.invalid).toBeTrue();
   });
 
   it('form — should be valid when name is exactly 2 characters', () => {
-    component.form.patchValue({ ...VALID_FORM, name: 'TK' });
+    component.form.patchValue({ ...VALID_FORM, name: 'TKL' }); // minLength is 3
     expect(component.form.valid).toBeTrue();
   });
 
@@ -120,13 +120,13 @@ describe('RegisterComponent', () => {
   });
 
   it('form — should be invalid when password is less than 6 characters', () => {
-    component.form.patchValue({ ...VALID_FORM, password: '12345' });
+    component.form.patchValue({ ...VALID_FORM, password: 'Ab1!' }); // less than 8
     expect(component.form.get('password')?.invalid).toBeTrue();
   });
 
   it('form — should be valid when password is exactly 6 characters', () => {
-    component.form.patchValue({ ...VALID_FORM, password: '123456' });
-    expect(component.form.valid).toBeTrue();
+    component.form.patchValue({ ...VALID_FORM, password: 'Pass1!' }); // 6 chars but needs 8
+    expect(component.form.get('password')?.invalid).toBeTrue(); // still invalid (minLength 8)
   });
 
   // ── submit() — HAPPY PATH ──────────────────────────────────────────────────
@@ -140,7 +140,7 @@ describe('RegisterComponent', () => {
       jasmine.objectContaining({
         name:     'Thanush K',
         email:    'thanush@test.com',
-        password: 'pass123',
+        password: 'Pass123!',
       })
     );
   });

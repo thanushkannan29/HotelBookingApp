@@ -131,7 +131,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       key: environment.razorpayKeyId,
       amount: amountPaise,
       currency: 'INR',
-      name: '🏨 StayHub',
+      name: '🏨 Thanush StayHub',
       description: `Booking: ${res.reservationCode} — ${res.hotelName}`,
       notes: { reservationCode: res.reservationCode },
       theme: { color: '#2d3a8c' },
@@ -219,7 +219,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       doc.rect(0, 0, W, 36, 'F');
       doc.setTextColor(255, 255, 255);
       doc.setFontSize(22); doc.setFont('helvetica', 'bold');
-      doc.text('StayHub', margin, 16);
+      doc.text('Thanush StayHub', margin, 16);
       doc.setFontSize(10); doc.setFont('helvetica', 'normal');
       doc.text('Booking Confirmation', margin, 24);
       doc.setFontSize(9);
@@ -326,11 +326,11 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       doc.setFillColor(240, 242, 255);
       doc.rect(0, 277, W, 20, 'F');
       doc.setFontSize(8); doc.setTextColor(45, 58, 140);
-      doc.text('Thank you for choosing StayHub! For support: support@stayhub.in', W / 2, 285, { align: 'center' });
+      doc.text('Thank you for choosing Thanush StayHub! For support: support@thanushstayhub.in', W / 2, 285, { align: 'center' });
       doc.setTextColor(120,120,120);
       doc.text('This is a computer-generated document. No signature required.', W / 2, 291, { align: 'center' });
 
-      doc.save(`StayHub-Booking-${res.reservationCode}.pdf`);
+      doc.save(`ThanushStayHub-Booking-${res.reservationCode}.pdf`);
       this.toast.success('PDF downloaded!');
     } catch (e) {
       this.toast.error('PDF generation failed. Ensure jsPDF is installed: npm install jspdf');
@@ -354,12 +354,22 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
     const checkIn = new Date(res.checkInDate);
     const today = new Date(); today.setHours(0,0,0,0); checkIn.setHours(0,0,0,0);
     const days = Math.round((checkIn.getTime() - today.getTime()) / 86400000);
-    if (res.cancellationFeePaid) {
-      if (days >= 1) return `Full refund of ₹${res.totalAmount.toFixed(2)} — cancellation protection active`;
-      return 'No refund — same-day cancellation not covered by protection';
+
+    // After check-in or stay already passed — no refund
+    if (res.isCheckedIn || days < 0) {
+      return `No refund — reservation already checked in or stay has passed`;
     }
-    if (days >= 5) return `You will receive ₹${(res.totalAmount * 0.5).toFixed(2)} refund (50% — 5+ days before check-in)`;
-    if (days >= 3) return `You will receive ₹${(res.totalAmount * 0.25).toFixed(2)} refund (25% — 3–4 days before check-in)`;
-    return 'No refund applicable — within 2 days of check-in';
+
+    if (res.cancellationFeePaid) {
+      // With protection: full refund before check-in day, 50% on check-in day
+      if (days > 0) return `Full refund of ₹${res.totalAmount.toFixed(2)} — protection active, cancelled before check-in day`;
+      return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled on check-in day (protection provides partial refund)`;
+    }
+
+    // Without protection — industry-standard tiered policy
+    if (days >= 7) return `Full refund of ₹${res.totalAmount.toFixed(2)} — free cancellation, 7+ days before check-in`;
+    if (days >= 3) return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled 3–6 days before check-in`;
+    if (days >= 1) return `25% refund of ₹${(res.totalAmount * 0.25).toFixed(2)} — cancelled 1–2 days before check-in`;
+    return `No refund — cancelled on check-in day`;
   }
 }

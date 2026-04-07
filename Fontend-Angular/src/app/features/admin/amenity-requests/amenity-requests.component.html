@@ -1,0 +1,110 @@
+<div class="page-wrapper">
+  <div class="container">
+    <div class="page-header-row">
+      <div>
+        <a routerLink="/admin/dashboard" class="back-link"><mat-icon>arrow_back</mat-icon> Dashboard</a>
+        <h1 class="section-title">🔧 Amenity Requests</h1>
+        <p class="section-subtitle">Request new amenities for your hotel</p>
+      </div>
+    </div>
+
+    <!-- Submit Form -->
+    <div class="form-card mb-4">
+      <h3 class="form-card-title">Request New Amenity</h3>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="request-form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Amenity Name</mat-label>
+          <input matInput formControlName="amenityName" />
+          @if (form.get('amenityName')?.hasError('required') && form.get('amenityName')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Category</mat-label>
+          <input matInput formControlName="category" placeholder="e.g. Room, Services" />
+          @if (form.get('category')?.hasError('required') && form.get('category')?.touched) {
+            <mat-error>Required</mat-error>
+          }
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Icon Name (optional)</mat-label>
+          <input matInput formControlName="iconName" placeholder="e.g. wifi" />
+          <mat-icon matSuffix>emoji_objects</mat-icon>
+        </mat-form-field>
+
+        <div class="submit-col">
+          <button mat-flat-button color="primary" type="submit" [disabled]="form.invalid || submitting()">
+            <mat-icon>send</mat-icon>
+            {{ submitting() ? 'Submitting…' : 'Submit Request' }}
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- My Requests Table -->
+    <div class="table-card">
+      <div class="table-toolbar">
+        <h3 class="form-card-title" style="margin:0;">My Requests</h3>
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>🔍 Search</mat-label>
+          <input matInput (input)="onSearch($event)" placeholder="Amenity name or category…" />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      @if (loading()) {
+        <div class="text-center py-5"><mat-spinner diameter="40" /></div>
+      } @else {
+        <mat-table [dataSource]="requests()">
+
+          <ng-container matColumnDef="amenityName">
+            <mat-header-cell *matHeaderCellDef>Amenity</mat-header-cell>
+            <mat-cell *matCellDef="let r"><strong>{{ r.amenityName }}</strong></mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="category">
+            <mat-header-cell *matHeaderCellDef>Category</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.category }}</mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="status">
+            <mat-header-cell *matHeaderCellDef>Status</mat-header-cell>
+            <mat-cell *matCellDef="let r">
+              <span class="badge {{ statusClass(r.status) }}">{{ r.status }}</span>
+            </mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="note">
+            <mat-header-cell *matHeaderCellDef>Note</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.superAdminNote || '—' }}</mat-cell>
+          </ng-container>
+
+          <ng-container matColumnDef="date">
+            <mat-header-cell *matHeaderCellDef>Date</mat-header-cell>
+            <mat-cell *matCellDef="let r">{{ r.createdAt | date:'MMM d, y' }}</mat-cell>
+          </ng-container>
+
+          <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+          <mat-row *matRowDef="let row; columns: displayedColumns;"></mat-row>
+
+          <tr class="mat-row" *matNoDataRow>
+            <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align:center;padding:32px;color:#999;">
+              No requests yet
+            </td>
+          </tr>
+        </mat-table>
+      }
+
+      <!-- Paginator always in DOM -->
+      <mat-paginator
+        [length]="totalCount()"
+        [pageSize]="pageSize"
+        [pageSizeOptions]="[5, 10, 20]"
+        showFirstLastButtons
+        (page)="onPage($event)"
+      />
+    </div>
+  </div>
+</div>

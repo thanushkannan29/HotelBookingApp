@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -18,20 +18,16 @@ export class AmenityRequestService {
     ).pipe(map(r => r.data!));
   }
 
-  getMine(page = 1, pageSize = 10): Observable<PagedAmenityRequestResponseDto> {
-    const params = new HttpParams()
-      .set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedAmenityRequestResponseDto>>(
-      `${this.base}/admin/amenity-requests`, { params }
+  getMine(page = 1, pageSize = 10, search?: string): Observable<PagedAmenityRequestResponseDto> {
+    return this.http.post<ApiResponse<PagedAmenityRequestResponseDto>>(
+      `${this.base}/admin/amenity-requests/list`, { page, pageSize, search }
     ).pipe(map(r => r.data!));
   }
 
   // SuperAdmin
   getAll(status = 'All', page = 1, pageSize = 10): Observable<PagedAmenityRequestResponseDto> {
-    const params = new HttpParams()
-      .set('status', status).set('page', page).set('pageSize', pageSize);
-    return this.http.get<ApiResponse<PagedAmenityRequestResponseDto>>(
-      `${this.base}/superadmin/amenity-requests`, { params }
+    return this.http.post<ApiResponse<PagedAmenityRequestResponseDto>>(
+      `${this.base}/superadmin/amenity-requests/list`, { status, page, pageSize }
     ).pipe(map(r => r.data!));
   }
 

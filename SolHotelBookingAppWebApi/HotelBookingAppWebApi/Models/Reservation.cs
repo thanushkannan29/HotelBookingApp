@@ -58,7 +58,6 @@ namespace HotelBookingAppWebApi.Models
 
         public ICollection<ReservationRoom>? ReservationRooms { get; set; }
         public ICollection<Transaction>? Transactions { get; set; }
-        public ICollection<RefundRequest>? RefundRequests { get; set; }
     }
 
     public enum ReservationStatus

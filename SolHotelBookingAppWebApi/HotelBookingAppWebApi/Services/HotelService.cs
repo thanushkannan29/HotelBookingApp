@@ -11,6 +11,10 @@ using System.Text.Json;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// Manages hotel data for public browsing, admin self-management, and SuperAdmin oversight.
+    /// Public queries use AsNoTracking for performance; write operations use transactions.
+    /// </summary>
     public class HotelService : IHotelService
     {
         private readonly IRepository<Guid, Hotel> _hotelRepo;
@@ -40,111 +44,51 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── PUBLIC: TOP HOTELS ────────────────────────────────────────────────
+
         public async Task<IEnumerable<HotelListItemDto>> GetTopHotelsAsync()
         {
-            return await _hotelRepo.GetQueryable()
+            var raw = await _hotelRepo.GetQueryable()
                 .AsNoTracking()
                 .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin)
                 .Select(h => new
                 {
-                    h.HotelId,
-                    h.Name,
-                    h.City,
-                    h.ImageUrl,
-
-                    AvgRating = h.Reviews!
-                        .Select(r => (decimal?)r.Rating)
-                        .Average(),
-
+                    h.HotelId, h.Name, h.City, h.ImageUrl,
+                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
                     ReviewCount = h.Reviews!.Count(),
-
-                    StartingPrice = h.RoomTypes!
-                        .SelectMany(rt => rt.Rates!)
-                        .Select(r => (decimal?)r.Rate)
-                        .Min()
+                    StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Select(r => (decimal?)r.Rate).Min()
                 })
                 .OrderByDescending(x => x.AvgRating ?? 0)
                 .ThenByDescending(x => x.ReviewCount)
                 .Take(10)
-                .Select(x => new HotelListItemDto
-                {
-                    HotelId = x.HotelId,
-                    Name = x.Name,
-                    City = x.City,
-                    ImageUrl = x.ImageUrl,
-
-                    AverageRating = Math.Round(x.AvgRating ?? 0m, 2), // ✅ AFTER SQL
-
-                    ReviewCount = x.ReviewCount,
-
-                    StartingPrice = x.StartingPrice ?? 0
-                })
                 .ToListAsync();
+
+            return raw.Select(x => MapToListItemDto(
+                x.HotelId, x.Name, x.City, x.ImageUrl,
+                x.AvgRating, x.ReviewCount, x.StartingPrice));
         }
 
         // ── PUBLIC: SEARCH ────────────────────────────────────────────────────
+
         public async Task<SearchHotelResponseDto> SearchHotelsAsync(SearchHotelRequestDto request)
         {
-            var query = _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
-                            h.City.ToLower() == request.City.ToLower());
-
-            // Amenity filter
-            if (request.AmenityIds != null && request.AmenityIds.Count > 0)
-            {
-                query = query.Where(h => h.RoomTypes!.Any(rt =>
-                    rt.RoomTypeAmenities!.Any(rta => request.AmenityIds.Contains(rta.AmenityId))));
-            }
-
-            // Room type filter
-            if (!string.IsNullOrWhiteSpace(request.RoomType))
-            {
-                query = query.Where(h => h.RoomTypes!.Any(rt =>
-                    rt.Name.ToLower().Contains(request.RoomType.ToLower())));
-            }
-
-            // Price filter
-            if (request.MinPrice.HasValue)
-            {
-                query = query.Where(h => h.RoomTypes!
-                    .SelectMany(rt => rt.Rates!)
-                    .Any(r => r.Rate >= request.MinPrice.Value));
-            }
-            if (request.MaxPrice.HasValue)
-            {
-                query = query.Where(h => h.RoomTypes!
-                    .SelectMany(rt => rt.Rates!)
-                    .Any(r => r.Rate <= request.MaxPrice.Value));
-            }
+            var query = BuildPublicHotelQuery();
+            query = ApplySearchFilters(query, request);
 
             var totalRecords = await query.CountAsync();
             if (totalRecords == 0)
-                throw new NotFoundException("No hotels found for the given criteria.");
+                return EmptySearchResponse(request.PageNumber);
 
-            // Sort
-            IQueryable<Hotel> sorted = request.SortBy switch
-            {
-                "price_asc" => query.OrderBy(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
-                "price_desc" => query.OrderByDescending(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
-                _ => query.OrderBy(h => h.Name)
-            };
-
+            var sorted = ApplySorting(query, request.SortBy);
             var hotels = await sorted
                 .Skip((request.PageNumber - 1) * request.PageSize)
                 .Take(request.PageSize)
                 .Select(h => new HotelListItemDto
                 {
-                    HotelId = h.HotelId,
-                    Name = h.Name,
-                    City = h.City,
-                    ImageUrl = h.ImageUrl,
+                    HotelId = h.HotelId, Name = h.Name, City = h.City, ImageUrl = h.ImageUrl,
                     AverageRating = h.Reviews != null && h.Reviews.Any()
                         ? Math.Round((decimal)(h.Reviews.Average(r => (decimal?)r.Rating) ?? 0m), 2) : 0m,
                     ReviewCount = h.Reviews!.Count(),
-                    StartingPrice = h.RoomTypes!
-                        .SelectMany(rt => rt.Rates!)
-                        .Min(r => (decimal?)r.Rate) ?? 0
+                    StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0
                 })
                 .ToListAsync();
 
@@ -157,100 +101,320 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        // ── PUBLIC: CITIES ────────────────────────────────────────────────────
+        // ── PUBLIC: CITIES / STATES ───────────────────────────────────────────
+
         public async Task<IEnumerable<string>> GetCitiesAsync()
-        {
-            return await _hotelRepo.GetQueryable()
-                .AsNoTracking()
+            => await _hotelRepo.GetQueryable().AsNoTracking()
                 .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin)
-                .Select(h => h.City)
-                .Distinct()
-                .OrderBy(c => c)
-                .ToListAsync();
-        }
+                .Select(h => h.City).Distinct().OrderBy(c => c).ToListAsync();
 
-        // ── PUBLIC: HOTELS BY CITY ────────────────────────────────────────────
+        public async Task<IEnumerable<string>> GetActiveStatesAsync()
+            => await _hotelRepo.GetQueryable().AsNoTracking()
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin && !string.IsNullOrEmpty(h.State))
+                .Select(h => h.State).Distinct().OrderBy(s => s).ToListAsync();
+
+        // ── PUBLIC: HOTELS BY CITY / STATE ────────────────────────────────────
+
         public async Task<IEnumerable<HotelListItemDto>> GetHotelsByCityAsync(string city)
-        {
-            var hotels = await _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(h => h.IsActive &&
-                            !h.IsBlockedBySuperAdmin &&
-                            h.City.ToLower() == city.ToLower())
-                .Select(h => new
-                {
-                    h.HotelId,
-                    h.Name,
-                    h.City,
-                    h.ImageUrl,
+            => await FetchHotelListAsync(h => h.City.ToLower() == city.ToLower());
 
-                    // ✅ SAFE: EF can translate this
-                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
-                    ReviewCount = h.Reviews!.Count(),
+        public async Task<IEnumerable<HotelListItemDto>> GetHotelsByStateAsync(string stateName)
+            => await FetchHotelListAsync(h => h.State.ToLower() == stateName.ToLower(), take: 10);
 
-                    StartingPrice = h.RoomTypes!
-                        .SelectMany(rt => rt.Rates!)
-                        .Select(r => (decimal?)r.Rate)
-                        .Min()
-                })
-                .ToListAsync();
+        // ── PUBLIC: HOTEL DETAILS ─────────────────────────────────────────────
 
-            // ✅ FINAL MAPPING (IN MEMORY)
-            return hotels.Select(h => new HotelListItemDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ImageUrl = h.ImageUrl,
-                AverageRating = Math.Round(h.AvgRating ?? 0m, 2),
-                ReviewCount = h.ReviewCount,
-                StartingPrice = h.StartingPrice ?? 0
-            });
-        }
-
-
-        // ── PUBLIC: HOTEL DETAILS (FULL) ──────────────────────────────────────
         public async Task<HotelDetailsDto> GetHotelDetailsAsync(Guid hotelId)
         {
             var hotel = await _hotelRepo.GetQueryable()
                 .AsNoTracking()
                 .Include(h => h.RoomTypes!.Where(rt => rt.IsActive))
-                    .ThenInclude(rt => rt.RoomTypeAmenities!)
-                        .ThenInclude(rta => rta.Amenity)
-                .Include(h => h.Reviews!)
-                    .ThenInclude(r => r.User!)
-                        .ThenInclude(u => u.UserDetails)
+                    .ThenInclude(rt => rt.RoomTypeAmenities!).ThenInclude(rta => rta.Amenity)
+                .Include(h => h.Reviews!).ThenInclude(r => r.User!).ThenInclude(u => u.UserDetails)
                 .AsSplitQuery()
                 .FirstOrDefaultAsync(h => h.HotelId == hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
 
-            var reviews = hotel.Reviews ?? new List<Review>();
+            return BuildHotelDetailsDto(hotel);
+        }
 
-            // Collect unique amenities from join table only
+        // ── PUBLIC: ROOM TYPES ────────────────────────────────────────────────
+
+        public async Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId)
+            => await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
+                .Include(rt => rt.RoomTypeAmenities!).ThenInclude(rta => rta.Amenity)
+                .Where(r => r.HotelId == hotelId && r.IsActive)
+                .Select(t => MapToRoomTypePublicDto(t))
+                .ToListAsync();
+
+        // ── PUBLIC: AVAILABILITY ──────────────────────────────────────────────
+
+        public async Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
+            Guid hotelId, DateOnly checkIn, DateOnly checkOut)
+        {
+            var inventories = await _roomTypeRepo.GetQueryable()
+                .AsNoTracking()
+                .Where(rt => rt.HotelId == hotelId && rt.IsActive)
+                .SelectMany(rt => rt.Inventories!)
+                .Where(i => i.Date >= checkIn && i.Date < checkOut)
+                .Include(i => i.RoomType!).ThenInclude(rt => rt.Rates)
+                .ToListAsync();
+
+            return inventories.GroupBy(i => i.RoomType!).Select(g =>
+            {
+                var rate = g.Key.Rates?.FirstOrDefault(r => checkIn >= r.StartDate && checkIn <= r.EndDate);
+                return new RoomAvailabilityDto
+                {
+                    RoomTypeId = g.Key.RoomTypeId,
+                    RoomTypeName = g.Key.Name,
+                    PricePerNight = rate?.Rate ?? 0,
+                    AvailableRooms = g.Min(x => x.AvailableInventory),
+                    ImageUrl = g.Key.ImageUrl
+                };
+            });
+        }
+
+        // ── ADMIN: UPDATE HOTEL ───────────────────────────────────────────────
+
+        public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var (user, hotel) = await GetAdminWithHotelAsync(userId);
+                var changes = new
+                {
+                    Before = new { hotel.Name, hotel.Address, hotel.City, hotel.Description, hotel.ContactNumber, hotel.UpiId },
+                    After = new { dto.Name, dto.Address, dto.City, dto.Description, dto.ContactNumber, dto.UpiId }
+                };
+                ApplyHotelUpdates(hotel, dto);
+                await _unitOfWork.CommitAsync();
+                await _auditLogService.LogAsync(userId, "HotelUpdated", "Hotel",
+                    hotel.HotelId, JsonSerializer.Serialize(changes));
+            }
+            catch { await _unitOfWork.RollbackAsync(); throw; }
+        }
+
+        // ── ADMIN: TOGGLE STATUS ──────────────────────────────────────────────
+
+        public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+            try
+            {
+                var (_, hotel) = await GetAdminWithHotelAsync(userId);
+                if (isActive && hotel.IsBlockedBySuperAdmin)
+                    throw new ValidationException("Hotel is blocked by SuperAdmin and cannot be activated.");
+                hotel.IsActive = isActive;
+                await _unitOfWork.CommitAsync();
+                await _auditLogService.LogAsync(userId, isActive ? "HotelActivated" : "HotelDeactivated",
+                    "Hotel", hotel.HotelId, $"IsActive set to {isActive}");
+            }
+            catch { await _unitOfWork.RollbackAsync(); throw; }
+        }
+
+        // ── ADMIN: UPDATE GST ─────────────────────────────────────────────────
+
+        public async Task UpdateHotelGstAsync(Guid adminUserId, decimal gstPercent)
+        {
+            var (_, hotel) = await GetAdminWithHotelAsync(adminUserId);
+            hotel.GstPercent = gstPercent;
+            await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(adminUserId, "HotelGstUpdated", "Hotel",
+                hotel.HotelId, $"GST set to {gstPercent}%");
+        }
+
+        // ── SUPERADMIN: BLOCK / UNBLOCK ───────────────────────────────────────
+
+        public async Task BlockHotelAsync(Guid hotelId)
+        {
+            var hotel = await GetHotelOrThrowAsync(hotelId);
+            hotel.IsBlockedBySuperAdmin = true;
+            hotel.IsActive = false;
+            await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(null, "HotelBlocked", "Hotel", hotelId, "Hotel blocked by SuperAdmin.");
+        }
+
+        public async Task UnblockHotelAsync(Guid hotelId)
+        {
+            var hotel = await GetHotelOrThrowAsync(hotelId);
+            hotel.IsBlockedBySuperAdmin = false;
+            await _unitOfWork.SaveChangesAsync();
+            await _auditLogService.LogAsync(null, "HotelUnblocked", "Hotel", hotelId, "Hotel unblocked by SuperAdmin.");
+        }
+
+        // ── SUPERADMIN: LIST ALL HOTELS (non-paged) ───────────────────────────
+
+        public async Task<IEnumerable<SuperAdminHotelListDto>> GetAllHotelsForSuperAdminAsync()
+        {
+            var hotels = await _hotelRepo.GetQueryable().AsNoTracking().OrderBy(h => h.Name).ToListAsync();
+            var reservationCounts = await GetReservationCountsByHotelAsync(null);
+            var revenueByHotel = await GetRevenueByHotelAsync(null);
+            return hotels.Select(h => MapToSuperAdminDto(h, reservationCounts, revenueByHotel));
+        }
+
+        // ── SUPERADMIN: LIST ALL HOTELS (paged) ───────────────────────────────
+
+        public async Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(
+            int page, int pageSize, string? search = null, string? status = null)
+        {
+            var query = BuildSuperAdminHotelQuery(search, status);
+            var totalCount = await query.CountAsync();
+            var hotels = await query.OrderBy(h => h.Name)
+                .Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            var hotelIds = hotels.Select(h => h.HotelId).ToList();
+            var reservationCounts = await GetReservationCountsByHotelAsync(hotelIds);
+            var revenueByHotel = await GetRevenueByHotelAsync(hotelIds);
+
+            return new PagedSuperAdminHotelResponseDto
+            {
+                TotalCount = totalCount,
+                Hotels = hotels.Select(h => MapToSuperAdminDto(h, reservationCounts, revenueByHotel))
+            };
+        }
+
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private async Task<(User user, Hotel hotel)> GetAdminWithHotelAsync(Guid userId)
+        {
+            var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (user.HotelId is null) throw new UnAuthorizedException("Unauthorized.");
+            var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
+                ?? throw new NotFoundException("Hotel not found.");
+            return (user, hotel);
+        }
+
+        private async Task<Hotel> GetHotelOrThrowAsync(Guid hotelId)
+            => await _hotelRepo.GetAsync(hotelId) ?? throw new NotFoundException("Hotel not found.");
+
+        private IQueryable<Hotel> BuildPublicHotelQuery()
+            => _hotelRepo.GetQueryable().AsNoTracking()
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin);
+
+        private static IQueryable<Hotel> ApplySearchFilters(
+            IQueryable<Hotel> query, SearchHotelRequestDto request)
+        {
+            if (!string.IsNullOrWhiteSpace(request.City))
+                query = query.Where(h => h.City.ToLower() == request.City.ToLower());
+            else if (!string.IsNullOrWhiteSpace(request.State))
+                query = query.Where(h => h.State.ToLower() == request.State.ToLower());
+
+            if (request.AmenityIds?.Count > 0)
+                query = query.Where(h => h.RoomTypes!.Any(rt =>
+                    rt.RoomTypeAmenities!.Any(rta => request.AmenityIds.Contains(rta.AmenityId))));
+
+            if (!string.IsNullOrWhiteSpace(request.RoomType))
+                query = query.Where(h => h.RoomTypes!.Any(rt =>
+                    rt.Name.ToLower().Contains(request.RoomType.ToLower())));
+
+            if (request.MinPrice.HasValue)
+                query = query.Where(h => h.RoomTypes!.SelectMany(rt => rt.Rates!)
+                    .Any(r => r.Rate >= request.MinPrice.Value));
+
+            if (request.MaxPrice.HasValue)
+                query = query.Where(h => h.RoomTypes!.SelectMany(rt => rt.Rates!)
+                    .Any(r => r.Rate <= request.MaxPrice.Value));
+
+            return query;
+        }
+
+        private static IQueryable<Hotel> ApplySorting(IQueryable<Hotel> query, string? sortBy)
+            => sortBy switch
+            {
+                "price_asc"  => query.OrderBy(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
+                "price_desc" => query.OrderByDescending(h => h.RoomTypes!.SelectMany(rt => rt.Rates!).Min(r => (decimal?)r.Rate) ?? 0),
+                _            => query.OrderBy(h => h.Name)
+            };
+
+        private static SearchHotelResponseDto EmptySearchResponse(int pageNumber) => new()
+        {
+            Hotels = new List<HotelListItemDto>(),
+            PageNumber = pageNumber,
+            RecordsCount = 0,
+            TotalCount = 0
+        };
+
+        private async Task<IEnumerable<HotelListItemDto>> FetchHotelListAsync(
+            System.Linq.Expressions.Expression<Func<Hotel, bool>> filter, int? take = null)
+        {
+            var query = _hotelRepo.GetQueryable().AsNoTracking()
+                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin)
+                .Where(filter)
+                .Select(h => new
+                {
+                    h.HotelId, h.Name, h.City, h.ImageUrl,
+                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
+                    ReviewCount = h.Reviews!.Count(),
+                    StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Select(r => (decimal?)r.Rate).Min()
+                })
+                .OrderByDescending(h => h.AvgRating ?? 0);
+
+            var raw = take.HasValue
+                ? await query.Take(take.Value).ToListAsync()
+                : await query.ToListAsync();
+
+            return raw.Select(h => MapToListItemDto(
+                h.HotelId, h.Name, h.City, h.ImageUrl,
+                h.AvgRating, h.ReviewCount, h.StartingPrice));
+        }
+
+        private IQueryable<Hotel> BuildSuperAdminHotelQuery(string? search, string? status)
+        {
+            var query = _hotelRepo.GetQueryable().AsNoTracking().AsQueryable();
+            if (!string.IsNullOrWhiteSpace(search))
+                query = query.Where(h => h.Name.Contains(search) || h.City.Contains(search));
+            if (!string.IsNullOrWhiteSpace(status) && status != "All")
+                query = status switch
+                {
+                    "Active"   => query.Where(h => h.IsActive && !h.IsBlockedBySuperAdmin),
+                    "Inactive" => query.Where(h => !h.IsActive && !h.IsBlockedBySuperAdmin),
+                    "Blocked"  => query.Where(h => h.IsBlockedBySuperAdmin),
+                    _          => query
+                };
+            return query;
+        }
+
+        private async Task<Dictionary<Guid, int>> GetReservationCountsByHotelAsync(List<Guid>? hotelIds)
+        {
+            var query = _reservationRepo.GetQueryable().AsNoTracking();
+            if (hotelIds is not null) query = query.Where(r => hotelIds.Contains(r.HotelId));
+            return await query.GroupBy(r => r.HotelId)
+                .Select(g => new { HotelId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Count);
+        }
+
+        private async Task<Dictionary<Guid, decimal>> GetRevenueByHotelAsync(List<Guid>? hotelIds)
+        {
+            var query = _transactionRepo.GetQueryable().AsNoTracking()
+                .Where(t => t.Status == PaymentStatus.Success);
+            if (hotelIds is not null) query = query.Where(t => hotelIds.Contains(t.Reservation!.HotelId));
+            return await query.GroupBy(t => t.Reservation!.HotelId)
+                .Select(g => new { HotelId = g.Key, Revenue = g.Sum(t => t.Amount) })
+                .ToDictionaryAsync(x => x.HotelId, x => x.Revenue);
+        }
+
+        private static void ApplyHotelUpdates(Hotel hotel, UpdateHotelDto dto)
+        {
+            hotel.Name = dto.Name;
+            hotel.Address = dto.Address;
+            hotel.City = dto.City;
+            if (!string.IsNullOrWhiteSpace(dto.State)) hotel.State = dto.State;
+            hotel.Description = dto.Description;
+            hotel.ContactNumber = dto.ContactNumber;
+            hotel.ImageUrl = dto.ImageUrl;
+            if (dto.UpiId is not null) hotel.UpiId = dto.UpiId;
+        }
+
+        private static HotelDetailsDto BuildHotelDetailsDto(Hotel hotel)
+        {
+            var reviews = hotel.Reviews ?? new List<Review>();
             var allAmenities = hotel.RoomTypes?
                 .SelectMany(rt => rt.RoomTypeAmenities ?? Enumerable.Empty<RoomTypeAmenity>())
                 .Select(rta => rta.Amenity?.Name ?? string.Empty)
-                .Where(n => !string.IsNullOrEmpty(n))
-                .Distinct()
-                .ToList() ?? new List<string>();
-
-            var roomTypeDtos = hotel.RoomTypes?.Select(t => new RoomTypePublicDto
-            {
-                RoomTypeId = t.RoomTypeId,
-                Name = t.Name,
-                Description = t.Description,
-                MaxOccupancy = t.MaxOccupancy,
-                Amenities = t.RoomTypeAmenities?.Select(rta => rta.Amenity?.Name ?? string.Empty).Where(n => !string.IsNullOrEmpty(n))
-                    ?? Enumerable.Empty<string>(),
-                AmenityList = t.RoomTypeAmenities?.Select(rta => new AmenityPublicDto
-                {
-                    AmenityId = rta.AmenityId,
-                    Name = rta.Amenity?.Name ?? string.Empty,
-                    Category = rta.Amenity?.Category ?? string.Empty,
-                    IconName = rta.Amenity?.IconName
-                }) ?? Enumerable.Empty<AmenityPublicDto>(),
-                ImageUrl = t.ImageUrl
-            }) ?? Enumerable.Empty<RoomTypePublicDto>();
+                .Where(n => !string.IsNullOrEmpty(n)).Distinct().ToList()
+                ?? new List<string>();
 
             return new HotelDetailsDto
             {
@@ -268,7 +432,8 @@ namespace HotelBookingAppWebApi.Services
                     ? Math.Round(reviews.Average(r => (decimal)r.Rating), 2) : 0m,
                 ReviewCount = reviews.Count,
                 Amenities = allAmenities,
-                RoomTypes = roomTypeDtos,
+                RoomTypes = hotel.RoomTypes?.Select(t => MapToRoomTypePublicDto(t))
+                    ?? Enumerable.Empty<RoomTypePublicDto>(),
                 Reviews = reviews.OrderByDescending(r => r.CreatedDate).Take(10).Select(r => new ReviewDto
                 {
                     UserName = r.User?.Name ?? "Anonymous",
@@ -282,307 +447,53 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        // ── PUBLIC: ROOM TYPES ────────────────────────────────────────────────
-        public async Task<IEnumerable<RoomTypePublicDto>> GetRoomTypesAsync(Guid hotelId)
+        private static RoomTypePublicDto MapToRoomTypePublicDto(RoomType roomType) => new()
         {
-            return await _roomTypeRepo.GetQueryable()
-                .AsNoTracking()
-                .Include(rt => rt.RoomTypeAmenities!)
-                    .ThenInclude(rta => rta.Amenity)
-                .Where(r => r.HotelId == hotelId && r.IsActive)
-                .Select(t => new RoomTypePublicDto
-                {
-                    RoomTypeId = t.RoomTypeId,
-                    Name = t.Name,
-                    Description = t.Description,
-                    MaxOccupancy = t.MaxOccupancy,
-                    Amenities = t.RoomTypeAmenities!.Select(rta => rta.Amenity!.Name),
-                    AmenityList = t.RoomTypeAmenities!.Select(rta => new AmenityPublicDto
-                    {
-                        AmenityId = rta.AmenityId,
-                        Name = rta.Amenity!.Name,
-                        Category = rta.Amenity.Category,
-                        IconName = rta.Amenity.IconName
-                    }),
-                    ImageUrl = t.ImageUrl
-                })
-                .ToListAsync();
-        }
-
-        // ── PUBLIC: AVAILABILITY ──────────────────────────────────────────────
-        public async Task<IEnumerable<RoomAvailabilityDto>> GetAvailabilityAsync(
-            Guid hotelId, DateOnly checkIn, DateOnly checkOut)
-        {
-            var inventories = await _roomTypeRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(rt => rt.HotelId == hotelId && rt.IsActive)
-                .SelectMany(rt => rt.Inventories!)
-                .Where(i => i.Date >= checkIn && i.Date < checkOut)
-                .Include(i => i.RoomType!)
-                    .ThenInclude(rt => rt.Rates)
-                .ToListAsync();
-
-            return inventories
-                .GroupBy(i => i.RoomType!)
-                .Select(g =>
-                {
-                    var rate = g.Key.Rates?
-                        .FirstOrDefault(r => checkIn >= r.StartDate && checkIn <= r.EndDate);
-                    return new RoomAvailabilityDto
-                    {
-                        RoomTypeId = g.Key.RoomTypeId,
-                        RoomTypeName = g.Key.Name,
-                        PricePerNight = rate?.Rate ?? 0,
-                        AvailableRooms = g.Min(x => x.AvailableInventory),
-                        ImageUrl = g.Key.ImageUrl
-                    };
-                });
-        }
-
-        // ── ADMIN: UPDATE HOTEL ───────────────────────────────────────────────
-        public async Task UpdateHotelAsync(Guid userId, UpdateHotelDto dto)
-        {
-            await _unitOfWork.BeginTransactionAsync();
-            try
+            RoomTypeId = roomType.RoomTypeId,
+            Name = roomType.Name,
+            Description = roomType.Description,
+            MaxOccupancy = roomType.MaxOccupancy,
+            Amenities = roomType.RoomTypeAmenities?
+                .Select(rta => rta.Amenity?.Name ?? string.Empty)
+                .Where(n => !string.IsNullOrEmpty(n))
+                ?? Enumerable.Empty<string>(),
+            AmenityList = roomType.RoomTypeAmenities?.Select(rta => new AmenityPublicDto
             {
-                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId)
-                    ?? throw new UnAuthorizedException("Unauthorized.");
+                AmenityId = rta.AmenityId,
+                Name = rta.Amenity?.Name ?? string.Empty,
+                Category = rta.Amenity?.Category ?? string.Empty,
+                IconName = rta.Amenity?.IconName
+            }) ?? Enumerable.Empty<AmenityPublicDto>(),
+            ImageUrl = roomType.ImageUrl
+        };
 
-                if (user.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized.");
-
-                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
-                    ?? throw new NotFoundException("Hotel not found.");
-
-                var changes = new
-                {
-                    Before = new { hotel.Name, hotel.Address, hotel.City, hotel.Description, hotel.ContactNumber, hotel.UpiId },
-                    After = new { dto.Name, dto.Address, dto.City, dto.Description, dto.ContactNumber, dto.UpiId }
-                };
-
-                hotel.Name = dto.Name;
-                hotel.Address = dto.Address;
-                hotel.City = dto.City;
-                if (!string.IsNullOrWhiteSpace(dto.State)) hotel.State = dto.State;
-                hotel.Description = dto.Description;
-                hotel.ContactNumber = dto.ContactNumber;
-                hotel.ImageUrl = dto.ImageUrl;
-                if (dto.UpiId != null) hotel.UpiId = dto.UpiId;
-
-                await _unitOfWork.CommitAsync();
-
-                await _auditLogService.LogAsync(userId, "HotelUpdated", "Hotel",
-                    hotel.HotelId, JsonSerializer.Serialize(changes));
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
-        }
-
-        // ── ADMIN: TOGGLE HOTEL STATUS ────────────────────────────────────────
-        public async Task ToggleHotelStatusAsync(Guid userId, bool isActive)
+        private static SuperAdminHotelListDto MapToSuperAdminDto(
+            Hotel hotel,
+            Dictionary<Guid, int> reservationCounts,
+            Dictionary<Guid, decimal> revenueByHotel) => new()
         {
-            await _unitOfWork.BeginTransactionAsync();
-            try
-            {
-                var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == userId)
-                    ?? throw new UnAuthorizedException("Unauthorized.");
+            HotelId = hotel.HotelId,
+            Name = hotel.Name,
+            City = hotel.City,
+            ContactNumber = hotel.ContactNumber,
+            IsActive = hotel.IsActive,
+            IsBlockedBySuperAdmin = hotel.IsBlockedBySuperAdmin,
+            CreatedAt = hotel.CreatedAt,
+            TotalReservations = reservationCounts.TryGetValue(hotel.HotelId, out var rc) ? rc : 0,
+            TotalRevenue = revenueByHotel.TryGetValue(hotel.HotelId, out var rv) ? rv : 0m
+        };
 
-                if (user.HotelId == null)
-                    throw new UnAuthorizedException("Unauthorized.");
-
-                var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
-                    ?? throw new NotFoundException("Hotel not found.");
-
-                if (isActive && hotel.IsBlockedBySuperAdmin)
-                    throw new ValidationException("Hotel is blocked by SuperAdmin and cannot be activated.");
-
-                hotel.IsActive = isActive;
-                await _unitOfWork.CommitAsync();
-
-                await _auditLogService.LogAsync(userId, isActive ? "HotelActivated" : "HotelDeactivated",
-                    "Hotel", hotel.HotelId, $"IsActive set to {isActive}");
-            }
-            catch
-            {
-                await _unitOfWork.RollbackAsync();
-                throw;
-            }
-        }
-
-        // ── SUPERADMIN: LIST ALL HOTELS ───────────────────────────────────────
-        // Fixed: single query with grouped joins instead of N+1 per-hotel loops.
-        // Fetches all reservation counts and revenue sums in 2 queries, then merges in memory.
-        public async Task<IEnumerable<SuperAdminHotelListDto>> GetAllHotelsForSuperAdminAsync()
+        private static HotelListItemDto MapToListItemDto(
+            Guid hotelId, string name, string city, string? imageUrl,
+            decimal? avgRating, int reviewCount, decimal? startingPrice) => new()
         {
-            // Query 1: all hotels
-            var hotels = await _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .OrderBy(h => h.Name)
-                .ToListAsync();
-
-            // Query 2: reservation counts grouped by hotel
-            var reservationCounts = await _reservationRepo.GetQueryable()
-                .AsNoTracking()
-                .GroupBy(r => r.HotelId)
-                .Select(g => new { HotelId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.HotelId, x => x.Count);
-
-            // Query 3: revenue sums grouped by hotel (success transactions only)
-            var revenueByHotel = await _transactionRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(t => t.Status == PaymentStatus.Success)
-                .GroupBy(t => t.Reservation!.HotelId)
-                .Select(g => new { HotelId = g.Key, Revenue = g.Sum(t => t.Amount) })
-                .ToDictionaryAsync(x => x.HotelId, x => x.Revenue);
-
-            // Merge in memory — no N+1
-            return hotels.Select(h => new SuperAdminHotelListDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ContactNumber = h.ContactNumber,
-                IsActive = h.IsActive,
-                IsBlockedBySuperAdmin = h.IsBlockedBySuperAdmin,
-                CreatedAt = h.CreatedAt,
-                TotalReservations = reservationCounts.TryGetValue(h.HotelId, out var rc) ? rc : 0,
-                TotalRevenue = revenueByHotel.TryGetValue(h.HotelId, out var rv) ? rv : 0m
-            });
-        }
-
-        // ── SUPERADMIN: BLOCK HOTEL ───────────────────────────────────────────
-        public async Task BlockHotelAsync(Guid hotelId)
-        {
-            var hotel = await _hotelRepo.GetAsync(hotelId)
-                ?? throw new NotFoundException("Hotel not found.");
-
-            hotel.IsBlockedBySuperAdmin = true;
-            hotel.IsActive = false;
-
-            await _unitOfWork.SaveChangesAsync();
-            await _auditLogService.LogAsync(null, "HotelBlocked", "Hotel", hotelId,
-                "Hotel blocked by SuperAdmin.");
-        }
-
-        // ── PUBLIC: ACTIVE STATES ─────────────────────────────────────────────
-        public async Task<IEnumerable<string>> GetActiveStatesAsync()
-        {
-            return await _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin && !string.IsNullOrEmpty(h.State))
-                .Select(h => h.State)
-                .Distinct()
-                .OrderBy(s => s)
-                .ToListAsync();
-        }
-
-        // ── PUBLIC: HOTELS BY STATE ───────────────────────────────────────────
-        public async Task<IEnumerable<HotelListItemDto>> GetHotelsByStateAsync(string stateName)
-        {
-            var hotels = await _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(h => h.IsActive && !h.IsBlockedBySuperAdmin &&
-                            h.State.ToLower() == stateName.ToLower())
-                .Select(h => new
-                {
-                    h.HotelId, h.Name, h.City, h.ImageUrl,
-                    AvgRating = h.Reviews!.Select(r => (decimal?)r.Rating).Average(),
-                    ReviewCount = h.Reviews!.Count(),
-                    StartingPrice = h.RoomTypes!.SelectMany(rt => rt.Rates!).Select(r => (decimal?)r.Rate).Min()
-                })
-                .OrderByDescending(h => h.AvgRating ?? 0)
-                .Take(10)
-                .ToListAsync();
-
-            return hotels.Select(h => new HotelListItemDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ImageUrl = h.ImageUrl,
-                AverageRating = Math.Round(h.AvgRating ?? 0m, 2),
-                ReviewCount = h.ReviewCount,
-                StartingPrice = h.StartingPrice ?? 0
-            });
-        }
-
-        // ── SUPERADMIN: UNBLOCK HOTEL ─────────────────────────────────────────
-        public async Task UnblockHotelAsync(Guid hotelId)
-        {
-            var hotel = await _hotelRepo.GetAsync(hotelId)
-                ?? throw new NotFoundException("Hotel not found.");
-
-            hotel.IsBlockedBySuperAdmin = false;
-
-            await _unitOfWork.SaveChangesAsync();
-            await _auditLogService.LogAsync(null, "HotelUnblocked", "Hotel", hotelId,
-                "Hotel unblocked by SuperAdmin.");
-        }
-
-        // ── ADMIN: UPDATE GST ─────────────────────────────────────────────────
-        public async Task UpdateHotelGstAsync(Guid adminUserId, decimal gstPercent)
-        {
-            var user = await _userRepo.FirstOrDefaultAsync(u => u.UserId == adminUserId)
-                ?? throw new UnAuthorizedException("Unauthorized.");
-
-            if (user.HotelId == null)
-                throw new UnAuthorizedException("No hotel associated with this admin.");
-
-            var hotel = await _hotelRepo.GetAsync(user.HotelId.Value)
-                ?? throw new NotFoundException("Hotel not found.");
-
-            hotel.GstPercent = gstPercent;
-            await _unitOfWork.SaveChangesAsync();
-
-            await _auditLogService.LogAsync(adminUserId, "HotelGstUpdated", "Hotel",
-                hotel.HotelId, $"GST set to {gstPercent}%");
-        }
-
-        // ── SUPERADMIN: LIST ALL HOTELS (paged) ───────────────────────────────
-        public async Task<PagedSuperAdminHotelResponseDto> GetAllHotelsForSuperAdminPagedAsync(int page, int pageSize)
-        {
-            var totalCount = await _hotelRepo.GetQueryable().CountAsync();
-
-            var hotels = await _hotelRepo.GetQueryable()
-                .AsNoTracking()
-                .OrderBy(h => h.Name)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var hotelIds = hotels.Select(h => h.HotelId).ToList();
-
-            var reservationCounts = await _reservationRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(r => hotelIds.Contains(r.HotelId))
-                .GroupBy(r => r.HotelId)
-                .Select(g => new { HotelId = g.Key, Count = g.Count() })
-                .ToDictionaryAsync(x => x.HotelId, x => x.Count);
-
-            var revenueByHotel = await _transactionRepo.GetQueryable()
-                .AsNoTracking()
-                .Where(t => t.Status == PaymentStatus.Success && hotelIds.Contains(t.Reservation!.HotelId))
-                .GroupBy(t => t.Reservation!.HotelId)
-                .Select(g => new { HotelId = g.Key, Revenue = g.Sum(t => t.Amount) })
-                .ToDictionaryAsync(x => x.HotelId, x => x.Revenue);
-
-            var dtos = hotels.Select(h => new SuperAdminHotelListDto
-            {
-                HotelId = h.HotelId,
-                Name = h.Name,
-                City = h.City,
-                ContactNumber = h.ContactNumber,
-                IsActive = h.IsActive,
-                IsBlockedBySuperAdmin = h.IsBlockedBySuperAdmin,
-                CreatedAt = h.CreatedAt,
-                TotalReservations = reservationCounts.TryGetValue(h.HotelId, out var rc) ? rc : 0,
-                TotalRevenue = revenueByHotel.TryGetValue(h.HotelId, out var rev) ? rev : 0
-            });
-
-            return new PagedSuperAdminHotelResponseDto { TotalCount = totalCount, Hotels = dtos };
-        }
+            HotelId = hotelId,
+            Name = name,
+            City = city,
+            ImageUrl = imageUrl ?? string.Empty,
+            AverageRating = Math.Round(avgRating ?? 0m, 2),
+            ReviewCount = reviewCount,
+            StartingPrice = startingPrice ?? 0
+        };
     }
 }
