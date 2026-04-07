@@ -94,6 +94,12 @@ public class ReservationCleanupServiceTests
         var emptyInventory = new List<RoomTypeInventory>().AsQueryable().BuildMock();
         inventoryRepoMock.Setup(r => r.GetQueryable()).Returns(emptyInventory);
 
+        // BeginTransactionAsync must be set up so CommitAsync is reached
+        unitOfWorkMock.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
+        unitOfWorkMock.Setup(u => u.CommitAsync()).Returns(Task.CompletedTask);
+        walletServiceMock.Setup(w => w.CreditAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>()))
+            .Returns(Task.CompletedTask);
+
         var scopeMock = new Mock<IServiceScope>();
         var spMock = new Mock<IServiceProvider>();
         spMock.Setup(p => p.GetService(typeof(IRepository<Guid, Reservation>))).Returns(reservationRepoMock.Object);

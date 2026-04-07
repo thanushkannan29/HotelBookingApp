@@ -15,7 +15,7 @@ interface GroqResponse {
 @Injectable({ providedIn: 'root' })
 export class ChatbotService {
   private http = inject(HttpClient);
-  private readonly apiUrl = 'https://api.groq.com/openai/v1/chat/completions';
+  private readonly apiUrl = environment.groqApiUrl;
 
   send(history: ChatMessage[], userMessage: string, systemPrompt: string): Observable<string> {
     const headers = new HttpHeaders({

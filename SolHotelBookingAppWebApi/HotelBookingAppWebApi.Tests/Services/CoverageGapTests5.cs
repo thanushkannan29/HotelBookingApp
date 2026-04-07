@@ -205,13 +205,14 @@ public class CoverageGapTests5
         var inventoryRepoMock = new Mock<IRepository<Guid, RoomTypeInventory>>();
         var unitOfWorkMock = new Mock<IUnitOfWork>();
 
+        // CheckOutDate must be strictly before today (UTC) so the WHERE filter matches
         var noShowReservation = new Reservation
         {
             ReservationId = Guid.NewGuid(), ReservationCode = "RES-NS",
             UserId = Guid.NewGuid(), HotelId = Guid.NewGuid(),
             Status = ReservationStatus.Confirmed, IsCheckedIn = false,
-            CheckInDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-5)),
-            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(-1)),
+            CheckInDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-7)),
+            CheckOutDate = DateOnly.FromDateTime(DateTime.UtcNow.AddDays(-2)),
             TotalAmount = 500, CreatedDate = DateTime.UtcNow,
             ReservationRooms = new List<ReservationRoom>()
         };
@@ -220,11 +221,14 @@ public class CoverageGapTests5
         inventoryRepoMock.Setup(r => r.GetQueryable())
             .Returns(new List<RoomTypeInventory>().AsQueryable().BuildMock());
 
-        // CommitAsync throws — triggers rollback catch block in CommitNoShowsAsync
+        // BeginTransactionAsync succeeds; CommitAsync throws → triggers rollback catch block
+        unitOfWorkMock.Setup(u => u.BeginTransactionAsync()).Returns(Task.CompletedTask);
         unitOfWorkMock.Setup(u => u.CommitAsync()).ThrowsAsync(new Exception("DB commit failed"));
+        unitOfWorkMock.Setup(u => u.RollbackAsync()).Returns(Task.CompletedTask);
 
         var scopeMock = new Mock<IServiceScope>();
         var spMock = new Mock<IServiceProvider>();
+        // GetRequiredService<T> resolves via GetService internally
         spMock.Setup(p => p.GetService(typeof(IRepository<Guid, Reservation>))).Returns(reservationRepoMock.Object);
         spMock.Setup(p => p.GetService(typeof(IRepository<Guid, RoomTypeInventory>))).Returns(inventoryRepoMock.Object);
         spMock.Setup(p => p.GetService(typeof(IUnitOfWork))).Returns(unitOfWorkMock.Object);
@@ -236,11 +240,11 @@ public class CoverageGapTests5
         var sut = new NoShowAutoCancelService(scopeFactoryMock.Object, loggerMock.Object);
         using var cts = new CancellationTokenSource(TimeSpan.FromMilliseconds(200));
 
-        // Act
+        // Act — let the service run one iteration
         await sut.StartAsync(cts.Token);
-        await Task.Delay(500);
+        await Task.Delay(600);
 
-        // Assert — rollback called and error logged (exercises lines 105-109)
+        // Assert — rollback called and error logged (exercises CommitNoShowsAsync catch block)
         unitOfWorkMock.Verify(u => u.RollbackAsync(), Times.AtLeastOnce);
         loggerMock.Verify(l => l.Log(LogLevel.Error, It.IsAny<EventId>(),
             It.Is<It.IsAnyType>((v, _) => true), It.IsAny<Exception>(),
