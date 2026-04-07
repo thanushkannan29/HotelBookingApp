@@ -527,6 +527,12 @@ namespace HotelBookingAppWebApi.Services
                         }
                     }
 
+                    // Mark the success transaction as Refunded only on full refund.
+                    // For partial refunds the transaction stays Success (hotel kept part of the payment).
+                    var successTx = res.Transactions?.FirstOrDefault(t => t.Status == PaymentStatus.Success);
+                    if (successTx is not null && refundPercent == 100)
+                        successTx.Status = PaymentStatus.Refunded;
+
                     if (refundPercent > 0)
                     {
                         var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);

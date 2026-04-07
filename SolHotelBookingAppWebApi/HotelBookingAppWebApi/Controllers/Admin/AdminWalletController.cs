@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _walletService = walletService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns the wallet balance for a specific guest.</summary>
         [HttpGet("guest/{guestUserId}")]

@@ -131,6 +131,6 @@ describe('SpinnerComponent', () => {
     fixture.detectChanges();
 
     const spinner = fixture.nativeElement.querySelector('mat-progress-spinner');
-    expect(spinner?.getAttribute('ng-reflect-diameter')).toBe('40');
+    expect(spinner?.getAttribute('diameter')).toBe('40');
   });
 });

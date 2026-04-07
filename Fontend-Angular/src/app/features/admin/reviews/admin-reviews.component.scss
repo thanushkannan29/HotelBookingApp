@@ -1,47 +1,166 @@
-.review-list { display: flex; flex-direction: column; gap: 16px; }
+// ── Review List ───────────────────────────────────────────────────────────────
+.review-list {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
 
+// ── Review Card ───────────────────────────────────────────────────────────────
 .review-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
   padding: 20px 24px;
+  transition: box-shadow var(--transition), border-color var(--transition);
+
+  &:hover {
+    box-shadow: var(--shadow-md);
+    border-color: rgba(45, 58, 140, 0.2);
+  }
 }
 
+// ── Review Header ─────────────────────────────────────────────────────────────
 .review-header {
-  display: flex; align-items: center; gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
 }
 
 .reviewer-avatar {
-  width: 40px; height: 40px; border-radius: 50%;
-  background: var(--color-primary); color: white;
+  width: 42px; height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-light));
+  color: white;
   display: flex; align-items: center; justify-content: center;
-  font-weight: 600; font-size: 1rem; flex-shrink: 0; overflow: hidden;
+  font-weight: 700; font-size: 1rem;
+  flex-shrink: 0; overflow: hidden;
+  box-shadow: 0 2px 8px rgba(45,58,140,0.25);
+
   img { width: 100%; height: 100%; object-fit: cover; }
 }
 
-.reviewer-info { flex: 1; strong { display: block; font-size: 0.95rem; } }
-.stars { display: flex; gap: 1px; margin-top: 2px; }
-.review-date { font-size: 0.78rem; color: var(--color-text-muted); margin-left: auto; }
-.review-comment { font-size: 0.875rem; color: var(--color-text-secondary); line-height: 1.6; margin-bottom: 12px; }
-
-.hotel-reply {
-  display: flex; align-items: flex-start; gap: 8px;
-  background: rgba(45,58,140,0.05); border-left: 3px solid var(--color-primary);
-  border-radius: 0 8px 8px 0; padding: 10px 14px; margin-bottom: 10px;
-  mat-icon { color: var(--color-primary); font-size: 16px; width: 16px; height: 16px; margin-top: 2px; flex-shrink: 0; }
-  .reply-label { font-size: 0.72rem; font-weight: 600; color: var(--color-primary); display: block; margin-bottom: 2px; text-transform: uppercase; letter-spacing: 0.04em; }
-  .reply-text { font-size: 0.85rem; color: var(--color-text-secondary); margin: 0; line-height: 1.5; }
+.reviewer-info {
+  flex: 1;
+  strong { display: block; font-size: 0.95rem; font-weight: 600; }
 }
 
+.stars {
+  display: flex;
+  gap: 1px;
+  margin-top: 3px;
+}
+
+.review-date {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+// ── Review Comment ────────────────────────────────────────────────────────────
+.review-comment {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+  line-height: 1.65;
+  margin-bottom: 14px;
+}
+
+// ── Hotel Reply ───────────────────────────────────────────────────────────────
+.hotel-reply {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: linear-gradient(135deg, rgba(45,58,140,0.05), rgba(45,58,140,0.02));
+  border-left: 3px solid var(--color-primary);
+  border-radius: 0 10px 10px 0;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+
+  mat-icon {
+    color: var(--color-primary);
+    font-size: 16px; width: 16px; height: 16px;
+    margin-top: 2px; flex-shrink: 0;
+  }
+
+  .reply-label {
+    font-size: 0.7rem; font-weight: 700;
+    color: var(--color-primary);
+    display: block; margin-bottom: 3px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .reply-text {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    margin: 0; line-height: 1.55;
+  }
+}
+
+<<<<<<< Updated upstream
 .reply-form { margin-top: 8px; }
 .reply-actions { display: flex; gap: 10px; margin-top: 8px; justify-content: flex-end; }
 .review-actions { display: flex; justify-content: flex-end; margin-top: 4px; }
-
-.filter-toolbar {
-  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
-  .filter-label { font-size: 0.78rem; color: var(--color-text-muted); font-weight: 500; white-space: nowrap; }
+=======
+// ── Reply Form ────────────────────────────────────────────────────────────────
+.reply-form { margin-top: 10px; }
+.reply-actions {
+  display: flex; gap: 10px;
+  margin-top: 10px;
+  justify-content: flex-end;
 }
-.rating-filters, .sort-controls { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-button.active-filter { background: var(--color-primary); color: white; border-color: var(--color-primary); }
-.reviews-wrap { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
-.review-list { padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+
+.review-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+// ── Filter Toolbar ────────────────────────────────────────────────────────────
+.filter-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: 14px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-sm);
+
+  .filter-label {
+    font-size: 0.75rem;
+    color: var(--color-text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+}
+
+.rating-filters,
+.sort-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+button.active-filter {
+  background: var(--color-primary) !important;
+  color: white !important;
+  border-color: var(--color-primary) !important;
+}
+
+// ── Reviews Wrap ──────────────────────────────────────────────────────────────
+.reviews-wrap {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+}
+>>>>>>> Stashed changes

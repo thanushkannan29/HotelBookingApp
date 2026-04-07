@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             => _reservationService = reservationService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Create a new reservation with optional room selection and wallet/promo usage.</summary>
         [HttpPost]

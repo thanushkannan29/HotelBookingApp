@@ -16,7 +16,7 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatChipsModule } from '@angular/material/chips';
 import { RouterLink } from '@angular/router';
-import { DatePipe, CommonModule } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import { RoomService, RoomTypeService } from '../../../core/services/api.services';
 import { ToastService } from '../../../core/services/toast.service';
@@ -26,7 +26,7 @@ import { RoomListResponseDto, RoomTypeListDto, RoomOccupancyDto } from '../../..
   selector: 'app-room-management',
   standalone: true,
   imports: [
-    CommonModule, ReactiveFormsModule, RouterLink, DatePipe,
+    CommonModule, ReactiveFormsModule, RouterLink,
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatButtonModule, MatIconModule, MatSlideToggleModule, MatTooltipModule,
     MatTableModule, MatSortModule, MatPaginatorModule,

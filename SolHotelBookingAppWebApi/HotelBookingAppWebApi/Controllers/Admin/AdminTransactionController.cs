@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _transactionService = transactionService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>
         /// Marks a transaction as Failed and resets the reservation to Pending

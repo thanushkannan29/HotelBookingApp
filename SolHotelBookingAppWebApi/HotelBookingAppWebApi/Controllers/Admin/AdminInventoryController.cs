@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _inventoryService = inventoryService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Add inventory records for a date range. Skips existing dates (idempotent).</summary>
         [HttpPost]

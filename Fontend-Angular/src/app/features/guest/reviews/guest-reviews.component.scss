@@ -1,38 +1,62 @@
 .page-header-row {
   display: flex; justify-content: space-between; align-items: flex-start;
-  margin-bottom: 24px; flex-wrap: wrap; gap: 16px;
+  margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
 }
 
+.contribution-summary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06));
+  border: 1px solid rgba(245,158,11,0.25);
+  color: #b45309; font-size: 0.82rem; font-weight: 600;
+  padding: 6px 14px; border-radius: 20px; margin-top: 8px;
+}
+
+// ── Add / Edit Form Card ──────────────────────────────────────────────────────
 .review-form-card {
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl); padding: 24px; margin-bottom: 28px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  margin-bottom: 28px;
+  box-shadow: var(--shadow-sm);
+
   .form-card-title {
-    font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em;
-    color: var(--color-text-muted); font-weight: 600; margin-bottom: 20px;
+    font-family: var(--font-display);
+    font-size: 1.1rem; font-weight: 600;
+    color: var(--color-text-primary);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--color-border);
   }
+
   form { display: flex; flex-direction: column; gap: 16px; }
 }
 
+// ── Star Picker ───────────────────────────────────────────────────────────────
 .rating-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
 .rating-label { font-size: 0.85rem; color: var(--color-text-secondary); font-weight: 500; min-width: 80px; }
-.rating-text { font-size: 0.85rem; color: var(--color-text-muted); margin-left: 4px; }
+.rating-text { font-size: 0.85rem; color: var(--color-text-muted); margin-left: 4px; font-weight: 600; }
 
-.star-picker { display: flex; align-items: center; gap: 4px; }
+.star-picker { display: flex; align-items: center; gap: 2px; }
 .star-btn {
-  background: none; border: none; cursor: pointer; padding: 2px;
+  background: none; border: none; cursor: pointer; padding: 3px;
   transition: transform var(--transition);
-  mat-icon { font-size: 28px; width: 28px; height: 28px; color: var(--color-border); transition: color var(--transition); }
+  mat-icon { font-size: 30px; width: 30px; height: 30px; color: #e2e8f0; transition: color var(--transition); }
   &.active mat-icon { color: #f59e0b; }
-  &:hover mat-icon { color: #f59e0b; transform: scale(1.2); }
+  &:hover { transform: scale(1.15); }
+  &:hover mat-icon { color: #f59e0b; }
 }
 
-.reviews-list { display: flex; flex-direction: column; gap: 16px; }
-
-.review-card {
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg); padding: 20px 24px;
+// ── Table Card ────────────────────────────────────────────────────────────────
+.table-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
+<<<<<<< Updated upstream
 .review-header {
   display: flex; justify-content: space-between; align-items: flex-start;
   margin-bottom: 12px;
@@ -55,7 +79,41 @@
 }
 
 .edit-form { display: flex; flex-direction: column; gap: 14px; padding-top: 8px; }
-
-.table-card { background: var(--color-surface); border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden; }
-.spinner-wrap { display: flex; justify-content: center; padding: 48px; }
+=======
+.spinner-wrap { display: flex; justify-content: center; padding: 56px; }
 mat-table.hidden { display: none; }
+
+// ── Contribution Badge ────────────────────────────────────────────────────────
+.contribution-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.06));
+  border: 1px solid rgba(245,158,11,0.2);
+  color: #b45309; font-size: 0.72rem; font-weight: 600;
+  padding: 2px 8px; border-radius: 12px; margin-left: 8px; white-space: nowrap;
+}
+
+// ── Stay Code ─────────────────────────────────────────────────────────────────
+.stay-code {
+  font-family: 'Courier New', monospace;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--color-primary);
+  background: rgba(45,58,140,0.07);
+  padding: 3px 8px; border-radius: 4px;
+}
+
+// ── Star Display (table) ──────────────────────────────────────────────────────
+.star-display-inline {
+  display: flex; align-items: center; gap: 1px;
+  .star-icon-sm { font-size: 15px; width: 15px; height: 15px; color: #e2e8f0; &.filled { color: #f59e0b; } }
+  .rating-num { margin-left: 6px; font-size: 0.78rem; color: var(--color-text-muted); font-weight: 600; }
+}
+
+// ── Comment Preview ───────────────────────────────────────────────────────────
+.comment-preview {
+  font-size: 0.85rem; color: var(--color-text-secondary);
+  cursor: default; line-height: 1.5;
+}
+
+// ── Empty Cell ────────────────────────────────────────────────────────────────
+.empty-cell { text-align: center; padding: 48px 24px; color: var(--color-text-muted); font-size: 0.9rem; }
+>>>>>>> Stashed changes

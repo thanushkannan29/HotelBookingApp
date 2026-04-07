@@ -9,8 +9,8 @@ import { ToastService } from '../../../core/services/toast.service';
 import { provideAnimationsAsync } from '@angular/platform-browser/animations/async';
 
 const MOCK_REVIEWS = [
-  { reviewId: 'rev-001', hotelId: 'h1', userId: 'u1', userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES001', rating: 5, comment: 'Excellent!', createdDate: '2025-01-10T10:00:00Z', contributionPoints: 100 },
-  { reviewId: 'rev-002', hotelId: 'h1', userId: 'u2', userName: 'Bob',   reservationId: 'res-002', reservationCode: 'RES002', rating: 3, comment: 'Average.',   createdDate: '2025-01-11T10:00:00Z', contributionPoints: 100 },
+  { reviewId: 'rev-001', hotelId: 'h1', userId: 'u1', userName: 'Alice', reservationId: 'res-001', reservationCode: 'RES001', rating: 5, comment: 'Excellent!', createdDate: '2025-01-10T10:00:00Z', contributionPoints: 10 },
+  { reviewId: 'rev-002', hotelId: 'h1', userId: 'u2', userName: 'Bob',   reservationId: 'res-002', reservationCode: 'RES002', rating: 3, comment: 'Average.',   createdDate: '2025-01-11T10:00:00Z', contributionPoints: 10 },
 ];
 
 describe('AdminReviewsComponent', () => {

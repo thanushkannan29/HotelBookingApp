@@ -9,6 +9,7 @@ import { ToastService } from '../../../core/services/toast.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { UserProfileResponseDto } from '../../../core/models/models';
 import { CityAutocompleteComponent } from '../../../shared/components/city-autocomplete/city-autocomplete.component';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-guest-profile',
@@ -30,6 +31,7 @@ export class GuestProfileComponent implements OnInit {
   profile = signal<UserProfileResponseDto | null>(null);
   isEditing = signal(false);
   isSaving = signal(false);
+  readonly reviewRewardPoints = environment.reviewRewardPoints;
 
   // F2D: separate FormControl for city autocomplete
   cityControl = new FormControl('');

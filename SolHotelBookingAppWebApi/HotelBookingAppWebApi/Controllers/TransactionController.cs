@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers
             => _transactionService = transactionService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Records a successful payment and promotes the reservation to Confirmed.</summary>
         [HttpPost]
@@ -52,7 +52,7 @@ namespace HotelBookingAppWebApi.Controllers
         [Authorize(Roles = "Admin,Guest,SuperAdmin")]
         public async Task<IActionResult> GetList([FromBody] TransactionQueryDto dto)
         {
-            var role = User.FindFirstValue(ClaimTypes.Role)!;
+            var role = User.FindFirstValue("role")!;
             var result = await _transactionService.GetAllTransactionsAsync(
                 GetUserId(), role, dto.Page, dto.PageSize, dto.SortField, dto.SortDir);
             return Ok(new { success = true, data = result });

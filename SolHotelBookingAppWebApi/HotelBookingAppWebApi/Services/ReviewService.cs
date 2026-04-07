@@ -5,17 +5,13 @@ using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
 using HotelBookingAppWebApi.Models.DTOs.Review;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace HotelBookingAppWebApi.Services
 {
-    /// <summary>
-    /// Manages guest reviews — creation, update, deletion, and admin replies.
-    /// One review per completed reservation is enforced.
-    /// </summary>
+<<<<<<< Updated upstream
     public class ReviewService : IReviewService
     {
-        private const decimal ReviewRewardAmount = 100m;
-
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Hotel> _hotelRepo;
         private readonly IRepository<Guid, Reservation> _reservationRepo;
@@ -38,24 +34,83 @@ namespace HotelBookingAppWebApi.Services
             _walletService = walletService;
             _unitOfWork = unitOfWork;
         }
+=======
+    /// <summary>
+    /// Manages guest reviews — creation, update, deletion, and admin replies.
+    /// One review per completed reservation is enforced.
+    /// Reward points are configured via ReviewSettings:RewardPoints in appsettings.json.
+    /// </summary>
+    public class ReviewService(
+        IRepository<Guid, Review> reviewRepo,
+        IRepository<Guid, Hotel> hotelRepo,
+        IRepository<Guid, Reservation> reservationRepo,
+        IRepository<Guid, User> userRepo,
+        IWalletService walletService,
+        IUnitOfWork unitOfWork,
+        IConfiguration configuration) : IReviewService
+    {
+        private readonly decimal _reviewRewardAmount = configuration.GetValue<decimal>("ReviewSettings:RewardPoints", 10m);
 
-        // ── PUBLIC API ────────────────────────────────────────────────────────
+        private readonly IRepository<Guid, Review> _reviewRepo = reviewRepo;
+        private readonly IRepository<Guid, Hotel> _hotelRepo = hotelRepo;
+        private readonly IRepository<Guid, Reservation> _reservationRepo = reservationRepo;
+        private readonly IRepository<Guid, User> _userRepo = userRepo;
+        private readonly IWalletService _walletService = walletService;
+        private readonly IUnitOfWork _unitOfWork = unitOfWork;
+>>>>>>> Stashed changes
 
+        // ── ADD REVIEW (one review per completed reservation) ─────────────────
         public async Task<ReviewResponseDto> AddReviewAsync(Guid userId, CreateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                await EnsureHotelExistsAsync(dto.HotelId);
-                var reservation = await GetCompletedReservationOrThrowAsync(userId, dto);
-                await EnsureNotAlreadyReviewedAsync(dto.ReservationId);
+                var hotelExists = await _hotelRepo.GetQueryable()
+                    .AnyAsync(h => h.HotelId == dto.HotelId);
 
-                var review = BuildReview(userId, dto);
+                if (!hotelExists)
+                    throw new NotFoundException("Hotel not found.");
+
+                // Verify the reservation exists, belongs to this user, belongs to this hotel, and is Completed
+                var reservation = await _reservationRepo.GetQueryable()
+                    .FirstOrDefaultAsync(r =>
+                        r.ReservationId == dto.ReservationId &&
+                        r.UserId == userId &&
+                        r.HotelId == dto.HotelId &&
+                        r.Status == ReservationStatus.Completed);
+
+                if (reservation == null)
+                    throw new ReviewException(
+                        "You can only review a completed reservation. Verify the reservation belongs to you and is completed.");
+
+                // One review per reservation
+                var alreadyReviewed = await _reviewRepo.GetQueryable()
+                    .AnyAsync(r => r.ReservationId == dto.ReservationId);
+
+                if (alreadyReviewed)
+                    throw new ReviewException("You have already submitted a review for this reservation.");
+
+                var review = new Review
+                {
+                    ReviewId = Guid.NewGuid(),
+                    HotelId = dto.HotelId,
+                    UserId = userId,
+                    ReservationId = dto.ReservationId,
+                    Rating = dto.Rating,
+                    Comment = dto.Comment,
+                    ImageUrl = dto.ImageUrl,
+                    CreatedDate = DateTime.UtcNow
+                };
+
                 await _reviewRepo.AddAsync(review);
-                await _walletService.CreditAsync(userId, ReviewRewardAmount, "Review contribution reward");
+<<<<<<< Updated upstream
+                await _walletService.CreditAsync(userId, 100m, "Review contribution reward");
+=======
+                await _walletService.CreditAsync(userId, _reviewRewardAmount, "Review contribution reward");
+>>>>>>> Stashed changes
                 await _unitOfWork.CommitAsync();
 
-                return MapToDto(review, reservation.ReservationCode);
+                return MapToDto(review, reservation.ReservationCode, _reviewRewardAmount);
             }
             catch
             {
@@ -64,20 +119,29 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        public async Task<ReviewResponseDto> UpdateReviewAsync(
-            Guid userId, Guid reviewId, UpdateReviewDto dto)
+        // ── UPDATE REVIEW ─────────────────────────────────────────────────────
+        public async Task<ReviewResponseDto> UpdateReviewAsync(Guid userId, Guid reviewId, UpdateReviewDto dto)
         {
             await _unitOfWork.BeginTransactionAsync();
             try
             {
-                var review = await GetReviewWithDetailsAsync(reviewId);
-                EnsureReviewOwnership(review, userId);
+                var review = await _reviewRepo.GetQueryable()
+                    .Include(r => r.Reservation)
+                    .Include(r => r.User)
+                    .FirstOrDefaultAsync(r => r.ReviewId == reviewId)
+                    ?? throw new NotFoundException("Review not found.");
 
-                ApplyReviewUpdates(review, dto);
+                if (review.UserId != userId)
+                    throw new ReviewException("You are not allowed to update this review.");
+
+                review.Rating = dto.Rating;
+                if (!string.IsNullOrWhiteSpace(dto.Comment)) review.Comment = dto.Comment;
+                if (dto.ImageUrl != null) review.ImageUrl = dto.ImageUrl;
+
                 await _reviewRepo.UpdateAsync(reviewId, review);
                 await _unitOfWork.CommitAsync();
 
-                return MapToDto(review, review.Reservation?.ReservationCode ?? string.Empty);
+                return MapToDto(review, review.Reservation?.ReservationCode ?? string.Empty, _reviewRewardAmount);
             }
             catch
             {
@@ -86,6 +150,7 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
+        // ── DELETE REVIEW ─────────────────────────────────────────────────────
         public async Task<bool> DeleteReviewAsync(Guid userId, Guid reviewId)
         {
             await _unitOfWork.BeginTransactionAsync();
@@ -93,14 +158,20 @@ namespace HotelBookingAppWebApi.Services
             {
                 var review = await _reviewRepo.GetAsync(reviewId)
                     ?? throw new NotFoundException("Review not found.");
-                EnsureReviewOwnership(review, userId);
 
-                await _walletService.DebitAsync(review.UserId, ReviewRewardAmount,
+<<<<<<< Updated upstream
+                if (review.UserId != userId)
+                    throw new ReviewException("You are not allowed to delete this review.");
+
+                await _walletService.DebitAsync(review.UserId, 100m, "Review contribution reversed on deletion");
+=======
+                await _walletService.DebitAsync(review.UserId, _reviewRewardAmount,
                     "Review contribution reversed on deletion");
+>>>>>>> Stashed changes
                 var deleted = await _reviewRepo.DeleteAsync(reviewId);
                 await _unitOfWork.CommitAsync();
 
-                return deleted is not null;
+                return deleted != null;
             }
             catch
             {
@@ -109,29 +180,51 @@ namespace HotelBookingAppWebApi.Services
             }
         }
 
-        public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(
-            Guid hotelId, int page, int pageSize)
+        // ── GET REVIEWS BY HOTEL ──────────────────────────────────────────────
+        public async Task<PagedReviewResponseDto> GetReviewsByHotelAsync(Guid hotelId, int page, int pageSize)
         {
             var query = _reviewRepo.GetQueryable()
                 .Include(r => r.Reservation)
-                .Include(r => r.User!).ThenInclude(u => u.UserDetails)
+                .Include(r => r.User!)
+                    .ThenInclude(u => u.UserDetails)
                 .Where(r => r.HotelId == hotelId)
                 .OrderByDescending(r => r.CreatedDate);
 
-            return await BuildPagedReviewResponseAsync(query, page, pageSize);
+            var total = await query.CountAsync();
+            var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            return new PagedReviewResponseDto
+            {
+                TotalCount = total,
+                Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty))
+            };
         }
 
-        public async Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(
-            Guid adminUserId, int page, int pageSize,
-            int? minRating = null, int? maxRating = null, string? sortDir = null)
+        // ── GET HOTEL REVIEWS FOR ADMIN (looks up hotel from admin's userId) ──
+        public async Task<PagedReviewResponseDto> GetAdminHotelReviewsAsync(Guid adminUserId, int page, int pageSize)
         {
-            var admin = await GetAdminWithHotelAsync(adminUserId);
-            var query = BuildAdminReviewQuery(admin.HotelId!.Value, minRating, maxRating, sortDir);
-            return await BuildPagedReviewResponseAsync(query, page, pageSize);
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("No hotel associated with this admin.");
+            return await GetReviewsByHotelAsync(admin.HotelId.Value, page, pageSize);
         }
 
-        public async Task<PagedMyReviewsResponseDto> GetMyReviewsPagedAsync(
-            Guid userId, int page, int pageSize)
+        // ── GET MY REVIEWS (non-paged) ────────────────────────────────────────
+        public async Task<IEnumerable<MyReviewsResponseDto>> GetMyReviewsAsync(Guid userId)
+        {
+            var reviews = await _reviewRepo.GetQueryable()
+                .Include(r => r.Hotel)
+                .Include(r => r.Reservation)
+                .Where(r => r.UserId == userId)
+                .OrderByDescending(r => r.CreatedDate)
+                .ToListAsync();
+
+            return reviews.Select(MapToMyDto);
+        }
+
+        // ── GET MY REVIEWS (paged) ────────────────────────────────────────────
+        public async Task<PagedMyReviewsResponseDto> GetMyReviewsPagedAsync(Guid userId, int page, int pageSize)
         {
             var query = _reviewRepo.GetQueryable()
                 .Include(r => r.Hotel)
@@ -142,16 +235,25 @@ namespace HotelBookingAppWebApi.Services
             var total = await query.CountAsync();
             var reviews = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
+<<<<<<< Updated upstream
+            return new PagedMyReviewsResponseDto { TotalCount = total, Reviews = reviews.Select(MapToMyDto) };
+=======
             return new PagedMyReviewsResponseDto
             {
                 TotalCount = total,
-                Reviews = reviews.Select(MapToMyDto)
+                Reviews = reviews.Select(r => MapToMyDto(r, _reviewRewardAmount))
             };
+>>>>>>> Stashed changes
         }
 
+        // ── ADMIN: REPLY TO REVIEW ────────────────────────────────────────────
         public async Task ReplyToReviewAsync(Guid adminUserId, Guid reviewId, string reply)
         {
-            var admin = await GetAdminWithHotelAsync(adminUserId);
+            var admin = await _userRepo.GetAsync(adminUserId)
+                ?? throw new UnAuthorizedException("Unauthorized.");
+            if (admin.HotelId == null)
+                throw new UnAuthorizedException("No hotel associated with this admin.");
+
             var review = await _reviewRepo.GetQueryable()
                 .FirstOrDefaultAsync(r => r.ReviewId == reviewId && r.HotelId == admin.HotelId)
                 ?? throw new NotFoundException("Review not found or does not belong to your hotel.");
@@ -160,10 +262,37 @@ namespace HotelBookingAppWebApi.Services
             await _unitOfWork.SaveChangesAsync();
         }
 
-        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
-
-        private async Task EnsureHotelExistsAsync(Guid hotelId)
+        private static ReviewResponseDto MapToDto(Review r, string reservationCode) => new()
         {
+<<<<<<< Updated upstream
+            ReviewId = r.ReviewId,
+            HotelId = r.HotelId,
+            UserId = r.UserId,
+            UserName = r.User?.Name ?? string.Empty,
+            UserProfileImageUrl = r.User?.UserDetails?.ProfileImageUrl,
+            ReservationId = r.ReservationId,
+            ReservationCode = reservationCode,
+            Rating = r.Rating,
+            Comment = r.Comment,
+            ImageUrl = r.ImageUrl,
+            AdminReply = r.AdminReply,
+            CreatedDate = r.CreatedDate,
+            ContributionPoints = 100
+        };
+
+        private static MyReviewsResponseDto MapToMyDto(Review r) => new()
+        {
+            ReviewId = r.ReviewId,
+            HotelId = r.HotelId,
+            HotelName = r.Hotel?.Name ?? string.Empty,
+            ReservationId = r.ReservationId,
+            ReservationCode = r.Reservation?.ReservationCode ?? string.Empty,
+            Rating = r.Rating,
+            Comment = r.Comment,
+            ImageUrl = r.ImageUrl,
+            CreatedDate = r.CreatedDate,
+            ContributionPoints = 100
+=======
             var exists = await _hotelRepo.GetQueryable().AnyAsync(h => h.HotelId == hotelId);
             if (!exists) throw new NotFoundException("Hotel not found.");
         }
@@ -224,7 +353,7 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        private static async Task<PagedReviewResponseDto> BuildPagedReviewResponseAsync(
+        private async Task<PagedReviewResponseDto> BuildPagedReviewResponseAsync(
             IQueryable<Review> query, int page, int pageSize)
         {
             var total = await query.CountAsync();
@@ -232,7 +361,7 @@ namespace HotelBookingAppWebApi.Services
             return new PagedReviewResponseDto
             {
                 TotalCount = total,
-                Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty))
+                Reviews = reviews.Select(r => MapToDto(r, r.Reservation?.ReservationCode ?? string.Empty, _reviewRewardAmount))
             };
         }
 
@@ -261,7 +390,7 @@ namespace HotelBookingAppWebApi.Services
             CreatedDate = DateTime.UtcNow
         };
 
-        private static ReviewResponseDto MapToDto(Review review, string reservationCode) => new()
+        private static ReviewResponseDto MapToDto(Review review, string reservationCode, decimal rewardAmount) => new()
         {
             ReviewId = review.ReviewId,
             HotelId = review.HotelId,
@@ -275,10 +404,10 @@ namespace HotelBookingAppWebApi.Services
             ImageUrl = review.ImageUrl,
             AdminReply = review.AdminReply,
             CreatedDate = review.CreatedDate,
-            ContributionPoints = (int)ReviewRewardAmount
+            ContributionPoints = (int)rewardAmount
         };
 
-        private static MyReviewsResponseDto MapToMyDto(Review review) => new()
+        private static MyReviewsResponseDto MapToMyDto(Review review, decimal rewardAmount) => new()
         {
             ReviewId = review.ReviewId,
             HotelId = review.HotelId,
@@ -289,7 +418,8 @@ namespace HotelBookingAppWebApi.Services
             Comment = review.Comment,
             ImageUrl = review.ImageUrl,
             CreatedDate = review.CreatedDate,
-            ContributionPoints = (int)ReviewRewardAmount
+            ContributionPoints = (int)rewardAmount
+>>>>>>> Stashed changes
         };
     }
 }

@@ -1,5 +1,4 @@
 select * from Users 
-select * from Cities
 select * from Hotels
 select * from UserProfileDetails
 select * from Rooms

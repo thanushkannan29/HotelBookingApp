@@ -36,9 +36,9 @@ public class GlobalExceptionMiddlewareTests
     {
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Name, "TestUser"),
-            new Claim(ClaimTypes.Role, role)
+            new Claim("nameid",      userId.ToString()),
+            new Claim("unique_name", "TestUser"),
+            new Claim("role",        role)
         };
         return new ClaimsPrincipal(new ClaimsIdentity(claims, "Test"));
     }

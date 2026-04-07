@@ -8,6 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HotelBookingAppWebApi.Services
 {
+    /// <summary>
+    /// Manages promo code generation, validation, and lifecycle.
+    /// Codes are auto-generated on reservation completion and expire after 90 days.
+    /// </summary>
     public class PromoCodeService : IPromoCodeService
     {
         private readonly IRepository<Guid, PromoCode> _promoRepo;
@@ -27,6 +31,8 @@ namespace HotelBookingAppWebApi.Services
             _unitOfWork = unitOfWork;
         }
 
+        // ── PUBLIC API ────────────────────────────────────────────────────────
+
         public async Task<IEnumerable<PromoCodeResponseDto>> GetGuestPromoCodesAsync(Guid userId)
         {
             var promos = await _promoRepo.GetQueryable()
@@ -38,27 +44,20 @@ namespace HotelBookingAppWebApi.Services
             return promos.Select(MapToDto);
         }
 
-        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize, string? status = null)
+<<<<<<< Updated upstream
+        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(Guid userId, int page, int pageSize)
         {
             var query = _promoRepo.GetQueryable()
                 .Include(p => p.Hotel)
                 .Where(p => p.UserId == userId)
-                .AsQueryable();
+                .OrderByDescending(p => p.CreatedAt);
 
-            // Apply status filter in memory after mapping (status is computed, not a DB column)
-            var now = DateTime.UtcNow;
-            if (!string.IsNullOrWhiteSpace(status) && status != "All")
-            {
-                query = status switch
-                {
-                    "Active"  => query.Where(p => !p.IsUsed && p.ExpiryDate >= now),
-                    "Used"    => query.Where(p => p.IsUsed),
-                    "Expired" => query.Where(p => !p.IsUsed && p.ExpiryDate < now),
-                    _         => query
-                };
-            }
-
-            query = query.OrderByDescending(p => p.CreatedAt);
+=======
+        public async Task<PagedPromoCodeResponseDto> GetGuestPromoCodesPagedAsync(
+            Guid userId, int page, int pageSize, string? status = null)
+        {
+            var query = BuildGuestPromoQuery(userId, status);
+>>>>>>> Stashed changes
             var total = await query.CountAsync();
             var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
@@ -69,7 +68,8 @@ namespace HotelBookingAppWebApi.Services
             };
         }
 
-        public async Task<PromoCodeValidationResultDto> ValidateAsync(Guid userId, ValidatePromoCodeDto dto)
+        public async Task<PromoCodeValidationResultDto> ValidateAsync(
+            Guid userId, ValidatePromoCodeDto dto)
         {
             var promo = await _promoRepo.GetQueryable()
                 .FirstOrDefaultAsync(p =>
@@ -77,17 +77,11 @@ namespace HotelBookingAppWebApi.Services
                     p.UserId == userId &&
                     p.HotelId == dto.HotelId);
 
-            if (promo == null)
-                return Invalid("Promo code not found or not applicable to this hotel.");
-
-            if (promo.IsUsed)
-                return Invalid("Promo code has already been used.");
-
-            if (promo.ExpiryDate < DateTime.UtcNow)
-                return Invalid("Promo code has expired.");
+            if (promo is null) return InvalidResult("Promo code not found or not applicable to this hotel.");
+            if (promo.IsUsed) return InvalidResult("Promo code has already been used.");
+            if (promo.ExpiryDate < DateTime.UtcNow) return InvalidResult("Promo code has expired.");
 
             var discountAmount = Math.Round(dto.TotalAmount * promo.DiscountPercent / 100, 2);
-
             return new PromoCodeValidationResultDto
             {
                 IsValid = true,
@@ -101,29 +95,13 @@ namespace HotelBookingAppWebApi.Services
         {
             var reservation = await _reservationRepo.GetQueryable()
                 .FirstOrDefaultAsync(r => r.ReservationId == reservationId);
+            if (reservation is null) return;
 
-            if (reservation == null) return;
-
-            // Check if promo already generated for this reservation
-            var exists = await _promoRepo.GetQueryable()
+            var alreadyExists = await _promoRepo.GetQueryable()
                 .AnyAsync(p => p.ReservationId == reservationId);
-            if (exists) return;
+            if (alreadyExists) return;
 
-            var discountPercent = CalculateDiscountPercent(reservation.TotalAmount);
-
-            var promo = new PromoCode
-            {
-                PromoCodeId = Guid.NewGuid(),
-                Code = GenerateCode(),
-                UserId = reservation.UserId,
-                HotelId = reservation.HotelId,
-                ReservationId = reservationId,
-                DiscountPercent = discountPercent,
-                ExpiryDate = DateTime.UtcNow.AddDays(90),
-                IsUsed = false,
-                CreatedAt = DateTime.UtcNow
-            };
-
+            var promo = BuildPromoCode(reservation);
             await _promoRepo.AddAsync(promo);
             await _unitOfWork.SaveChangesAsync();
         }
@@ -133,45 +111,81 @@ namespace HotelBookingAppWebApi.Services
             var promo = await _promoRepo.GetQueryable()
                 .FirstOrDefaultAsync(p => p.Code == code && p.UserId == userId);
 
-            if (promo != null)
+            if (promo is not null)
             {
                 promo.IsUsed = true;
                 await _unitOfWork.SaveChangesAsync();
             }
         }
 
-        // ── HELPERS ───────────────────────────────────────────────────────────
+        // ── PRIVATE HELPERS ───────────────────────────────────────────────────
+
+        private IQueryable<PromoCode> BuildGuestPromoQuery(Guid userId, string? status)
+        {
+            var now = DateTime.UtcNow;
+            var query = _promoRepo.GetQueryable()
+                .Include(p => p.Hotel)
+                .Where(p => p.UserId == userId)
+                .AsQueryable();
+
+            query = status switch
+            {
+                "Active"  => query.Where(p => !p.IsUsed && p.ExpiryDate >= now),
+                "Used"    => query.Where(p => p.IsUsed),
+                "Expired" => query.Where(p => !p.IsUsed && p.ExpiryDate < now),
+                _         => query
+            };
+
+            return query.OrderByDescending(p => p.CreatedAt);
+        }
+
+        private static PromoCode BuildPromoCode(Reservation reservation) => new()
+        {
+            PromoCodeId = Guid.NewGuid(),
+            Code = GenerateCode(),
+            UserId = reservation.UserId,
+            HotelId = reservation.HotelId,
+            ReservationId = reservation.ReservationId,
+            DiscountPercent = CalculateDiscountPercent(reservation.TotalAmount),
+            ExpiryDate = DateTime.UtcNow.AddDays(90),
+            IsUsed = false,
+            CreatedAt = DateTime.UtcNow
+        };
+
         private static decimal CalculateDiscountPercent(decimal totalAmount) => totalAmount switch
         {
-            <= 500 => 5,
+            <= 500  => 5,
             <= 1000 => 10,
             <= 2000 => 15,
             <= 5000 => 20,
-            _ => 25
+            _       => 25
         };
 
         private static string GenerateCode()
             => $"PROMO-{Guid.NewGuid().ToString("N")[..8].ToUpper()}";
 
-        private static PromoCodeValidationResultDto Invalid(string msg) => new()
+        private static PromoCodeValidationResultDto InvalidResult(string message) => new()
         {
             IsValid = false,
-            Message = msg
+            Message = message
         };
 
-        private static PromoCodeResponseDto MapToDto(PromoCode p)
+        private static PromoCodeResponseDto MapToDto(PromoCode promo)
         {
             var now = DateTime.UtcNow;
-            string status = p.IsUsed ? "Used" : p.ExpiryDate < now ? "Expired" : "Active";
+            var status = promo.IsUsed ? "Used"
+                : promo.ExpiryDate < now ? "Expired"
+                : "Active";
+
             return new PromoCodeResponseDto
             {
-                PromoCodeId = p.PromoCodeId,
-                Code = p.Code,
-                HotelName = p.Hotel?.Name ?? string.Empty,
-                HotelId = p.HotelId,
-                DiscountPercent = p.DiscountPercent,
-                ExpiryDate = p.ExpiryDate,
-                IsUsed = p.IsUsed,
+                PromoCodeId = promo.PromoCodeId,
+                Code = promo.Code,
+                HotelName = promo.Hotel?.Name ?? string.Empty,
+                HotelId = promo.HotelId,
+                DiscountPercent = promo.DiscountPercent,
+                ExpiryDate = promo.ExpiryDate,
+                IsUsed = promo.IsUsed,
                 Status = status
             };
         }

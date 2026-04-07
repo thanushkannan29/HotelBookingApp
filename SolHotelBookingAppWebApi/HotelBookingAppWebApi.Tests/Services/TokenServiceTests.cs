@@ -3,7 +3,6 @@ using HotelBookingAppWebApi.Models.DTOs.Auth;
 using HotelBookingAppWebApi.Services;
 using Microsoft.Extensions.Configuration;
 using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
 
 namespace HotelBookingAppWebApi.Tests.Services;
 
@@ -53,7 +52,7 @@ public class TokenServiceTests
         var token = handler.ReadJwtToken(result);
         // JWT short claim type for NameIdentifier is "nameid"
         token.Claims.Should().Contain(c =>
-            (c.Type == ClaimTypes.NameIdentifier || c.Type == "nameid") &&
+            c.Type == "nameid" &&
             c.Value == payload.UserId.ToString());
     }
 
@@ -72,7 +71,7 @@ public class TokenServiceTests
         var token = handler.ReadJwtToken(result);
         // JWT short claim type for Name is "unique_name"
         token.Claims.Should().Contain(c =>
-            (c.Type == ClaimTypes.Name || c.Type == "unique_name") &&
+            c.Type == "unique_name" &&
             c.Value == "TestUser");
     }
 
@@ -91,7 +90,7 @@ public class TokenServiceTests
         var token = handler.ReadJwtToken(result);
         // JWT short claim type for Role is "role"
         token.Claims.Should().Contain(c =>
-            (c.Type == ClaimTypes.Role || c.Type == "role") &&
+            c.Type == "role" &&
             c.Value == "Guest");
     }
 

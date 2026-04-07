@@ -56,7 +56,7 @@ PROMO CODES:
 
 REVIEWS:
 - Guests can write one review per completed stay
-- Writing a review earns ₹100 wallet reward
+- Writing a review earns ₹10 wallet reward
 - Hotel admins can reply to guest reviews
 
 SUPPORT:
@@ -85,7 +85,7 @@ PAYMENTS & WALLET:
 - Apply promo codes at checkout
 
 REVIEWS & REWARDS:
-- Write a review after a completed stay: Reviews section (earns ₹100 wallet reward)
+- Write a review after a completed stay: Reviews section (earns ₹10 wallet reward)
 - View your submitted reviews: Reviews section
 
 SUPPORT & PROFILE:

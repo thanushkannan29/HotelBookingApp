@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers
             => _logService = logService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged logs for the authenticated user.</summary>
         [HttpPost("my-logs")]

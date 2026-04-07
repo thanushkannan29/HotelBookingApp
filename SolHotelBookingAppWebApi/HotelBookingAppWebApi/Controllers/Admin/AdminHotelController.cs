@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _hotelService = hotelService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Update hotel name, address, city, description, contact, and UPI ID.</summary>
         [HttpPut]

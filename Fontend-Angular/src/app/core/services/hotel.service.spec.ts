@@ -213,8 +213,9 @@ describe('HotelService', () => {
   it('getHotelDetails() — should embed the hotelId correctly in URL', () => {
     service.getHotelDetails('hotel-999').subscribe();
 
-    http.expectOne(`${BASE}/public/hotels/hotel-999/full-details`)
-        .flush({ success: true, data: { ...MOCK_HOTEL_DETAILS, hotelId: 'hotel-999' } });
+    const req = http.expectOne(`${BASE}/public/hotels/hotel-999/full-details`);
+    expect(req.request.method).toBe('GET');
+    req.flush({ success: true, data: { ...MOCK_HOTEL_DETAILS, hotelId: 'hotel-999' } });
   });
 
   // ── PUBLIC: getAvailability ────────────────────────────────────────────────
@@ -342,8 +343,9 @@ describe('HotelService', () => {
   it('blockHotel() — should embed hotelId correctly in the URL', () => {
     service.blockHotel('hotel-999').subscribe();
 
-    http.expectOne(`${BASE}/superadmin/hotels/hotel-999/block`)
-        .flush({ success: true, message: 'Hotel has been blocked.' });
+    const req = http.expectOne(`${BASE}/superadmin/hotels/hotel-999/block`);
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ success: true, message: 'Hotel has been blocked.' });
   });
 
   // ── SUPERADMIN: unblockHotel ───────────────────────────────────────────────
@@ -362,7 +364,8 @@ describe('HotelService', () => {
   it('unblockHotel() — should embed hotelId correctly in the URL', () => {
     service.unblockHotel('hotel-001').subscribe();
 
-    http.expectOne(`${BASE}/superadmin/hotels/hotel-001/unblock`)
-        .flush({ success: true, message: 'Hotel has been unblocked.' });
+    const req = http.expectOne(`${BASE}/superadmin/hotels/hotel-001/unblock`);
+    expect(req.request.method).toBe('PATCH');
+    req.flush({ success: true, message: 'Hotel has been unblocked.' });
   });
 });

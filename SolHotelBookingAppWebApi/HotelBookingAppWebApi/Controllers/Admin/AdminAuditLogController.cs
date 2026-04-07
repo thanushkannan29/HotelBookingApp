@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _auditLogService = auditLogService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged audit logs for the admin's hotel with optional keyword search.</summary>
         [HttpPost("list")]

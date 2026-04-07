@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers
             => _reviewService = reviewService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Add a review for a completed reservation. Credits ₹100 wallet reward.</summary>
         [HttpPost]

@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _amenityRequestService = amenityRequestService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Submit a new amenity request to SuperAdmin.</summary>
         [HttpPost]

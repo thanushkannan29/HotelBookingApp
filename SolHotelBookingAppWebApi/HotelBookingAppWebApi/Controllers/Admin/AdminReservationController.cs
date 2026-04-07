@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _reservationService = reservationService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged reservations for the hotel with optional status, search, and sort.</summary>
         [HttpPost("list")]

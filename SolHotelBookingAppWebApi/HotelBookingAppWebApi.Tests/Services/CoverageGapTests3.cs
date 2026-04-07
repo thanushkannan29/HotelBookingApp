@@ -10,6 +10,7 @@ using HotelBookingAppWebApi.Models.DTOs.Transactions;
 using HotelBookingAppWebApi.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using MockQueryable.Moq;
 using Moq;
 
@@ -140,7 +141,7 @@ public class CoverageGapTests3
         var tx = new Transaction { TransactionId = Guid.NewGuid(), ReservationId = reservationId, Amount = 1000, PaymentMethod = PaymentMethod.UPI, Status = PaymentStatus.Success, TransactionDate = DateTime.UtcNow, Reservation = reservation };
         var commission = new SuperAdminRevenue { SuperAdminRevenueId = Guid.NewGuid(), ReservationId = reservationId, HotelId = hotelId, ReservationAmount = 1000, CommissionAmount = 20, SuperAdminUpiId = "sa@upi", CreatedAt = DateTime.UtcNow, Reservation = reservation };
         var wallet = new Wallet { WalletId = walletId, UserId = guestId, Balance = 0, UpdatedAt = DateTime.UtcNow };
-        var autoRefundTx = new WalletTransaction { WalletTransactionId = Guid.NewGuid(), WalletId = walletId, Amount = 100, Type = "Credit", Description = "Auto Refund for cancellation", CreatedAt = DateTime.UtcNow };
+        var autoRefundTx = new WalletTransaction { WalletTransactionId = Guid.NewGuid(), WalletId = walletId, Amount = 100, Type = "Credit", Description = "Refund for cancelled reservation RES-TEST01 (hotel deactivated)", CreatedAt = DateTime.UtcNow };
         var adminUser = new User { UserId = adminId, HotelId = hotelId, Name = "Admin", Email = "a@b.com", Password = new byte[]{1}, PasswordSaltValue = new byte[]{2}, Role = UserRole.Admin, CreatedAt = DateTime.UtcNow };
         var guestUser = new User { UserId = guestId, HotelId = null, Name = "Guest", Email = "g@b.com", Password = new byte[]{1}, PasswordSaltValue = new byte[]{2}, Role = UserRole.Guest, CreatedAt = DateTime.UtcNow };
         // _userRepo.GetQueryable() is called twice: once for admin hotel ID, once for guest names
@@ -376,12 +377,18 @@ public class CoverageGapTests3
         var review = new Review { ReviewId = Guid.NewGuid(), UserId = userId, HotelId = hotelId, ReservationId = reservationId, Rating = 4, Comment = "Great stay!", CreatedDate = DateTime.UtcNow, Hotel = hotel, Reservation = reservation };
         var reviewRepo = new Mock<IRepository<Guid, Review>>();
         reviewRepo.Setup(r => r.GetQueryable()).Returns(new List<Review> { review }.AsQueryable().BuildMock());
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["ReviewSettings:RewardPoints"] = "10" })
+            .Build();
+
         var sut = new ReviewService(reviewRepo.Object,
             new Mock<IRepository<Guid, Hotel>>().Object,
             new Mock<IRepository<Guid, Reservation>>().Object,
             new Mock<IRepository<Guid, User>>().Object,
             new Mock<IWalletService>().Object,
-            new Mock<IUnitOfWork>().Object);
+            new Mock<IUnitOfWork>().Object,
+            config);
 
         // Act
         var result = await sut.GetMyReviewsPagedAsync(userId, 1, 10);

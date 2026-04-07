@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             => _promoCodeService = promoCodeService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged promo codes for the guest with optional status filter.</summary>
         [HttpPost("list")]

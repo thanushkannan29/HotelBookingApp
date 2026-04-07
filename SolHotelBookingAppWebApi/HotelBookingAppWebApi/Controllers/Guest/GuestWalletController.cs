@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             => _walletService = walletService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged wallet transaction history and current balance.</summary>
         [HttpPost("list")]

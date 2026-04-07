@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             => _reservationService = reservationService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns a UPI QR code for the guest to pay for a pending reservation.</summary>
         [HttpGet("qr/{reservationId}")]

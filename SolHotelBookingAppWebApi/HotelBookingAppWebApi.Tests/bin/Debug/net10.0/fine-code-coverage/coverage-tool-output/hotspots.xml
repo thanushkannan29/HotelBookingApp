@@ -1,0 +1,48 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Hotspots>
+  <Hotspot>
+    <Assembly>AspNetCoreRateLimit</Assembly>
+    <Class>AspNetCoreRateLimit.WildcardMatcher</Class>
+    <MethodName>IsMatch(...)</MethodName>
+    <ShortName />
+    <Line></Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>46</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
+  <Hotspot>
+    <Assembly>AspNetCoreRateLimit</Assembly>
+    <Class>AspNetCoreRateLimit.RateLimitProcessor</Class>
+    <MethodName>GetMatchingRules(...)</MethodName>
+    <ShortName />
+    <Line></Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>40</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
+  <Hotspot>
+    <Assembly>HotelBookingAppWebApi</Assembly>
+    <Class>HotelBookingAppWebApi.Services.ReservationService</Class>
+    <MethodName>MoveNext()</MethodName>
+    <ShortName />
+    <Line>443</Line>
+    <FileIndex>0</FileIndex>
+    <Metrics>
+      <Metric>
+        <Name>Cyclomatic complexity</Name>
+        <Exceeded>true</Exceeded>
+        <Value>40</Value>
+      </Metric>
+    </Metrics>
+  </Hotspot>
+</Hotspots>

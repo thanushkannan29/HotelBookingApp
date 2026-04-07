@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers
             => _userService = userService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns the authenticated user's profile details.</summary>
         [HttpGet]

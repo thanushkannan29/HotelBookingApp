@@ -10,9 +10,9 @@ internal static class ControllerTestHelper
     {
         var claims = new[]
         {
-            new Claim(ClaimTypes.NameIdentifier, userId.ToString()),
-            new Claim(ClaimTypes.Role, role),
-            new Claim(ClaimTypes.Name, "TestUser")
+            new Claim("nameid", userId.ToString()),
+            new Claim("role",   role),
+            new Claim("unique_name", "TestUser")
         };
         var identity = new ClaimsIdentity(claims, "Test");
         var principal = new ClaimsPrincipal(identity);

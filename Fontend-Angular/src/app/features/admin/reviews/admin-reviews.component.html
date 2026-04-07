@@ -2,32 +2,64 @@
   <div class="container" style="max-width:860px;">
     <div class="page-header-row">
       <div>
-        <h1 class="section-title">⭐ Guest Reviews</h1>
-        <p class="section-subtitle">{{ totalCount() }} reviews for your hotel</p>
+        <h1 class="section-title">Guest Reviews</h1>
+        <p class="section-subtitle">{{ totalCount() }} review{{ totalCount() !== 1 ? 's' : '' }} for your hotel</p>
       </div>
     </div>
 
-    <!-- Filters row -->
+<<<<<<< Updated upstream
+    @if (loading()) {
+      <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
+    } @else if (reviews().length === 0) {
+      <div class="empty-state">
+        <mat-icon class="empty-icon">star_border</mat-icon>
+        <h3>No reviews yet</h3>
+      </div>
+    } @else {
+      <div class="review-list">
+        @for (r of reviews(); track r.reviewId) {
+          <div class="review-card">
+            <!-- Header -->
+            <div class="review-header">
+              <div class="reviewer-avatar">
+                @if (r.userProfileImageUrl) {
+                  <img [src]="r.userProfileImageUrl" [alt]="r.userName" />
+                } @else {
+                  {{ r.userName.charAt(0).toUpperCase() }}
+                }
+              </div>
+              <div class="reviewer-info">
+                <strong>{{ r.userName }}</strong>
+                <div class="stars">
+                  @for (s of stars; track s) {
+                    <mat-icon [style.color]="s <= r.rating ? '#f59e0b' : '#ddd'" style="font-size:16px;width:16px;height:16px;">star</mat-icon>
+                  }
+                </div>
+=======
+    <!-- Filter Toolbar -->
     <div class="filter-toolbar mb-3">
       <div class="rating-filters">
         <span class="filter-label">Filter:</span>
         @for (r of stars; track r) {
-          <button mat-stroked-button [class.active-filter]="ratingFilter === r" (click)="onRatingFilter(r)">
+          <button mat-stroked-button [class.active-filter]="ratingFilter === r" (click)="onRatingFilter(r)"
+                  [attr.aria-label]="r + ' star filter'" [attr.aria-pressed]="ratingFilter === r">
             {{ r }}★
           </button>
         }
         @if (ratingFilter > 0) {
-          <button mat-icon-button (click)="onRatingFilter(0)" matTooltip="Clear filter">
+          <button mat-icon-button (click)="onRatingFilter(0)" matTooltip="Clear filter" aria-label="Clear rating filter">
             <mat-icon>close</mat-icon>
           </button>
         }
       </div>
       <div class="sort-controls">
-        <span class="filter-label">Sort by rating:</span>
-        <button mat-stroked-button [class.active-filter]="sortDir === 'desc'" (click)="onSort('desc')">
+        <span class="filter-label">Sort:</span>
+        <button mat-stroked-button [class.active-filter]="sortDir === 'desc'" (click)="onSort('desc')"
+                aria-label="Sort high to low">
           <mat-icon>arrow_downward</mat-icon> High → Low
         </button>
-        <button mat-stroked-button [class.active-filter]="sortDir === 'asc'" (click)="onSort('asc')">
+        <button mat-stroked-button [class.active-filter]="sortDir === 'asc'" (click)="onSort('asc')"
+                aria-label="Sort low to high">
           <mat-icon>arrow_upward</mat-icon> Low → High
         </button>
       </div>
@@ -35,18 +67,21 @@
 
     <div class="reviews-wrap">
       @if (loading()) {
-        <div style="display:flex;justify-content:center;padding:60px;"><mat-spinner diameter="40" /></div>
+        <div style="display:flex;justify-content:center;padding:64px;">
+          <mat-spinner diameter="40" aria-label="Loading reviews" />
+        </div>
       } @else if (reviews().length === 0) {
         <div class="empty-state">
           <mat-icon class="empty-icon">star_border</mat-icon>
           <h3>No reviews found</h3>
+          <p>Try adjusting your filters or check back later</p>
         </div>
       } @else {
         <div class="review-list">
           @for (r of reviews(); track r.reviewId) {
-            <div class="review-card">
+            <div class="review-card animate-fade-in">
               <div class="review-header">
-                <div class="reviewer-avatar">
+                <div class="reviewer-avatar" [attr.aria-label]="r.userName + ' avatar'">
                   @if (r.userProfileImageUrl) {
                     <img [src]="r.userProfileImageUrl" [alt]="r.userName" />
                   } @else {
@@ -55,35 +90,72 @@
                 </div>
                 <div class="reviewer-info">
                   <strong>{{ r.userName }}</strong>
-                  <div class="stars">
+                  <div class="stars" role="img" [attr.aria-label]="r.rating + ' out of 5 stars'">
                     @for (s of stars; track s) {
-                      <mat-icon [style.color]="s <= r.rating ? '#f59e0b' : '#ddd'" style="font-size:16px;width:16px;height:16px;">star</mat-icon>
+                      <mat-icon [style.color]="s <= r.rating ? '#f59e0b' : '#e2e8f0'"
+                                style="font-size:16px;width:16px;height:16px;">star</mat-icon>
                     }
                   </div>
                 </div>
                 <span class="review-date">{{ r.createdDate | date:'MMM d, y' }}</span>
+>>>>>>> Stashed changes
               </div>
+              <span class="review-date">{{ r.createdDate | date:'MMM d, y' }}</span>
+            </div>
 
-              <p class="review-comment">{{ r.comment }}</p>
+            <!-- Comment -->
+            <p class="review-comment">{{ r.comment }}</p>
 
+<<<<<<< Updated upstream
+            <!-- Existing reply -->
+            @if (r.adminReply && replyingId() !== r.reviewId) {
+              <div class="hotel-reply">
+                <mat-icon>hotel</mat-icon>
+                <div>
+                  <span class="reply-label">Your Response</span>
+                  <p class="reply-text">{{ r.adminReply }}</p>
+=======
               @if (r.adminReply && replyingId() !== r.reviewId) {
-                <div class="hotel-reply">
-                  <mat-icon>hotel</mat-icon>
+                <div class="hotel-reply" role="note" aria-label="Hotel response">
+                  <mat-icon aria-hidden="true">hotel</mat-icon>
                   <div>
-                    <span class="reply-label">Your Response</span>
+                    <span class="reply-label">Hotel Response</span>
                     <p class="reply-text">{{ r.adminReply }}</p>
                   </div>
+>>>>>>> Stashed changes
                 </div>
-              }
+              </div>
+            }
 
+<<<<<<< Updated upstream
+            <!-- Reply form -->
+            @if (replyingId() === r.reviewId) {
+              <div class="reply-form" [formGroup]="replyForm">
+                <mat-form-field appearance="outline" style="width:100%">
+                  <mat-label>Your reply to {{ r.userName }}</mat-label>
+                  <textarea matInput formControlName="adminReply" rows="3" maxlength="500"></textarea>
+                  <mat-hint align="end">{{ replyForm.get('adminReply')?.value?.length ?? 0 }}/500</mat-hint>
+                  @if (replyForm.get('adminReply')?.hasError('required') && replyForm.get('adminReply')?.touched) {
+                    <mat-error>Reply is required</mat-error>
+                  }
+                </mat-form-field>
+                <div class="reply-actions">
+                  <button mat-stroked-button (click)="cancelReply()">Cancel</button>
+                  <button mat-flat-button color="primary" (click)="submitReply()" [disabled]="isSaving()">
+                    @if (isSaving()) { Saving… } @else { Save Reply }
+=======
               @if (replyingId() === r.reviewId) {
                 <div class="reply-form" [formGroup]="replyForm">
                   <mat-form-field appearance="outline" style="width:100%">
                     <mat-label>Your reply to {{ r.userName }}</mat-label>
-                    <textarea matInput formControlName="adminReply" rows="3" maxlength="500"></textarea>
+                    <textarea matInput formControlName="adminReply" rows="3" maxlength="500"
+                              [attr.aria-label]="'Reply to ' + r.userName"></textarea>
                     <mat-hint align="end">{{ replyForm.get('adminReply')?.value?.length ?? 0 }}/500</mat-hint>
                     @if (replyForm.get('adminReply')?.hasError('required') && replyForm.get('adminReply')?.touched) {
                       <mat-error>Reply is required</mat-error>
+                    }
+                    @if (replyForm.get('adminReply')?.hasError('minlength') && replyForm.get('adminReply')?.touched) {
+                      <mat-error>Reply must be at least 3 characters</mat-error>
                     }
                   </mat-form-field>
                   <div class="reply-actions">
@@ -95,25 +167,34 @@
                 </div>
               } @else {
                 <div class="review-actions">
-                  <button mat-stroked-button (click)="startReply(r.reviewId, r.adminReply)" style="font-size:12px;">
+                  <button mat-stroked-button (click)="startReply(r.reviewId, r.adminReply)"
+                          style="font-size:12px;" [attr.aria-label]="r.adminReply ? 'Edit reply to ' + r.userName : 'Reply to ' + r.userName">
                     <mat-icon>reply</mat-icon>
                     {{ r.adminReply ? 'Edit Reply' : 'Reply' }}
+>>>>>>> Stashed changes
                   </button>
                 </div>
-              }
-            </div>
-          }
-        </div>
-      }
+              </div>
+            } @else {
+              <div class="review-actions">
+                <button mat-stroked-button (click)="startReply(r.reviewId, r.adminReply)" style="font-size:12px;">
+                  <mat-icon>reply</mat-icon>
+                  {{ r.adminReply ? 'Edit Reply' : 'Reply' }}
+                </button>
+              </div>
+            }
+          </div>
+        }
+      </div>
 
-      <!-- Paginator always in DOM -->
       <mat-paginator
         [length]="totalCount()"
         [pageSize]="pageSize"
         [pageSizeOptions]="[10, 25, 50]"
         showFirstLastButtons
         (page)="onPage($event)"
+        aria-label="Reviews pagination"
       />
-    </div>
+    }
   </div>
 </div>

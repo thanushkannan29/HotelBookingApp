@@ -17,7 +17,7 @@ namespace HotelBookingAppWebApi.Controllers
             => _dashboardService = dashboardService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns hotel stats, reservation counts, revenue, and review summary.</summary>
         [HttpGet("admin")]

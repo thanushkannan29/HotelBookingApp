@@ -22,7 +22,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
         }
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Add a new physical room to the hotel.</summary>
         [HttpPost]

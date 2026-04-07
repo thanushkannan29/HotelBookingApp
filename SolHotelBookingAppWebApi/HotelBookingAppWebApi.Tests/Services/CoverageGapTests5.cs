@@ -12,6 +12,7 @@ using HotelBookingAppWebApi.Services;
 using HotelBookingAppWebApi.Services.BackgroundServices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using MockQueryable.Moq;
@@ -409,18 +410,24 @@ public class CoverageGapTests5
         var reviewRepo = new Mock<IRepository<Guid, Review>>();
         reviewRepo.Setup(r => r.GetQueryable())
             .Returns(new List<Review> { review }.AsQueryable().BuildMock());
+
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["ReviewSettings:RewardPoints"] = "10" })
+            .Build();
+
         var sut = new ReviewService(reviewRepo.Object,
             new Mock<IRepository<Guid, Hotel>>().Object,
             new Mock<IRepository<Guid, Reservation>>().Object,
             new Mock<IRepository<Guid, User>>().Object,
             new Mock<IWalletService>().Object,
-            new Mock<IUnitOfWork>().Object);
+            new Mock<IUnitOfWork>().Object,
+            config);
 
         // Act
         var result = await sut.GetMyReviewsPagedAsync(userId, 1, 10);
 
-        // Assert — ContributionPoints = ReviewRewardAmount = 100 (exercises line 17 constant)
-        result.Reviews.First().ContributionPoints.Should().Be(100);
+        // Assert — ContributionPoints comes from ReviewSettings:RewardPoints config (10)
+        result.Reviews.First().ContributionPoints.Should().Be(10);
     }
 
     // ── 7. PromoCodeService switch default branch ─────────────────────────────

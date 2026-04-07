@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Guest
             => _supportRequestService = supportRequestService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Submit a support complaint linked to the guest's account.</summary>
         [HttpPost]

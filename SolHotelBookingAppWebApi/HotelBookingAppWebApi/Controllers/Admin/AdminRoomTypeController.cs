@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _roomTypeService = roomTypeService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Returns paged room types for the hotel.</summary>
         [HttpPost("list")]

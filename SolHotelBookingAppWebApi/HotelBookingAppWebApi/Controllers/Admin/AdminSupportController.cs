@@ -18,7 +18,7 @@ namespace HotelBookingAppWebApi.Controllers.Admin
             => _supportRequestService = supportRequestService;
 
         private Guid GetUserId()
-            => Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            => Guid.Parse(User.FindFirstValue("nameid")!);
 
         /// <summary>Submit a bug or issue report to the platform team.</summary>
         [HttpPost]
