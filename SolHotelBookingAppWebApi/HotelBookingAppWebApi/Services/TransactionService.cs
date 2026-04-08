@@ -129,61 +129,39 @@ namespace HotelBookingAppWebApi.Services
         }
 
         // ── GET ALL TRANSACTIONS (Role-based) ─────────────────────────────────
-        // NOTE (Correction 10C): Admin branch has NO status filter — returns all statuses
-        // (Success, Refunded, Failed) for the hotel. This is intentional.
         public async Task<PagedTransactionResponseDto> GetAllTransactionsAsync(
             Guid userId, string role, int page, int pageSize,
             string? sortField = null, string? sortDir = null)
         {
-            var query = _transactionRepo.GetQueryable().AsQueryable();
-
+            // ── GUEST ─────────────────────────────────────────────────────────
             if (role == "Guest")
             {
-                query = query.Where(t => t.Reservation!.UserId == userId);
-            }
-            else if (role == "Admin")
-            {
-                var hotelId = await _userRepo.GetQueryable()
-                    .Where(u => u.UserId == userId)
-                    .Select(u => u.HotelId)
-                    .FirstOrDefaultAsync()
-                    ?? throw new NotFoundException("Admin hotel not found.");
+                // Collect all payment transactions for this guest
+                var paymentTxs = (await _transactionRepo.GetQueryable()
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.Hotel)
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.User)
+                    .Where(t => t.Reservation!.UserId == userId)
+                    .ToListAsync())
+                    .Select(MapToDto)
+                    .ToList();
 
-                // No status filter — Admin sees ALL transaction statuses for their hotel
-                query = query.Where(t => t.Reservation!.HotelId == hotelId);
-            }
-            // SuperAdmin → no filter — sees everything
-
-            var total = await query.CountAsync();
-
-            var data = await query
-                .Include(t => t.Reservation)
-                    .ThenInclude(r => r!.Hotel)
-                .Include(t => t.Reservation)
-                    .ThenInclude(r => r!.User)
-                .OrderByDescending(t => t.TransactionDate)
-                .Skip((page - 1) * pageSize)
-                .Take(pageSize)
-                .ToListAsync();
-
-            var txList = data.Select(MapToDto).ToList();
-
-            // ── GUEST: append wallet refund credits ───────────────────────────
-            if (role == "Guest")
-            {
+                // Collect wallet refund credits for this guest
                 var wallet = await _walletRepo.GetQueryable()
                     .FirstOrDefaultAsync(w => w.UserId == userId);
 
+                var walletRefunds = new List<TransactionResponseDto>();
                 if (wallet is not null)
                 {
-                    var refundEntries = await _walletTxRepo.GetQueryable()
+                    var rawRefunds = await _walletTxRepo.GetQueryable()
                         .Where(wt => wt.WalletId == wallet.WalletId &&
                                      wt.Type == "Credit" &&
                                      wt.Description.Contains("Refund"))
                         .OrderByDescending(wt => wt.CreatedAt)
                         .ToListAsync();
 
-                    txList.AddRange(refundEntries.Select(wt => new TransactionResponseDto
+                    walletRefunds = rawRefunds.Select(wt => new TransactionResponseDto
                     {
                         TransactionId = wt.WalletTransactionId,
                         ReservationId = Guid.Empty,
@@ -196,30 +174,46 @@ namespace HotelBookingAppWebApi.Services
                         TransactionDate = wt.CreatedAt,
                         TransactionType = "WalletRefund",
                         Description = wt.Description
-                    }));
-
-                    txList = [.. txList.OrderByDescending(t => t.TransactionDate)];
-                    total += refundEntries.Count;
+                    }).ToList();
                 }
+
+                var allGuest = paymentTxs
+                    .Concat(walletRefunds)
+                    .OrderByDescending(t => t.TransactionDate)
+                    .ToList();
+
+                var total = allGuest.Count;
+                var paged = allGuest.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                return new PagedTransactionResponseDto { TotalCount = total, Transactions = paged };
             }
 
-            // ── ADMIN: append auto-refund sent to guests + commission to superadmin ──
+            // ── ADMIN ─────────────────────────────────────────────────────────
             if (role == "Admin")
             {
                 var adminHotelId = await _userRepo.GetQueryable()
                     .Where(u => u.UserId == userId)
                     .Select(u => u.HotelId)
-                    .FirstOrDefaultAsync();
+                    .FirstOrDefaultAsync()
+                    ?? throw new NotFoundException("Admin hotel not found.");
 
-                if (adminHotelId is not null)
-                {
-                    var commissions = await _revenueRepo.GetQueryable()
-                        .Include(r => r.Reservation)
-                        .Where(r => r.HotelId == adminHotelId)
-                        .OrderByDescending(r => r.CreatedAt)
-                        .ToListAsync();
+                // Payment transactions for this hotel (all statuses)
+                var paymentTxs = (await _transactionRepo.GetQueryable()
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.Hotel)
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.User)
+                    .Where(t => t.Reservation!.HotelId == adminHotelId)
+                    .ToListAsync())
+                    .Select(MapToDto)
+                    .ToList();
 
-                    txList.AddRange(commissions.Select(c => new TransactionResponseDto
+                // Commission records for this hotel
+                var commissions = (await _revenueRepo.GetQueryable()
+                    .Include(r => r.Reservation)
+                    .Where(r => r.HotelId == adminHotelId)
+                    .ToListAsync())
+                    .Select(c => new TransactionResponseDto
                     {
                         TransactionId = c.SuperAdminRevenueId,
                         ReservationId = c.ReservationId,
@@ -232,47 +226,51 @@ namespace HotelBookingAppWebApi.Services
                         TransactionDate = c.CreatedAt,
                         TransactionType = "CommissionSent",
                         Description = $"2% commission sent to SuperAdmin for reservation {c.Reservation?.ReservationCode}"
-                    }));
+                    })
+                    .ToList();
 
-                    // Auto-refunds sent to guests (wallet credits with "Refund" in description for this hotel's reservations)
-                    var hotelReservationIds = await _reservationRepo.GetQueryable()
-                        .Where(r => r.HotelId == adminHotelId)
-                        .Select(r => r.ReservationId)
-                        .ToListAsync();
+                // Auto-refunds: only wallet credits whose description contains a reservation code
+                // that belongs to THIS hotel — filter by matching reservation codes
+                var hotelReservationCodes = await _reservationRepo.GetQueryable()
+                    .Where(r => r.HotelId == adminHotelId)
+                    .Select(r => r.ReservationCode)
+                    .ToListAsync();
 
-                    var guestUserIds = await _reservationRepo.GetQueryable()
-                        .Where(r => r.HotelId == adminHotelId)
-                        .Select(r => r.UserId)
-                        .Distinct()
-                        .ToListAsync();
+                var guestUserIds = await _reservationRepo.GetQueryable()
+                    .Where(r => r.HotelId == adminHotelId)
+                    .Select(r => r.UserId)
+                    .Distinct()
+                    .ToListAsync();
 
-                    var guestWalletIds = await _walletRepo.GetQueryable()
-                        .Where(w => guestUserIds.Contains(w.UserId))
-                        .Select(w => new { w.WalletId, w.UserId })
-                        .ToListAsync();
+                var guestWalletIds = await _walletRepo.GetQueryable()
+                    .Where(w => guestUserIds.Contains(w.UserId))
+                    .Select(w => new { w.WalletId, w.UserId })
+                    .ToListAsync();
 
-                    var walletIdList = guestWalletIds.Select(w => w.WalletId).ToList();
+                var walletIdList = guestWalletIds.Select(w => w.WalletId).ToList();
+                var walletUserMap = guestWalletIds.ToDictionary(w => w.WalletId, w => w.UserId);
 
-                    var autoRefunds = await _walletTxRepo.GetQueryable()
-                        .Where(wt => walletIdList.Contains(wt.WalletId) &&
-                                     wt.Type == "Credit" &&
-                                     wt.Description.Contains("Refund"))
-                        .OrderByDescending(wt => wt.CreatedAt)
-                        .ToListAsync();
+                var userNameMap = await _userRepo.GetQueryable()
+                    .Where(u => guestUserIds.Contains(u.UserId))
+                    .Select(u => new { u.UserId, u.Name })
+                    .ToDictionaryAsync(u => u.UserId, u => u.Name);
 
-                    var walletUserMap = guestWalletIds.ToDictionary(w => w.WalletId, w => w.UserId);
-                    var userNames = await _userRepo.GetQueryable()
-                        .Where(u => guestUserIds.Contains(u.UserId))
-                        .Select(u => new { u.UserId, u.Name })
-                        .ToListAsync();
-                    var userNameMap = userNames.ToDictionary(u => u.UserId, u => u.Name);
+                // Only include wallet refunds whose description references one of this hotel's reservation codes
+                var allWalletRefunds = await _walletTxRepo.GetQueryable()
+                    .Where(wt => walletIdList.Contains(wt.WalletId) &&
+                                 wt.Type == "Credit" &&
+                                 wt.Description.Contains("Refund"))
+                    .ToListAsync();
 
-                    foreach (var wt in autoRefunds)
+                var autoRefunds = allWalletRefunds
+                    .Where(wt => hotelReservationCodes.Any(code => wt.Description.Contains(code)))
+                    .Select(wt =>
                     {
                         var guestUserId = walletUserMap.GetValueOrDefault(wt.WalletId);
-                        var guestName = guestUserId != Guid.Empty ? userNameMap.GetValueOrDefault(guestUserId) ?? string.Empty : string.Empty;
-
-                        txList.Add(new TransactionResponseDto
+                        var guestName = guestUserId != Guid.Empty
+                            ? userNameMap.GetValueOrDefault(guestUserId) ?? string.Empty
+                            : string.Empty;
+                        return new TransactionResponseDto
                         {
                             TransactionId = wt.WalletTransactionId,
                             ReservationId = Guid.Empty,
@@ -285,19 +283,43 @@ namespace HotelBookingAppWebApi.Services
                             TransactionDate = wt.CreatedAt,
                             TransactionType = "AutoRefund",
                             Description = wt.Description
-                        });
-                    }
+                        };
+                    })
+                    .ToList();
 
-                    txList = txList.OrderByDescending(t => t.TransactionDate).ToList();
-                    total += commissions.Count + autoRefunds.Count;
-                }
+                var allAdmin = paymentTxs
+                    .Concat(commissions)
+                    .Concat(autoRefunds)
+                    .OrderByDescending(t => t.TransactionDate)
+                    .ToList();
+
+                var total = allAdmin.Count;
+                var paged = allAdmin.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+                return new PagedTransactionResponseDto { TotalCount = total, Transactions = paged };
             }
 
-            return new PagedTransactionResponseDto
+            // ── SUPERADMIN: no filter, sees everything ────────────────────────
             {
-                TotalCount = total,
-                Transactions = txList
-            };
+                var query = _transactionRepo.GetQueryable()
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.Hotel)
+                    .Include(t => t.Reservation)
+                        .ThenInclude(r => r!.User)
+                    .OrderByDescending(t => t.TransactionDate);
+
+                var total = await query.CountAsync();
+                var data = await query
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToListAsync();
+
+                return new PagedTransactionResponseDto
+                {
+                    TotalCount = total,
+                    Transactions = data.Select(MapToDto).ToList()
+                };
+            }
         }
 
         // ── PAYMENT INTENT (Correction 7D) ────────────────────────────────────
