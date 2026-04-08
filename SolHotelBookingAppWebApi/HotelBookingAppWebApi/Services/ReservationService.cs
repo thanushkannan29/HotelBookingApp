@@ -104,8 +104,11 @@ namespace HotelBookingAppWebApi.Services
         // ── GET HOTEL ─────────────────────────────────────────────────────────
         private async Task<Hotel> GetHotelAsync(Guid hotelId)
         {
-            return await _hotelRepo.GetAsync(hotelId)
+            var hotel = await _hotelRepo.GetAsync(hotelId)
                 ?? throw new NotFoundException("Hotel not found.");
+            if (!hotel.IsActive)
+                throw new ValidationException("This hotel is currently unavailable for booking.");
+            return hotel;
         }
 
         // ── GET ROOM TYPE ─────────────────────────────────────────────────────
@@ -535,7 +538,10 @@ namespace HotelBookingAppWebApi.Services
 
                     if (refundPercent > 0)
                     {
-                        var refundAmount = Math.Round(res.TotalAmount * (refundPercent / 100m), 2);
+                        // Refund is based on what the guest actually paid (FinalAmount),
+                        // not the pre-GST/pre-discount base (TotalAmount).
+                        var paidAmount = res.FinalAmount > 0 ? res.FinalAmount : res.TotalAmount;
+                        var refundAmount = Math.Round(paidAmount * (refundPercent / 100m), 2);
                         await _walletService.CreditAsync(userId, refundAmount,
                             $"Refund ({refundNote}) for {res.ReservationCode}");
                     }

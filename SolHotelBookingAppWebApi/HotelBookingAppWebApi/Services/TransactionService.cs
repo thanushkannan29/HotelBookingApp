@@ -18,6 +18,7 @@ namespace HotelBookingAppWebApi.Services
         IRepository<Guid, Wallet> walletRepo,
         IRepository<Guid, WalletTransaction> walletTxRepo,
         IRepository<Guid, SuperAdminRevenue> revenueRepo,
+        IWalletService walletService,
         IUnitOfWork unitOfWork) : ITransactionService
     {
         private readonly IRepository<Guid, Transaction> _transactionRepo = transactionRepo;
@@ -29,6 +30,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Wallet> _walletRepo = walletRepo;
         private readonly IRepository<Guid, WalletTransaction> _walletTxRepo = walletTxRepo;
         private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo = revenueRepo;
+        private readonly IWalletService _walletService = walletService;
         private readonly IUnitOfWork _unitOfWork = unitOfWork;
 
         // ── CREATE PAYMENT ────────────────────────────────────────────────────
@@ -122,6 +124,15 @@ namespace HotelBookingAppWebApi.Services
 
                 foreach (var inv in inventories)
                     inv.ReservedInventory = Math.Max(0, inv.ReservedInventory - roomCount);
+            }
+
+            // Refund wallet amount that was pre-deducted at booking time
+            if (reservation.WalletAmountUsed > 0)
+            {
+                await _walletService.CreditAsync(
+                    reservation.UserId,
+                    reservation.WalletAmountUsed,
+                    $"Wallet refund — direct refund for {reservation.ReservationCode}");
             }
 
             await _unitOfWork.SaveChangesAsync();

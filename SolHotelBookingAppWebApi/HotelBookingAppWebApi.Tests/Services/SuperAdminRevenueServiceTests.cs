@@ -21,6 +21,42 @@ public class SuperAdminRevenueServiceTests
         _hotelRepoMock.Object, _unitOfWorkMock.Object);
 
     [Fact]
+    public async Task RecordCommissionAsync_CommissionIsOnFinalAmountNotTotalAmount()
+    {
+        // Arrange — reservation with ₹1000 base but ₹850 final (after GST + promo + wallet)
+        var reservationId = Guid.NewGuid();
+        var emptyRevenue = new List<SuperAdminRevenue>().AsQueryable().BuildMock();
+        _revenueRepoMock.Setup(r => r.GetQueryable()).Returns(emptyRevenue);
+
+        SuperAdminRevenue? captured = null;
+        _revenueRepoMock.Setup(r => r.AddAsync(It.IsAny<SuperAdminRevenue>()))
+            .Callback<SuperAdminRevenue>(sr => captured = sr)
+            .ReturnsAsync((SuperAdminRevenue sr) => sr);
+
+        var reservation = new Reservation
+        {
+            ReservationId = reservationId, ReservationCode = "R1",
+            UserId = Guid.NewGuid(), HotelId = Guid.NewGuid(),
+            TotalAmount = 1000m,   // base before GST/discount
+            FinalAmount = 850m,    // what guest actually paid
+            Status = ReservationStatus.Completed,
+            CheckInDate = DateOnly.FromDateTime(DateTime.Today),
+            CheckOutDate = DateOnly.FromDateTime(DateTime.Today.AddDays(2)),
+            CreatedDate = DateTime.UtcNow
+        };
+        _reservationRepoMock.Setup(r => r.GetAsync(reservationId)).ReturnsAsync(reservation);
+        var sut = CreateSut();
+
+        // Act
+        await sut.RecordCommissionAsync(reservationId);
+
+        // Assert — 2% of ₹850 (FinalAmount) = ₹17, NOT 2% of ₹1000 (TotalAmount) = ₹20
+        captured.Should().NotBeNull();
+        captured!.ReservationAmount.Should().Be(850m);
+        captured.CommissionAmount.Should().Be(17m);
+    }
+
+    [Fact]
     public async Task RecordCommissionAsync_NewReservation_AddsRecord()
     {
         // Arrange

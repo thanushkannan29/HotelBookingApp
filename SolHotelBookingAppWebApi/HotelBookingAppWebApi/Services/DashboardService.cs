@@ -20,6 +20,7 @@ namespace HotelBookingAppWebApi.Services
         private readonly IRepository<Guid, Review> _reviewRepo;
         private readonly IRepository<Guid, Room> _roomRepo;
         private readonly IRepository<Guid, RoomType> _roomTypeRepo;
+        private readonly IRepository<Guid, SuperAdminRevenue> _revenueRepo;
 
         public DashboardService(
             IRepository<Guid, User> userRepo,
@@ -28,7 +29,8 @@ namespace HotelBookingAppWebApi.Services
             IRepository<Guid, Transaction> transactionRepo,
             IRepository<Guid, Review> reviewRepo,
             IRepository<Guid, Room> roomRepo,
-            IRepository<Guid, RoomType> roomTypeRepo)
+            IRepository<Guid, RoomType> roomTypeRepo,
+            IRepository<Guid, SuperAdminRevenue> revenueRepo)
         {
             _userRepo = userRepo;
             _hotelRepo = hotelRepo;
@@ -37,6 +39,7 @@ namespace HotelBookingAppWebApi.Services
             _reviewRepo = reviewRepo;
             _roomRepo = roomRepo;
             _roomTypeRepo = roomTypeRepo;
+            _revenueRepo = revenueRepo;
         }
 
         // ── PUBLIC API ────────────────────────────────────────────────────────
@@ -90,9 +93,10 @@ namespace HotelBookingAppWebApi.Services
 
         public async Task<SuperAdminDashboardDto> GetSuperAdminDashboardAsync()
         {
-            var totalRevenue = await _transactionRepo.GetQueryable()
-                .Where(t => t.Status == PaymentStatus.Success)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            // Platform revenue = sum of 2% commissions recorded in SuperAdminRevenue.
+            // This is the actual money earned by the platform, NOT the total booking amounts.
+            var totalRevenue = await _revenueRepo.GetQueryable()
+                .SumAsync(r => (decimal?)r.CommissionAmount) ?? 0;
 
             return new SuperAdminDashboardDto
             {
@@ -141,8 +145,12 @@ namespace HotelBookingAppWebApi.Services
         }
 
         private async Task<decimal> GetHotelRevenueAsync(Guid hotelId)
+            // Only count revenue from Completed reservations — these are fully earned.
+            // Pending/Confirmed reservations may still be cancelled and refunded.
             => await _transactionRepo.GetQueryable()
-                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.HotelId == hotelId)
+                .Where(t => t.Status == PaymentStatus.Success
+                         && t.Reservation!.HotelId == hotelId
+                         && t.Reservation.Status == ReservationStatus.Completed)
                 .SumAsync(t => (decimal?)t.Amount) ?? 0;
 
         private async Task<(int Count, decimal Average)> GetReviewStatsAsync(Guid hotelId)
@@ -154,8 +162,12 @@ namespace HotelBookingAppWebApi.Services
         }
 
         private async Task<decimal> GetGuestSpendAsync(Guid userId)
-            => await _transactionRepo.GetQueryable()
-                .Where(t => t.Status == PaymentStatus.Success && t.Reservation!.UserId == userId)
-                .SumAsync(t => (decimal?)t.Amount) ?? 0;
+            // Sum FinalAmount of Completed reservations only.
+            // Completed = stay is done, money is fully earned by the hotel — no refund possible.
+            // Cancelled reservations are excluded entirely (refunds already returned to wallet).
+            // Pending/Confirmed are excluded — payment may still be reversed.
+            => await _reservationRepo.GetQueryable()
+                .Where(r => r.UserId == userId && r.Status == ReservationStatus.Completed)
+                .SumAsync(r => (decimal?)r.FinalAmount) ?? 0;
     }
 }

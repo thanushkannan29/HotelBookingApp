@@ -1,5 +1,6 @@
 using FluentAssertions;
 using HotelBookingAppWebApi.Exceptions;
+using HotelBookingAppWebApi.Interfaces;
 using HotelBookingAppWebApi.Interfaces.RepositoryInterface;
 using HotelBookingAppWebApi.Interfaces.UnitOfWorkInterface;
 using HotelBookingAppWebApi.Models;
@@ -21,6 +22,7 @@ public class TransactionServiceTests
     private readonly Mock<IRepository<Guid, Wallet>> _walletRepoMock = new();
     private readonly Mock<IRepository<Guid, WalletTransaction>> _walletTxRepoMock = new();
     private readonly Mock<IRepository<Guid, SuperAdminRevenue>> _revenueRepoMock = new();
+    private readonly Mock<IWalletService> _walletServiceMock = new();
     private readonly Mock<IUnitOfWork> _unitOfWorkMock = new();
 
     private TransactionService CreateSut() => new(
@@ -28,7 +30,7 @@ public class TransactionServiceTests
         _inventoryRepoMock.Object, _reservationRoomRepoMock.Object,
         _userRepoMock.Object, _hotelRepoMock.Object,
         _walletRepoMock.Object, _walletTxRepoMock.Object,
-        _revenueRepoMock.Object, _unitOfWorkMock.Object);
+        _revenueRepoMock.Object, _walletServiceMock.Object, _unitOfWorkMock.Object);
 
     private static Reservation MakePendingReservation(Guid userId, Guid hotelId) => new()
     {

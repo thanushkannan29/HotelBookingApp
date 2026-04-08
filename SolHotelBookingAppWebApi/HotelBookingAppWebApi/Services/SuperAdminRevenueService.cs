@@ -86,8 +86,11 @@ namespace HotelBookingAppWebApi.Services
             SuperAdminRevenueId = Guid.NewGuid(),
             ReservationId = reservation.ReservationId,
             HotelId = reservation.HotelId,
-            ReservationAmount = reservation.TotalAmount,
-            CommissionAmount = Math.Round(reservation.TotalAmount * CommissionRate, 2),
+            // ReservationAmount = the actual amount the guest paid (FinalAmount).
+            // Commission is 2% of what was collected, not the pre-GST/pre-discount base.
+            ReservationAmount = reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount,
+            CommissionAmount = Math.Round(
+                (reservation.FinalAmount > 0 ? reservation.FinalAmount : reservation.TotalAmount) * CommissionRate, 2),
             SuperAdminUpiId = SuperAdminUpiId,
             CreatedAt = DateTime.UtcNow
         };

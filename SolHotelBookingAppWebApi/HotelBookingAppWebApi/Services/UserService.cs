@@ -153,7 +153,7 @@ namespace HotelBookingAppWebApi.Services
                 Pincode = details.Pincode,
                 ProfileImageUrl = details.ProfileImageUrl,
                 CreatedAt = details.CreatedAt,
-                TotalReviewPoints = reviewCount * 100
+                TotalReviewPoints = reviewCount * 10
             };
         }
     }

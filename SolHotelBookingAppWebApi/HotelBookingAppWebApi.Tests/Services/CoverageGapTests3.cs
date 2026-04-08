@@ -41,12 +41,13 @@ public class CoverageGapTests3
     private readonly Mock<IRepository<Guid, Wallet>> _walletRepo = new();
     private readonly Mock<IRepository<Guid, WalletTransaction>> _walletTxRepo = new();
     private readonly Mock<IRepository<Guid, SuperAdminRevenue>> _revenueRepo = new();
+    private readonly Mock<IWalletService> _walletServiceMock = new();
     private readonly Mock<IUnitOfWork> _uow = new();
 
     private TransactionService CreateTxSut() => new(
         _txRepo.Object, _resRepo.Object, _invRepo.Object, _rrRepo.Object,
         _userRepo.Object, _hotelRepo.Object, _walletRepo.Object,
-        _walletTxRepo.Object, _revenueRepo.Object, _uow.Object);
+        _walletTxRepo.Object, _revenueRepo.Object, _walletServiceMock.Object, _uow.Object);
 
     private static Reservation MakeReservation(Guid userId, Guid hotelId,
         ReservationStatus status = ReservationStatus.Confirmed) => new()

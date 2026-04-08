@@ -106,6 +106,32 @@ public class UserServiceTests
     }
 
     [Fact]
+    public async Task GetProfileAsync_ReviewCount_TotalReviewPointsIs10PerReview()
+    {
+        // Arrange — user has 4 reviews → should be 4 × 10 = 40 pts (not 400)
+        var user = MakeUserWithProfile();
+        var users = new List<User> { user }.AsQueryable().BuildMock();
+        _userRepoMock.Setup(r => r.GetQueryable()).Returns(users);
+
+        var reviews = new List<Review>
+        {
+            new() { ReviewId = Guid.NewGuid(), UserId = user.UserId, HotelId = Guid.NewGuid(), ReservationId = Guid.NewGuid(), Rating = 5, Comment = "Great!", CreatedDate = DateTime.UtcNow },
+            new() { ReviewId = Guid.NewGuid(), UserId = user.UserId, HotelId = Guid.NewGuid(), ReservationId = Guid.NewGuid(), Rating = 4, Comment = "Good!", CreatedDate = DateTime.UtcNow },
+            new() { ReviewId = Guid.NewGuid(), UserId = user.UserId, HotelId = Guid.NewGuid(), ReservationId = Guid.NewGuid(), Rating = 3, Comment = "Ok!", CreatedDate = DateTime.UtcNow },
+            new() { ReviewId = Guid.NewGuid(), UserId = user.UserId, HotelId = Guid.NewGuid(), ReservationId = Guid.NewGuid(), Rating = 5, Comment = "Loved it!", CreatedDate = DateTime.UtcNow },
+        }.AsQueryable().BuildMock();
+        _reviewRepoMock.Setup(r => r.GetQueryable()).Returns(reviews);
+
+        var sut = CreateSut();
+
+        // Act
+        var result = await sut.GetProfileAsync(user.UserId);
+
+        // Assert — 4 reviews × 10 pts = 40, NOT 400
+        result.TotalReviewPoints.Should().Be(40);
+    }
+
+    [Fact]
     public async Task GetBookingHistoryAsync_ValidUser_ReturnsPaged()
     {
         // Arrange

@@ -129,7 +129,8 @@ public class CoverageGapTests2
             new Mock<IRepository<Guid, Transaction>>().Object,
             new Mock<IRepository<Guid, Review>>().Object,
             new Mock<IRepository<Guid, Room>>().Object,
-            new Mock<IRepository<Guid, RoomType>>().Object);
+            new Mock<IRepository<Guid, RoomType>>().Object,
+            new Mock<IRepository<Guid, SuperAdminRevenue>>().Object);
 
         // Act
         var act = async () => await sut.GetAdminDashboardAsync(adminId);
@@ -165,7 +166,7 @@ public class CoverageGapTests2
         resRepo.Setup(r => r.GetQueryable()).Returns(new List<Reservation>().AsQueryable().BuildMock());
         var txRepo = new Mock<IRepository<Guid, Transaction>>();
         txRepo.Setup(r => r.GetQueryable()).Returns(new List<Transaction>().AsQueryable().BuildMock());
-        var sut = new DashboardService(userRepo.Object, hotelRepo.Object, resRepo.Object, txRepo.Object, reviewRepo.Object, roomRepo.Object, roomTypeRepo.Object);
+        var sut = new DashboardService(userRepo.Object, hotelRepo.Object, resRepo.Object, txRepo.Object, reviewRepo.Object, roomRepo.Object, roomTypeRepo.Object, new Mock<IRepository<Guid, SuperAdminRevenue>>().Object);
 
         // Act
         var result = await sut.GetAdminDashboardAsync(adminId);
@@ -1243,7 +1244,7 @@ public class CoverageGapTests2
         resRepo.Setup(r => r.GetQueryable()).Returns(reservations);
         var txRepo = new Mock<IRepository<Guid, Transaction>>();
         txRepo.Setup(r => r.GetQueryable()).Returns(transactions);
-        var sut = new DashboardService(new Mock<IRepository<Guid, User>>().Object, new Mock<IRepository<Guid, Hotel>>().Object, resRepo.Object, txRepo.Object, new Mock<IRepository<Guid, Review>>().Object, new Mock<IRepository<Guid, Room>>().Object, new Mock<IRepository<Guid, RoomType>>().Object);
+        var sut = new DashboardService(new Mock<IRepository<Guid, User>>().Object, new Mock<IRepository<Guid, Hotel>>().Object, resRepo.Object, txRepo.Object, new Mock<IRepository<Guid, Review>>().Object, new Mock<IRepository<Guid, Room>>().Object, new Mock<IRepository<Guid, RoomType>>().Object, new Mock<IRepository<Guid, SuperAdminRevenue>>().Object);
 
         // Act
         var result = await sut.GetGuestDashboardAsync(guestId);

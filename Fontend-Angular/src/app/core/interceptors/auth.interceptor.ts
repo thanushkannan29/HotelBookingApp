@@ -4,14 +4,15 @@ import { catchError, throwError } from 'rxjs';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
+import { environment } from '../../../environments/environment';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const router     = inject(Router);
   const toast      = inject(ToastService);
 
-  // Skip interceptor for external APIs (Gemini, Groq, etc.)
-  if (!req.url.includes('localhost') && !req.url.includes('127.0.0.1')) {
+  // Only attach JWT to requests going to our own API; skip external APIs (Groq, etc.)
+  if (!req.url.startsWith(environment.apiUrl)) {
     return next(req);
   }
 

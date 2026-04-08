@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("HotelBookingAppWebApi.Tests")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a60d14d8e8659bcf04ee3dc9c72e2497db413927")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e43f73ddcb37e677b8dfc6622e4ce5827254e2c4")]
 [assembly: System.Reflection.AssemblyProductAttribute("HotelBookingAppWebApi.Tests")]
 [assembly: System.Reflection.AssemblyTitleAttribute("HotelBookingAppWebApi.Tests")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
