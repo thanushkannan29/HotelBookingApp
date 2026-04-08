@@ -1,0 +1,866 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Thanush StayHub — Board Presentation</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+/* ── SITE DESIGN TOKENS (matches styles.scss exactly) ── */
+:root {
+  --bg:        #f8f7f4;
+  --surface:   #ffffff;
+  --surface-alt:#f2f0eb;
+  --primary:   #2d3a8c;
+  --primary-l: #4a5db5;
+  --primary-d: #1a2460;
+  --accent:    #c97d1b;
+  --accent-l:  #e8a040;
+  --text:      #1a1a2e;
+  --text-sec:  #5a6278;
+  --text-muted:#9aa0b4;
+  --border:    #e0ddd6;
+  --success:   #2e7d32;
+  --error:     #c62828;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.10),0 2px 4px rgba(0,0,0,.06);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.12),0 4px 8px rgba(0,0,0,.08);
+  --r-sm:6px; --r-md:10px; --r-lg:16px; --r-xl:24px;
+  --font-d:'Playfair Display',Georgia,serif;
+  --font-b:'DM Sans',-apple-system,sans-serif;
+  --tr:200ms cubic-bezier(.4,0,.2,1);
+}
+body.dark-mode {
+  --bg:        #121212;
+  --surface:   #1e1e1e;
+  --surface-alt:#2a2a2a;
+  --primary:   #90caf9;
+  --primary-l: #bbdefb;
+  --primary-d: #1565c0;
+  --accent:    #ffcc80;
+  --accent-l:  #ffb74d;
+  --text:      #e0e0e0;
+  --text-sec:  #aaaaaa;
+  --text-muted:#666666;
+  --border:    #333333;
+  --shadow-sm: 0 1px 3px rgba(0,0,0,.4);
+  --shadow-md: 0 4px 12px rgba(0,0,0,.5);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{font-size:16px;scroll-behavior:smooth;}
+body{
+  font-family:var(--font-b);
+  background:var(--bg);
+  color:var(--text);
+  height:100vh;width:100vw;
+  overflow:hidden;
+  transition:background .35s,color .35s;
+}
+
+/* ── SLIDE DECK ── */
+.deck{width:100vw;height:100vh;position:relative;}
+.slide{
+  position:absolute;inset:0;
+  display:flex;flex-direction:column;
+  justify-content:center;align-items:center;
+  padding:44px 60px;
+  opacity:0;transform:translateX(80px);
+  transition:opacity .55s cubic-bezier(.4,0,.2,1),transform .55s cubic-bezier(.4,0,.2,1);
+  pointer-events:none;overflow:hidden;
+}
+.slide.active{opacity:1;transform:translateX(0);pointer-events:all;}
+.slide.exit{opacity:0;transform:translateX(-80px);}
+
+/* ── PROGRESS BAR ── */
+#progressBar{
+  position:fixed;top:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--primary),var(--accent));
+  transition:width .5s ease;z-index:200;
+}
+
+/* ── TOP BAR ── */
+.topbar{
+  position:fixed;top:0;left:0;right:0;
+  height:56px;
+  background:var(--surface);
+  border-bottom:1px solid var(--border);
+  box-shadow:var(--shadow-sm);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;z-index:150;
+  transition:background .35s,border-color .35s;
+}
+.topbar-logo{display:flex;align-items:center;gap:10px;}
+.topbar-logo img{height:32px;object-fit:contain;}
+.topbar-logo span{font-family:var(--font-d);font-size:16px;font-weight:700;color:var(--text);}
+.topbar-right{display:flex;align-items:center;gap:12px;}
+.key-hint{font-size:11px;color:var(--text-muted);display:flex;gap:6px;align-items:center;}
+.key-hint kbd{
+  background:var(--surface-alt);border:1px solid var(--border);
+  border-radius:4px;padding:2px 6px;font-size:10px;font-family:inherit;color:var(--text-sec);
+}
+.theme-btn{
+  width:36px;height:36px;border-radius:var(--r-md);
+  background:var(--surface-alt);border:1px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:16px;transition:all var(--tr);color:var(--text);
+}
+.theme-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff;}
+
+/* ── SLIDE HEADER ── */
+.slide-header{
+  width:100%;display:flex;align-items:center;gap:14px;
+  margin-bottom:28px;z-index:1;
+}
+.slide-num{
+  width:38px;height:38px;border-radius:var(--r-md);
+  background:var(--primary);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.slide-title{
+  font-family:var(--font-d);
+  font-size:clamp(20px,2.5vw,28px);
+  font-weight:700;color:var(--text);
+}
+.slide-title span{color:var(--accent);}
+.slide-divider{flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent);}
+.live-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(46,125,50,.1);border:1px solid rgba(46,125,50,.3);
+  color:var(--success);font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  padding:4px 10px;border-radius:20px;
+}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite;}
+
+/* ── SLIDE 1 — TITLE ── */
+#slide-1{background:var(--bg);}
+.title-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(45,58,140,.08);border:1px solid rgba(45,58,140,.2);
+  color:var(--primary);font-size:11px;font-weight:600;
+  letter-spacing:2px;text-transform:uppercase;
+  padding:6px 16px;border-radius:20px;margin-bottom:20px;z-index:1;
+}
+body.dark-mode .title-eyebrow{background:rgba(144,202,249,.1);border-color:rgba(144,202,249,.25);}
+.title-main{
+  font-family:var(--font-d);
+  font-size:clamp(40px,6vw,68px);
+  font-weight:800;line-height:1.05;
+  text-align:center;z-index:1;
+  color:var(--primary);
+  margin-bottom:10px;
+}
+.title-tagline{
+  font-size:16px;color:var(--text-sec);
+  text-align:center;z-index:1;margin-bottom:32px;
+  font-weight:400;max-width:560px;line-height:1.6;
+}
+.presenter-row{
+  display:flex;align-items:center;gap:20px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r-xl);
+  padding:18px 28px;
+  box-shadow:var(--shadow-md);
+  z-index:1;
+}
+.presenter-photo{
+  width:64px;height:64px;border-radius:50%;
+  object-fit:cover;
+  border:3px solid var(--primary);
+  flex-shrink:0;
+}
+.presenter-photo-fallback{
+  width:64px;height:64px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-d);font-size:22px;font-weight:700;color:#fff;
+  border:3px solid var(--primary);flex-shrink:0;
+}
+.presenter-info{display:flex;flex-direction:column;gap:3px;}
+.presenter-name{font-family:var(--font-d);font-size:17px;font-weight:700;color:var(--text);}
+.presenter-role{font-size:13px;color:var(--text-sec);}
+.presenter-contact{font-size:12px;color:var(--primary);}
+.tech-pills{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px;z-index:1;}
+.pill{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-sm);padding:5px 12px;
+  font-size:11px;font-weight:500;color:var(--text-sec);
+  box-shadow:var(--shadow-sm);transition:all var(--tr);
+}
+.pill:hover{border-color:var(--primary);color:var(--primary);}
+
+/* ── SLIDE 2 — PROBLEM & SOLUTION ── */
+#slide-2{background:var(--bg);align-items:flex-start;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;width:100%;z-index:1;}
+.prob-card,.sol-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:22px;
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+}
+.prob-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#c62828,#ef5350);}
+.sol-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));}
+.card-label{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;}
+.prob-card .card-label{color:#c62828;}
+.sol-card .card-label{color:var(--primary);}
+body.dark-mode .prob-card .card-label{color:#ef9a9a;}
+body.dark-mode .sol-card .card-label{color:var(--primary);}
+.card-heading{font-family:var(--font-d);font-size:15px;font-weight:700;color:var(--text);margin-bottom:12px;}
+.point-list{list-style:none;display:flex;flex-direction:column;gap:8px;}
+.point-list li{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:var(--text-sec);line-height:1.5;}
+.point-list li .ico{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;flex-shrink:0;margin-top:1px;
+}
+.prob-card .ico{background:rgba(198,40,40,.1);color:#c62828;}
+.sol-card .ico{background:rgba(46,125,50,.1);color:var(--success);}
+body.dark-mode .prob-card .ico{background:rgba(239,154,154,.15);color:#ef9a9a;}
+body.dark-mode .sol-card .ico{background:rgba(129,199,132,.15);color:#81c784;}
+.role-cards{display:flex;gap:12px;width:100%;z-index:1;}
+.role-card{
+  flex:1;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:16px;
+  box-shadow:var(--shadow-sm);transition:box-shadow var(--tr),transform var(--tr);
+}
+.role-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.role-icon{font-size:22px;margin-bottom:6px;}
+.role-name{font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.role-features{list-style:none;display:flex;flex-direction:column;gap:4px;}
+.role-features li{font-size:11px;color:var(--text-sec);display:flex;align-items:center;gap:5px;}
+.role-features li::before{content:'›';color:var(--accent);font-weight:700;}
+
+/* ── SLIDE 3 — TECH STACK ── */
+#slide-3{background:var(--bg);align-items:flex-start;}
+.stack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:100%;z-index:1;}
+.stack-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:18px;
+  box-shadow:var(--shadow-sm);transition:box-shadow var(--tr),transform var(--tr);
+}
+.stack-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.stack-icon{font-size:26px;margin-bottom:8px;display:block;}
+.stack-layer{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--accent);margin-bottom:3px;}
+.stack-name{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);margin-bottom:5px;}
+.stack-desc{font-size:11px;color:var(--text-sec);line-height:1.5;}
+.stack-tag{
+  display:inline-block;
+  background:rgba(45,58,140,.08);border:1px solid rgba(45,58,140,.15);
+  color:var(--primary);font-size:9px;font-weight:600;
+  padding:2px 7px;border-radius:4px;margin-top:6px;
+}
+body.dark-mode .stack-tag{background:rgba(144,202,249,.1);border-color:rgba(144,202,249,.2);}
+.bg-services{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;z-index:1;}
+.bg-svc{
+  background:var(--surface-alt);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:12px 14px;
+  display:flex;align-items:flex-start;gap:10px;
+}
+.bg-svc-icon{
+  width:30px;height:30px;border-radius:var(--r-sm);
+  background:rgba(45,58,140,.1);
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+}
+body.dark-mode .bg-svc-icon{background:rgba(144,202,249,.1);}
+.bg-svc-name{font-size:11px;font-weight:700;color:var(--text);margin-bottom:2px;}
+.bg-svc-desc{font-size:10px;color:var(--text-muted);line-height:1.4;}
+
+/* ── SLIDE 4 — DB RELATIONSHIPS ── */
+#slide-4{background:var(--bg);align-items:flex-start;}
+.db-layout{display:grid;grid-template-columns:1fr 1.5fr;gap:20px;width:100%;z-index:1;}
+.db-tables{display:flex;flex-direction:column;gap:7px;}
+.db-table{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:9px 13px;
+  display:flex;align-items:center;gap:10px;
+  transition:border-color var(--tr);
+}
+.db-table:hover{border-color:var(--primary);}
+.db-table-icon{
+  width:30px;height:30px;border-radius:var(--r-sm);
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;flex-shrink:0;
+}
+.db-table-name{font-size:12px;font-weight:700;color:var(--text);}
+.db-table-desc{font-size:10px;color:var(--text-muted);margin-top:1px;}
+.db-diagram{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:20px;
+  box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;
+}
+.db-diagram-title{font-family:var(--font-d);font-size:13px;font-weight:700;color:var(--primary);margin-bottom:4px;}
+.rel-row{display:flex;align-items:center;gap:6px;font-size:11.5px;}
+.rel-from{color:var(--text);font-weight:600;min-width:110px;}
+.rel-line{flex:1;height:1px;background:var(--border);position:relative;}
+.rel-line::after{content:'▶';position:absolute;right:-4px;top:-7px;font-size:9px;color:var(--text-muted);}
+.rel-type{
+  background:rgba(45,58,140,.08);border:1px solid rgba(45,58,140,.2);
+  color:var(--primary);font-size:9px;font-weight:700;
+  padding:2px 7px;border-radius:4px;min-width:44px;text-align:center;white-space:nowrap;
+}
+body.dark-mode .rel-type{background:rgba(144,202,249,.1);border-color:rgba(144,202,249,.2);}
+.rel-to{color:var(--text-sec);font-size:11px;}
+.db-constraints{
+  margin-top:10px;padding-top:10px;border-top:1px solid var(--border);
+}
+.db-constraints-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:6px;}
+.constraint-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.cpill{
+  background:rgba(201,125,27,.08);border:1px solid rgba(201,125,27,.2);
+  color:var(--accent);font-size:9px;font-weight:600;
+  padding:2px 7px;border-radius:4px;
+}
+body.dark-mode .cpill{background:rgba(255,204,128,.1);border-color:rgba(255,204,128,.2);}
+
+/* ── SLIDE 5 — TESTING ── */
+#slide-5{background:var(--bg);align-items:flex-start;}
+.test-layout{display:grid;grid-template-columns:1fr 1fr;gap:16px;width:100%;z-index:1;}
+.test-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-lg);padding:20px;
+  box-shadow:var(--shadow-sm);position:relative;overflow:hidden;
+}
+.test-card.be::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--primary),var(--accent));}
+.test-card.fe::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),#c62828);}
+.test-card.ai{grid-column:1/-1;}
+.test-card.ai::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--success),var(--primary));}
+.test-card-title{font-family:var(--font-d);font-size:14px;font-weight:700;color:var(--text);margin-bottom:14px;}
+.cov-wrap{margin-bottom:10px;}
+.cov-label{display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;}
+.cov-label span:first-child{color:var(--text-sec);}
+.cov-label span:last-child{font-weight:700;color:var(--success);}
+body.dark-mode .cov-label span:last-child{color:#81c784;}
+.cov-bar{height:7px;background:var(--surface-alt);border-radius:4px;overflow:hidden;border:1px solid var(--border);}
+.cov-fill{height:100%;border-radius:4px;background:linear-gradient(90deg,var(--success),#4caf50);width:0;transition:width 1.2s cubic-bezier(.4,0,.2,1) .3s;}
+.test-stats{display:flex;gap:10px;margin-top:12px;}
+.test-stat{
+  flex:1;background:var(--surface-alt);border:1px solid var(--border);
+  border-radius:var(--r-md);padding:10px;text-align:center;
+}
+.test-stat-num{font-family:var(--font-d);font-size:20px;font-weight:700;color:var(--success);}
+body.dark-mode .test-stat-num{color:#81c784;}
+.test-stat-label{font-size:9px;color:var(--text-muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.test-detail{font-size:10.5px;color:var(--text-muted);line-height:1.6;margin-top:10px;}
+.ai-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px;}
+.ai-feat{font-size:11px;color:var(--text-sec);display:flex;align-items:flex-start;gap:6px;line-height:1.5;}
+.ai-feat::before{content:'✦';color:var(--accent);font-size:9px;flex-shrink:0;margin-top:2px;}
+
+/* ── SLIDE 6 — THANK YOU ── */
+#slide-6{background:var(--bg);}
+.ty-logo{height:60px;object-fit:contain;margin-bottom:24px;z-index:1;}
+.ty-heading{
+  font-family:var(--font-d);
+  font-size:clamp(36px,5vw,60px);
+  font-weight:800;color:var(--primary);
+  text-align:center;z-index:1;margin-bottom:8px;
+}
+.ty-sub{font-size:16px;color:var(--text-sec);text-align:center;z-index:1;margin-bottom:32px;max-width:500px;line-height:1.6;}
+.ty-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--r-xl);padding:28px 40px;
+  box-shadow:var(--shadow-lg);z-index:1;
+  display:flex;align-items:center;gap:24px;
+}
+.ty-photo{
+  width:80px;height:80px;border-radius:50%;
+  object-fit:cover;border:3px solid var(--primary);flex-shrink:0;
+}
+.ty-photo-fallback{
+  width:80px;height:80px;border-radius:50%;
+  background:linear-gradient(135deg,var(--primary),var(--accent));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-d);font-size:28px;font-weight:700;color:#fff;
+  border:3px solid var(--primary);flex-shrink:0;
+}
+.ty-details{display:flex;flex-direction:column;gap:6px;}
+.ty-name{font-family:var(--font-d);font-size:22px;font-weight:700;color:var(--text);}
+.ty-role{font-size:14px;color:var(--text-sec);}
+.ty-contact-row{display:flex;gap:16px;margin-top:4px;}
+.ty-contact{
+  display:flex;align-items:center;gap:6px;
+  font-size:13px;color:var(--primary);
+}
+.ty-contact span{font-size:14px;}
+.ty-divider{width:1px;background:var(--border);align-self:stretch;}
+.ty-stack{display:flex;flex-direction:column;gap:6px;padding-left:24px;}
+.ty-stack-title{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px;}
+.ty-pills{display:flex;flex-wrap:wrap;gap:6px;}
+.ty-pill{
+  background:rgba(45,58,140,.07);border:1px solid rgba(45,58,140,.15);
+  color:var(--primary);font-size:10px;font-weight:600;
+  padding:3px 9px;border-radius:var(--r-sm);
+}
+body.dark-mode .ty-pill{background:rgba(144,202,249,.1);border-color:rgba(144,202,249,.2);}
+.ty-qa{
+  margin-top:20px;z-index:1;
+  background:rgba(45,58,140,.05);border:1px solid rgba(45,58,140,.12);
+  border-radius:var(--r-lg);padding:14px 24px;
+  font-size:13px;color:var(--text-sec);text-align:center;
+}
+body.dark-mode .ty-qa{background:rgba(144,202,249,.05);border-color:rgba(144,202,249,.1);}
+
+/* ── NAV BAR ── */
+.nav-bar{
+  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:10px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:50px;padding:8px 18px;
+  box-shadow:var(--shadow-md);z-index:100;
+  transition:background .35s,border-color .35s;
+}
+.nav-btn{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--surface-alt);border:1px solid var(--border);
+  color:var(--text);font-size:14px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all var(--tr);
+}
+.nav-btn:hover{background:var(--primary);border-color:var(--primary);color:#fff;}
+.nav-btn:disabled{opacity:.3;cursor:not-allowed;}
+.nav-dots{display:flex;gap:6px;align-items:center;}
+.nav-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--border);cursor:pointer;transition:all .3s;
+}
+.nav-dot.active{background:var(--primary);width:22px;border-radius:4px;}
+.nav-counter{font-size:11px;color:var(--text-muted);min-width:36px;text-align:center;}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);}}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(.8);}}
+.slide.active .a1{animation:fadeUp .5s ease .08s both;}
+.slide.active .a2{animation:fadeUp .5s ease .18s both;}
+.slide.active .a3{animation:fadeUp .5s ease .28s both;}
+.slide.active .a4{animation:fadeUp .5s ease .38s both;}
+.slide.active .a5{animation:fadeUp .5s ease .48s both;}
+</style>
+</head>
+<body>
+
+
+<!-- Progress -->
+<div id="progressBar" style="width:16.6%"></div>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <img id="logoImg" src="../Fontend-Angular/public/logo.png" alt="StayHub Logo"/>
+    <span>Thanush StayHub</span>
+  </div>
+  <div class="topbar-right">
+    <div class="key-hint"><kbd>←</kbd><kbd>→</kbd> navigate &nbsp;|&nbsp; <kbd>F</kbd> fullscreen</div>
+    <button class="theme-btn" id="themeBtn" title="Toggle theme">🌙</button>
+  </div>
+</div>
+
+<div class="deck" style="padding-top:56px;">
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 1 — TITLE
+══════════════════════════════════════════════════════ -->
+<div class="slide active" id="slide-1">
+  <div class="title-eyebrow a1">🏨 Full-Stack Hotel Booking Platform</div>
+  <h1 class="title-main a2">Thanush StayHub</h1>
+  <p class="title-tagline a3">A production-ready hotel booking &amp; management platform built with Angular 18 &amp; ASP.NET Core .NET 10</p>
+
+  <div class="presenter-row a4">
+    <img class="presenter-photo" src="./My-Photo.jpg" alt="Thanush Kannan"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div class="presenter-photo-fallback" style="display:none">TK</div>
+    <div class="presenter-info">
+      <div class="presenter-name">Thanush Kannan</div>
+      <div class="presenter-role">Software Engineer Trainee · NAF Inc.</div>
+      <div class="presenter-contact">thanush.k@nafinc.com &nbsp;|&nbsp; +91 9840650939</div>
+    </div>
+  </div>
+
+  <div class="tech-pills a5">
+    <span class="pill">Angular 18</span>
+    <span class="pill">ASP.NET Core .NET 10</span>
+    <span class="pill">SQL Server · EF Core 10</span>
+    <span class="pill">JWT Auth</span>
+    <span class="pill">Razorpay</span>
+    <span class="pill">Groq AI · LLaMA 3.1</span>
+    <span class="pill">xUnit · Jasmine/Karma</span>
+    <span class="pill">Angular Signals</span>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 2 — PROBLEM & SOLUTION
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="slide-2">
+  <div class="slide-header a1">
+    <div class="slide-num">02</div>
+    <div class="slide-title">Problem Statement &amp; <span>Solution</span></div>
+    <div class="slide-divider"></div>
+  </div>
+
+  <div class="two-col a2">
+    <div class="prob-card">
+      <div class="card-label">⚠ The Problem</div>
+      <div class="card-heading">Fragmented Hotel Operations</div>
+      <ul class="point-list">
+        <li><span class="ico">✕</span>No unified platform — guests search, book &amp; pay across disconnected tools</li>
+        <li><span class="ico">✕</span>Hotel admins manage rooms, rates &amp; inventory in spreadsheets</li>
+        <li><span class="ico">✕</span>No real-time availability — overbooking &amp; manual errors are common</li>
+        <li><span class="ico">✕</span>Refund &amp; cancellation processes are slow and fully manual</li>
+        <li><span class="ico">✕</span>No platform-level oversight for multi-hotel management</li>
+        <li><span class="ico">✕</span>Guests have no self-service support or AI assistance</li>
+      </ul>
+    </div>
+    <div class="sol-card">
+      <div class="card-label">✓ Our Solution</div>
+      <div class="card-heading">One Platform, Three Roles</div>
+      <ul class="point-list">
+        <li><span class="ico">✓</span>Guests search, book, pay &amp; cancel — all in one seamless flow</li>
+        <li><span class="ico">✓</span>Admins get a full dashboard: rooms, rates, inventory, reservations</li>
+        <li><span class="ico">✓</span>Real-time per-date inventory — zero overbooking guaranteed</li>
+        <li><span class="ico">✓</span>Automated refunds via background services on cancellation</li>
+        <li><span class="ico">✓</span>SuperAdmin controls all hotels, amenities &amp; platform revenue</li>
+        <li><span class="ico">✓</span>AI chatbot (Groq LLaMA 3.1) for instant role-aware guest support</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="role-cards a3" style="margin-top:16px;">
+    <div class="role-card">
+      <div class="role-icon">🧳</div>
+      <div class="role-name">Guest</div>
+      <ul class="role-features">
+        <li>Search &amp; book hotels</li>
+        <li>Razorpay payments</li>
+        <li>Wallet &amp; promo codes</li>
+        <li>Reviews &amp; AI chatbot</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">🏨</div>
+      <div class="role-name">Hotel Admin</div>
+      <ul class="role-features">
+        <li>Room &amp; rate management</li>
+        <li>Inventory control</li>
+        <li>Reservation dashboard</li>
+        <li>Audit logs &amp; PDF reports</li>
+      </ul>
+    </div>
+    <div class="role-card">
+      <div class="role-icon">👑</div>
+      <div class="role-name">SuperAdmin</div>
+      <ul class="role-features">
+        <li>Platform-wide control</li>
+        <li>Hotel activation/block</li>
+        <li>Commission revenue (2%)</li>
+        <li>Amenity management</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 3 — TECH STACK
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="slide-3">
+  <div class="slide-header a1">
+    <div class="slide-num">03</div>
+    <div class="slide-title">Tech Stack &amp; <span>Architecture</span></div>
+    <div class="slide-divider"></div>
+  </div>
+
+  <div class="stack-grid a2">
+    <div class="stack-card">
+      <span class="stack-icon">⚡</span>
+      <div class="stack-layer">Frontend</div>
+      <div class="stack-name">Angular 18</div>
+      <div class="stack-desc">Standalone components, Angular Signals for state, lazy-loaded feature modules, Angular Material UI, DM Sans + Playfair Display</div>
+      <span class="stack-tag">TypeScript · SCSS</span>
+    </div>
+    <div class="stack-card">
+      <span class="stack-icon">🔧</span>
+      <div class="stack-layer">Backend</div>
+      <div class="stack-name">ASP.NET Core .NET 10</div>
+      <div class="stack-desc">Web API with Generic Repository + Unit of Work pattern, Service layer, Global exception middleware, Swagger UI</div>
+      <span class="stack-tag">C# · REST API</span>
+    </div>
+    <div class="stack-card">
+      <span class="stack-icon">🗄️</span>
+      <div class="stack-layer">Database</div>
+      <div class="stack-name">SQL Server + EF Core 10</div>
+      <div class="stack-desc">Code-first migrations, Fluent API constraints, Query splitting, Indexed City/State columns for fast hotel search</div>
+      <span class="stack-tag">LINQ · Migrations</span>
+    </div>
+    <div class="stack-card">
+      <span class="stack-icon">🔐</span>
+      <div class="stack-layer">Security</div>
+      <div class="stack-name">JWT Bearer Auth</div>
+      <div class="stack-desc">HS256 signed tokens, role-based route guards on frontend, HMAC-SHA256 password hashing, IP rate limiting (60 req/min)</div>
+      <span class="stack-tag">RBAC · Rate Limit</span>
+    </div>
+    <div class="stack-card">
+      <span class="stack-icon">💳</span>
+      <div class="stack-layer">Payments</div>
+      <div class="stack-name">Razorpay + Wallet</div>
+      <div class="stack-desc">UPI, Credit/Debit Card, Net Banking, QR code. Platform wallet with top-up, reward points for reviews, promo codes &amp; GST</div>
+      <span class="stack-tag">Promo Codes · GST</span>
+    </div>
+    <div class="stack-card">
+      <span class="stack-icon">🤖</span>
+      <div class="stack-layer">AI</div>
+      <div class="stack-name">Groq API · LLaMA 3.1</div>
+      <div class="stack-desc">Role-aware AI chatbot with conversation history, context-aware system prompts per user role, 512 token limit</div>
+      <span class="stack-tag">llama-3.1-8b-instant</span>
+    </div>
+  </div>
+
+  <div class="bg-services a3" style="margin-top:14px;">
+    <div class="bg-svc"><div class="bg-svc-icon">⏱️</div><div><div class="bg-svc-name">ReservationCleanupService</div><div class="bg-svc-desc">Auto-cancels unpaid reservations after 10 min</div></div></div>
+    <div class="bg-svc"><div class="bg-svc-icon">🚫</div><div><div class="bg-svc-name">NoShowAutoCancelService</div><div class="bg-svc-desc">Marks no-shows if guest doesn't check in</div></div></div>
+    <div class="bg-svc"><div class="bg-svc-icon">💰</div><div><div class="bg-svc-name">HotelDeactivationRefundService</div><div class="bg-svc-desc">Auto-refunds guests when hotel deactivated</div></div></div>
+    <div class="bg-svc"><div class="bg-svc-icon">🔄</div><div><div class="bg-svc-name">InventoryRestoreHelper</div><div class="bg-svc-desc">Restores room inventory on cancellation</div></div></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 4 — DATABASE TABLE RELATIONSHIPS
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="slide-4">
+  <div class="slide-header a1">
+    <div class="slide-num">04</div>
+    <div class="slide-title">Database <span>Table Relationships</span></div>
+    <div class="slide-divider"></div>
+    <span class="live-badge"><span class="live-dot"></span>20 Tables · SQL Server</span>
+  </div>
+
+  <div class="db-layout a2">
+    <div class="db-tables">
+      <div class="db-table"><div class="db-table-icon">👤</div><div><div class="db-table-name">Users + UserProfileDetails</div><div class="db-table-desc">Guest · Admin · SuperAdmin · HMAC-SHA256 password</div></div></div>
+      <div class="db-table"><div class="db-table-icon">🏨</div><div><div class="db-table-name">Hotels</div><div class="db-table-desc">City/State indexed, GST%, UPI, IsActive, IsBlocked</div></div></div>
+      <div class="db-table"><div class="db-table-icon">🛏️</div><div><div class="db-table-name">RoomTypes + Rooms</div><div class="db-table-desc">Type → many Rooms, MaxOccupancy, ImageUrl</div></div></div>
+      <div class="db-table"><div class="db-table-icon">💲</div><div><div class="db-table-name">RoomTypeRates</div><div class="db-table-desc">Date-range pricing (StartDate–EndDate per type)</div></div></div>
+      <div class="db-table"><div class="db-table-icon">📅</div><div><div class="db-table-name">RoomTypeInventory</div><div class="db-table-desc">Per-date availability (Total vs Reserved)</div></div></div>
+      <div class="db-table"><div class="db-table-icon">🔗</div><div><div class="db-table-name">RoomTypeAmenities</div><div class="db-table-desc">M:N join — RoomType ↔ Amenities</div></div></div>
+      <div class="db-table"><div class="db-table-icon">📋</div><div><div class="db-table-name">Reservations + ReservationRooms</div><div class="db-table-desc">Bridge table, multi-room, GST, promo, wallet breakdown</div></div></div>
+      <div class="db-table"><div class="db-table-icon">💳</div><div><div class="db-table-name">Transactions</div><div class="db-table-desc">Payment method, status, wallet amount used</div></div></div>
+      <div class="db-table"><div class="db-table-icon">👛</div><div><div class="db-table-name">Wallet + WalletTransactions</div><div class="db-table-desc">Balance, top-up, reward points, refund credits</div></div></div>
+      <div class="db-table"><div class="db-table-icon">⭐</div><div><div class="db-table-name">Reviews</div><div class="db-table-desc">1 per reservation, rating 1–5, admin reply</div></div></div>
+      <div class="db-table"><div class="db-table-icon">🎟️</div><div><div class="db-table-name">PromoCodes</div><div class="db-table-desc">Discount%, usage limit, validity dates</div></div></div>
+      <div class="db-table"><div class="db-table-icon">🛎️</div><div><div class="db-table-name">Amenities + AmenityRequests</div><div class="db-table-desc">Platform amenities, Admin → SuperAdmin requests</div></div></div>
+      <div class="db-table"><div class="db-table-icon">📊</div><div><div class="db-table-name">AuditLogs + Logs + SupportRequests</div><div class="db-table-desc">Full audit trail, error logs, support tickets</div></div></div>
+      <div class="db-table"><div class="db-table-icon">💹</div><div><div class="db-table-name">SuperAdminRevenue</div><div class="db-table-desc">2% commission per completed booking</div></div></div>
+    </div>
+
+    <div class="db-diagram">
+      <div class="db-diagram-title">Entity Relationships</div>
+
+      <div class="rel-row"><span class="rel-from">User</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">Reservations</span></div>
+      <div class="rel-row"><span class="rel-from">User (Admin)</span><span class="rel-line"></span><span class="rel-type">1 : 1</span><span class="rel-to">Hotel</span></div>
+      <div class="rel-row"><span class="rel-from">User</span><span class="rel-line"></span><span class="rel-type">1 : 1</span><span class="rel-to">Wallet</span></div>
+      <div class="rel-row"><span class="rel-from">User</span><span class="rel-line"></span><span class="rel-type">1 : 1</span><span class="rel-to">UserProfileDetails</span></div>
+      <div class="rel-row"><span class="rel-from">Hotel</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">RoomTypes</span></div>
+      <div class="rel-row"><span class="rel-from">RoomType</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">Rooms</span></div>
+      <div class="rel-row"><span class="rel-from">RoomType</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">RoomTypeRates</span></div>
+      <div class="rel-row"><span class="rel-from">RoomType</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">RoomTypeInventory</span></div>
+      <div class="rel-row"><span class="rel-from">RoomType</span><span class="rel-line"></span><span class="rel-type">M : N</span><span class="rel-to">Amenities (via RoomTypeAmenities)</span></div>
+      <div class="rel-row"><span class="rel-from">Reservation</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">ReservationRooms</span></div>
+      <div class="rel-row"><span class="rel-from">Reservation</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">Transactions</span></div>
+      <div class="rel-row"><span class="rel-from">Reservation</span><span class="rel-line"></span><span class="rel-type">1 : 1</span><span class="rel-to">Review (1 per booking)</span></div>
+      <div class="rel-row"><span class="rel-from">Wallet</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">WalletTransactions</span></div>
+      <div class="rel-row"><span class="rel-from">Hotel</span><span class="rel-line"></span><span class="rel-type">1 : N</span><span class="rel-to">AmenityRequests → SuperAdmin</span></div>
+      <div class="rel-row"><span class="rel-from">Reservation</span><span class="rel-line"></span><span class="rel-type">1 : 1</span><span class="rel-to">SuperAdminRevenue (2% commission)</span></div>
+
+      <div class="db-constraints">
+        <div class="db-constraints-title">Key Constraints &amp; Indexes</div>
+        <div class="constraint-pills">
+          <span class="cpill">GUID PKs</span>
+          <span class="cpill">UNIQUE: Email</span>
+          <span class="cpill">UNIQUE: (HotelId, RoomNumber)</span>
+          <span class="cpill">UNIQUE: (UserId, ReservationId) Review</span>
+          <span class="cpill">UNIQUE: (RoomTypeId, Date) Inventory</span>
+          <span class="cpill">INDEX: City, State</span>
+          <span class="cpill">INDEX: (RoomTypeId, StartDate, EndDate)</span>
+          <span class="cpill">UNIQUE: ReservationCode</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 5 — TESTING & AI
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="slide-5">
+  <div class="slide-header a1">
+    <div class="slide-num">05</div>
+    <div class="slide-title">Testing Coverage &amp; <span>AI Chatbot</span></div>
+    <div class="slide-divider"></div>
+    <span class="live-badge"><span class="live-dot"></span>Live Demo Next</span>
+  </div>
+
+  <div class="test-layout a2">
+    <div class="test-card be">
+      <div class="test-card-title">🔧 Backend — xUnit + Moq + FluentAssertions</div>
+      <div class="cov-wrap">
+        <div class="cov-label"><span>Line Coverage</span><span>96%</span></div>
+        <div class="cov-bar"><div class="cov-fill" data-w="96"></div></div>
+      </div>
+      <div class="cov-wrap">
+        <div class="cov-label"><span>Branch Coverage</span><span>75%</span></div>
+        <div class="cov-bar"><div class="cov-fill" data-w="75" style="background:linear-gradient(90deg,var(--accent),#e8a040);"></div></div>
+      </div>
+      <div class="test-stats">
+        <div class="test-stat"><div class="test-stat-num">20+</div><div class="test-stat-label">Services Tested</div></div>
+        <div class="test-stat"><div class="test-stat-num">4</div><div class="test-stat-label">BG Services</div></div>
+        <div class="test-stat"><div class="test-stat-num">100%</div><div class="test-stat-label">Controllers</div></div>
+      </div>
+      <div class="test-detail">AuthService · ReservationService · HotelService · WalletService · PromoCodeService · RoomTypeService · InventoryService · AuditLogService · DashboardService · TransactionService · ReviewService · SupportRequestService · AmenityRequestService · GlobalExceptionMiddleware · Repository Layer · DTO Models</div>
+    </div>
+
+    <div class="test-card fe">
+      <div class="test-card-title">⚡ Frontend — Jasmine + Karma + Angular Testing</div>
+      <div class="cov-wrap">
+        <div class="cov-label"><span>Component Coverage</span><span>100%</span></div>
+        <div class="cov-bar"><div class="cov-fill" data-w="100"></div></div>
+      </div>
+      <div class="cov-wrap">
+        <div class="cov-label"><span>Service Coverage</span><span>100%</span></div>
+        <div class="cov-bar"><div class="cov-fill" data-w="100"></div></div>
+      </div>
+      <div class="test-stats">
+        <div class="test-stat"><div class="test-stat-num">100%</div><div class="test-stat-label">All Components</div></div>
+        <div class="test-stat"><div class="test-stat-num">100%</div><div class="test-stat-label">All Services</div></div>
+        <div class="test-stat"><div class="test-stat-num">✓</div><div class="test-stat-label">Guards &amp; Interceptors</div></div>
+      </div>
+      <div class="test-detail">All feature components (Auth, Hotel, Booking, Guest, Admin, SuperAdmin) · Shared components (Chatbot, Carousel, Dialogs, City Autocomplete) · AuthService · HotelService · BookingService · Guards · Interceptors</div>
+    </div>
+
+    <div class="test-card ai">
+      <div class="test-card-title">🤖 AI Chatbot — Groq LLaMA 3.1 (llama-3.1-8b-instant)</div>
+      <div class="ai-grid">
+        <div><div class="ai-feat">Role-aware system prompts — Guest / Admin / SuperAdmin each get tailored context</div></div>
+        <div><div class="ai-feat">Conversation history (last 6 messages) for contextual follow-up answers</div></div>
+        <div><div class="ai-feat">Floating chatbot widget on all pages, skips global loading spinner</div></div>
+        <div><div class="ai-feat">512 token limit, 0.7 temperature — fast, natural responses. Fully unit tested.</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════
+     SLIDE 6 — THANK YOU
+══════════════════════════════════════════════════════ -->
+<div class="slide" id="slide-6">
+  <img class="ty-logo a1" id="tyLogo" src="../Fontend-Angular/public/logo.png" alt="StayHub"/>
+  <h1 class="ty-heading a2">Thank You</h1>
+  <p class="ty-sub a3">It was a pleasure presenting Thanush StayHub. Happy to take any questions about the architecture, business logic, testing approach, or live demo.</p>
+
+  <div class="ty-card a4">
+    <img class="ty-photo" src="./My-Photo.jpg" alt="Thanush Kannan"
+         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"/>
+    <div class="ty-photo-fallback" style="display:none">TK</div>
+    <div class="ty-details">
+      <div class="ty-name">Thanush Kannan</div>
+      <div class="ty-role">Software Engineer Trainee · NAF Inc.</div>
+      <div class="ty-contact-row">
+        <div class="ty-contact"><span>✉</span> thanush.k@nafinc.com</div>
+        <div class="ty-contact"><span>📞</span> +91 9840650939</div>
+      </div>
+    </div>
+    <div class="ty-divider"></div>
+    <div class="ty-stack">
+      <div class="ty-stack-title">Built With</div>
+      <div class="ty-pills">
+        <span class="ty-pill">Angular 18</span>
+        <span class="ty-pill">ASP.NET Core .NET 10</span>
+        <span class="ty-pill">SQL Server</span>
+        <span class="ty-pill">JWT Auth</span>
+        <span class="ty-pill">Razorpay</span>
+        <span class="ty-pill">Groq AI</span>
+        <span class="ty-pill">xUnit · Jasmine</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ty-qa a5">
+    💬 &nbsp; Open for Q&amp;A — Architecture · Business Logic · Testing · Live Demo
+  </div>
+</div>
+
+</div><!-- end .deck -->
+
+<!-- Nav Bar -->
+<div class="nav-bar">
+  <button class="nav-btn" id="prevBtn" onclick="navigate(-1)" disabled>&#8592;</button>
+  <div class="nav-dots" id="navDots"></div>
+  <div class="nav-counter" id="navCounter">1 / 6</div>
+  <button class="nav-btn" id="nextBtn" onclick="navigate(1)">&#8594;</button>
+</div>
+
+<script>
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+let current = 0;
+let isDark = false;
+
+// Build dots
+const dotsEl = document.getElementById('navDots');
+slides.forEach((_,i)=>{
+  const d = document.createElement('div');
+  d.className='nav-dot'+(i===0?' active':'');
+  d.onclick=()=>goTo(i);
+  dotsEl.appendChild(d);
+});
+
+function goTo(idx){
+  if(idx<0||idx>=total) return;
+  slides[current].classList.remove('active');
+  slides[current].classList.add('exit');
+  setTimeout(()=>slides[current].classList.remove('exit'),600);
+  current=idx;
+  slides[current].classList.add('active');
+  document.querySelectorAll('.nav-dot').forEach((d,i)=>d.classList.toggle('active',i===current));
+  document.getElementById('navCounter').textContent=`${current+1} / ${total}`;
+  document.getElementById('prevBtn').disabled=current===0;
+  document.getElementById('nextBtn').disabled=current===total-1;
+  document.getElementById('progressBar').style.width=`${((current+1)/total)*100}%`;
+  setTimeout(animateBars,400);
+}
+
+function navigate(dir){goTo(current+dir);}
+
+document.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'||e.key==='ArrowDown') navigate(1);
+  if(e.key==='ArrowLeft'||e.key==='ArrowUp') navigate(-1);
+  if(e.key==='f'||e.key==='F'){
+    if(!document.fullscreenElement) document.documentElement.requestFullscreen();
+    else document.exitFullscreen();
+  }
+});
+
+// Theme toggle
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  isDark=!isDark;
+  document.body.classList.toggle('dark-mode',isDark);
+  document.getElementById('themeBtn').textContent=isDark?'☀️':'🌙';
+  // swap logo
+  const logoImg=document.getElementById('logoImg');
+  const tyLogo=document.getElementById('tyLogo');
+  if(logoImg) logoImg.src=isDark?'../Fontend-Angular/public/dark.png':'../Fontend-Angular/public/logo.png';
+  if(tyLogo)  tyLogo.src=isDark?'../Fontend-Angular/public/dark.png':'../Fontend-Angular/public/logo.png';
+});
+
+function animateBars(){
+  document.querySelectorAll('.cov-fill').forEach(b=>{
+    const w=b.getAttribute('data-w');
+    if(w) b.style.width=w+'%';
+  });
+}
+animateBars();
+</script>
+</body>
+</html>
