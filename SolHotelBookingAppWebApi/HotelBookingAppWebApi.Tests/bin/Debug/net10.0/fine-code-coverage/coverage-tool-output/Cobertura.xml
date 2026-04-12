@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE coverage SYSTEM "http://cobertura.sourceforge.net/xml/coverage-04.dtd">
-<coverage line-rate="0.964305440486054" branch-rate="0.660913140311804" lines-covered="13967" lines-valid="14484" branches-covered="1187" branches-valid="1796" complexity="4655" version="0" timestamp="1775680836">
+<coverage line-rate="0.963753106876553" branch-rate="0.658685968819599" lines-covered="13959" lines-valid="14484" branches-covered="1183" branches-valid="1796" complexity="4655" version="0" timestamp="1775716755">
   <sources />
   <packages>
-    <package name="AspNetCoreRateLimit" line-rate="0.484709480122324" branch-rate="0.284037558685446" complexity="569">
+    <package name="AspNetCoreRateLimit" line-rate="0.472477064220183" branch-rate="0.274647887323944" complexity="569">
       <classes>
         <class name="AspNetCoreRateLimit.AsyncKeyLock" filename="C:\Users\User\Documents\Github\AspNetCoreRateLimit\src\AspNetCoreRateLimit\AsyncKeyLock\AsyncKeyLock.cs" line-rate="1" branch-rate="1" complexity="15">
           <methods>

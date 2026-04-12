@@ -420,6 +420,46 @@ public class CoverageGapTests4
         walletSvc.Verify(w => w.CreditAsync(It.IsAny<Guid>(), It.IsAny<decimal>(), It.IsAny<string>()), Times.Never);
     }
 
+    [Fact]
+    public async Task CancelReservation_WalletPlusGateway_RefundIncludesWalletAmount()
+    {
+        // Arrange — guest paid ₹700 via gateway (FinalAmount) + ₹300 via wallet (WalletAmountUsed)
+        using var ctx = CreateContext(nameof(CancelReservation_WalletPlusGateway_RefundIncludesWalletAmount));
+        var userId = Guid.NewGuid();
+        var walletSvc = new Mock<IWalletService>();
+        var hotelId = Guid.NewGuid();
+        var roomTypeId = Guid.NewGuid();
+        var roomId = Guid.NewGuid();
+        var checkIn = DateOnly.FromDateTime(DateTime.Now.AddDays(10));
+        var res = new Reservation
+        {
+            ReservationId = Guid.NewGuid(),
+            ReservationCode = $"RES-WALLET",
+            UserId = userId, HotelId = hotelId,
+            Status = ReservationStatus.Confirmed,
+            TotalAmount = 1000, FinalAmount = 700, WalletAmountUsed = 300,
+            CheckInDate = checkIn, CheckOutDate = checkIn.AddDays(2),
+            CreatedDate = DateTime.UtcNow, IsCheckedIn = false, CancellationFeePaid = false,
+            ReservationRooms = new List<ReservationRoom>
+            {
+                new() { ReservationRoomId = Guid.NewGuid(), RoomId = roomId, RoomTypeId = roomTypeId, PricePerNight = 500 }
+            },
+            Transactions = new List<Transaction>
+            {
+                new() { TransactionId = Guid.NewGuid(), Amount = 700, PaymentMethod = PaymentMethod.UPI, Status = PaymentStatus.Success, TransactionDate = DateTime.UtcNow }
+            }
+        };
+        ctx.Reservations.Add(res);
+        await ctx.SaveChangesAsync();
+        var sut = CreateResSut(ctx, walletSvc);
+
+        // Act — 10 days before check-in → 100% refund
+        await sut.CancelReservationAsync(userId, res.ReservationCode, "Test");
+
+        // Assert — refund = FinalAmount (700) + WalletAmountUsed (300) = 1000
+        walletSvc.Verify(w => w.CreditAsync(userId, 1000m, It.IsAny<string>()), Times.Once);
+    }
+
     // ── ReservationService: CalculatePricingAsync — promo + wallet branches ───
 
     [Fact]

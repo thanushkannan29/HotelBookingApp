@@ -538,10 +538,10 @@ namespace HotelBookingAppWebApi.Services
 
                     if (refundPercent > 0)
                     {
-                        // Refund is based on what the guest actually paid (FinalAmount),
-                        // not the pre-GST/pre-discount base (TotalAmount).
-                        var paidAmount = res.FinalAmount > 0 ? res.FinalAmount : res.TotalAmount;
-                        var refundAmount = Math.Round(paidAmount * (refundPercent / 100m), 2);
+                        // Total paid = gateway payment (FinalAmount) + wallet portion (WalletAmountUsed)
+                        var gatewayPaid = res.FinalAmount > 0 ? res.FinalAmount : res.TotalAmount;
+                        var totalPaid = gatewayPaid + res.WalletAmountUsed;
+                        var refundAmount = Math.Round(totalPaid * (refundPercent / 100m), 2);
                         await _walletService.CreditAsync(userId, refundAmount,
                             $"Refund ({refundNote}) for {res.ReservationCode}");
                     }

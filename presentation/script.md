@@ -47,7 +47,7 @@
 > *"Now let me talk about what's under the hood."*
 
 **Frontend:**
-> *"The frontend is Angular 18 — using the latest standalone component architecture with Angular Signals for state management. No NgRx complexity. Clean, reactive, and fast."*
+> *"The frontend is Angular 21 — using the latest standalone component architecture with Angular Signals for state management. No NgRx complexity. Clean, reactive, and fast."*
 
 **Backend:**
 > *"The backend is ASP.NET Core on .NET 10 — the latest release. I implemented a clean layered architecture: Controllers handle HTTP, Services contain all business logic, and a Generic Repository with Unit of Work handles data access. This means zero business logic leaks into controllers."*
