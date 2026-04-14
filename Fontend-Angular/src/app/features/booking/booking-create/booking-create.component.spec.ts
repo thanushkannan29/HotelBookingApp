@@ -278,4 +278,36 @@ describe('BookingCreateComponent', () => {
     component.clearPromo();
     expect(component.promoValid()).toBeNull();
   });
+
+  // ── walletCoversAll ───────────────────────────────────────────────────────
+
+  it('walletCoversAll — should be false when no reservation created yet and wallet not used', () => {
+    expect(component.walletCoversAll()).toBeFalse();
+  });
+
+  it('walletCoversAll — should be false pre-creation when wallet not toggled on', () => {
+    component.availability.set(MOCK_AVAILABILITY as any);
+    component.selectedRoomTypeId.set('rt-001');
+    component.checkInDate.set(new Date(2025, 5, 1));
+    component.checkOutDate.set(new Date(2025, 5, 3));
+    component.numberOfRooms.set(1);
+    expect(component.walletCoversAll()).toBeFalse();
+  });
+
+  it('walletCoversAll — post-creation: true when server finalAmount is 0 and walletAmountUsed > 0', () => {
+    const walletOnlyRes = { ...MOCK_RESERVATION, finalAmount: 0, walletAmountUsed: 7000 };
+    component.createdReservation.set(walletOnlyRes as any);
+    expect(component.walletCoversAll()).toBeTrue();
+  });
+
+  it('walletCoversAll — post-creation: false when server finalAmount > 0', () => {
+    component.createdReservation.set(MOCK_RESERVATION as any); // finalAmount: 7000
+    expect(component.walletCoversAll()).toBeFalse();
+  });
+
+  it('walletCoversAll — post-creation: false when walletAmountUsed is 0 even if finalAmount is 0', () => {
+    const zeroRes = { ...MOCK_RESERVATION, finalAmount: 0, walletAmountUsed: 0 };
+    component.createdReservation.set(zeroRes as any);
+    expect(component.walletCoversAll()).toBeFalse();
+  });
 });

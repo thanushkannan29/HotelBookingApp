@@ -187,9 +187,9 @@
               This reservation was cancelled.
               @if (res.walletAmountUsed > 0) {
                 @if (res.finalAmount === 0) {
-                  Full wallet payment of  has been refunded to your wallet.
+                  Full wallet payment of ₹{{ res.walletAmountUsed | number:'1.2-2' }} has been refunded to your wallet.
                 } @else {
-                  Amount has been refunded in wallet.
+                  ₹{{ res.finalAmount | number:'1.2-2' }} has been refunded to your wallet.
                 }
               }
             </div>

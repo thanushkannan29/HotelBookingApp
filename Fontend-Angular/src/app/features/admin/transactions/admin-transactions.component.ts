@@ -91,7 +91,8 @@ export class AdminTransactionsComponent implements OnInit {
   }
 
   amountColor(tx: TransactionResponseDto): string {
-    return (tx.transactionType === 'CommissionSent' || tx.transactionType === 'AutoRefund')
-      ? 'var(--color-error)' : 'inherit';
+    if (tx.transactionType === 'CommissionSent') return 'var(--color-error)';
+    if (tx.transactionType === 'AutoRefund' || tx.transactionType === 'WalletRefund') return '#e65100'; // orange — refund out
+    return 'inherit';
   }
 }

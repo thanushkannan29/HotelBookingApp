@@ -198,8 +198,8 @@ describe('BookingDetailComponent', () => {
 
   // ── canCancel() ────────────────────────────────────────────────────────────
 
-  it('canCancel() — should return true for Pending reservation', () => {
-    expect(component.canCancel(PENDING_RES)).toBeTrue();
+  it('canCancel() — should return false for Pending reservation (auto-cancelled by system)', () => {
+    expect(component.canCancel(PENDING_RES)).toBeFalse();
   });
 
   it('canCancel() — should return true for Confirmed reservation', () => {
@@ -216,6 +216,80 @@ describe('BookingDetailComponent', () => {
 
   it('canCancel() — should return false for NoShow reservation', () => {
     expect(component.canCancel(makeReservation('NoShow'))).toBeFalse();
+  });
+
+  // ── getRefundPreview() ─────────────────────────────────────────────────────
+
+  it('getRefundPreview() — should return no refund when already checked in', () => {
+    const res = makeReservation('Confirmed', { isCheckedIn: true, checkInDate: '2025-06-01', finalAmount: 7000 });
+    expect(component.getRefundPreview(res)).toContain('No refund');
+  });
+
+  it('getRefundPreview() — should return full refund (finalAmount) for 7+ days before check-in', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 10);
+    const res = makeReservation('Confirmed', {
+      checkInDate: future.toISOString().split('T')[0],
+      totalAmount: 7000,
+      finalAmount: 8260, // includes GST
+    });
+    const preview = component.getRefundPreview(res);
+    expect(preview).toContain('8260.00');
+    expect(preview).toContain('Full refund');
+  });
+
+  it('getRefundPreview() — should return 50% of finalAmount for 3–6 days before check-in', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 4);
+    const res = makeReservation('Confirmed', {
+      checkInDate: future.toISOString().split('T')[0],
+      totalAmount: 7000,
+      finalAmount: 8260,
+    });
+    const preview = component.getRefundPreview(res);
+    expect(preview).toContain('4130.00');
+    expect(preview).toContain('50%');
+  });
+
+  it('getRefundPreview() — should return 25% of finalAmount for 1–2 days before check-in', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 1);
+    const res = makeReservation('Confirmed', {
+      checkInDate: future.toISOString().split('T')[0],
+      totalAmount: 7000,
+      finalAmount: 8260,
+    });
+    const preview = component.getRefundPreview(res);
+    expect(preview).toContain('2065.00');
+    expect(preview).toContain('25%');
+  });
+
+  it('getRefundPreview() — should NOT use totalAmount for refund calculation', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 10);
+    const res = makeReservation('Confirmed', {
+      checkInDate: future.toISOString().split('T')[0],
+      totalAmount: 7000,
+      finalAmount: 8260,
+    });
+    const preview = component.getRefundPreview(res);
+    // Should show finalAmount (8260), not totalAmount (7000)
+    expect(preview).not.toContain('7000.00');
+    expect(preview).toContain('8260.00');
+  });
+
+  it('getRefundPreview() — with cancellation protection: full refund of finalAmount before check-in day', () => {
+    const future = new Date();
+    future.setDate(future.getDate() + 3);
+    const res = makeReservation('Confirmed', {
+      checkInDate: future.toISOString().split('T')[0],
+      cancellationFeePaid: true,
+      totalAmount: 7000,
+      finalAmount: 8260,
+    });
+    const preview = component.getRefundPreview(res);
+    expect(preview).toContain('8260.00');
+    expect(preview).toContain('Full refund');
   });
 
   // ── cancel() — HAPPY PATH ──────────────────────────────────────────────────

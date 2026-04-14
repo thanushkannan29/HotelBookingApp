@@ -347,7 +347,7 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
   }
 
   canCancel(res: ReservationDetailsDto): boolean {
-    return res.status === 'Pending' || res.status === 'Confirmed';
+    return res.status === 'Confirmed';
   }
 
   getRefundPreview(res: ReservationDetailsDto): string {
@@ -360,16 +360,19 @@ export class BookingDetailComponent implements OnInit, OnDestroy {
       return `No refund — reservation already checked in or stay has passed`;
     }
 
+    // Refund is calculated on the actual amount paid (finalAmount), not base amount
+    const paid = res.finalAmount;
+
     if (res.cancellationFeePaid) {
       // With protection: full refund before check-in day, 50% on check-in day
-      if (days > 0) return `Full refund of ₹${res.totalAmount.toFixed(2)} — protection active, cancelled before check-in day`;
-      return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled on check-in day (protection provides partial refund)`;
+      if (days > 0) return `Full refund of ₹${paid.toFixed(2)} — protection active, cancelled before check-in day`;
+      return `50% refund of ₹${(paid * 0.5).toFixed(2)} — cancelled on check-in day (protection provides partial refund)`;
     }
 
     // Without protection — industry-standard tiered policy
-    if (days >= 7) return `Full refund of ₹${res.totalAmount.toFixed(2)} — free cancellation, 7+ days before check-in`;
-    if (days >= 3) return `50% refund of ₹${(res.totalAmount * 0.5).toFixed(2)} — cancelled 3–6 days before check-in`;
-    if (days >= 1) return `25% refund of ₹${(res.totalAmount * 0.25).toFixed(2)} — cancelled 1–2 days before check-in`;
+    if (days >= 7) return `Full refund of ₹${paid.toFixed(2)} — free cancellation, 7+ days before check-in`;
+    if (days >= 3) return `50% refund of ₹${(paid * 0.5).toFixed(2)} — cancelled 3–6 days before check-in`;
+    if (days >= 1) return `25% refund of ₹${(paid * 0.25).toFixed(2)} — cancelled 1–2 days before check-in`;
     return `No refund — cancelled on check-in day`;
   }
 }

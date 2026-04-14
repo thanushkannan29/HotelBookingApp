@@ -137,9 +137,10 @@ namespace HotelBookingAppWebApi.Services.BackgroundServices
                 .FirstOrDefault(t => t.Status == PaymentStatus.Refunded);
             if (successTx is null) return;
 
-            var refundAmount = reservation.FinalAmount > 0
-                ? reservation.FinalAmount
-                : reservation.TotalAmount;
+            // Total paid = gateway amount (FinalAmount) + any wallet pre-deducted at booking
+            // This matches the same formula used in ReservationService.CancelReservationAsync
+            var refundAmount = reservation.FinalAmount + reservation.WalletAmountUsed;
+            if (refundAmount <= 0) return;
 
             await walletService.CreditAsync(
                 reservation.UserId,

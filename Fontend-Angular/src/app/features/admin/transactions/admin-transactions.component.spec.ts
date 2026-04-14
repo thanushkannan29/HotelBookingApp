@@ -119,8 +119,12 @@ describe('AdminTransactionsComponent', () => {
     expect(component.amountColor(MOCK_TX[2] as any)).toBe('var(--color-error)');
   });
 
-  it('amountColor — AutoRefund → var(--color-error)', () => {
-    expect(component.amountColor(MOCK_TX[1] as any)).toBe('var(--color-error)');
+  it('amountColor — AutoRefund → #e65100 (orange, not error red)', () => {
+    expect(component.amountColor(MOCK_TX[1] as any)).toBe('#e65100');
+  });
+
+  it('amountColor — WalletRefund → #e65100 (orange, not error red)', () => {
+    expect(component.amountColor(MOCK_TX[3] as any)).toBe('#e65100');
   });
 
   it('amountColor — normal payment → inherit', () => {

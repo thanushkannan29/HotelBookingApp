@@ -14,7 +14,7 @@ import { authInterceptor } from './auth.interceptor';
 import { AuthService } from '../services/auth.service';
 import { ToastService } from '../services/toast.service';
 
-const LOCAL_URL    = 'http://localhost:5000/api/test';
+const LOCAL_URL    = 'https://localhost:7208/api/test';
 const EXTERNAL_URL = 'https://generativelanguage.googleapis.com/v1/models';
 
 describe('authInterceptor', () => {

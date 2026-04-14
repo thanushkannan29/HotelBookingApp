@@ -166,9 +166,16 @@ export class BookingCreateComponent implements OnInit, OnDestroy {
   );
 
   // True when wallet covers the full remaining amount
-  walletCoversAll = computed(() =>
-    this.useWallet() && this.finalTotal() === 0 && this.baseTotal() > 0
-  );
+  // After reservation is created, use server's finalAmount as source of truth
+  walletCoversAll = computed(() => {
+    const res = this.createdReservation();
+    if (res) {
+      // Post-creation: trust the server's finalAmount
+      return res.finalAmount <= 0 && res.walletAmountUsed > 0;
+    }
+    // Pre-creation: use frontend computed total
+    return this.useWallet() && this.finalTotal() === 0 && this.baseTotal() > 0;
+  });
 
   step1Valid = computed(() =>
     !!this.selectedRoomTypeId() &&
